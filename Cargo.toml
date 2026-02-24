@@ -1,0 +1,10 @@
+[package]
+name = "cameo"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+authors = ["Justin Chung <20733699+justin13888@users.noreply.github.com>"]
+description = "API client SDK"
+repository = "https://github.com/justin13888/cameo"
+
+[dependencies]
