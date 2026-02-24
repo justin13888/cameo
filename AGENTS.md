@@ -1,6 +1,11 @@
 # cameo
 
-API client SDK for an internal/private API.
+Unified movie/TV show database SDK for Rust
+
+## MANDATORY: Use td for Task Management
+
+You must run td usage --new-session at conversation start (or after /clear) to see current work.
+Use td usage -q for subsequent reads.
 
 ## Conventions
 
