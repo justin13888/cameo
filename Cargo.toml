@@ -4,7 +4,42 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 authors = ["Justin Chung <20733699+justin13888@users.noreply.github.com>"]
-description = "API client SDK"
+description = "Unified movie/TV show database SDK for Rust"
 repository = "https://github.com/justin13888/cameo"
 
+[features]
+default = ["tmdb"]
+tmdb = []
+live-tests = [] # Gate for tests that hit real TMDB API
+
 [dependencies]
+# Generated client runtime
+progenitor-client = "0.11"
+reqwest = { version = "0.12", features = ["json"] }
+# Async
+tokio = { version = "1", features = ["time", "sync"] }
+futures = "0.3"
+async-stream = "0.3"
+async-trait = "0.1"
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde"] }
+# Error handling
+thiserror = "2"
+# URL/HTTP helpers
+url = "2"
+http = "1"
+# Logging
+tracing = "0.1"
+
+[build-dependencies]
+progenitor = "0.11"
+serde_json = "1"
+syn = "2"
+prettyplease = "0.2"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+wiremock = "0.6"
+pretty_assertions = "1"
