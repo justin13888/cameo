@@ -16,6 +16,8 @@ const DEFAULT_RATE_LIMIT: u32 = 40;
 pub struct TmdbConfig {
     /// TMDB API read access token (v4 auth / bearer token).
     pub api_token: String,
+    /// Base URL override (defaults to `https://api.themoviedb.org`).
+    pub base_url: Option<String>,
     /// Default language for requests (e.g. `"en-US"`).
     pub language: Option<String>,
     /// Default region for requests (e.g. `"US"`).
@@ -31,6 +33,19 @@ impl TmdbConfig {
     pub fn new(api_token: impl Into<String>) -> Self {
         Self {
             api_token: api_token.into(),
+            base_url: None,
+            language: None,
+            region: None,
+            include_adult: None,
+            rate_limit: DEFAULT_RATE_LIMIT,
+        }
+    }
+
+    /// Create a new config with a custom base URL (useful for testing).
+    pub fn new_with_base_url(api_token: impl Into<String>, base_url: impl Into<String>) -> Self {
+        Self {
+            api_token: api_token.into(),
+            base_url: Some(base_url.into()),
             language: None,
             region: None,
             include_adult: None,
@@ -95,7 +110,8 @@ impl TmdbClient {
             .build()
             .map_err(TmdbError::Http)?;
 
-        let inner = tmdb::Client::new_with_client(TMDB_BASE_URL, http_client);
+        let base_url = config.base_url.as_deref().unwrap_or(TMDB_BASE_URL);
+        let inner = tmdb::Client::new_with_client(base_url, http_client);
         let rate_limiter = Arc::new(Semaphore::new(config.rate_limit as usize));
 
         Ok(Self {

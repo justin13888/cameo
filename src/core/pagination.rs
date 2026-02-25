@@ -1,7 +1,8 @@
 use futures::Stream;
+use serde::{Deserialize, Serialize};
 
 /// A paginated response from a provider API.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PaginatedResponse<T> {
     /// Current page number (1-indexed).
     pub page: u32,

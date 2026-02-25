@@ -26,6 +26,10 @@
 /// Auto-generated low-level API client code (from progenitor).
 pub mod generated;
 
+/// Caching layer for transparent API response caching.
+#[cfg(feature = "cache")]
+pub mod cache;
+
 /// Shared core types: pagination, configuration, errors.
 pub mod core;
 
@@ -42,3 +46,6 @@ pub use unified::{CameoClient, CameoClientBuilder};
 
 #[cfg(feature = "tmdb")]
 pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
+
+#[cfg(feature = "cache")]
+pub use cache::{CacheBackend, CacheError, CacheTtlConfig, SqliteCache};

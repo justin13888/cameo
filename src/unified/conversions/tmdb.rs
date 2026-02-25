@@ -1,11 +1,8 @@
 //! Conversions from TMDB generated types to unified models.
-//!
-//! Since the TMDB API returns genre IDs (not names) in list endpoints,
-//! these conversions leave `genres` empty for list results. The unified
-//! layer resolves genre names via a cached genre list when needed.
 
 use crate::generated::tmdb::types;
 use crate::providers::tmdb::image_url::{BackdropSize, ImageUrl, PosterSize, ProfileSize};
+use crate::unified::genre::Genre;
 use crate::unified::models::*;
 
 fn resolve_poster(path: &Option<String>) -> Option<String> {
@@ -36,7 +33,7 @@ macro_rules! impl_movie_from {
                     release_date: m.release_date,
                     poster_url: resolve_poster(&m.poster_path),
                     backdrop_url: resolve_backdrop(&m.backdrop_path),
-                    genres: Vec::new(), // genre IDs only; resolved by caller
+                    genres: m.genre_ids.iter().map(|&id| Genre::from_tmdb_id(id)).collect(),
                     popularity: m.popularity,
                     vote_average: m.vote_average,
                     vote_count: m.vote_count as u64,
@@ -56,6 +53,13 @@ impl_movie_from!(types::DiscoverMovieResponseResultsItem);
 
 impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
     fn from(m: types::MovieDetailsResponse) -> Self {
+        let belongs_to_collection = m
+            .belongs_to_collection
+            .as_ref()
+            .and_then(|v| v.get("name"))
+            .and_then(|n| n.as_str())
+            .map(String::from);
+
         UnifiedMovieDetails {
             movie: UnifiedMovie {
                 provider_id: format!("tmdb:{}", m.id),
@@ -65,7 +69,7 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
                 release_date: m.release_date,
                 poster_url: resolve_poster(&m.poster_path),
                 backdrop_url: resolve_backdrop(&m.backdrop_path),
-                genres: m.genres.iter().filter_map(|g| g.name.clone()).collect(),
+                genres: m.genres.iter().filter_map(|g| g.name.as_deref()).map(Genre::from_name).collect(),
                 popularity: m.popularity,
                 vote_average: m.vote_average,
                 vote_count: m.vote_count as u64,
@@ -94,6 +98,8 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
                 .iter()
                 .filter_map(|l| l.english_name.clone())
                 .collect(),
+            video: m.video,
+            belongs_to_collection,
         }
     }
 }
@@ -112,12 +118,13 @@ macro_rules! impl_tv_from {
                     first_air_date: t.first_air_date,
                     poster_url: resolve_poster(&t.poster_path),
                     backdrop_url: resolve_backdrop(&t.backdrop_path),
-                    genres: Vec::new(),
+                    genres: t.genre_ids.iter().map(|&id| Genre::from_tmdb_id(id)).collect(),
                     popularity: t.popularity,
                     vote_average: t.vote_average,
                     vote_count: t.vote_count as u64,
                     original_language: t.original_language,
                     origin_country: t.origin_country,
+                    adult: t.adult,
                 }
             }
         }
@@ -138,12 +145,13 @@ impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
             first_air_date: t.first_air_date,
             poster_url: resolve_poster(&t.poster_path),
             backdrop_url: resolve_backdrop(&t.backdrop_path),
-            genres: Vec::new(),
+            genres: t.genre_ids.iter().map(|&id| Genre::from_tmdb_id(id)).collect(),
             popularity: t.popularity,
             vote_average: if t.vote_average != 0 { Some(t.vote_average as f64) } else { None },
             vote_count: t.vote_count as u64,
             original_language: t.original_language,
             origin_country: t.origin_country,
+            adult: false,
         }
     }
 }
@@ -156,15 +164,16 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 name: t.name.unwrap_or_default(),
                 original_name: t.original_name,
                 overview: t.overview,
-                first_air_date: t.first_air_date,
+                first_air_date: t.first_air_date.clone(),
                 poster_url: resolve_poster(&t.poster_path),
                 backdrop_url: resolve_backdrop(&t.backdrop_path),
-                genres: t.genres.iter().filter_map(|g| g.name.clone()).collect(),
+                genres: t.genres.iter().filter_map(|g| g.name.as_deref()).map(Genre::from_name).collect(),
                 popularity: t.popularity,
                 vote_average: t.vote_average,
                 vote_count: t.vote_count as u64,
                 original_language: t.original_language,
                 origin_country: t.origin_country,
+                adult: t.adult,
             },
             tagline: t.tagline,
             number_of_seasons: t.number_of_seasons as u32,
@@ -175,6 +184,20 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
             networks: t.networks.iter().filter_map(|n| n.name.clone()).collect(),
             production_companies: t
                 .production_companies
+                .iter()
+                .filter_map(|c| c.name.clone())
+                .collect(),
+            last_air_date: t.last_air_date,
+            type_: t.type_,
+            created_by: t.created_by.iter().filter_map(|c| c.name.clone()).collect(),
+            episode_run_time: t.episode_run_time.iter().map(|&r| r as u32).collect(),
+            spoken_languages: t
+                .spoken_languages
+                .iter()
+                .filter_map(|l| l.english_name.clone())
+                .collect(),
+            production_countries: t
+                .production_countries
                 .iter()
                 .filter_map(|c| c.name.clone())
                 .collect(),
@@ -192,6 +215,8 @@ impl From<types::SearchPersonResponseResultsItem> for UnifiedPerson {
             known_for_department: p.known_for_department,
             profile_url: resolve_profile(&p.profile_path),
             popularity: p.popularity,
+            gender: Some(p.gender as i32),
+            adult: p.adult,
         }
     }
 }
@@ -205,6 +230,8 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
                 known_for_department: p.known_for_department,
                 profile_url: resolve_profile(&p.profile_path),
                 popularity: p.popularity,
+                gender: Some(p.gender as i32),
+                adult: p.adult,
             },
             biography: p.biography,
             birthday: p.birthday,
@@ -212,6 +239,7 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
             place_of_birth: p.place_of_birth,
             imdb_id: p.imdb_id,
             homepage: p.homepage.and_then(|v| v.as_str().map(String::from)),
+            also_known_as: p.also_known_as,
         }
     }
 }
@@ -229,7 +257,7 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                 release_date: item.release_date,
                 poster_url: resolve_poster(&item.poster_path),
                 backdrop_url: resolve_backdrop(&item.backdrop_path),
-                genres: Vec::new(),
+                genres: item.genre_ids.iter().map(|&id| Genre::from_tmdb_id(id)).collect(),
                 popularity: item.popularity,
                 vote_average: item.vote_average,
                 vote_count: item.vote_count as u64,
@@ -244,12 +272,13 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                 first_air_date: item.release_date, // multi-search uses release_date for both
                 poster_url: resolve_poster(&item.poster_path),
                 backdrop_url: resolve_backdrop(&item.backdrop_path),
-                genres: Vec::new(),
+                genres: item.genre_ids.iter().map(|&id| Genre::from_tmdb_id(id)).collect(),
                 popularity: item.popularity,
                 vote_average: item.vote_average,
                 vote_count: item.vote_count as u64,
                 original_language: item.original_language,
                 origin_country: Vec::new(),
+                adult: item.adult,
             }),
             _ => UnifiedSearchResult::Person(UnifiedPerson {
                 provider_id: format!("tmdb:{}", item.id),
@@ -257,6 +286,8 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                 known_for_department: None,
                 profile_url: resolve_poster(&item.poster_path), // multi uses poster_path
                 popularity: item.popularity,
+                gender: None,
+                adult: item.adult,
             }),
         }
     }

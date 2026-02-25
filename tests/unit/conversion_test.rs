@@ -1,4 +1,5 @@
 use cameo::generated::tmdb::types;
+use cameo::unified::genre::Genre;
 use cameo::unified::models::*;
 
 fn make_search_movie() -> types::SearchMovieResponseResultsItem {
@@ -33,8 +34,8 @@ fn search_movie_to_unified() {
     assert!((unified.vote_average.unwrap() - 8.4).abs() < 0.01);
     assert_eq!(unified.original_language.as_deref(), Some("en"));
     assert!(!unified.adult);
-    // Genres are empty for list results (only IDs are returned)
-    assert!(unified.genres.is_empty());
+    // Genres now resolved from IDs (18=Drama, 53=Thriller)
+    assert_eq!(unified.genres, vec![Genre::Drama, Genre::Thriller]);
     // Image URLs should be resolved
     assert!(unified.poster_url.as_deref().unwrap().starts_with("https://image.tmdb.org/t/p/"));
     assert!(unified.backdrop_url.as_deref().unwrap().starts_with("https://image.tmdb.org/t/p/"));
@@ -48,6 +49,23 @@ fn search_movie_no_poster() {
     let unified: UnifiedMovie = raw.into();
     assert!(unified.poster_url.is_none());
     assert!(unified.backdrop_url.is_none());
+}
+
+#[test]
+fn search_movie_empty_genre_ids() {
+    let mut raw = make_search_movie();
+    raw.genre_ids = vec![];
+    let unified: UnifiedMovie = raw.into();
+    assert!(unified.genres.is_empty());
+}
+
+#[test]
+fn search_movie_unknown_genre_id() {
+    let mut raw = make_search_movie();
+    raw.genre_ids = vec![99999];
+    let unified: UnifiedMovie = raw.into();
+    assert_eq!(unified.genres.len(), 1);
+    assert!(matches!(unified.genres[0], Genre::Other(_)));
 }
 
 fn make_search_tv() -> types::SearchTvResponseResultsItem {
@@ -80,6 +98,10 @@ fn search_tv_to_unified() {
     assert_eq!(unified.origin_country, vec!["US"]);
     assert_eq!(unified.vote_count, 14000);
     assert!(unified.poster_url.is_some());
+    // adult field
+    assert!(!unified.adult);
+    // Genres from IDs (18=Drama, 80=Crime)
+    assert_eq!(unified.genres, vec![Genre::Drama, Genre::Crime]);
 }
 
 fn make_search_person() -> types::SearchPersonResponseResultsItem {
@@ -106,6 +128,9 @@ fn search_person_to_unified() {
     assert_eq!(unified.known_for_department.as_deref(), Some("Acting"));
     assert!(unified.profile_url.is_some());
     assert!(unified.profile_url.unwrap().starts_with("https://image.tmdb.org/t/p/"));
+    // New fields
+    assert_eq!(unified.gender, Some(2));
+    assert!(!unified.adult);
 }
 
 #[test]
@@ -121,7 +146,7 @@ fn search_multi_movie_type() {
         release_date: Some("1999-10-15".to_string()),
         poster_path: Some("/poster.jpg".to_string()),
         backdrop_path: None,
-        genre_ids: vec![],
+        genre_ids: vec![18],
         popularity: Some(73.4),
         vote_average: Some(8.4),
         vote_count: 26000,
@@ -135,6 +160,7 @@ fn search_multi_movie_type() {
         UnifiedSearchResult::Movie(m) => {
             assert_eq!(m.provider_id, "tmdb:550");
             assert_eq!(m.title, "Fight Club");
+            assert_eq!(m.genres, vec![Genre::Drama]);
         }
         other => panic!("expected Movie, got {:?}", other),
     }
@@ -167,6 +193,7 @@ fn search_multi_tv_type() {
         UnifiedSearchResult::TvShow(t) => {
             assert_eq!(t.provider_id, "tmdb:1396");
             assert_eq!(t.name, "Breaking Bad");
+            assert!(!t.adult);
         }
         other => panic!("expected TvShow, got {:?}", other),
     }

@@ -1,5 +1,9 @@
+use serde::{Deserialize, Serialize};
+
+use super::genre::Genre;
+
 /// A movie in the unified model.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedMovie {
     /// Provider-qualified ID (e.g. `"tmdb:550"`).
     pub provider_id: String,
@@ -15,8 +19,8 @@ pub struct UnifiedMovie {
     pub poster_url: Option<String>,
     /// Full backdrop image URL (resolved from provider).
     pub backdrop_url: Option<String>,
-    /// Genre names.
-    pub genres: Vec<String>,
+    /// Genres.
+    pub genres: Vec<Genre>,
     /// Popularity score.
     pub popularity: Option<f64>,
     /// Average vote score.
@@ -30,7 +34,7 @@ pub struct UnifiedMovie {
 }
 
 /// Detailed movie information in the unified model.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedMovieDetails {
     /// Base movie info.
     pub movie: UnifiedMovie,
@@ -54,10 +58,14 @@ pub struct UnifiedMovieDetails {
     pub production_countries: Vec<String>,
     /// Spoken languages.
     pub spoken_languages: Vec<String>,
+    /// Whether the movie has a video.
+    pub video: bool,
+    /// Name of the collection this movie belongs to, if any.
+    pub belongs_to_collection: Option<String>,
 }
 
 /// A TV show in the unified model.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedTvShow {
     /// Provider-qualified ID (e.g. `"tmdb:1396"`).
     pub provider_id: String,
@@ -73,8 +81,8 @@ pub struct UnifiedTvShow {
     pub poster_url: Option<String>,
     /// Full backdrop image URL.
     pub backdrop_url: Option<String>,
-    /// Genre names.
-    pub genres: Vec<String>,
+    /// Genres.
+    pub genres: Vec<Genre>,
     /// Popularity score.
     pub popularity: Option<f64>,
     /// Average vote score.
@@ -85,10 +93,12 @@ pub struct UnifiedTvShow {
     pub original_language: Option<String>,
     /// Origin countries.
     pub origin_country: Vec<String>,
+    /// Whether this is adult content.
+    pub adult: bool,
 }
 
 /// Detailed TV show information in the unified model.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedTvShowDetails {
     /// Base TV show info.
     pub show: UnifiedTvShow,
@@ -108,10 +118,22 @@ pub struct UnifiedTvShowDetails {
     pub networks: Vec<String>,
     /// Production companies.
     pub production_companies: Vec<String>,
+    /// Last air date as a string (YYYY-MM-DD).
+    pub last_air_date: Option<String>,
+    /// Type of show (e.g. "Scripted", "Reality").
+    pub type_: Option<String>,
+    /// Creators of the show.
+    pub created_by: Vec<String>,
+    /// Episode run times in minutes.
+    pub episode_run_time: Vec<u32>,
+    /// Spoken languages (English names).
+    pub spoken_languages: Vec<String>,
+    /// Production countries (ISO 3166-1 names).
+    pub production_countries: Vec<String>,
 }
 
 /// A person in the unified model.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedPerson {
     /// Provider-qualified ID (e.g. `"tmdb:287"`).
     pub provider_id: String,
@@ -123,10 +145,14 @@ pub struct UnifiedPerson {
     pub profile_url: Option<String>,
     /// Popularity score.
     pub popularity: Option<f64>,
+    /// Gender code (1=female, 2=male, 3=non-binary, 0=not specified).
+    pub gender: Option<i32>,
+    /// Whether this person is associated with adult content.
+    pub adult: bool,
 }
 
 /// Detailed person information in the unified model.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedPersonDetails {
     /// Base person info.
     pub person: UnifiedPerson,
@@ -142,10 +168,12 @@ pub struct UnifiedPersonDetails {
     pub imdb_id: Option<String>,
     /// Homepage URL.
     pub homepage: Option<String>,
+    /// Other names the person is known by.
+    pub also_known_as: Vec<String>,
 }
 
 /// A search result that can be a movie, TV show, or person.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UnifiedSearchResult {
     /// Movie result.
     Movie(UnifiedMovie),

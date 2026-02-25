@@ -8,8 +8,9 @@ description = "Unified movie/TV show database SDK for Rust"
 repository = "https://github.com/justin13888/cameo"
 
 [features]
-default = ["tmdb"]
+default = ["tmdb", "cache"]
 tmdb = []
+cache = ["dep:rusqlite", "dep:dirs"]
 live-tests = [] # Gate for tests that hit real TMDB API
 
 [dependencies]
@@ -32,6 +33,9 @@ url = "2"
 http = "1"
 # Logging
 tracing = "0.1"
+# Cache backend (optional)
+rusqlite = { version = "0.32", features = ["bundled"], optional = true }
+dirs = { version = "5", optional = true }
 
 [build-dependencies]
 progenitor = "0.11"
