@@ -7,8 +7,6 @@
 [![CI](https://github.com/justin13888/cameo/actions/workflows/ci.yml/badge.svg)](https://github.com/justin13888/cameo/actions)
 [![License](https://img.shields.io/crates/l/cameo.svg)](LICENSE-MIT)
 
----
-
 ## Overview
 
 cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the [TMDB API](https://developer.themoviedb.org/) behind a unified, ergonomic interface with type-safe models, transparent SQLite caching, and first-class pagination support.
@@ -22,8 +20,6 @@ cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the
 - Type-safe image URL resolution for poster, backdrop, profile, still, and logo sizes
 - 28-genre taxonomy spanning movies and TV, with `Genre::from_tmdb_id` mapping
 
----
-
 ## Installation
 
 ```toml
@@ -34,7 +30,7 @@ cameo = "0.1"
 ### Feature flags
 
 | Feature | Default | Description |
-|---------|---------|-------------|
+|||-|
 | `tmdb` | yes | TMDB provider support |
 | `cache` | yes | SQLite caching layer (requires `rusqlite`) |
 | `live-tests` | no | Gates tests that hit the real TMDB API |
@@ -44,8 +40,6 @@ cameo = "0.1"
 ```toml
 cameo = { version = "0.1", default-features = false, features = ["tmdb"] }
 ```
-
----
 
 ## Quick Start
 
@@ -67,8 +61,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
-
----
 
 ## Usage
 
@@ -189,7 +181,7 @@ let unknown = Genre::from_tmdb_id(99999);
 // Genre::Other(UnknownGenre::TmdbId(99999))
 ```
 
----
+
 
 ## TMDB Provider (Direct Access)
 
@@ -239,14 +231,14 @@ let profile = ImageUrl::profile("/path.jpg", ProfileSize::W185);
 **Available sizes:**
 
 | Type | Variants |
-|------|---------|
+|||
 | `PosterSize` | `W92`, `W154`, `W185`, `W342`, `W500`, `W780`, `Original` |
 | `BackdropSize` | `W300`, `W780`, `W1280`, `Original` |
 | `ProfileSize` | `W45`, `W185`, `H632`, `Original` |
 | `StillSize` | `W92`, `W185`, `W300`, `Original` |
 | `LogoSize` | `W45`, `W92`, `W154`, `W185`, `W300`, `W500`, `Original` |
 
----
+
 
 ## Caching
 
@@ -321,8 +313,6 @@ client.clear_cache().await;
 
 > **Note:** Cache errors are non-fatal. They are logged internally but do not cause API calls to fail.
 
----
-
 ## Error Handling
 
 All errors implement `std::error::Error` and work naturally with `?`.
@@ -358,12 +348,10 @@ match client.movie_details(999_999_999).await {
   - `Serialization(serde_json::Error)`
   - `Backend(...)` — storage-level error
 
----
-
 ## Data Models Reference
 
 | Type | Key fields |
-|------|-----------|
+||--|
 | `UnifiedMovie` | `provider_id`, `title`, `overview`, `release_date`, `poster_url`, `backdrop_url`, `genres`, `vote_average`, `vote_count`, `popularity` |
 | `UnifiedMovieDetails` | `movie: UnifiedMovie`, `tagline`, `runtime`, `budget`, `revenue`, `status`, `imdb_id`, `production_companies`, `belongs_to_collection` |
 | `UnifiedTvShow` | `provider_id`, `name`, `overview`, `first_air_date`, `poster_url`, `backdrop_url`, `genres`, `vote_average`, `origin_country` |
@@ -373,8 +361,6 @@ match client.movie_details(999_999_999).await {
 | `UnifiedSearchResult` | `Movie(UnifiedMovie)`, `TvShow(UnifiedTvShow)`, `Person(UnifiedPerson)` |
 
 **`provider_id` format:** `"tmdb:{id}"` — e.g. `"tmdb:550"` for Fight Club. All image fields (`poster_url`, `backdrop_url`, `profile_url`) are fully resolved HTTPS URLs.
-
----
 
 ## Traits Reference
 
@@ -396,13 +382,11 @@ where
 ```
 
 | Trait | Methods |
-|-------|---------|
+|-||
 | `SearchProvider` | `search_movies`, `search_tv_shows`, `search_people`, `search_multi` |
 | `DetailProvider` | `movie_details`, `tv_show_details`, `person_details` |
 | `DiscoveryProvider` | `trending_movies`, `trending_tv_shows`, `popular_movies`, `top_rated_movies` |
 | `MediaProvider` | Blanket — requires all three above |
-
----
 
 ## Architecture
 
@@ -415,14 +399,12 @@ CameoClient (unified facade)
 ```
 
 | Module | Purpose |
-|--------|---------|
+|--||
 | `cameo::unified` | `CameoClient` facade, traits, unified model types, `Genre` |
 | `cameo::providers::tmdb` | `TmdbClient`, `TmdbConfig`, `ImageUrl`, discover builders |
 | `cameo::cache` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig` |
 | `cameo::core` | `PaginatedResponse`, `into_stream`, `TimeWindow`, `CameoError` |
 | `cameo::generated` | Progenitor-generated low-level TMDB client (do not use directly) |
-
----
 
 ## Examples
 
@@ -436,8 +418,6 @@ cargo run --example discover
 cargo run --example unified_search -- "Breaking Bad"
 ```
 
----
-
 ## Testing
 
 ```bash
@@ -448,8 +428,6 @@ cargo test
 TMDB_API_TOKEN=your_token cargo test --features live-tests
 ```
 
----
-
 ## Contributing
 
 1. Clone the repo and run `cargo test` to verify your environment
@@ -457,8 +435,6 @@ TMDB_API_TOKEN=your_token cargo test --features live-tests
 3. All public API items must have `///` doc comments
 4. No `unwrap()` in library code — use `?` and proper error types
 5. Add tests for all public API surface (unit tests preferred; wiremock for network calls)
-
----
 
 ## License
 
