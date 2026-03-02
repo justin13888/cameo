@@ -39,10 +39,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Rating:   ★ {rating}/10 ({} votes)", movie.vote_count);
     println!("Runtime:  {} min", movie.runtime);
 
-    if let Some(tagline) = &movie.tagline {
-        if !tagline.is_empty() {
-            println!("Tagline:  \"{tagline}\"");
-        }
+    if let Some(tagline) = &movie.tagline
+        && !tagline.is_empty()
+    {
+        println!("Tagline:  \"{tagline}\"");
     }
 
     if !movie.genres.is_empty() {

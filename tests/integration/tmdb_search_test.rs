@@ -1,5 +1,3 @@
-use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
-
 #[cfg(feature = "live-tests")]
 fn token() -> String {
     std::env::var("TMDB_API_TOKEN").expect("TMDB_API_TOKEN must be set for live tests")
