@@ -40,14 +40,3 @@ cargo publish
 - Create a GitHub Release from the tag, using the relevant `CHANGELOG.md` section as release notes
 - Verify that <https://docs.rs/cameo/latest> resolves correctly (may take a few minutes to build)
 
-## First Publish (crates.io name registration)
-
-The crate name `cameo` must not already be taken. Verify at <https://crates.io/crates/cameo>.
-
-If the name is free, the first publish can be done manually:
-
-```sh
-cargo publish  # from a clean, tagged commit
-```
-
-Or by pushing a `v0.1.0` tag and letting the CD workflow handle it automatically.
