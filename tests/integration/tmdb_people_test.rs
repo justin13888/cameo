@@ -14,5 +14,11 @@ async fn live_person_details_brad_pitt() {
 
     assert_eq!(person.id, 287);
     assert_eq!(person.name.as_deref(), Some("Brad Pitt"));
-    assert!(person.biography.as_deref().map(|b| !b.is_empty()).unwrap_or(false));
+    assert!(
+        person
+            .biography
+            .as_deref()
+            .map(|b| !b.is_empty())
+            .unwrap_or(false)
+    );
 }

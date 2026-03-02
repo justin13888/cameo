@@ -1,14 +1,18 @@
 //! SQLite-backed cache implementation.
 
-use std::path::Path;
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::{
+    path::Path,
+    sync::{Arc, Mutex},
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
 use async_trait::async_trait;
 use rusqlite::{Connection, OptionalExtension, params};
 
-use super::backend::{CacheBackend, CacheError};
-use super::key::CacheKey;
+use super::{
+    backend::{CacheBackend, CacheError},
+    key::CacheKey,
+};
 
 const CREATE_TABLE: &str = "
 CREATE TABLE IF NOT EXISTS cache_entries (
@@ -35,15 +39,13 @@ pub struct SqliteCache {
 impl SqliteCache {
     /// Open or create a SQLite cache database at the given path.
     pub fn new(path: impl AsRef<Path>) -> Result<Self, CacheError> {
-        let conn = Connection::open(path)
-            .map_err(|e| CacheError::Backend(Box::new(e)))?;
+        let conn = Connection::open(path).map_err(|e| CacheError::Backend(Box::new(e)))?;
         Self::init(conn)
     }
 
     /// Create an in-memory SQLite cache (useful for testing).
     pub fn in_memory() -> Result<Self, CacheError> {
-        let conn =
-            Connection::open_in_memory().map_err(|e| CacheError::Backend(Box::new(e)))?;
+        let conn = Connection::open_in_memory().map_err(|e| CacheError::Backend(Box::new(e)))?;
         Self::init(conn)
     }
 
@@ -65,7 +67,7 @@ impl SqliteCache {
 
     /// Periodically purge expired rows (every ~100 writes).
     fn maybe_purge(conn: &Connection, count: u64) {
-        if count % 100 == 0 {
+        if count.is_multiple_of(100) {
             let now = Self::now_secs();
             let _ = conn.execute(
                 "DELETE FROM cache_entries WHERE expires_at < ?1",
@@ -143,9 +145,9 @@ impl CacheBackend for SqliteCache {
         let key_id = key.key_id();
 
         tokio::task::spawn_blocking(move || {
-            let conn = conn.lock().map_err(|e| {
-                CacheError::Backend(Box::from(format!("mutex poisoned: {e}")))
-            })?;
+            let conn = conn
+                .lock()
+                .map_err(|e| CacheError::Backend(Box::from(format!("mutex poisoned: {e}"))))?;
             conn.execute(
                 "DELETE FROM cache_entries WHERE key_type = ?1 AND key_id = ?2",
                 params![key_type, key_id],
@@ -161,9 +163,9 @@ impl CacheBackend for SqliteCache {
         let conn = Arc::clone(&self.conn);
 
         tokio::task::spawn_blocking(move || {
-            let conn = conn.lock().map_err(|e| {
-                CacheError::Backend(Box::from(format!("mutex poisoned: {e}")))
-            })?;
+            let conn = conn
+                .lock()
+                .map_err(|e| CacheError::Backend(Box::from(format!("mutex poisoned: {e}"))))?;
             conn.execute("DELETE FROM cache_entries", [])
                 .map_err(|e| CacheError::Backend(Box::new(e)))?;
             Ok(())

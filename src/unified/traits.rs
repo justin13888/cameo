@@ -1,11 +1,10 @@
 use async_trait::async_trait;
 
-use crate::core::pagination::PaginatedResponse;
-
 use super::models::{
     UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult,
     UnifiedTvShow, UnifiedTvShowDetails,
 };
+use crate::core::pagination::PaginatedResponse;
 
 /// Provider that can search for movies, TV shows, and people.
 #[async_trait]

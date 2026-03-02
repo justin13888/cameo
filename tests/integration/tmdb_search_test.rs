@@ -20,7 +20,10 @@ fn client() -> TmdbClient {
 async fn live_search_movies_returns_results() {
     let c = client();
     let resp = c.search_movies("Inception", None).await.unwrap();
-    assert!(resp.total_results > 0, "Should find results for 'Inception'");
+    assert!(
+        resp.total_results > 0,
+        "Should find results for 'Inception'"
+    );
     assert!(!resp.results.is_empty(), "First page should have results");
 
     let first = &resp.results[0];

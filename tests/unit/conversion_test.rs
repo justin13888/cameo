@@ -1,6 +1,7 @@
-use cameo::generated::tmdb::types;
-use cameo::unified::genre::Genre;
-use cameo::unified::models::*;
+use cameo::{
+    generated::tmdb::types,
+    unified::{genre::Genre, models::*},
+};
 
 fn make_search_movie() -> types::SearchMovieResponseResultsItem {
     types::SearchMovieResponseResultsItem {
@@ -37,8 +38,20 @@ fn search_movie_to_unified() {
     // Genres now resolved from IDs (18=Drama, 53=Thriller)
     assert_eq!(unified.genres, vec![Genre::Drama, Genre::Thriller]);
     // Image URLs should be resolved
-    assert!(unified.poster_url.as_deref().unwrap().starts_with("https://image.tmdb.org/t/p/"));
-    assert!(unified.backdrop_url.as_deref().unwrap().starts_with("https://image.tmdb.org/t/p/"));
+    assert!(
+        unified
+            .poster_url
+            .as_deref()
+            .unwrap()
+            .starts_with("https://image.tmdb.org/t/p/")
+    );
+    assert!(
+        unified
+            .backdrop_url
+            .as_deref()
+            .unwrap()
+            .starts_with("https://image.tmdb.org/t/p/")
+    );
 }
 
 #[test]
@@ -127,7 +140,12 @@ fn search_person_to_unified() {
     assert_eq!(unified.name, "Brad Pitt");
     assert_eq!(unified.known_for_department.as_deref(), Some("Acting"));
     assert!(unified.profile_url.is_some());
-    assert!(unified.profile_url.unwrap().starts_with("https://image.tmdb.org/t/p/"));
+    assert!(
+        unified
+            .profile_url
+            .unwrap()
+            .starts_with("https://image.tmdb.org/t/p/")
+    );
     // New fields
     assert_eq!(unified.gender, Some(2));
     assert!(!unified.adult);

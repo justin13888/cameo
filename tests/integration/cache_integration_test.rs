@@ -2,12 +2,15 @@
 
 use std::sync::Arc;
 
-use wiremock::matchers::{method, path, query_param};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-
-use cameo::cache::SqliteCache;
-use cameo::providers::tmdb::TmdbConfig;
-use cameo::unified::{CameoClient, SearchProvider, DetailProvider};
+use cameo::{
+    cache::SqliteCache,
+    providers::tmdb::TmdbConfig,
+    unified::{CameoClient, DetailProvider, SearchProvider},
+};
+use wiremock::{
+    Mock, MockServer, ResponseTemplate,
+    matchers::{method, path, query_param},
+};
 
 fn search_movie_fixture() -> &'static str {
     include_str!("../fixtures/search_movie_response.json")
@@ -37,7 +40,9 @@ async fn search_result_is_cached_second_call_skips_server() {
     Mock::given(method("GET"))
         .and(path("/3/search/movie"))
         .and(query_param("query", "fight club"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(search_movie_fixture(), "application/json"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(search_movie_fixture(), "application/json"),
+        )
         .expect(1) // must only be called ONCE
         .mount(&server)
         .await;
@@ -59,7 +64,9 @@ async fn search_indexes_individual_items_into_item_cache() {
     Mock::given(method("GET"))
         .and(path("/3/search/movie"))
         .and(query_param("query", "fight club"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(search_movie_fixture(), "application/json"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(search_movie_fixture(), "application/json"),
+        )
         .mount(&server)
         .await;
 
@@ -81,7 +88,9 @@ async fn detail_result_is_cached_second_call_skips_server() {
 
     Mock::given(method("GET"))
         .and(path("/3/movie/550"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(movie_details_fixture(), "application/json"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(movie_details_fixture(), "application/json"),
+        )
         .expect(1)
         .mount(&server)
         .await;
@@ -99,7 +108,9 @@ async fn detail_fetch_populates_both_detail_and_item_caches() {
 
     Mock::given(method("GET"))
         .and(path("/3/movie/550"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(movie_details_fixture(), "application/json"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(movie_details_fixture(), "application/json"),
+        )
         .mount(&server)
         .await;
 
@@ -111,7 +122,10 @@ async fn detail_fetch_populates_both_detail_and_item_caches() {
 
     // Item cache should also be populated.
     let item = client.cached_movie("tmdb:550").await;
-    assert!(item.is_some(), "item cache should be populated after detail fetch");
+    assert!(
+        item.is_some(),
+        "item cache should be populated after detail fetch"
+    );
 }
 
 // ── Cache miss cases ──────────────────────────────────────────────────────────
@@ -123,7 +137,9 @@ async fn cached_movie_details_returns_none_if_only_search_was_done() {
 
     Mock::given(method("GET"))
         .and(path("/3/search/movie"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(search_movie_fixture(), "application/json"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(search_movie_fixture(), "application/json"),
+        )
         .mount(&server)
         .await;
 
@@ -132,7 +148,10 @@ async fn cached_movie_details_returns_none_if_only_search_was_done() {
 
     // Item should be in cache, but NOT the full details.
     let detail = client.cached_movie_details("tmdb:550").await;
-    assert!(detail.is_none(), "details should not be available after search-only");
+    assert!(
+        detail.is_none(),
+        "details should not be available after search-only"
+    );
 }
 
 // ── Invalidation ─────────────────────────────────────────────────────────────
@@ -144,7 +163,9 @@ async fn invalidate_cached_removes_all_entries_for_provider_id() {
 
     Mock::given(method("GET"))
         .and(path("/3/movie/550"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(movie_details_fixture(), "application/json"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(movie_details_fixture(), "application/json"),
+        )
         .mount(&server)
         .await;
 
@@ -167,7 +188,9 @@ async fn clear_cache_empties_everything() {
 
     Mock::given(method("GET"))
         .and(path("/3/movie/550"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(movie_details_fixture(), "application/json"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(movie_details_fixture(), "application/json"),
+        )
         .mount(&server)
         .await;
 

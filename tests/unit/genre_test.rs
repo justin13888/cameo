@@ -86,13 +86,19 @@ fn known_names_round_trip() {
 fn from_name_is_case_insensitive() {
     assert_eq!(Genre::from_name("DRAMA"), Genre::Drama);
     assert_eq!(Genre::from_name("science fiction"), Genre::ScienceFiction);
-    assert_eq!(Genre::from_name("Action & Adventure"), Genre::ActionAdventure);
+    assert_eq!(
+        Genre::from_name("Action & Adventure"),
+        Genre::ActionAdventure
+    );
 }
 
 #[test]
 fn unknown_name_becomes_other() {
     let g = Genre::from_name("Superhero");
-    assert_eq!(g, Genre::Other(UnknownGenre::Named("superhero".to_string())));
+    assert_eq!(
+        g,
+        Genre::Other(UnknownGenre::Named("superhero".to_string()))
+    );
 }
 
 // ── name() / Display ──
@@ -123,7 +129,11 @@ fn unknown_tmdb_id_genre_display() {
 
 #[test]
 fn genre_serde_round_trip() {
-    let genres = vec![Genre::Drama, Genre::ScienceFiction, Genre::Other(UnknownGenre::TmdbId(12345))];
+    let genres = vec![
+        Genre::Drama,
+        Genre::ScienceFiction,
+        Genre::Other(UnknownGenre::TmdbId(12345)),
+    ];
     let json = serde_json::to_string(&genres).unwrap();
     let parsed: Vec<Genre> = serde_json::from_str(&json).unwrap();
     assert_eq!(genres, parsed);

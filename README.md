@@ -438,8 +438,7 @@ TMDB_API_TOKEN=your_token cargo test --features live-tests
 
 ## MSRV
 
-The minimum supported Rust version is 1.93.1 because it is primarily used by [Beam](https://github.com/justin13888/beam) which uses relatively new syntax. We will not bump this version unless something major comes up. In theory, this crate does not use much modern features though besides Rust edition 2024.
-
+We don't have an MSRV because this crate does not use any modern features besides Rust edition 2024. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
 ## License
 
 Licensed under either of:

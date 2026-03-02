@@ -8,13 +8,12 @@ pub mod backend;
 pub mod key;
 pub mod sqlite;
 
-pub use backend::{CacheBackend, CacheError};
-pub use key::{CacheKey, MediaType};
-pub use sqlite::SqliteCache;
-
 use std::time::Duration;
 
+pub use backend::{CacheBackend, CacheError};
 use chrono::{NaiveDate, Utc};
+pub use key::{CacheKey, MediaType};
+pub use sqlite::SqliteCache;
 
 /// TTL configuration for the cache layer.
 ///
@@ -33,7 +32,6 @@ pub struct CacheTtlConfig {
     pub items: Duration,
 
     // ── Age-aware policy fields ──────────────────────────────────────────────
-
     /// Content is considered "old" when its release/air date is at least this
     /// many days in the past (default: 1095 = ~3 years).
     pub old_content_threshold_days: u32,
@@ -57,16 +55,16 @@ pub struct CacheTtlConfig {
 impl Default for CacheTtlConfig {
     fn default() -> Self {
         Self {
-            details: Duration::from_secs(24 * 3600),    // 24 hours (fallback)
-            search: Duration::from_secs(3600),           // 1 hour
-            discovery: Duration::from_secs(15 * 60),     // 15 minutes
-            items: Duration::from_secs(6 * 3600),        // 6 hours
-            old_content_threshold_days: 1095,            // ~3 years
-            recent_content_threshold_days: 180,          // ~6 months
-            old_content_details_ttl: Duration::from_secs(7 * 24 * 3600),  // 7 days
-            recent_content_details_ttl: Duration::from_secs(6 * 3600),    // 6 hours
-            active_content_details_ttl: Duration::from_secs(4 * 3600),    // 4 hours
-            volatile_ttl: Duration::from_secs(3600),                       // 1 hour
+            details: Duration::from_secs(24 * 3600), // 24 hours (fallback)
+            search: Duration::from_secs(3600),       // 1 hour
+            discovery: Duration::from_secs(15 * 60), // 15 minutes
+            items: Duration::from_secs(6 * 3600),    // 6 hours
+            old_content_threshold_days: 1095,        // ~3 years
+            recent_content_threshold_days: 180,      // ~6 months
+            old_content_details_ttl: Duration::from_secs(7 * 24 * 3600), // 7 days
+            recent_content_details_ttl: Duration::from_secs(6 * 3600), // 6 hours
+            active_content_details_ttl: Duration::from_secs(4 * 3600), // 4 hours
+            volatile_ttl: Duration::from_secs(3600), // 1 hour
         }
     }
 }
@@ -90,12 +88,10 @@ impl CacheTtlConfig {
     ///    [`recent_content_threshold_days`](CacheTtlConfig::recent_content_threshold_days)
     ///    → [`recent_content_details_ttl`](CacheTtlConfig::recent_content_details_ttl)
     /// 3. Fallback → [`details`](CacheTtlConfig::details)
-    pub fn movie_details_ttl(
-        &self,
-        release_date: Option<&str>,
-        status: Option<&str>,
-    ) -> Duration {
-        let release_days = release_date.and_then(Self::parse_date).map(Self::days_since);
+    pub fn movie_details_ttl(&self, release_date: Option<&str>, status: Option<&str>) -> Duration {
+        let release_days = release_date
+            .and_then(Self::parse_date)
+            .map(Self::days_since);
 
         let is_released = status.map(|s| s == "Released").unwrap_or(false);
         let is_old = release_days
@@ -140,15 +136,18 @@ impl CacheTtlConfig {
         status: Option<&str>,
         in_production: bool,
     ) -> Duration {
-        let last_air_days = last_air_date.and_then(Self::parse_date).map(Self::days_since);
+        let last_air_days = last_air_date
+            .and_then(Self::parse_date)
+            .map(Self::days_since);
         let recently_aired = last_air_days.map(|d| d <= 90).unwrap_or(false);
 
         if in_production || recently_aired {
             return self.active_content_details_ttl;
         }
 
-        let first_air_days =
-            first_air_date.and_then(Self::parse_date).map(Self::days_since);
+        let first_air_days = first_air_date
+            .and_then(Self::parse_date)
+            .map(Self::days_since);
         let is_ended = matches!(status, Some("Ended") | Some("Canceled"));
         let is_old = first_air_days
             .map(|d| d > self.old_content_threshold_days as i64)

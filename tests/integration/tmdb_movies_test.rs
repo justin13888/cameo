@@ -1,7 +1,8 @@
-use wiremock::matchers::{header, method, path, query_param};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-
 use cameo::generated::tmdb::Client as GeneratedClient;
+use wiremock::{
+    Mock, MockServer, ResponseTemplate,
+    matchers::{header, method, path, query_param},
+};
 
 fn search_movie_fixture() -> &'static str {
     include_str!("../fixtures/search_movie_response.json")
@@ -19,7 +20,10 @@ async fn setup_mock_client() -> (MockServer, GeneratedClient) {
         reqwest::header::AUTHORIZATION,
         reqwest::header::HeaderValue::from_static("Bearer test-token"),
     );
-    let http = reqwest::ClientBuilder::new().default_headers(headers).build().unwrap();
+    let http = reqwest::ClientBuilder::new()
+        .default_headers(headers)
+        .build()
+        .unwrap();
     let client = GeneratedClient::new_with_client(&server.uri(), http);
     (server, client)
 }
@@ -32,8 +36,7 @@ async fn search_movie_deserializes_response() {
         .and(path("/3/search/movie"))
         .and(query_param("query", "fight club"))
         .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_raw(search_movie_fixture(), "application/json"),
+            ResponseTemplate::new(200).set_body_raw(search_movie_fixture(), "application/json"),
         )
         .mount(&server)
         .await;
@@ -61,8 +64,7 @@ async fn movie_details_deserializes_response() {
     Mock::given(method("GET"))
         .and(path("/3/movie/550"))
         .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_raw(movie_details_fixture(), "application/json"),
+            ResponseTemplate::new(200).set_body_raw(movie_details_fixture(), "application/json"),
         )
         .mount(&server)
         .await;
@@ -87,8 +89,7 @@ async fn bearer_token_is_sent() {
         .and(path("/3/search/movie"))
         .and(header("authorization", "Bearer test-token"))
         .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_raw(search_movie_fixture(), "application/json"),
+            ResponseTemplate::new(200).set_body_raw(search_movie_fixture(), "application/json"),
         )
         .mount(&server)
         .await;

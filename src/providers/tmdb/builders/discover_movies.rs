@@ -1,11 +1,10 @@
 use chrono::NaiveDate;
 
-use crate::core::pagination::PaginatedResponse;
-use crate::generated::tmdb::types::{
-    DiscoverMovieResponseResultsItem, DiscoverMovieSortBy,
+use crate::{
+    core::pagination::PaginatedResponse,
+    generated::tmdb::types::{DiscoverMovieResponseResultsItem, DiscoverMovieSortBy},
+    providers::tmdb::{TmdbClient, error::TmdbError},
 };
-use crate::providers::tmdb::error::TmdbError;
-use crate::providers::tmdb::TmdbClient;
 
 /// Builder for discovering movies with flexible filters.
 ///

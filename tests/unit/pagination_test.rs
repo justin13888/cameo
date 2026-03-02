@@ -1,8 +1,13 @@
-use cameo::core::pagination::{into_stream, PaginatedResponse};
+use cameo::core::pagination::{PaginatedResponse, into_stream};
 use futures::StreamExt;
 
 fn make_page(page: u32, total: u32, items: Vec<u32>) -> PaginatedResponse<u32> {
-    PaginatedResponse { page, results: items, total_pages: total, total_results: total * 2 }
+    PaginatedResponse {
+        page,
+        results: items,
+        total_pages: total,
+        total_results: total * 2,
+    }
 }
 
 #[test]

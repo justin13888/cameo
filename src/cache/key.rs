@@ -38,10 +38,7 @@ pub enum CacheKey {
         page: u32,
     },
     /// Discovery/list results page: (endpoint name, page).
-    Discovery {
-        endpoint: String,
-        page: u32,
-    },
+    Discovery { endpoint: String, page: u32 },
 }
 
 impl CacheKey {
@@ -59,13 +56,23 @@ impl CacheKey {
     /// primary key, uniquely identifying the entry within its `key_type`.
     pub fn key_id(&self) -> String {
         match self {
-            CacheKey::Detail { media_type, provider_id } => {
+            CacheKey::Detail {
+                media_type,
+                provider_id,
+            } => {
                 format!("{}:{}", media_type.as_str(), provider_id)
             }
-            CacheKey::Item { media_type, provider_id } => {
+            CacheKey::Item {
+                media_type,
+                provider_id,
+            } => {
                 format!("{}:{}", media_type.as_str(), provider_id)
             }
-            CacheKey::Search { media_type, query, page } => {
+            CacheKey::Search {
+                media_type,
+                query,
+                page,
+            } => {
                 let mt = media_type.map_or("multi", |m| m.as_str());
                 format!("{}:{}:{}", mt, normalize_query(query), page)
             }

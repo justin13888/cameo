@@ -22,7 +22,11 @@ impl<T> PaginatedResponse<T> {
 
     /// Returns the next page number, or `None` if this is the last page.
     pub fn next_page(&self) -> Option<u32> {
-        if self.has_next_page() { Some(self.page + 1) } else { None }
+        if self.has_next_page() {
+            Some(self.page + 1)
+        } else {
+            None
+        }
     }
 }
 

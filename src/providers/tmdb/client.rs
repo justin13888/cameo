@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use tokio::sync::Semaphore;
 
-use crate::core::config::TimeWindow;
-use crate::core::pagination::PaginatedResponse;
-use crate::generated::tmdb::{self, types};
-
 use super::error::TmdbError;
+use crate::{
+    core::{config::TimeWindow, pagination::PaginatedResponse},
+    generated::tmdb::{self, types},
+};
 
 const TMDB_BASE_URL: &str = "https://api.themoviedb.org";
 const DEFAULT_RATE_LIMIT: u32 = 40;
@@ -306,10 +306,7 @@ impl TmdbClient {
         &self,
         movie_id: i32,
     ) -> Result<types::MovieCreditsResponse, TmdbError> {
-        let resp = self
-            .inner
-            .movie_credits(movie_id, self.language())
-            .await?;
+        let resp = self.inner.movie_credits(movie_id, self.language()).await?;
         Ok(resp.into_inner())
     }
 
@@ -376,11 +373,7 @@ impl TmdbClient {
     ) -> Result<PaginatedResponse<types::MoviePopularListResponseResultsItem>, TmdbError> {
         let resp = self
             .inner
-            .movie_popular_list(
-                self.language(),
-                page.map(|p| p as i32),
-                self.region(),
-            )
+            .movie_popular_list(self.language(), page.map(|p| p as i32), self.region())
             .await?;
         let body = resp.into_inner();
         Ok(PaginatedResponse {
@@ -398,11 +391,7 @@ impl TmdbClient {
     ) -> Result<PaginatedResponse<types::MovieTopRatedListResponseResultsItem>, TmdbError> {
         let resp = self
             .inner
-            .movie_top_rated_list(
-                self.language(),
-                page.map(|p| p as i32),
-                self.region(),
-            )
+            .movie_top_rated_list(self.language(), page.map(|p| p as i32), self.region())
             .await?;
         let body = resp.into_inner();
         Ok(PaginatedResponse {
@@ -416,17 +405,13 @@ impl TmdbClient {
     // ── Genres ──
 
     /// Get the list of official movie genres.
-    pub async fn movie_genres(
-        &self,
-    ) -> Result<types::GenreMovieListResponse, TmdbError> {
+    pub async fn movie_genres(&self) -> Result<types::GenreMovieListResponse, TmdbError> {
         let resp = self.inner.genre_movie_list(self.language()).await?;
         Ok(resp.into_inner())
     }
 
     /// Get the list of official TV show genres.
-    pub async fn tv_genres(
-        &self,
-    ) -> Result<types::GenreTvListResponse, TmdbError> {
+    pub async fn tv_genres(&self) -> Result<types::GenreTvListResponse, TmdbError> {
         let resp = self.inner.genre_tv_list(self.language()).await?;
         Ok(resp.into_inner())
     }

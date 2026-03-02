@@ -42,10 +42,9 @@ pub mod unified;
 /// Re-export the most common types.
 pub use core::error::CameoError;
 pub use core::pagination::PaginatedResponse;
-pub use unified::{CameoClient, CameoClientBuilder};
-
-#[cfg(feature = "tmdb")]
-pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
 
 #[cfg(feature = "cache")]
 pub use cache::{CacheBackend, CacheError, CacheTtlConfig, SqliteCache};
+#[cfg(feature = "tmdb")]
+pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
+pub use unified::{CameoClient, CameoClientBuilder};

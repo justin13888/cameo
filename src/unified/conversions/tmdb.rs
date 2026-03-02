@@ -1,20 +1,24 @@
 //! Conversions from TMDB generated types to unified models.
 
-use crate::generated::tmdb::types;
-use crate::providers::tmdb::image_url::{BackdropSize, ImageUrl, PosterSize, ProfileSize};
-use crate::unified::genre::Genre;
-use crate::unified::models::*;
+use crate::{
+    generated::tmdb::types,
+    providers::tmdb::image_url::{BackdropSize, ImageUrl, PosterSize, ProfileSize},
+    unified::{genre::Genre, models::*},
+};
 
 fn resolve_poster(path: &Option<String>) -> Option<String> {
-    path.as_deref().map(|p| ImageUrl::poster(p, PosterSize::W500))
+    path.as_deref()
+        .map(|p| ImageUrl::poster(p, PosterSize::W500))
 }
 
 fn resolve_backdrop(path: &Option<String>) -> Option<String> {
-    path.as_deref().map(|p| ImageUrl::backdrop(p, BackdropSize::W780))
+    path.as_deref()
+        .map(|p| ImageUrl::backdrop(p, BackdropSize::W780))
 }
 
 fn resolve_profile(path: &Option<String>) -> Option<String> {
-    path.as_deref().map(|p| ImageUrl::profile(p, ProfileSize::H632))
+    path.as_deref()
+        .map(|p| ImageUrl::profile(p, ProfileSize::H632))
 }
 
 // ── Movie conversions ──
@@ -33,7 +37,11 @@ macro_rules! impl_movie_from {
                     release_date: m.release_date,
                     poster_url: resolve_poster(&m.poster_path),
                     backdrop_url: resolve_backdrop(&m.backdrop_path),
-                    genres: m.genre_ids.iter().map(|&id| Genre::from_tmdb_id(id)).collect(),
+                    genres: m
+                        .genre_ids
+                        .iter()
+                        .map(|&id| Genre::from_tmdb_id(id))
+                        .collect(),
                     popularity: m.popularity,
                     vote_average: m.vote_average,
                     vote_count: m.vote_count as u64,
@@ -69,7 +77,12 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
                 release_date: m.release_date,
                 poster_url: resolve_poster(&m.poster_path),
                 backdrop_url: resolve_backdrop(&m.backdrop_path),
-                genres: m.genres.iter().filter_map(|g| g.name.as_deref()).map(Genre::from_name).collect(),
+                genres: m
+                    .genres
+                    .iter()
+                    .filter_map(|g| g.name.as_deref())
+                    .map(Genre::from_name)
+                    .collect(),
                 popularity: m.popularity,
                 vote_average: m.vote_average,
                 vote_count: m.vote_count as u64,
@@ -77,9 +90,21 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
                 adult: m.adult,
             },
             tagline: m.tagline,
-            runtime: if m.runtime > 0 { Some(m.runtime as u32) } else { None },
-            budget: if m.budget > 0 { Some(m.budget as u64) } else { None },
-            revenue: if m.revenue > 0 { Some(m.revenue as u64) } else { None },
+            runtime: if m.runtime > 0 {
+                Some(m.runtime as u32)
+            } else {
+                None
+            },
+            budget: if m.budget > 0 {
+                Some(m.budget as u64)
+            } else {
+                None
+            },
+            revenue: if m.revenue > 0 {
+                Some(m.revenue as u64)
+            } else {
+                None
+            },
             status: m.status,
             homepage: m.homepage,
             imdb_id: m.imdb_id,
@@ -118,7 +143,11 @@ macro_rules! impl_tv_from {
                     first_air_date: t.first_air_date,
                     poster_url: resolve_poster(&t.poster_path),
                     backdrop_url: resolve_backdrop(&t.backdrop_path),
-                    genres: t.genre_ids.iter().map(|&id| Genre::from_tmdb_id(id)).collect(),
+                    genres: t
+                        .genre_ids
+                        .iter()
+                        .map(|&id| Genre::from_tmdb_id(id))
+                        .collect(),
                     popularity: t.popularity,
                     vote_average: t.vote_average,
                     vote_count: t.vote_count as u64,
@@ -145,9 +174,17 @@ impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
             first_air_date: t.first_air_date,
             poster_url: resolve_poster(&t.poster_path),
             backdrop_url: resolve_backdrop(&t.backdrop_path),
-            genres: t.genre_ids.iter().map(|&id| Genre::from_tmdb_id(id)).collect(),
+            genres: t
+                .genre_ids
+                .iter()
+                .map(|&id| Genre::from_tmdb_id(id))
+                .collect(),
             popularity: t.popularity,
-            vote_average: if t.vote_average != 0 { Some(t.vote_average as f64) } else { None },
+            vote_average: if t.vote_average != 0 {
+                Some(t.vote_average as f64)
+            } else {
+                None
+            },
             vote_count: t.vote_count as u64,
             original_language: t.original_language,
             origin_country: t.origin_country,
@@ -167,7 +204,12 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 first_air_date: t.first_air_date.clone(),
                 poster_url: resolve_poster(&t.poster_path),
                 backdrop_url: resolve_backdrop(&t.backdrop_path),
-                genres: t.genres.iter().filter_map(|g| g.name.as_deref()).map(Genre::from_name).collect(),
+                genres: t
+                    .genres
+                    .iter()
+                    .filter_map(|g| g.name.as_deref())
+                    .map(Genre::from_name)
+                    .collect(),
                 popularity: t.popularity,
                 vote_average: t.vote_average,
                 vote_count: t.vote_count as u64,
@@ -257,7 +299,11 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                 release_date: item.release_date,
                 poster_url: resolve_poster(&item.poster_path),
                 backdrop_url: resolve_backdrop(&item.backdrop_path),
-                genres: item.genre_ids.iter().map(|&id| Genre::from_tmdb_id(id)).collect(),
+                genres: item
+                    .genre_ids
+                    .iter()
+                    .map(|&id| Genre::from_tmdb_id(id))
+                    .collect(),
                 popularity: item.popularity,
                 vote_average: item.vote_average,
                 vote_count: item.vote_count as u64,
@@ -272,7 +318,11 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                 first_air_date: item.release_date, // multi-search uses release_date for both
                 poster_url: resolve_poster(&item.poster_path),
                 backdrop_url: resolve_backdrop(&item.backdrop_path),
-                genres: item.genre_ids.iter().map(|&id| Genre::from_tmdb_id(id)).collect(),
+                genres: item
+                    .genre_ids
+                    .iter()
+                    .map(|&id| Genre::from_tmdb_id(id))
+                    .collect(),
                 popularity: item.popularity,
                 vote_average: item.vote_average,
                 vote_count: item.vote_count as u64,

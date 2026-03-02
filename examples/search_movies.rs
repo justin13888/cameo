@@ -6,8 +6,8 @@ use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("TMDB_API_TOKEN")
-        .expect("TMDB_API_TOKEN environment variable must be set");
+    let token =
+        std::env::var("TMDB_API_TOKEN").expect("TMDB_API_TOKEN environment variable must be set");
 
     let args: Vec<String> = std::env::args().collect();
     let query = args.get(1).map(String::as_str).unwrap_or("Inception");
@@ -45,7 +45,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map(|p| format!("{:.1}", p))
             .unwrap_or_else(|| "N/A".to_string());
 
-        println!("  [{year}] {title}  ★ {rating}  ↑ {popularity}  (id: {})", movie.id);
+        println!(
+            "  [{year}] {title}  ★ {rating}  ↑ {popularity}  (id: {})",
+            movie.id
+        );
         if let Some(overview) = &movie.overview {
             let truncated: String = overview.chars().take(100).collect();
             let suffix = if overview.len() > 100 { "…" } else { "" };
