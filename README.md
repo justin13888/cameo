@@ -438,7 +438,7 @@ TMDB_API_TOKEN=your_token cargo test --features live-tests
 
 ## MSRV
 
-We don't have an MSRV because this crate does not use any modern features besides Rust edition 2024. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
+The minimum supported Rust version is **1.88**. This crate uses [let-chains](https://blog.rust-lang.org/2024/09/05/Rust-1.88.0.html#let-chains) (`if let A = x && let B = y`) which were stabilized in Rust 1.88. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
 ## License
 
 Licensed under either of:
