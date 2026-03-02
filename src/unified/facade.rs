@@ -633,11 +633,15 @@ impl DetailProvider for CameoClient {
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
+                let detail_ttl = cache.ttl.movie_details_ttl(
+                    details.movie.release_date.as_deref(),
+                    details.status.as_deref(),
+                );
                 let detail_key = CacheKey::Detail {
                     media_type: MediaType::Movie,
                     provider_id: provider_id.clone(),
                 };
-                cache.set(detail_key, &details, cache.ttl.details).await;
+                cache.set(detail_key, &details, detail_ttl).await;
                 // Also index the base item.
                 let item_key = CacheKey::Item {
                     media_type: MediaType::Movie,
@@ -677,11 +681,17 @@ impl DetailProvider for CameoClient {
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
+                let detail_ttl = cache.ttl.tv_show_details_ttl(
+                    details.show.first_air_date.as_deref(),
+                    details.last_air_date.as_deref(),
+                    details.status.as_deref(),
+                    details.in_production,
+                );
                 let detail_key = CacheKey::Detail {
                     media_type: MediaType::TvShow,
                     provider_id: provider_id.clone(),
                 };
-                cache.set(detail_key, &details, cache.ttl.details).await;
+                cache.set(detail_key, &details, detail_ttl).await;
                 let item_key = CacheKey::Item {
                     media_type: MediaType::TvShow,
                     provider_id,
