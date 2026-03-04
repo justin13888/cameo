@@ -4,6 +4,7 @@ use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 
 use super::{
+    config::AniListConfig,
     error::AniListError,
     query,
     response::{
@@ -22,58 +23,11 @@ use crate::{
     },
 };
 
-const DEFAULT_PER_PAGE: u32 = 20;
-
 /// AniList format strings for anime that map to the "movie" media type.
 const MOVIE_FORMATS: &[&str] = &["MOVIE"];
 
 /// AniList format strings for anime that map to the "TV show" media type.
 const TV_FORMATS: &[&str] = &["TV", "TV_SHORT", "ONA", "OVA", "SPECIAL"];
-
-// ── Configuration ──────────────────────────────────────────────────────────────
-
-/// Configuration for the [`AniListClient`].
-#[derive(Debug, Clone)]
-pub struct AniListConfig {
-    /// Base URL for the AniList GraphQL endpoint.
-    ///
-    /// Defaults to `https://graphql.anilist.co`.  Override for testing.
-    pub base_url: String,
-    /// Number of results returned per page (default: 20, max: 50).
-    pub per_page: u32,
-}
-
-impl Default for AniListConfig {
-    fn default() -> Self {
-        Self {
-            base_url: "https://graphql.anilist.co".to_string(),
-            per_page: DEFAULT_PER_PAGE,
-        }
-    }
-}
-
-impl AniListConfig {
-    /// Create a new config with default settings.
-    ///
-    /// No authentication is required for AniList public data.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Create a config with a custom base URL (useful for testing with mock servers).
-    pub fn new_with_base_url(base_url: impl Into<String>) -> Self {
-        Self {
-            base_url: base_url.into(),
-            ..Self::default()
-        }
-    }
-
-    /// Set the number of results per page.
-    pub fn with_per_page(mut self, per_page: u32) -> Self {
-        self.per_page = per_page;
-        self
-    }
-}
 
 // ── Client ─────────────────────────────────────────────────────────────────────
 

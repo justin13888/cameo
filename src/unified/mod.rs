@@ -9,7 +9,7 @@ pub mod models;
 /// Provider traits.
 pub mod traits;
 
-pub use facade::{CameoClient, CameoClientBuilder};
+pub use facade::{CameoClient, CameoClientBuilder, CameoClientError};
 pub use genre::{Genre, UnknownGenre};
 pub use models::*;
 pub use traits::{DetailProvider, DiscoveryProvider, MediaProvider, SearchProvider};

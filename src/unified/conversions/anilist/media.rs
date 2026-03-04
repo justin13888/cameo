@@ -1,19 +1,17 @@
-//! Conversions from AniList GraphQL response types to unified models.
+//! AniList media → unified model conversions.
 
 use crate::{
-    providers::anilist::response::{
-        AniListMedia, AniListMediaDetail, AniListStaff, AniListStaffDetail,
-    },
+    providers::anilist::response::{AniListMedia, AniListMediaDetail},
     unified::{
         genre::Genre,
         models::{
-            UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
-            UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
+            UnifiedMovie, UnifiedMovieDetails, UnifiedSearchResult, UnifiedTvShow,
+            UnifiedTvShowDetails,
         },
     },
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Private helpers ───────────────────────────────────────────────────────────
 
 /// Resolve the best English title from an AniList media entry.
 fn resolve_title(media: &AniListMedia) -> String {
@@ -259,258 +257,16 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
     }
 }
 
-// ── AniListStaff → UnifiedPerson ──────────────────────────────────────────────
-
-/// Convert an AniList staff member to a [`UnifiedPerson`].
-pub fn staff_to_person(s: AniListStaff) -> UnifiedPerson {
-    let department = s
-        .primary_occupations
-        .as_deref()
-        .and_then(|occ| occ.first())
-        .map(|occ| normalize_occupation(occ));
-
-    UnifiedPerson {
-        provider_id: format!("anilist:staff:{}", s.id),
-        name: s
-            .name
-            .as_ref()
-            .and_then(|n| n.full.clone())
-            .unwrap_or_default(),
-        known_for_department: department,
-        profile_url: s.image.and_then(|i| i.large),
-        popularity: None,
-        gender: None,
-        adult: false,
-    }
-}
-
-/// Convert an AniList staff detail to [`UnifiedPersonDetails`].
-pub fn staff_detail_to_person_details(s: AniListStaffDetail) -> UnifiedPersonDetails {
-    let department = s
-        .primary_occupations
-        .as_deref()
-        .and_then(|occ| occ.first())
-        .map(|occ| normalize_occupation(occ));
-
-    let also_known_as = s
-        .name
-        .as_ref()
-        .map(|n| {
-            let mut names: Vec<String> = n.alternative.clone();
-            if let Some(native) = &n.native {
-                names.push(native.clone());
-            }
-            names
-        })
-        .unwrap_or_default();
-
-    UnifiedPersonDetails {
-        person: UnifiedPerson {
-            provider_id: format!("anilist:staff:{}", s.id),
-            name: s
-                .name
-                .as_ref()
-                .and_then(|n| n.full.clone())
-                .unwrap_or_default(),
-            known_for_department: department,
-            profile_url: s.image.and_then(|i| i.large),
-            popularity: None,
-            gender: None,
-            adult: false,
-        },
-        biography: s.description,
-        birthday: s.date_of_birth.as_ref().and_then(|d| d.to_date_string()),
-        deathday: s.date_of_death.as_ref().and_then(|d| d.to_date_string()),
-        place_of_birth: s.home_town,
-        imdb_id: None,
-        homepage: s.site_url,
-        also_known_as,
-    }
-}
-
-/// Normalize an AniList primary occupation to a consistent department string.
-fn normalize_occupation(occupation: &str) -> String {
-    match occupation.to_lowercase().as_str() {
-        "voice actor" | "voice actress" => "Voice Acting".to_string(),
-        "director" => "Directing".to_string(),
-        "music" | "composer" => "Music".to_string(),
-        "animation director" | "animator" => "Animation".to_string(),
-        "character design" => "Art".to_string(),
-        _ => occupation.to_string(),
-    }
-}
-
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::providers::anilist::response::{
-        AniListCoverImage, AniListDate, AniListStaffImage, AniListStaffName, AniListTitle,
-    };
-
-    fn make_media(id: i32, format: &str) -> AniListMedia {
-        AniListMedia {
-            id,
-            title: Some(AniListTitle {
-                romaji: Some("Romaji Title".to_string()),
-                english: Some("English Title".to_string()),
-                native: Some("ネイティブ".to_string()),
-            }),
-            description: Some("A description.".to_string()),
-            start_date: Some(AniListDate {
-                year: Some(2022),
-                month: Some(4),
-                day: Some(1),
-            }),
-            cover_image: Some(AniListCoverImage {
-                large: Some("https://example.com/large.jpg".to_string()),
-                extra_large: Some("https://example.com/xl.jpg".to_string()),
-            }),
-            banner_image: Some("https://example.com/banner.jpg".to_string()),
-            genres: Some(vec!["Action".to_string(), "Mecha".to_string()]),
-            popularity: Some(100000),
-            average_score: Some(78),
-            episodes: Some(24),
-            duration: Some(23),
-            status: Some("FINISHED".to_string()),
-            format: Some(format.to_string()),
-            country_of_origin: Some("JP".to_string()),
-            is_adult: Some(false),
-        }
-    }
-
-    #[test]
-    fn test_media_to_movie_basic_fields() {
-        let movie = anilist_media_to_movie(make_media(42, "MOVIE"));
-        assert_eq!(movie.provider_id, "anilist:42");
-        assert_eq!(movie.title, "English Title");
-        assert_eq!(movie.original_title.as_deref(), Some("ネイティブ"));
-        assert_eq!(movie.release_date.as_deref(), Some("2022-04-01"));
-        assert_eq!(
-            movie.poster_url.as_deref(),
-            Some("https://example.com/xl.jpg")
-        );
-        assert_eq!(movie.vote_average, Some(7.8));
-        assert_eq!(movie.popularity, Some(100000.0));
-        assert_eq!(movie.original_language.as_deref(), Some("ja"));
-        assert!(!movie.adult);
-    }
-
-    #[test]
-    fn test_media_to_movie_genre_mapping() {
-        let movie = anilist_media_to_movie(make_media(1, "MOVIE"));
-        assert!(movie.genres.contains(&Genre::Action));
-        assert!(movie.genres.contains(&Genre::Mecha));
-    }
-
-    #[test]
-    fn test_media_to_tv_basic_fields() {
-        let tv = anilist_media_to_tv(make_media(99, "TV"));
-        assert_eq!(tv.provider_id, "anilist:99");
-        assert_eq!(tv.name, "English Title");
-        assert_eq!(tv.first_air_date.as_deref(), Some("2022-04-01"));
-        assert_eq!(tv.origin_country, vec!["JP"]);
-    }
-
-    #[test]
-    fn test_search_result_dispatch_by_format() {
-        let movie_result = anilist_media_to_search_result(make_media(1, "MOVIE"));
-        assert!(matches!(movie_result, UnifiedSearchResult::Movie(_)));
-
-        let tv_result = anilist_media_to_search_result(make_media(2, "TV"));
-        assert!(matches!(tv_result, UnifiedSearchResult::TvShow(_)));
-
-        let ova_result = anilist_media_to_search_result(make_media(3, "OVA"));
-        assert!(matches!(ova_result, UnifiedSearchResult::TvShow(_)));
-    }
+    use super::score_to_vote_average;
 
     #[test]
     fn test_score_conversion() {
         assert_eq!(score_to_vote_average(Some(85)), Some(8.5));
         assert_eq!(score_to_vote_average(Some(100)), Some(10.0));
         assert_eq!(score_to_vote_average(None), None);
-    }
-
-    #[test]
-    fn test_staff_to_person() {
-        let staff = AniListStaff {
-            id: 123,
-            name: Some(AniListStaffName {
-                full: Some("Test Person".to_string()),
-                native: Some("テスト".to_string()),
-                alternative: vec![],
-            }),
-            image: Some(AniListStaffImage {
-                large: Some("https://example.com/p.jpg".to_string()),
-            }),
-            description: None,
-            primary_occupations: Some(vec!["Voice Actor".to_string()]),
-            language: Some("Japanese".to_string()),
-        };
-        let person = staff_to_person(staff);
-        assert_eq!(person.provider_id, "anilist:staff:123");
-        assert_eq!(person.name, "Test Person");
-        assert_eq!(person.known_for_department.as_deref(), Some("Voice Acting"));
-        assert_eq!(
-            person.profile_url.as_deref(),
-            Some("https://example.com/p.jpg")
-        );
-    }
-
-    #[test]
-    fn test_date_formatting() {
-        let full = AniListDate {
-            year: Some(2022),
-            month: Some(4),
-            day: Some(1),
-        };
-        assert_eq!(full.to_date_string().as_deref(), Some("2022-04-01"));
-
-        let partial = AniListDate {
-            year: Some(2022),
-            month: Some(4),
-            day: None,
-        };
-        assert_eq!(partial.to_date_string().as_deref(), Some("2022-04"));
-
-        let year_only = AniListDate {
-            year: Some(2022),
-            month: None,
-            day: None,
-        };
-        assert_eq!(year_only.to_date_string().as_deref(), Some("2022"));
-
-        let empty = AniListDate {
-            year: None,
-            month: None,
-            day: None,
-        };
-        assert_eq!(empty.to_date_string(), None);
-    }
-
-    #[test]
-    fn test_from_anilist_genre() {
-        assert_eq!(Genre::from_anilist_genre("Mecha"), Genre::Mecha);
-        assert_eq!(
-            Genre::from_anilist_genre("Mahou Shoujo"),
-            Genre::MahouShoujo
-        );
-        assert_eq!(
-            Genre::from_anilist_genre("Slice of Life"),
-            Genre::SliceOfLife
-        );
-        assert_eq!(Genre::from_anilist_genre("Sports"), Genre::Sports);
-        assert_eq!(
-            Genre::from_anilist_genre("Supernatural"),
-            Genre::Supernatural
-        );
-        assert_eq!(Genre::from_anilist_genre("Ecchi"), Genre::Ecchi);
-        assert_eq!(Genre::from_anilist_genre("Sci-Fi"), Genre::ScienceFiction);
-        // Unknown genre falls through
-        assert!(matches!(
-            Genre::from_anilist_genre("Isekai"),
-            crate::unified::genre::Genre::Other(_)
-        ));
     }
 }
