@@ -36,7 +36,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     // ── Low-level AniListClient ───────────────────────────────────────────────
     println!("\n[Low-level AniListClient]");
-    let client = AniListClient::new(AniListConfig::new());
+    let client = AniListClient::new(AniListConfig::new())?;
 
     // Search anime movies
     println!("\nAnime movies matching \"{query}\":");
