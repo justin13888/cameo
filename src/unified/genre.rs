@@ -11,10 +11,10 @@ pub enum UnknownGenre {
     TmdbId(u32),
 }
 
-/// A canonical genre covering all known TMDB movie and TV genres.
+/// A canonical genre covering all known TMDB movie and TV genres, plus anime-specific genres.
 ///
-/// Use [`Genre::from_tmdb_id`] or [`Genre::from_name`] to convert provider data.
-/// Unknown genres are wrapped in [`Genre::Other`].
+/// Use [`Genre::from_tmdb_id`], [`Genre::from_name`], or [`Genre::from_anilist_genre`] to
+/// convert provider data. Unknown genres are wrapped in [`Genre::Other`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Genre {
     // Movie-only genres
@@ -74,6 +74,19 @@ pub enum Genre {
     Mystery,
     /// TMDB ID 37 — Western
     Western,
+    // Anime-specific genres (AniList)
+    /// Mecha — giant robot / mechanical suit anime.
+    Mecha,
+    /// Mahou Shoujo — magical girl anime.
+    MahouShoujo,
+    /// Slice of Life — everyday life stories.
+    SliceOfLife,
+    /// Sports — competitive athletics as the central theme.
+    Sports,
+    /// Supernatural — ghosts, demons, divine powers, and the occult.
+    Supernatural,
+    /// Ecchi — suggestive, mildly sexual content.
+    Ecchi,
     /// A genre not covered by the known variants.
     Other(UnknownGenre),
 }
@@ -151,6 +164,40 @@ impl Genre {
             "family" => Genre::Family,
             "mystery" => Genre::Mystery,
             "western" => Genre::Western,
+            // Anime-specific
+            "mecha" => Genre::Mecha,
+            "mahou shoujo" => Genre::MahouShoujo,
+            "slice of life" => Genre::SliceOfLife,
+            "sports" => Genre::Sports,
+            "supernatural" => Genre::Supernatural,
+            "ecchi" => Genre::Ecchi,
+            other => Genre::Other(UnknownGenre::Named(other.to_string())),
+        }
+    }
+
+    /// Convert an AniList genre name string to a [`Genre`] (case-insensitive).
+    ///
+    /// Handles AniList-specific genre names in addition to common genre names.
+    /// Returns [`Genre::Other(UnknownGenre::Named(s))`] for unrecognized names.
+    pub fn from_anilist_genre(name: &str) -> Genre {
+        match name.to_lowercase().as_str() {
+            "action" => Genre::Action,
+            "adventure" => Genre::Adventure,
+            "comedy" => Genre::Comedy,
+            "drama" => Genre::Drama,
+            "ecchi" => Genre::Ecchi,
+            "fantasy" => Genre::Fantasy,
+            "horror" => Genre::Horror,
+            "mahou shoujo" => Genre::MahouShoujo,
+            "mecha" => Genre::Mecha,
+            "music" => Genre::Music,
+            "mystery" => Genre::Mystery,
+            "romance" => Genre::Romance,
+            "sci-fi" => Genre::ScienceFiction,
+            "slice of life" => Genre::SliceOfLife,
+            "sports" => Genre::Sports,
+            "supernatural" => Genre::Supernatural,
+            "thriller" => Genre::Thriller,
             other => Genre::Other(UnknownGenre::Named(other.to_string())),
         }
     }
@@ -185,6 +232,12 @@ impl Genre {
             Genre::Family => "Family",
             Genre::Mystery => "Mystery",
             Genre::Western => "Western",
+            Genre::Mecha => "Mecha",
+            Genre::MahouShoujo => "Mahou Shoujo",
+            Genre::SliceOfLife => "Slice of Life",
+            Genre::Sports => "Sports",
+            Genre::Supernatural => "Supernatural",
+            Genre::Ecchi => "Ecchi",
             Genre::Other(UnknownGenre::Named(s)) => s.as_str(),
             Genre::Other(UnknownGenre::TmdbId(_)) => "Unknown",
         }

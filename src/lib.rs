@@ -5,11 +5,13 @@
 //! ## Quick Start
 //!
 //! ```no_run
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # #[cfg(feature = "tmdb")]
+//! # {
 //! use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 //! use cameo::unified::{CameoClient, SearchProvider};
 //!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Low-level TMDB client
 //! let client = TmdbClient::new(TmdbConfig::new("your-tmdb-token"))?;
 //! let results = client.search_movies("Inception", None).await?;
@@ -19,6 +21,31 @@
 //!     .with_tmdb(TmdbConfig::new("your-tmdb-token"))
 //!     .build()?;
 //! let movies = cameo.search_movies("Dune", None).await?;
+//! # }
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## AniList (anime/manga)
+//!
+//! ```no_run
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # #[cfg(feature = "anilist")]
+//! # {
+//! use cameo::providers::anilist::{AniListClient, AniListConfig};
+//! use cameo::unified::{CameoClient, SearchProvider};
+//!
+//! // Low-level AniList client (no auth required)
+//! let client = AniListClient::new(AniListConfig::new());
+//! let results = client.search_movies("Your Name", None).await?;
+//!
+//! // High-level unified facade (AniList only)
+//! let cameo = CameoClient::builder()
+//!     .with_anilist(AniListConfig::new())
+//!     .build()?;
+//! let anime = cameo.search_tv_shows("Attack on Titan", None).await?;
+//! # }
 //! # Ok(())
 //! # }
 //! ```
@@ -45,6 +72,8 @@ pub use core::pagination::PaginatedResponse;
 
 #[cfg(feature = "cache")]
 pub use cache::{CacheBackend, CacheError, CacheTtlConfig, SqliteCache};
+#[cfg(feature = "anilist")]
+pub use providers::anilist::{AniListClient, AniListConfig, AniListError};
 #[cfg(feature = "tmdb")]
 pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
 pub use unified::{CameoClient, CameoClientBuilder};

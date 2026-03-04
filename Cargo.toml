@@ -17,6 +17,7 @@ exclude = ["scripts/", ".sidecar*", "AGENTS.md", "CLAUDE.md"]
 [features]
 default = ["tmdb", "cache"]
 tmdb = []
+anilist = []
 cache = ["dep:rusqlite", "dep:dirs"]
 live-tests = [] # Gate for tests that hit real TMDB API
 
@@ -54,3 +55,27 @@ prettyplease = "0.2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 wiremock = "0.6"
 pretty_assertions = "1"
+
+[[example]]
+name = "search_movies"
+required-features = ["tmdb"]
+
+[[example]]
+name = "movie_details"
+required-features = ["tmdb"]
+
+[[example]]
+name = "discover"
+required-features = ["tmdb"]
+
+[[example]]
+name = "trending"
+required-features = ["tmdb"]
+
+[[example]]
+name = "unified_search"
+required-features = ["tmdb"]
+
+[[example]]
+name = "anilist_search"
+required-features = ["anilist"]

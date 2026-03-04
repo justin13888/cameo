@@ -14,6 +14,8 @@ use super::{
 #[cfg(feature = "cache")]
 use crate::cache::{CacheBackend, CacheError, CacheKey, CacheTtlConfig, MediaType, SqliteCache};
 use crate::core::{config::TimeWindow, pagination::PaginatedResponse};
+#[cfg(feature = "anilist")]
+use crate::providers::anilist::{AniListClient, AniListConfig};
 #[cfg(feature = "tmdb")]
 use crate::providers::tmdb::{TmdbClient, TmdbConfig};
 
@@ -28,6 +30,11 @@ pub enum CameoClientError {
     #[cfg(feature = "tmdb")]
     #[error(transparent)]
     Tmdb(#[from] crate::providers::tmdb::TmdbError),
+
+    /// Error from the AniList provider.
+    #[cfg(feature = "anilist")]
+    #[error(transparent)]
+    AniList(#[from] crate::providers::anilist::AniListError),
 
     /// Cache error (non-fatal; logged but does not fail the request).
     #[cfg(feature = "cache")]
@@ -67,6 +74,9 @@ pub struct CameoClientBuilder {
     #[cfg(feature = "tmdb")]
     tmdb_config: Option<TmdbConfig>,
 
+    #[cfg(feature = "anilist")]
+    anilist_config: Option<AniListConfig>,
+
     #[cfg(feature = "cache")]
     cache_backend: Option<Arc<dyn CacheBackend>>,
 
@@ -79,6 +89,13 @@ impl CameoClientBuilder {
     #[cfg(feature = "tmdb")]
     pub fn with_tmdb(mut self, config: TmdbConfig) -> Self {
         self.tmdb_config = Some(config);
+        self
+    }
+
+    /// Configure the AniList provider (no authentication required).
+    #[cfg(feature = "anilist")]
+    pub fn with_anilist(mut self, config: AniListConfig) -> Self {
+        self.anilist_config = Some(config);
         self
     }
 
@@ -134,7 +151,13 @@ impl CameoClientBuilder {
         #[cfg(not(feature = "tmdb"))]
         let tmdb: Option<()> = None;
 
-        if tmdb.is_none() {
+        #[cfg(feature = "anilist")]
+        let anilist = self.anilist_config.map(AniListClient::new);
+
+        #[cfg(not(feature = "anilist"))]
+        let anilist: Option<()> = None;
+
+        if tmdb.is_none() && anilist.is_none() {
             return Err(CameoClientError::NoProviders);
         }
 
@@ -147,6 +170,8 @@ impl CameoClientBuilder {
         Ok(CameoClient {
             #[cfg(feature = "tmdb")]
             tmdb,
+            #[cfg(feature = "anilist")]
+            anilist,
             #[cfg(feature = "cache")]
             cache,
         })
@@ -159,10 +184,17 @@ impl CameoClientBuilder {
 ///
 /// Use [`CameoClientBuilder`] to construct one.
 ///
+/// # Provider Priority
+///
+/// When multiple providers are configured, TMDB is used first (if configured).
+/// AniList is used as a fallback when TMDB is not configured.
+///
 /// # Example
 ///
 /// ```no_run
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// # #[cfg(feature = "tmdb")]
+/// # {
 /// use cameo::providers::tmdb::TmdbConfig;
 /// use cameo::unified::{CameoClient, SearchProvider};
 ///
@@ -171,12 +203,16 @@ impl CameoClientBuilder {
 ///     .build()?;
 ///
 /// let results = client.search_movies("Inception", None).await?;
+/// # }
 /// # Ok(())
 /// # }
 /// ```
 pub struct CameoClient {
     #[cfg(feature = "tmdb")]
     tmdb: Option<TmdbClient>,
+
+    #[cfg(feature = "anilist")]
+    anilist: Option<AniListClient>,
 
     #[cfg(feature = "cache")]
     cache: Option<Cache>,
@@ -194,15 +230,15 @@ impl CameoClient {
         self.tmdb.as_ref()
     }
 
-    /// Returns the first available TMDB client or an error.
-    #[cfg(feature = "tmdb")]
-    fn tmdb_or_err(&self) -> Result<&TmdbClient, CameoClientError> {
-        self.tmdb.as_ref().ok_or(CameoClientError::NoProviders)
+    /// Access the underlying AniList client, if configured.
+    #[cfg(feature = "anilist")]
+    pub fn anilist(&self) -> Option<&AniListClient> {
+        self.anilist.as_ref()
     }
 
     // ── Explicit cache lookup API ─────────────────────────────────────────────
 
-    /// Look up a movie from the cache by provider_id (e.g. `"tmdb:550"`).
+    /// Look up a movie from the cache by provider_id (e.g. `"tmdb:550"` or `"anilist:1"`).
     ///
     /// Checks the Item cache first (populated by search/discovery results),
     /// then falls back to extracting the base movie from the Detail cache.
@@ -373,8 +409,7 @@ impl SearchProvider for CameoClient {
         }
 
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
             let page_resp = client.search_movies(query, page).await?;
             let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
                 page: page_resp.page,
@@ -403,7 +438,30 @@ impl SearchProvider for CameoClient {
             return Ok(unified);
         }
 
-        #[allow(unreachable_code)]
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            let unified = client.search_movies(query, page).await?;
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let search_key = CacheKey::Search {
+                    media_type: Some(MediaType::Movie),
+                    query: query.to_string(),
+                    page: page_num,
+                };
+                cache.set(search_key, &unified, cache.ttl.search).await;
+                for item in &unified.results {
+                    let item_key = CacheKey::Item {
+                        media_type: MediaType::Movie,
+                        provider_id: item.provider_id.clone(),
+                    };
+                    cache.set(item_key, item, cache.ttl.items).await;
+                }
+            }
+
+            return Ok(unified);
+        }
+
         Err(CameoClientError::NoProviders)
     }
 
@@ -432,8 +490,7 @@ impl SearchProvider for CameoClient {
         }
 
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
             let page_resp = client.search_tv_shows(query, page).await?;
             let unified: PaginatedResponse<UnifiedTvShow> = PaginatedResponse {
                 page: page_resp.page,
@@ -462,7 +519,30 @@ impl SearchProvider for CameoClient {
             return Ok(unified);
         }
 
-        #[allow(unreachable_code)]
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            let unified = client.search_tv_shows(query, page).await?;
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let search_key = CacheKey::Search {
+                    media_type: Some(MediaType::TvShow),
+                    query: query.to_string(),
+                    page: page_num,
+                };
+                cache.set(search_key, &unified, cache.ttl.search).await;
+                for item in &unified.results {
+                    let item_key = CacheKey::Item {
+                        media_type: MediaType::TvShow,
+                        provider_id: item.provider_id.clone(),
+                    };
+                    cache.set(item_key, item, cache.ttl.items).await;
+                }
+            }
+
+            return Ok(unified);
+        }
+
         Err(CameoClientError::NoProviders)
     }
 
@@ -491,8 +571,7 @@ impl SearchProvider for CameoClient {
         }
 
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
             let page_resp = client.search_people(query, page).await?;
             let unified: PaginatedResponse<UnifiedPerson> = PaginatedResponse {
                 page: page_resp.page,
@@ -521,7 +600,30 @@ impl SearchProvider for CameoClient {
             return Ok(unified);
         }
 
-        #[allow(unreachable_code)]
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            let unified = client.search_people(query, page).await?;
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let search_key = CacheKey::Search {
+                    media_type: Some(MediaType::Person),
+                    query: query.to_string(),
+                    page: page_num,
+                };
+                cache.set(search_key, &unified, cache.ttl.search).await;
+                for item in &unified.results {
+                    let item_key = CacheKey::Item {
+                        media_type: MediaType::Person,
+                        provider_id: item.provider_id.clone(),
+                    };
+                    cache.set(item_key, item, cache.ttl.items).await;
+                }
+            }
+
+            return Ok(unified);
+        }
+
         Err(CameoClientError::NoProviders)
     }
 
@@ -550,8 +652,7 @@ impl SearchProvider for CameoClient {
         }
 
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
             let page_resp = client.search_multi(query, page).await?;
             let unified = PaginatedResponse {
                 page: page_resp.page,
@@ -599,7 +700,48 @@ impl SearchProvider for CameoClient {
             return Ok(unified);
         }
 
-        #[allow(unreachable_code)]
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            let unified = client.search_multi(query, page).await?;
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let search_key = CacheKey::Search {
+                    media_type: None,
+                    query: query.to_string(),
+                    page: page_num,
+                };
+                cache.set(search_key, &unified, cache.ttl.search).await;
+                for item in &unified.results {
+                    match item {
+                        UnifiedSearchResult::Movie(m) => {
+                            let k = CacheKey::Item {
+                                media_type: MediaType::Movie,
+                                provider_id: m.provider_id.clone(),
+                            };
+                            cache.set(k, m, cache.ttl.items).await;
+                        }
+                        UnifiedSearchResult::TvShow(t) => {
+                            let k = CacheKey::Item {
+                                media_type: MediaType::TvShow,
+                                provider_id: t.provider_id.clone(),
+                            };
+                            cache.set(k, t, cache.ttl.items).await;
+                        }
+                        UnifiedSearchResult::Person(p) => {
+                            let k = CacheKey::Item {
+                                media_type: MediaType::Person,
+                                provider_id: p.provider_id.clone(),
+                            };
+                            cache.set(k, p, cache.ttl.items).await;
+                        }
+                    }
+                }
+            }
+
+            return Ok(unified);
+        }
+
         Err(CameoClientError::NoProviders)
     }
 }
@@ -611,25 +753,24 @@ impl DetailProvider for CameoClient {
     type Error = CameoClientError;
 
     async fn movie_details(&self, id: i32) -> Result<UnifiedMovieDetails, CameoClientError> {
-        #[cfg(feature = "cache")]
-        let provider_id = format!("tmdb:{id}");
-
-        #[cfg(feature = "cache")]
-        {
-            let detail_key = CacheKey::Detail {
-                media_type: MediaType::Movie,
-                provider_id: provider_id.clone(),
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<UnifiedMovieDetails>(&detail_key).await
-            {
-                return Ok(cached);
-            }
-        }
-
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
+            #[cfg(feature = "cache")]
+            let provider_id = format!("tmdb:{id}");
+
+            #[cfg(feature = "cache")]
+            {
+                let detail_key = CacheKey::Detail {
+                    media_type: MediaType::Movie,
+                    provider_id: provider_id.clone(),
+                };
+                if let Some(cache) = self.cache.as_ref()
+                    && let Some(cached) = cache.get::<UnifiedMovieDetails>(&detail_key).await
+                {
+                    return Ok(cached);
+                }
+            }
+
             let details: UnifiedMovieDetails = client.movie_details(id).await?.into();
 
             #[cfg(feature = "cache")]
@@ -643,7 +784,6 @@ impl DetailProvider for CameoClient {
                     provider_id: provider_id.clone(),
                 };
                 cache.set(detail_key, &details, detail_ttl).await;
-                // Also index the base item.
                 let item_key = CacheKey::Item {
                     media_type: MediaType::Movie,
                     provider_id,
@@ -654,30 +794,69 @@ impl DetailProvider for CameoClient {
             return Ok(details);
         }
 
-        #[allow(unreachable_code)]
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            #[cfg(feature = "cache")]
+            let provider_id = format!("anilist:{id}");
+
+            #[cfg(feature = "cache")]
+            {
+                let detail_key = CacheKey::Detail {
+                    media_type: MediaType::Movie,
+                    provider_id: provider_id.clone(),
+                };
+                if let Some(cache) = self.cache.as_ref()
+                    && let Some(cached) = cache.get::<UnifiedMovieDetails>(&detail_key).await
+                {
+                    return Ok(cached);
+                }
+            }
+
+            let details = client.movie_details(id).await?;
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let detail_ttl = cache.ttl.movie_details_ttl(
+                    details.movie.release_date.as_deref(),
+                    details.status.as_deref(),
+                );
+                let detail_key = CacheKey::Detail {
+                    media_type: MediaType::Movie,
+                    provider_id: provider_id.clone(),
+                };
+                cache.set(detail_key, &details, detail_ttl).await;
+                let item_key = CacheKey::Item {
+                    media_type: MediaType::Movie,
+                    provider_id,
+                };
+                cache.set(item_key, &details.movie, cache.ttl.items).await;
+            }
+
+            return Ok(details);
+        }
+
         Err(CameoClientError::NoProviders)
     }
 
     async fn tv_show_details(&self, id: i32) -> Result<UnifiedTvShowDetails, CameoClientError> {
-        #[cfg(feature = "cache")]
-        let provider_id = format!("tmdb:{id}");
-
-        #[cfg(feature = "cache")]
-        {
-            let detail_key = CacheKey::Detail {
-                media_type: MediaType::TvShow,
-                provider_id: provider_id.clone(),
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<UnifiedTvShowDetails>(&detail_key).await
-            {
-                return Ok(cached);
-            }
-        }
-
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
+            #[cfg(feature = "cache")]
+            let provider_id = format!("tmdb:{id}");
+
+            #[cfg(feature = "cache")]
+            {
+                let detail_key = CacheKey::Detail {
+                    media_type: MediaType::TvShow,
+                    provider_id: provider_id.clone(),
+                };
+                if let Some(cache) = self.cache.as_ref()
+                    && let Some(cached) = cache.get::<UnifiedTvShowDetails>(&detail_key).await
+                {
+                    return Ok(cached);
+                }
+            }
+
             let details: UnifiedTvShowDetails = client.tv_series_details(id).await?.into();
 
             #[cfg(feature = "cache")]
@@ -703,30 +882,71 @@ impl DetailProvider for CameoClient {
             return Ok(details);
         }
 
-        #[allow(unreachable_code)]
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            #[cfg(feature = "cache")]
+            let provider_id = format!("anilist:{id}");
+
+            #[cfg(feature = "cache")]
+            {
+                let detail_key = CacheKey::Detail {
+                    media_type: MediaType::TvShow,
+                    provider_id: provider_id.clone(),
+                };
+                if let Some(cache) = self.cache.as_ref()
+                    && let Some(cached) = cache.get::<UnifiedTvShowDetails>(&detail_key).await
+                {
+                    return Ok(cached);
+                }
+            }
+
+            let details = client.tv_show_details(id).await?;
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let detail_ttl = cache.ttl.tv_show_details_ttl(
+                    details.show.first_air_date.as_deref(),
+                    details.last_air_date.as_deref(),
+                    details.status.as_deref(),
+                    details.in_production,
+                );
+                let detail_key = CacheKey::Detail {
+                    media_type: MediaType::TvShow,
+                    provider_id: provider_id.clone(),
+                };
+                cache.set(detail_key, &details, detail_ttl).await;
+                let item_key = CacheKey::Item {
+                    media_type: MediaType::TvShow,
+                    provider_id,
+                };
+                cache.set(item_key, &details.show, cache.ttl.items).await;
+            }
+
+            return Ok(details);
+        }
+
         Err(CameoClientError::NoProviders)
     }
 
     async fn person_details(&self, id: i32) -> Result<UnifiedPersonDetails, CameoClientError> {
-        #[cfg(feature = "cache")]
-        let provider_id = format!("tmdb:{id}");
-
-        #[cfg(feature = "cache")]
-        {
-            let detail_key = CacheKey::Detail {
-                media_type: MediaType::Person,
-                provider_id: provider_id.clone(),
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<UnifiedPersonDetails>(&detail_key).await
-            {
-                return Ok(cached);
-            }
-        }
-
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
+            #[cfg(feature = "cache")]
+            let provider_id = format!("tmdb:{id}");
+
+            #[cfg(feature = "cache")]
+            {
+                let detail_key = CacheKey::Detail {
+                    media_type: MediaType::Person,
+                    provider_id: provider_id.clone(),
+                };
+                if let Some(cache) = self.cache.as_ref()
+                    && let Some(cached) = cache.get::<UnifiedPersonDetails>(&detail_key).await
+                {
+                    return Ok(cached);
+                }
+            }
+
             let details: UnifiedPersonDetails = client.person_details(id).await?.into();
 
             #[cfg(feature = "cache")]
@@ -746,7 +966,43 @@ impl DetailProvider for CameoClient {
             return Ok(details);
         }
 
-        #[allow(unreachable_code)]
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            #[cfg(feature = "cache")]
+            let provider_id = format!("anilist:staff:{id}");
+
+            #[cfg(feature = "cache")]
+            {
+                let detail_key = CacheKey::Detail {
+                    media_type: MediaType::Person,
+                    provider_id: provider_id.clone(),
+                };
+                if let Some(cache) = self.cache.as_ref()
+                    && let Some(cached) = cache.get::<UnifiedPersonDetails>(&detail_key).await
+                {
+                    return Ok(cached);
+                }
+            }
+
+            let details = client.person_details(id).await?;
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let detail_key = CacheKey::Detail {
+                    media_type: MediaType::Person,
+                    provider_id: provider_id.clone(),
+                };
+                cache.set(detail_key, &details, cache.ttl.details).await;
+                let item_key = CacheKey::Item {
+                    media_type: MediaType::Person,
+                    provider_id,
+                };
+                cache.set(item_key, &details.person, cache.ttl.items).await;
+            }
+
+            return Ok(details);
+        }
+
         Err(CameoClientError::NoProviders)
     }
 }
@@ -784,8 +1040,7 @@ impl DiscoveryProvider for CameoClient {
         }
 
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
             let page_resp = client.trending_movies(time_window, page).await?;
             let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
                 page: page_resp.page,
@@ -793,6 +1048,31 @@ impl DiscoveryProvider for CameoClient {
                 total_results: page_resp.total_results,
                 results: page_resp.results.into_iter().map(Into::into).collect(),
             };
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let discovery_key = CacheKey::Discovery {
+                    endpoint: endpoint.clone(),
+                    page: page_num,
+                };
+                cache
+                    .set(discovery_key, &unified, cache.ttl.discovery)
+                    .await;
+                for item in &unified.results {
+                    let k = CacheKey::Item {
+                        media_type: MediaType::Movie,
+                        provider_id: item.provider_id.clone(),
+                    };
+                    cache.set(k, item, cache.ttl.items).await;
+                }
+            }
+
+            return Ok(unified);
+        }
+
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            let unified = client.trending_movies(time_window, page).await?;
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
@@ -815,7 +1095,6 @@ impl DiscoveryProvider for CameoClient {
             return Ok(unified);
         }
 
-        #[allow(unreachable_code)]
         Err(CameoClientError::NoProviders)
     }
 
@@ -846,8 +1125,7 @@ impl DiscoveryProvider for CameoClient {
         }
 
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
             let page_resp = client.trending_tv(time_window, page).await?;
             let unified: PaginatedResponse<UnifiedTvShow> = PaginatedResponse {
                 page: page_resp.page,
@@ -855,6 +1133,31 @@ impl DiscoveryProvider for CameoClient {
                 total_results: page_resp.total_results,
                 results: page_resp.results.into_iter().map(Into::into).collect(),
             };
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let discovery_key = CacheKey::Discovery {
+                    endpoint: endpoint.clone(),
+                    page: page_num,
+                };
+                cache
+                    .set(discovery_key, &unified, cache.ttl.discovery)
+                    .await;
+                for item in &unified.results {
+                    let k = CacheKey::Item {
+                        media_type: MediaType::TvShow,
+                        provider_id: item.provider_id.clone(),
+                    };
+                    cache.set(k, item, cache.ttl.items).await;
+                }
+            }
+
+            return Ok(unified);
+        }
+
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            let unified = client.trending_tv(time_window, page).await?;
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
@@ -877,7 +1180,6 @@ impl DiscoveryProvider for CameoClient {
             return Ok(unified);
         }
 
-        #[allow(unreachable_code)]
         Err(CameoClientError::NoProviders)
     }
 
@@ -907,8 +1209,7 @@ impl DiscoveryProvider for CameoClient {
         }
 
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
             let page_resp = client.popular_movies(page).await?;
             let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
                 page: page_resp.page,
@@ -938,7 +1239,31 @@ impl DiscoveryProvider for CameoClient {
             return Ok(unified);
         }
 
-        #[allow(unreachable_code)]
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            let unified = client.popular_movies(page).await?;
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let discovery_key = CacheKey::Discovery {
+                    endpoint,
+                    page: page_num,
+                };
+                cache
+                    .set(discovery_key, &unified, cache.ttl.discovery)
+                    .await;
+                for item in &unified.results {
+                    let k = CacheKey::Item {
+                        media_type: MediaType::Movie,
+                        provider_id: item.provider_id.clone(),
+                    };
+                    cache.set(k, item, cache.ttl.items).await;
+                }
+            }
+
+            return Ok(unified);
+        }
+
         Err(CameoClientError::NoProviders)
     }
 
@@ -968,8 +1293,7 @@ impl DiscoveryProvider for CameoClient {
         }
 
         #[cfg(feature = "tmdb")]
-        {
-            let client = self.tmdb_or_err()?;
+        if let Some(client) = &self.tmdb {
             let page_resp = client.top_rated_movies(page).await?;
             let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
                 page: page_resp.page,
@@ -999,11 +1323,36 @@ impl DiscoveryProvider for CameoClient {
             return Ok(unified);
         }
 
-        #[allow(unreachable_code)]
+        #[cfg(feature = "anilist")]
+        if let Some(client) = &self.anilist {
+            let unified = client.top_rated_movies(page).await?;
+
+            #[cfg(feature = "cache")]
+            if let Some(cache) = self.cache.as_ref() {
+                let discovery_key = CacheKey::Discovery {
+                    endpoint,
+                    page: page_num,
+                };
+                cache
+                    .set(discovery_key, &unified, cache.ttl.discovery)
+                    .await;
+                for item in &unified.results {
+                    let k = CacheKey::Item {
+                        media_type: MediaType::Movie,
+                        provider_id: item.provider_id.clone(),
+                    };
+                    cache.set(k, item, cache.ttl.items).await;
+                }
+            }
+
+            return Ok(unified);
+        }
+
         Err(CameoClientError::NoProviders)
     }
 }
 
+#[cfg(feature = "cache")]
 fn time_window_str(tw: TimeWindow) -> &'static str {
     match tw {
         TimeWindow::Day => "day",
