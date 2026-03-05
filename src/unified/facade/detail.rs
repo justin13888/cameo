@@ -27,10 +27,15 @@ impl DetailProvider for CameoClient {
                 if let Some(cache) = self.cache.as_ref()
                     && let Some(cached) = cache.get::<UnifiedMovieDetails>(&detail_key).await
                 {
+                    tracing::debug!(id, "cache hit: movie_details (tmdb)");
                     return Ok(cached);
+                }
+                if self.cache.is_some() {
+                    tracing::debug!(id, "cache miss: movie_details (tmdb)");
                 }
             }
 
+            tracing::debug!(id, "dispatching movie_details to tmdb");
             let details: UnifiedMovieDetails = client.movie_details(id).await?.into();
 
             #[cfg(feature = "cache")]
@@ -68,10 +73,15 @@ impl DetailProvider for CameoClient {
                 if let Some(cache) = self.cache.as_ref()
                     && let Some(cached) = cache.get::<UnifiedMovieDetails>(&detail_key).await
                 {
+                    tracing::debug!(id, "cache hit: movie_details (anilist)");
                     return Ok(cached);
+                }
+                if self.cache.is_some() {
+                    tracing::debug!(id, "cache miss: movie_details (anilist)");
                 }
             }
 
+            tracing::debug!(id, "dispatching movie_details to anilist");
             let details = client.movie_details(id).await?;
 
             #[cfg(feature = "cache")]
@@ -113,10 +123,15 @@ impl DetailProvider for CameoClient {
                 if let Some(cache) = self.cache.as_ref()
                     && let Some(cached) = cache.get::<UnifiedTvShowDetails>(&detail_key).await
                 {
+                    tracing::debug!(id, "cache hit: tv_show_details (tmdb)");
                     return Ok(cached);
+                }
+                if self.cache.is_some() {
+                    tracing::debug!(id, "cache miss: tv_show_details (tmdb)");
                 }
             }
 
+            tracing::debug!(id, "dispatching tv_show_details to tmdb");
             let details: UnifiedTvShowDetails = client.tv_series_details(id).await?.into();
 
             #[cfg(feature = "cache")]
@@ -156,10 +171,15 @@ impl DetailProvider for CameoClient {
                 if let Some(cache) = self.cache.as_ref()
                     && let Some(cached) = cache.get::<UnifiedTvShowDetails>(&detail_key).await
                 {
+                    tracing::debug!(id, "cache hit: tv_show_details (anilist)");
                     return Ok(cached);
+                }
+                if self.cache.is_some() {
+                    tracing::debug!(id, "cache miss: tv_show_details (anilist)");
                 }
             }
 
+            tracing::debug!(id, "dispatching tv_show_details to anilist");
             let details = client.tv_show_details(id).await?;
 
             #[cfg(feature = "cache")]
@@ -203,10 +223,15 @@ impl DetailProvider for CameoClient {
                 if let Some(cache) = self.cache.as_ref()
                     && let Some(cached) = cache.get::<UnifiedPersonDetails>(&detail_key).await
                 {
+                    tracing::debug!(id, "cache hit: person_details (tmdb)");
                     return Ok(cached);
+                }
+                if self.cache.is_some() {
+                    tracing::debug!(id, "cache miss: person_details (tmdb)");
                 }
             }
 
+            tracing::debug!(id, "dispatching person_details to tmdb");
             let details: UnifiedPersonDetails = client.person_details(id).await?.into();
 
             #[cfg(feature = "cache")]
@@ -240,10 +265,15 @@ impl DetailProvider for CameoClient {
                 if let Some(cache) = self.cache.as_ref()
                     && let Some(cached) = cache.get::<UnifiedPersonDetails>(&detail_key).await
                 {
+                    tracing::debug!(id, "cache hit: person_details (anilist)");
                     return Ok(cached);
+                }
+                if self.cache.is_some() {
+                    tracing::debug!(id, "cache miss: person_details (anilist)");
                 }
             }
 
+            tracing::debug!(id, "dispatching person_details to anilist");
             let details = client.person_details(id).await?;
 
             #[cfg(feature = "cache")]

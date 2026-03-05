@@ -35,12 +35,17 @@ impl SearchProvider for CameoClient {
                     .get::<PaginatedResponse<UnifiedMovie>>(&search_key)
                     .await
             {
+                tracing::debug!(query, page = page_num, "cache hit: search_movies");
                 return Ok(cached);
+            }
+            if self.cache.is_some() {
+                tracing::debug!(query, page = page_num, "cache miss: search_movies");
             }
         }
 
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
+            tracing::debug!(query, page = ?page, "dispatching search_movies to tmdb");
             let page_resp = client.search_movies(query, page).await?;
             let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
                 page: page_resp.page,
@@ -71,6 +76,7 @@ impl SearchProvider for CameoClient {
 
         #[cfg(feature = "anilist")]
         if let Some(client) = &self.anilist {
+            tracing::debug!(query, page = ?page, "dispatching search_movies to anilist");
             let unified = client.search_movies(query, page).await?;
 
             #[cfg(feature = "cache")]
@@ -116,12 +122,17 @@ impl SearchProvider for CameoClient {
                     .get::<PaginatedResponse<UnifiedTvShow>>(&search_key)
                     .await
             {
+                tracing::debug!(query, page = page_num, "cache hit: search_tv_shows");
                 return Ok(cached);
+            }
+            if self.cache.is_some() {
+                tracing::debug!(query, page = page_num, "cache miss: search_tv_shows");
             }
         }
 
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
+            tracing::debug!(query, page = ?page, "dispatching search_tv_shows to tmdb");
             let page_resp = client.search_tv_shows(query, page).await?;
             let unified: PaginatedResponse<UnifiedTvShow> = PaginatedResponse {
                 page: page_resp.page,
@@ -152,6 +163,7 @@ impl SearchProvider for CameoClient {
 
         #[cfg(feature = "anilist")]
         if let Some(client) = &self.anilist {
+            tracing::debug!(query, page = ?page, "dispatching search_tv_shows to anilist");
             let unified = client.search_tv_shows(query, page).await?;
 
             #[cfg(feature = "cache")]
@@ -197,12 +209,17 @@ impl SearchProvider for CameoClient {
                     .get::<PaginatedResponse<UnifiedPerson>>(&search_key)
                     .await
             {
+                tracing::debug!(query, page = page_num, "cache hit: search_people");
                 return Ok(cached);
+            }
+            if self.cache.is_some() {
+                tracing::debug!(query, page = page_num, "cache miss: search_people");
             }
         }
 
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
+            tracing::debug!(query, page = ?page, "dispatching search_people to tmdb");
             let page_resp = client.search_people(query, page).await?;
             let unified: PaginatedResponse<UnifiedPerson> = PaginatedResponse {
                 page: page_resp.page,
@@ -233,6 +250,7 @@ impl SearchProvider for CameoClient {
 
         #[cfg(feature = "anilist")]
         if let Some(client) = &self.anilist {
+            tracing::debug!(query, page = ?page, "dispatching search_people to anilist");
             let unified = client.search_people(query, page).await?;
 
             #[cfg(feature = "cache")]
@@ -278,12 +296,17 @@ impl SearchProvider for CameoClient {
                     .get::<PaginatedResponse<UnifiedSearchResult>>(&search_key)
                     .await
             {
+                tracing::debug!(query, page = page_num, "cache hit: search_multi");
                 return Ok(cached);
+            }
+            if self.cache.is_some() {
+                tracing::debug!(query, page = page_num, "cache miss: search_multi");
             }
         }
 
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
+            tracing::debug!(query, page = ?page, "dispatching search_multi to tmdb");
             let page_resp = client.search_multi(query, page).await?;
             let unified = PaginatedResponse {
                 page: page_resp.page,
@@ -333,6 +356,7 @@ impl SearchProvider for CameoClient {
 
         #[cfg(feature = "anilist")]
         if let Some(client) = &self.anilist {
+            tracing::debug!(query, page = ?page, "dispatching search_multi to anilist");
             let unified = client.search_multi(query, page).await?;
 
             #[cfg(feature = "cache")]

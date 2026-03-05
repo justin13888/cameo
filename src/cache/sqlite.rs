@@ -79,6 +79,7 @@ impl SqliteCache {
 
 #[async_trait]
 impl CacheBackend for SqliteCache {
+    #[tracing::instrument(skip(self, key), fields(key_type = key.key_type(), key_id = %key.key_id()))]
     async fn get(&self, key: &CacheKey) -> Result<Option<serde_json::Value>, CacheError> {
         let conn = Arc::clone(&self.conn);
         let key_type = key.key_type().to_string();
@@ -107,6 +108,7 @@ impl CacheBackend for SqliteCache {
         .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?
     }
 
+    #[tracing::instrument(skip(self, key, value), fields(key_type = key.key_type(), key_id = %key.key_id(), ttl_secs = ttl.as_secs()))]
     async fn set(
         &self,
         key: CacheKey,
@@ -139,6 +141,7 @@ impl CacheBackend for SqliteCache {
         .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?
     }
 
+    #[tracing::instrument(skip(self, key), fields(key_type = key.key_type(), key_id = %key.key_id()))]
     async fn invalidate(&self, key: &CacheKey) -> Result<(), CacheError> {
         let conn = Arc::clone(&self.conn);
         let key_type = key.key_type().to_string();
