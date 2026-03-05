@@ -96,6 +96,7 @@ impl AniListClient {
 
         if let Some(errors) = gql_resp.errors {
             if !errors.is_empty() {
+                tracing::warn!(?errors, "anilist: graphql errors");
                 return Err(AniListError::GraphQL(errors));
             }
         }
@@ -133,6 +134,11 @@ impl AniListClient {
             "perPage": per_page,
             "formatIn": Self::format_in_value(MOVIE_FORMATS),
         });
+        tracing::debug!(
+            query,
+            page = page_num,
+            "anilist: graphql SEARCH_ANIME (search_movies)"
+        );
         let resp: MediaPageResponse = self.graphql(query::SEARCH_ANIME, vars).await?;
         Ok(media_page_to_movies(resp))
     }
@@ -150,6 +156,11 @@ impl AniListClient {
             "perPage": per_page,
             "formatIn": Self::format_in_value(TV_FORMATS),
         });
+        tracing::debug!(
+            query,
+            page = page_num,
+            "anilist: graphql SEARCH_ANIME (search_tv_shows)"
+        );
         let resp: MediaPageResponse = self.graphql(query::SEARCH_ANIME, vars).await?;
         Ok(media_page_to_tv(resp))
     }
@@ -166,6 +177,7 @@ impl AniListClient {
             "page": page_num,
             "perPage": per_page,
         });
+        tracing::debug!(query, page = page_num, "anilist: graphql SEARCH_STAFF");
         let resp: StaffPageResponse = self.graphql(query::SEARCH_STAFF, vars).await?;
         let pi = &resp.page.page_info;
         Ok(PaginatedResponse {
@@ -194,6 +206,11 @@ impl AniListClient {
             "perPage": per_page,
             "formatIn": Value::Null,
         });
+        tracing::debug!(
+            query,
+            page = page_num,
+            "anilist: graphql SEARCH_ANIME (search_multi)"
+        );
         let resp: MediaPageResponse = self.graphql(query::SEARCH_ANIME, vars).await?;
         let pi = &resp.page.page_info;
         let results = resp
@@ -215,6 +232,7 @@ impl AniListClient {
     /// Get full details for an anime movie by AniList ID.
     pub async fn movie_details(&self, id: i32) -> Result<UnifiedMovieDetails, AniListError> {
         let vars = json!({ "id": id });
+        tracing::debug!(id, "anilist: graphql MEDIA_DETAILS (movie_details)");
         let resp: MediaDetailResponse = self.graphql(query::MEDIA_DETAILS, vars).await?;
         Ok(crate::unified::conversions::anilist::anilist_media_detail_to_movie_details(resp.media))
     }
@@ -222,6 +240,7 @@ impl AniListClient {
     /// Get full details for an anime TV series by AniList ID.
     pub async fn tv_show_details(&self, id: i32) -> Result<UnifiedTvShowDetails, AniListError> {
         let vars = json!({ "id": id });
+        tracing::debug!(id, "anilist: graphql MEDIA_DETAILS (tv_show_details)");
         let resp: MediaDetailResponse = self.graphql(query::MEDIA_DETAILS, vars).await?;
         Ok(crate::unified::conversions::anilist::anilist_media_detail_to_tv_details(resp.media))
     }
@@ -229,6 +248,7 @@ impl AniListClient {
     /// Get full details for a staff member by AniList ID.
     pub async fn person_details(&self, id: i32) -> Result<UnifiedPersonDetails, AniListError> {
         let vars = json!({ "id": id });
+        tracing::debug!(id, "anilist: graphql STAFF_DETAILS (person_details)");
         let resp: StaffDetailResponse = self.graphql(query::STAFF_DETAILS, vars).await?;
         Ok(crate::unified::conversions::anilist::staff_detail_to_person_details(resp.staff))
     }
@@ -247,6 +267,10 @@ impl AniListClient {
             "perPage": per_page,
             "formatIn": Self::format_in_value(MOVIE_FORMATS),
         });
+        tracing::debug!(
+            page = page_num,
+            "anilist: graphql LIST_TRENDING_ANIME (trending_movies)"
+        );
         let resp: MediaPageResponse = self.graphql(query::LIST_TRENDING_ANIME, vars).await?;
         Ok(media_page_to_movies(resp))
     }
@@ -263,6 +287,10 @@ impl AniListClient {
             "perPage": per_page,
             "formatIn": Self::format_in_value(TV_FORMATS),
         });
+        tracing::debug!(
+            page = page_num,
+            "anilist: graphql LIST_TRENDING_ANIME (trending_tv)"
+        );
         let resp: MediaPageResponse = self.graphql(query::LIST_TRENDING_ANIME, vars).await?;
         Ok(media_page_to_tv(resp))
     }
@@ -278,6 +306,10 @@ impl AniListClient {
             "perPage": per_page,
             "formatIn": Self::format_in_value(MOVIE_FORMATS),
         });
+        tracing::debug!(
+            page = page_num,
+            "anilist: graphql LIST_POPULAR_ANIME (popular_movies)"
+        );
         let resp: MediaPageResponse = self.graphql(query::LIST_POPULAR_ANIME, vars).await?;
         Ok(media_page_to_movies(resp))
     }
@@ -293,6 +325,10 @@ impl AniListClient {
             "perPage": per_page,
             "formatIn": Self::format_in_value(MOVIE_FORMATS),
         });
+        tracing::debug!(
+            page = page_num,
+            "anilist: graphql LIST_TOP_SCORED_ANIME (top_rated_movies)"
+        );
         let resp: MediaPageResponse = self.graphql(query::LIST_TOP_SCORED_ANIME, vars).await?;
         Ok(media_page_to_movies(resp))
     }

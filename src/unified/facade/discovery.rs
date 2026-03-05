@@ -37,12 +37,17 @@ impl DiscoveryProvider for CameoClient {
                     .get::<PaginatedResponse<UnifiedMovie>>(&discovery_key)
                     .await
             {
+                tracing::debug!(page = page_num, "cache hit: trending_movies");
                 return Ok(cached);
+            }
+            if self.cache.is_some() {
+                tracing::debug!(page = page_num, "cache miss: trending_movies");
             }
         }
 
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
+            tracing::debug!(page = ?page, "dispatching trending_movies to tmdb");
             let page_resp = client.trending_movies(time_window, page).await?;
             let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
                 page: page_resp.page,
@@ -74,6 +79,7 @@ impl DiscoveryProvider for CameoClient {
 
         #[cfg(feature = "anilist")]
         if let Some(client) = &self.anilist {
+            tracing::debug!(page = ?page, "dispatching trending_movies to anilist");
             let unified = client.trending_movies(time_window, page).await?;
 
             #[cfg(feature = "cache")]
@@ -122,12 +128,17 @@ impl DiscoveryProvider for CameoClient {
                     .get::<PaginatedResponse<UnifiedTvShow>>(&discovery_key)
                     .await
             {
+                tracing::debug!(page = page_num, "cache hit: trending_tv_shows");
                 return Ok(cached);
+            }
+            if self.cache.is_some() {
+                tracing::debug!(page = page_num, "cache miss: trending_tv_shows");
             }
         }
 
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
+            tracing::debug!(page = ?page, "dispatching trending_tv_shows to tmdb");
             let page_resp = client.trending_tv(time_window, page).await?;
             let unified: PaginatedResponse<UnifiedTvShow> = PaginatedResponse {
                 page: page_resp.page,
@@ -159,6 +170,7 @@ impl DiscoveryProvider for CameoClient {
 
         #[cfg(feature = "anilist")]
         if let Some(client) = &self.anilist {
+            tracing::debug!(page = ?page, "dispatching trending_tv_shows to anilist");
             let unified = client.trending_tv(time_window, page).await?;
 
             #[cfg(feature = "cache")]
@@ -206,12 +218,17 @@ impl DiscoveryProvider for CameoClient {
                     .get::<PaginatedResponse<UnifiedMovie>>(&discovery_key)
                     .await
             {
+                tracing::debug!(page = page_num, "cache hit: popular_movies");
                 return Ok(cached);
+            }
+            if self.cache.is_some() {
+                tracing::debug!(page = page_num, "cache miss: popular_movies");
             }
         }
 
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
+            tracing::debug!(page = ?page, "dispatching popular_movies to tmdb");
             let page_resp = client.popular_movies(page).await?;
             let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
                 page: page_resp.page,
@@ -243,6 +260,7 @@ impl DiscoveryProvider for CameoClient {
 
         #[cfg(feature = "anilist")]
         if let Some(client) = &self.anilist {
+            tracing::debug!(page = ?page, "dispatching popular_movies to anilist");
             let unified = client.popular_movies(page).await?;
 
             #[cfg(feature = "cache")]
@@ -290,12 +308,17 @@ impl DiscoveryProvider for CameoClient {
                     .get::<PaginatedResponse<UnifiedMovie>>(&discovery_key)
                     .await
             {
+                tracing::debug!(page = page_num, "cache hit: top_rated_movies");
                 return Ok(cached);
+            }
+            if self.cache.is_some() {
+                tracing::debug!(page = page_num, "cache miss: top_rated_movies");
             }
         }
 
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
+            tracing::debug!(page = ?page, "dispatching top_rated_movies to tmdb");
             let page_resp = client.top_rated_movies(page).await?;
             let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
                 page: page_resp.page,
@@ -327,6 +350,7 @@ impl DiscoveryProvider for CameoClient {
 
         #[cfg(feature = "anilist")]
         if let Some(client) = &self.anilist {
+            tracing::debug!(page = ?page, "dispatching top_rated_movies to anilist");
             let unified = client.top_rated_movies(page).await?;
 
             #[cfg(feature = "cache")]

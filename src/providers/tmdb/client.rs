@@ -80,6 +80,7 @@ impl TmdbClient {
     // ── Search ──
 
     /// Search for movies by title.
+    #[tracing::instrument(skip(self))]
     pub async fn search_movies(
         &self,
         query: &str,
@@ -107,6 +108,7 @@ impl TmdbClient {
     }
 
     /// Search for TV shows by name.
+    #[tracing::instrument(skip(self))]
     pub async fn search_tv_shows(
         &self,
         query: &str,
@@ -133,6 +135,7 @@ impl TmdbClient {
     }
 
     /// Search for people by name.
+    #[tracing::instrument(skip(self))]
     pub async fn search_people(
         &self,
         query: &str,
@@ -157,6 +160,7 @@ impl TmdbClient {
     }
 
     /// Multi-search across movies, TV shows, and people.
+    #[tracing::instrument(skip(self))]
     pub async fn search_multi(
         &self,
         query: &str,
@@ -183,6 +187,7 @@ impl TmdbClient {
     // ── Details ──
 
     /// Get detailed information about a movie.
+    #[tracing::instrument(skip(self))]
     pub async fn movie_details(
         &self,
         movie_id: i32,
@@ -195,6 +200,7 @@ impl TmdbClient {
     }
 
     /// Get detailed information about a movie with appended responses.
+    #[tracing::instrument(skip(self))]
     pub async fn movie_details_with_append(
         &self,
         movie_id: i32,
@@ -208,6 +214,7 @@ impl TmdbClient {
     }
 
     /// Get detailed information about a TV series.
+    #[tracing::instrument(skip(self))]
     pub async fn tv_series_details(
         &self,
         series_id: i32,
@@ -220,6 +227,7 @@ impl TmdbClient {
     }
 
     /// Get detailed information about a person.
+    #[tracing::instrument(skip(self))]
     pub async fn person_details(
         &self,
         person_id: i32,
@@ -234,6 +242,7 @@ impl TmdbClient {
     // ── Credits ──
 
     /// Get the cast and crew for a movie.
+    #[tracing::instrument(skip(self))]
     pub async fn movie_credits(
         &self,
         movie_id: i32,
@@ -243,6 +252,7 @@ impl TmdbClient {
     }
 
     /// Get the cast and crew for a TV series.
+    #[tracing::instrument(skip(self))]
     pub async fn tv_series_credits(
         &self,
         series_id: i32,
@@ -257,6 +267,7 @@ impl TmdbClient {
     // ── Trending ──
 
     /// Get trending movies (always returns page 1; trending endpoints don't support pagination).
+    #[tracing::instrument(skip(self, _page))]
     pub async fn trending_movies(
         &self,
         time_window: TimeWindow,
@@ -277,6 +288,7 @@ impl TmdbClient {
     }
 
     /// Get trending TV shows (always returns page 1; trending endpoints don't support pagination).
+    #[tracing::instrument(skip(self, _page))]
     pub async fn trending_tv(
         &self,
         time_window: TimeWindow,
@@ -299,6 +311,7 @@ impl TmdbClient {
     // ── Popular / Top Rated ──
 
     /// Get popular movies.
+    #[tracing::instrument(skip(self))]
     pub async fn popular_movies(
         &self,
         page: Option<u32>,
@@ -317,6 +330,7 @@ impl TmdbClient {
     }
 
     /// Get top-rated movies.
+    #[tracing::instrument(skip(self))]
     pub async fn top_rated_movies(
         &self,
         page: Option<u32>,
@@ -337,12 +351,14 @@ impl TmdbClient {
     // ── Genres ──
 
     /// Get the list of official movie genres.
+    #[tracing::instrument(skip(self))]
     pub async fn movie_genres(&self) -> Result<types::GenreMovieListResponse, TmdbError> {
         let resp = self.inner.genre_movie_list(self.language()).await?;
         Ok(resp.into_inner())
     }
 
     /// Get the list of official TV show genres.
+    #[tracing::instrument(skip(self))]
     pub async fn tv_genres(&self) -> Result<types::GenreTvListResponse, TmdbError> {
         let resp = self.inner.genre_tv_list(self.language()).await?;
         Ok(resp.into_inner())
@@ -351,6 +367,7 @@ impl TmdbClient {
     // ── Images ──
 
     /// Get images for a movie.
+    #[tracing::instrument(skip(self))]
     pub async fn movie_images(
         &self,
         movie_id: i32,

@@ -58,8 +58,10 @@ impl Cache {
     }
 
     async fn set<T: Serialize>(&self, key: CacheKey, value: &T, ttl: std::time::Duration) {
-        if let Ok(v) = serde_json::to_value(value) {
-            let _ = self.backend.set(key, v, ttl).await;
+        if let Ok(v) = serde_json::to_value(value)
+            && let Err(e) = self.backend.set(key, v, ttl).await
+        {
+            tracing::warn!(error = %e, "cache write failed");
         }
     }
 }
