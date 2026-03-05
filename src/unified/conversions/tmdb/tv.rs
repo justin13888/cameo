@@ -3,6 +3,7 @@
 use super::{resolve_backdrop, resolve_poster};
 use crate::{
     generated::tmdb::types,
+    providers::tmdb::image_url::{ImageUrl, StillSize},
     unified::{genre::Genre, models::*},
 };
 
@@ -37,6 +38,7 @@ macro_rules! impl_tv_from {
 
 impl_tv_from!(types::SearchTvResponseResultsItem);
 impl_tv_from!(types::TrendingTvResponseResultsItem);
+impl_tv_from!(types::TvSeriesRecommendationsResponseResultsItem);
 
 // DiscoverTvResponseResultsItem has vote_average: i64 (not Option<f64>) and no adult field
 impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
@@ -64,6 +66,148 @@ impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
             original_language: t.original_language,
             origin_country: t.origin_country,
             adult: false,
+        }
+    }
+}
+
+// TvSeriesPopularListResponseResultsItem has vote_average: i64 and no adult field
+impl From<types::TvSeriesPopularListResponseResultsItem> for UnifiedTvShow {
+    fn from(t: types::TvSeriesPopularListResponseResultsItem) -> Self {
+        UnifiedTvShow {
+            provider_id: format!("tmdb:{}", t.id),
+            name: t.name.unwrap_or_default(),
+            original_name: t.original_name,
+            overview: t.overview,
+            first_air_date: t.first_air_date,
+            poster_url: resolve_poster(&t.poster_path),
+            backdrop_url: resolve_backdrop(&t.backdrop_path),
+            genres: t
+                .genre_ids
+                .iter()
+                .map(|&id| Genre::from_tmdb_id(id))
+                .collect(),
+            popularity: t.popularity,
+            vote_average: if t.vote_average != 0 {
+                Some(t.vote_average as f64)
+            } else {
+                None
+            },
+            vote_count: t.vote_count as u64,
+            original_language: t.original_language,
+            origin_country: t.origin_country,
+            adult: false,
+        }
+    }
+}
+
+// TvSeriesTopRatedListResponseResultsItem has vote_average: Option<f64> and no adult field
+impl From<types::TvSeriesTopRatedListResponseResultsItem> for UnifiedTvShow {
+    fn from(t: types::TvSeriesTopRatedListResponseResultsItem) -> Self {
+        UnifiedTvShow {
+            provider_id: format!("tmdb:{}", t.id),
+            name: t.name.unwrap_or_default(),
+            original_name: t.original_name,
+            overview: t.overview,
+            first_air_date: t.first_air_date,
+            poster_url: resolve_poster(&t.poster_path),
+            backdrop_url: resolve_backdrop(&t.backdrop_path),
+            genres: t
+                .genre_ids
+                .iter()
+                .map(|&id| Genre::from_tmdb_id(id))
+                .collect(),
+            popularity: t.popularity,
+            vote_average: t.vote_average,
+            vote_count: t.vote_count as u64,
+            original_language: t.original_language,
+            origin_country: t.origin_country,
+            adult: false,
+        }
+    }
+}
+
+// TvSeriesSimilarResponseResultsItem has vote_average: i64 (not Option<f64>)
+impl From<types::TvSeriesSimilarResponseResultsItem> for UnifiedTvShow {
+    fn from(t: types::TvSeriesSimilarResponseResultsItem) -> Self {
+        UnifiedTvShow {
+            provider_id: format!("tmdb:{}", t.id),
+            name: t.name.unwrap_or_default(),
+            original_name: t.original_name,
+            overview: t.overview,
+            first_air_date: t.first_air_date,
+            poster_url: resolve_poster(&t.poster_path),
+            backdrop_url: resolve_backdrop(&t.backdrop_path),
+            genres: t
+                .genre_ids
+                .iter()
+                .map(|&id| Genre::from_tmdb_id(id))
+                .collect(),
+            popularity: t.popularity,
+            vote_average: if t.vote_average != 0 {
+                Some(t.vote_average as f64)
+            } else {
+                None
+            },
+            vote_count: t.vote_count as u64,
+            original_language: t.original_language,
+            origin_country: t.origin_country,
+            adult: t.adult,
+        }
+    }
+}
+
+impl From<types::TvSeasonDetailsResponse> for UnifiedSeasonDetails {
+    fn from(t: types::TvSeasonDetailsResponse) -> Self {
+        UnifiedSeasonDetails {
+            show_id: String::new(), // filled in by the caller
+            season_number: t.season_number as u32,
+            name: t.name,
+            overview: t.overview,
+            air_date: t.air_date,
+            poster_url: resolve_poster(&t.poster_path),
+            episodes: t.episodes.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl From<types::TvSeasonDetailsResponseEpisodesItem> for UnifiedEpisode {
+    fn from(e: types::TvSeasonDetailsResponseEpisodesItem) -> Self {
+        UnifiedEpisode {
+            episode_number: e.episode_number as u32,
+            name: e.name,
+            overview: e.overview,
+            air_date: e.air_date,
+            runtime: if e.runtime > 0 {
+                Some(e.runtime as u32)
+            } else {
+                None
+            },
+            still_url: e
+                .still_path
+                .as_deref()
+                .map(|p| ImageUrl::still(p, StillSize::W300)),
+            vote_average: e.vote_average,
+        }
+    }
+}
+
+impl From<types::TvEpisodeDetailsResponse> for UnifiedEpisode {
+    fn from(e: types::TvEpisodeDetailsResponse) -> Self {
+        UnifiedEpisode {
+            episode_number: e.episode_number as u32,
+            name: e.name,
+            overview: e.overview,
+            air_date: e.air_date,
+            runtime: if e.runtime > 0 {
+                Some(e.runtime as u32)
+            } else {
+                None
+            },
+            still_url: e
+                .still_path
+                .as_deref()
+                .map(|p| ImageUrl::still(p, StillSize::W300)),
+            vote_average: e.vote_average,
         }
     }
 }

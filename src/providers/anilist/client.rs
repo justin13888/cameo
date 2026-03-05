@@ -332,6 +332,44 @@ impl AniListClient {
         let resp: MediaPageResponse = self.graphql(query::LIST_TOP_SCORED_ANIME, vars).await?;
         Ok(media_page_to_movies(resp))
     }
+
+    /// Get popular anime TV shows (sorted by popularity).
+    pub async fn popular_tv_shows(
+        &self,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<UnifiedTvShow>, AniListError> {
+        let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
+        let vars = json!({
+            "page": page_num,
+            "perPage": per_page,
+            "formatIn": Self::format_in_value(TV_FORMATS),
+        });
+        tracing::debug!(
+            page = page_num,
+            "anilist: graphql LIST_POPULAR_ANIME (popular_tv_shows)"
+        );
+        let resp: MediaPageResponse = self.graphql(query::LIST_POPULAR_ANIME, vars).await?;
+        Ok(media_page_to_tv(resp))
+    }
+
+    /// Get top-scored anime TV shows (sorted by average score).
+    pub async fn top_rated_tv_shows(
+        &self,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<UnifiedTvShow>, AniListError> {
+        let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
+        let vars = json!({
+            "page": page_num,
+            "perPage": per_page,
+            "formatIn": Self::format_in_value(TV_FORMATS),
+        });
+        tracing::debug!(
+            page = page_num,
+            "anilist: graphql LIST_TOP_SCORED_ANIME (top_rated_tv_shows)"
+        );
+        let resp: MediaPageResponse = self.graphql(query::LIST_TOP_SCORED_ANIME, vars).await?;
+        Ok(media_page_to_tv(resp))
+    }
 }
 
 // ── Page conversion helpers ───────────────────────────────────────────────────

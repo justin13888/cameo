@@ -15,7 +15,10 @@ use crate::providers::tmdb::{TmdbClient, TmdbConfig};
 
 mod detail;
 mod discovery;
+mod recommendation;
 mod search;
+mod season;
+mod watch_providers;
 
 /// Error type for the `CameoClient` facade.
 #[derive(Debug, thiserror::Error)]

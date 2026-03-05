@@ -1,8 +1,9 @@
 use async_trait::async_trait;
 
 use super::models::{
-    UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult,
-    UnifiedTvShow, UnifiedTvShowDetails,
+    UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
+    UnifiedSearchResult, UnifiedSeasonDetails, UnifiedTvShow, UnifiedTvShowDetails,
+    UnifiedWatchProviders,
 };
 use crate::core::pagination::PaginatedResponse;
 
@@ -88,6 +89,88 @@ pub trait DiscoveryProvider {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedMovie>, Self::Error>;
+
+    /// Get popular TV shows.
+    async fn popular_tv_shows(
+        &self,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<UnifiedTvShow>, Self::Error>;
+
+    /// Get top-rated TV shows.
+    async fn top_rated_tv_shows(
+        &self,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<UnifiedTvShow>, Self::Error>;
+}
+
+/// Provider that can fetch recommendations and similar content.
+#[async_trait]
+pub trait RecommendationProvider {
+    /// The error type returned by this provider.
+    type Error: std::error::Error + Send + Sync + 'static;
+
+    /// Get movie recommendations based on a movie.
+    async fn movie_recommendations(
+        &self,
+        id: i32,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<UnifiedMovie>, Self::Error>;
+
+    /// Get TV show recommendations based on a TV show.
+    async fn tv_recommendations(
+        &self,
+        id: i32,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<UnifiedTvShow>, Self::Error>;
+
+    /// Get movies similar to a given movie.
+    async fn similar_movies(
+        &self,
+        id: i32,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<UnifiedMovie>, Self::Error>;
+
+    /// Get TV shows similar to a given TV show.
+    async fn similar_tv_shows(
+        &self,
+        id: i32,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<UnifiedTvShow>, Self::Error>;
+}
+
+/// Provider that can fetch season and episode details.
+#[async_trait]
+pub trait SeasonProvider {
+    /// The error type returned by this provider.
+    type Error: std::error::Error + Send + Sync + 'static;
+
+    /// Get details for a specific season of a TV show.
+    async fn season_details(
+        &self,
+        show_id: i32,
+        season_number: u32,
+    ) -> Result<UnifiedSeasonDetails, Self::Error>;
+
+    /// Get details for a specific episode of a TV show.
+    async fn episode_details(
+        &self,
+        show_id: i32,
+        season_number: u32,
+        episode_number: u32,
+    ) -> Result<UnifiedEpisode, Self::Error>;
+}
+
+/// Provider that can fetch streaming availability.
+#[async_trait]
+pub trait WatchProviderTrait {
+    /// The error type returned by this provider.
+    type Error: std::error::Error + Send + Sync + 'static;
+
+    /// Get streaming providers for a movie.
+    async fn movie_watch_providers(&self, id: i32) -> Result<UnifiedWatchProviders, Self::Error>;
+
+    /// Get streaming providers for a TV show.
+    async fn tv_watch_providers(&self, id: i32) -> Result<UnifiedWatchProviders, Self::Error>;
 }
 
 /// A provider that supports search, detail, and discovery operations.

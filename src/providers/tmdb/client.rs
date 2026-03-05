@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use tokio::sync::Semaphore;
 
@@ -6,6 +6,10 @@ use super::{config::TmdbConfig, error::TmdbError};
 use crate::{
     core::{config::TimeWindow, pagination::PaginatedResponse},
     generated::tmdb::{self, types},
+    unified::models::{
+        UnifiedEpisode, UnifiedMovie, UnifiedSeasonDetails, UnifiedStreamingService,
+        UnifiedWatchProviderEntry, UnifiedWatchProviders,
+    },
 };
 
 const TMDB_BASE_URL: &str = "https://api.themoviedb.org";
@@ -348,6 +352,204 @@ impl TmdbClient {
         })
     }
 
+    /// Get popular TV shows.
+    #[tracing::instrument(skip(self))]
+    pub async fn popular_tv_shows(
+        &self,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<types::TvSeriesPopularListResponseResultsItem>, TmdbError> {
+        let resp = self
+            .inner
+            .tv_series_popular_list(self.language(), page.map(|p| p as i32))
+            .await?;
+        let body = resp.into_inner();
+        Ok(PaginatedResponse {
+            page: body.page as u32,
+            results: body.results,
+            total_pages: body.total_pages as u32,
+            total_results: body.total_results as u32,
+        })
+    }
+
+    /// Get top-rated TV shows.
+    #[tracing::instrument(skip(self))]
+    pub async fn top_rated_tv_shows(
+        &self,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<types::TvSeriesTopRatedListResponseResultsItem>, TmdbError> {
+        let resp = self
+            .inner
+            .tv_series_top_rated_list(self.language(), page.map(|p| p as i32))
+            .await?;
+        let body = resp.into_inner();
+        Ok(PaginatedResponse {
+            page: body.page as u32,
+            results: body.results,
+            total_pages: body.total_pages as u32,
+            total_results: body.total_results as u32,
+        })
+    }
+
+    // ── Recommendations / Similar ──
+
+    /// Get movie recommendations based on a movie.
+    #[tracing::instrument(skip(self))]
+    pub async fn movie_recommendations(
+        &self,
+        movie_id: i32,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<UnifiedMovie>, TmdbError> {
+        let resp = self
+            .inner
+            .movie_recommendations(movie_id, self.language(), page.map(|p| p as i32))
+            .await?;
+        let map = resp.into_inner();
+        parse_movie_recs_from_map(map)
+    }
+
+    /// Get TV show recommendations based on a TV show.
+    #[tracing::instrument(skip(self))]
+    pub async fn tv_recommendations(
+        &self,
+        series_id: i32,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<types::TvSeriesRecommendationsResponseResultsItem>, TmdbError>
+    {
+        let resp = self
+            .inner
+            .tv_series_recommendations(series_id, self.language(), page.map(|p| p as i32))
+            .await?;
+        let body = resp.into_inner();
+        Ok(PaginatedResponse {
+            page: body.page as u32,
+            results: body.results,
+            total_pages: body.total_pages as u32,
+            total_results: body.total_results as u32,
+        })
+    }
+
+    /// Get movies similar to a given movie.
+    #[tracing::instrument(skip(self))]
+    pub async fn similar_movies(
+        &self,
+        movie_id: i32,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<types::MovieSimilarResponseResultsItem>, TmdbError> {
+        let resp = self
+            .inner
+            .movie_similar(movie_id, self.language(), page.map(|p| p as i32))
+            .await?;
+        let body = resp.into_inner();
+        Ok(PaginatedResponse {
+            page: body.page as u32,
+            results: body.results,
+            total_pages: body.total_pages as u32,
+            total_results: body.total_results as u32,
+        })
+    }
+
+    /// Get TV shows similar to a given TV show.
+    #[tracing::instrument(skip(self))]
+    pub async fn similar_tv_shows(
+        &self,
+        series_id: i32,
+        page: Option<u32>,
+    ) -> Result<PaginatedResponse<types::TvSeriesSimilarResponseResultsItem>, TmdbError> {
+        let id_str = series_id.to_string();
+        let resp = self
+            .inner
+            .tv_series_similar(&id_str, self.language(), page.map(|p| p as i32))
+            .await?;
+        let body = resp.into_inner();
+        Ok(PaginatedResponse {
+            page: body.page as u32,
+            results: body.results,
+            total_pages: body.total_pages as u32,
+            total_results: body.total_results as u32,
+        })
+    }
+
+    // ── Season / Episode ──
+
+    /// Get season details for a TV show.
+    #[tracing::instrument(skip(self))]
+    pub async fn tv_season_details(
+        &self,
+        series_id: i32,
+        season_number: u32,
+    ) -> Result<UnifiedSeasonDetails, TmdbError> {
+        let resp = self
+            .inner
+            .tv_season_details(series_id, season_number as i32, None, self.language())
+            .await?;
+        let body = resp.into_inner();
+        let show_id = format!("tmdb:{series_id}");
+        let mut details: UnifiedSeasonDetails = body.into();
+        details.show_id = show_id;
+        Ok(details)
+    }
+
+    /// Get episode details for a TV show.
+    #[tracing::instrument(skip(self))]
+    pub async fn tv_episode_details(
+        &self,
+        series_id: i32,
+        season_number: u32,
+        episode_number: u32,
+    ) -> Result<UnifiedEpisode, TmdbError> {
+        let resp = self
+            .inner
+            .tv_episode_details(
+                series_id,
+                season_number as i32,
+                episode_number as i32,
+                None,
+                self.language(),
+            )
+            .await?;
+        Ok(resp.into_inner().into())
+    }
+
+    // ── Watch Providers ──
+
+    /// Get streaming providers for a movie.
+    #[tracing::instrument(skip(self))]
+    pub async fn movie_watch_providers(
+        &self,
+        movie_id: i32,
+    ) -> Result<UnifiedWatchProviders, TmdbError> {
+        let resp = self.inner.movie_watch_providers(movie_id).await?;
+        let body = resp.into_inner();
+        let provider_id = format!("tmdb:{movie_id}");
+        let results = body
+            .results
+            .map(|r| parse_watch_provider_results(serde_json::to_value(r).unwrap_or_default()))
+            .unwrap_or_default();
+        Ok(UnifiedWatchProviders {
+            provider_id,
+            results,
+        })
+    }
+
+    /// Get streaming providers for a TV show.
+    #[tracing::instrument(skip(self))]
+    pub async fn tv_watch_providers(
+        &self,
+        series_id: i32,
+    ) -> Result<UnifiedWatchProviders, TmdbError> {
+        let resp = self.inner.tv_series_watch_providers(series_id).await?;
+        let body = resp.into_inner();
+        let provider_id = format!("tmdb:{series_id}");
+        let results = body
+            .results
+            .map(|r| parse_watch_provider_results(serde_json::to_value(r).unwrap_or_default()))
+            .unwrap_or_default();
+        Ok(UnifiedWatchProviders {
+            provider_id,
+            results,
+        })
+    }
+
     // ── Genres ──
 
     /// Get the list of official movie genres.
@@ -394,4 +596,124 @@ impl TmdbClient {
     pub fn discover_tv(&self) -> super::builders::DiscoverTvBuilder<'_> {
         super::builders::DiscoverTvBuilder::new(self)
     }
+}
+
+// ── Private helpers ───────────────────────────────────────────────────────────
+
+/// Parse movie recommendations from the raw JSON map returned by the generated client.
+fn parse_movie_recs_from_map(
+    map: serde_json::Map<String, serde_json::Value>,
+) -> Result<PaginatedResponse<UnifiedMovie>, TmdbError> {
+    use crate::{
+        providers::tmdb::image_url::{BackdropSize, ImageUrl, PosterSize},
+        unified::genre::Genre,
+    };
+
+    let value = serde_json::Value::Object(map);
+    let page = value["page"].as_i64().unwrap_or(1) as u32;
+    let total_pages = value["total_pages"].as_i64().unwrap_or(1) as u32;
+    let total_results = value["total_results"].as_i64().unwrap_or(0) as u32;
+    let empty = vec![];
+    let arr = value["results"].as_array().unwrap_or(&empty);
+
+    let results = arr
+        .iter()
+        .filter_map(|v| {
+            let id = v["id"].as_i64()?;
+            let title = v["title"].as_str().unwrap_or_default().to_string();
+            let original_title = v["original_title"].as_str().map(String::from);
+            let overview = v["overview"].as_str().map(String::from);
+            let release_date = v["release_date"].as_str().map(String::from);
+            let poster_url = v["poster_path"]
+                .as_str()
+                .map(|p| ImageUrl::poster(p, PosterSize::W500));
+            let backdrop_url = v["backdrop_path"]
+                .as_str()
+                .map(|p| ImageUrl::backdrop(p, BackdropSize::W780));
+            let genre_ids: Vec<i64> = v["genre_ids"]
+                .as_array()
+                .map(|a| a.iter().filter_map(|g| g.as_i64()).collect())
+                .unwrap_or_default();
+            let genres = genre_ids
+                .iter()
+                .map(|&gid| Genre::from_tmdb_id(gid))
+                .collect();
+            let popularity = v["popularity"].as_f64();
+            let vote_average = v["vote_average"].as_f64();
+            let vote_count = v["vote_count"].as_i64().unwrap_or(0) as u64;
+            let original_language = v["original_language"].as_str().map(String::from);
+            let adult = v["adult"].as_bool().unwrap_or(false);
+            Some(UnifiedMovie {
+                provider_id: format!("tmdb:{id}"),
+                title,
+                original_title,
+                overview,
+                release_date,
+                poster_url,
+                backdrop_url,
+                genres,
+                popularity,
+                vote_average,
+                vote_count,
+                original_language,
+                adult,
+            })
+        })
+        .collect();
+
+    Ok(PaginatedResponse {
+        page,
+        total_pages,
+        total_results,
+        results,
+    })
+}
+
+/// Parse watch provider results from a serde_json::Value (serialized country map).
+fn parse_watch_provider_results(
+    value: serde_json::Value,
+) -> HashMap<String, UnifiedWatchProviderEntry> {
+    use crate::providers::tmdb::image_url::{ImageUrl, LogoSize};
+
+    let Some(obj) = value.as_object() else {
+        return HashMap::new();
+    };
+
+    obj.iter()
+        .map(|(country_code, entry_val)| {
+            let flatrate =
+                parse_provider_list(&entry_val["flatrate"], &ImageUrl::logo, LogoSize::W92);
+            let rent = parse_provider_list(&entry_val["rent"], &ImageUrl::logo, LogoSize::W92);
+            let buy = parse_provider_list(&entry_val["buy"], &ImageUrl::logo, LogoSize::W92);
+            (
+                country_code.clone(),
+                UnifiedWatchProviderEntry {
+                    flatrate,
+                    rent,
+                    buy,
+                },
+            )
+        })
+        .collect()
+}
+
+fn parse_provider_list<F>(
+    val: &serde_json::Value,
+    logo_fn: &F,
+    size: crate::providers::tmdb::image_url::LogoSize,
+) -> Vec<UnifiedStreamingService>
+where
+    F: Fn(&str, crate::providers::tmdb::image_url::LogoSize) -> String,
+{
+    val.as_array()
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| {
+                    let name = v["provider_name"].as_str()?.to_string();
+                    let logo_url = v["logo_path"].as_str().map(|p| logo_fn(p, size));
+                    Some(UnifiedStreamingService { name, logo_url })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
 }

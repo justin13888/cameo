@@ -182,3 +182,70 @@ pub enum UnifiedSearchResult {
     /// Person result.
     Person(UnifiedPerson),
 }
+
+/// Detailed season information for a TV show.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedSeasonDetails {
+    /// Provider-qualified show ID (e.g. `"tmdb:1396"`).
+    pub show_id: String,
+    /// Season number.
+    pub season_number: u32,
+    /// Season name.
+    pub name: Option<String>,
+    /// Overview / synopsis.
+    pub overview: Option<String>,
+    /// Air date as a string (YYYY-MM-DD).
+    pub air_date: Option<String>,
+    /// Full poster image URL.
+    pub poster_url: Option<String>,
+    /// Episodes in this season.
+    pub episodes: Vec<UnifiedEpisode>,
+}
+
+/// A single episode in a TV show season.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedEpisode {
+    /// Episode number within the season.
+    pub episode_number: u32,
+    /// Episode name.
+    pub name: Option<String>,
+    /// Episode overview.
+    pub overview: Option<String>,
+    /// Air date as a string (YYYY-MM-DD).
+    pub air_date: Option<String>,
+    /// Runtime in minutes.
+    pub runtime: Option<u32>,
+    /// Full still image URL.
+    pub still_url: Option<String>,
+    /// Average vote score.
+    pub vote_average: Option<f64>,
+}
+
+/// Streaming availability for a movie or TV show.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedWatchProviders {
+    /// Provider-qualified media ID (e.g. `"tmdb:550"`).
+    pub provider_id: String,
+    /// Per-country watch provider entries, keyed by ISO 3166-1 alpha-2 country code.
+    pub results: std::collections::HashMap<String, UnifiedWatchProviderEntry>,
+}
+
+/// Streaming services available in a specific country.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct UnifiedWatchProviderEntry {
+    /// Services offering flat-rate / subscription streaming.
+    pub flatrate: Vec<UnifiedStreamingService>,
+    /// Services offering rental.
+    pub rent: Vec<UnifiedStreamingService>,
+    /// Services offering purchase.
+    pub buy: Vec<UnifiedStreamingService>,
+}
+
+/// A single streaming service.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedStreamingService {
+    /// Service name (e.g. "Netflix").
+    pub name: String,
+    /// Full logo image URL.
+    pub logo_url: Option<String>,
+}
