@@ -39,6 +39,7 @@ impl_movie_from!(types::TrendingMoviesResponseResultsItem);
 impl_movie_from!(types::MoviePopularListResponseResultsItem);
 impl_movie_from!(types::MovieTopRatedListResponseResultsItem);
 impl_movie_from!(types::DiscoverMovieResponseResultsItem);
+impl_movie_from!(types::MovieSimilarResponseResultsItem);
 
 impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
     fn from(m: types::MovieDetailsResponse) -> Self {

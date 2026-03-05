@@ -79,3 +79,15 @@ required-features = ["tmdb"]
 [[example]]
 name = "anilist_search"
 required-features = ["anilist"]
+
+[[example]]
+name = "recommendations"
+required-features = ["tmdb"]
+
+[[example]]
+name = "season_details"
+required-features = ["tmdb"]
+
+[[example]]
+name = "watch_providers"
+required-features = ["tmdb"]

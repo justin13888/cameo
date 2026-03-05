@@ -12,4 +12,7 @@ pub mod traits;
 pub use facade::{CameoClient, CameoClientBuilder, CameoClientError};
 pub use genre::{Genre, UnknownGenre};
 pub use models::*;
-pub use traits::{DetailProvider, DiscoveryProvider, MediaProvider, SearchProvider};
+pub use traits::{
+    DetailProvider, DiscoveryProvider, MediaProvider, RecommendationProvider, SearchProvider,
+    SeasonProvider, WatchProviderTrait,
+};
