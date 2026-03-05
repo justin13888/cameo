@@ -1,4 +1,6 @@
 mod unit {
+    #[cfg(feature = "anilist")]
+    mod anilist_test;
     #[cfg(feature = "tmdb")]
     mod builder_test;
     #[cfg(feature = "cache")]

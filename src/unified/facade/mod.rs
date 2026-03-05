@@ -150,7 +150,11 @@ impl CameoClientBuilder {
         let tmdb: Option<()> = None;
 
         #[cfg(feature = "anilist")]
-        let anilist = self.anilist_config.map(AniListClient::new);
+        let anilist = self
+            .anilist_config
+            .map(AniListClient::new)
+            .transpose()
+            .map_err(CameoClientError::AniList)?;
 
         #[cfg(not(feature = "anilist"))]
         let anilist: Option<()> = None;

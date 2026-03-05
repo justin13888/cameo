@@ -37,7 +37,7 @@
 //! use cameo::unified::{CameoClient, SearchProvider};
 //!
 //! // Low-level AniList client (no auth required)
-//! let client = AniListClient::new(AniListConfig::new());
+//! let client = AniListClient::new(AniListConfig::new())?;
 //! let results = client.search_movies("Your Name", None).await?;
 //!
 //! // High-level unified facade (AniList only)
