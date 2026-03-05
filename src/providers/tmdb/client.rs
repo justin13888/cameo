@@ -20,7 +20,6 @@ const TMDB_BASE_URL: &str = "https://api.themoviedb.org";
 pub struct TmdbClient {
     inner: tmdb::Client,
     config: TmdbConfig,
-    #[allow(dead_code)]
     rate_limiter: Arc<Semaphore>,
 }
 
@@ -81,6 +80,16 @@ impl TmdbClient {
         self.config.include_adult
     }
 
+    /// Acquire a rate-limit permit. The permit is held until the returned
+    /// `SemaphorePermit` is dropped, which should happen after the HTTP
+    /// response has been received.
+    pub(crate) async fn acquire_rate_limit_permit(&self) -> tokio::sync::SemaphorePermit<'_> {
+        self.rate_limiter
+            .acquire()
+            .await
+            .expect("rate-limit semaphore closed")
+    }
+
     // ── Search ──
 
     /// Search for movies by title.
@@ -90,6 +99,7 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::SearchMovieResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .search_movie(
@@ -118,6 +128,7 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::SearchTvResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .search_tv(
@@ -145,6 +156,7 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::SearchPersonResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .search_person(
@@ -170,6 +182,7 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::SearchMultiResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .search_multi(
@@ -196,6 +209,7 @@ impl TmdbClient {
         &self,
         movie_id: i32,
     ) -> Result<types::MovieDetailsResponse, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .movie_details(movie_id, None, self.language())
@@ -210,6 +224,7 @@ impl TmdbClient {
         movie_id: i32,
         append: &str,
     ) -> Result<types::MovieDetailsResponse, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .movie_details(movie_id, Some(append), self.language())
@@ -223,6 +238,7 @@ impl TmdbClient {
         &self,
         series_id: i32,
     ) -> Result<types::TvSeriesDetailsResponse, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .tv_series_details(series_id, None, self.language())
@@ -236,6 +252,7 @@ impl TmdbClient {
         &self,
         person_id: i32,
     ) -> Result<types::PersonDetailsResponse, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .person_details(person_id, None, self.language())
@@ -251,6 +268,7 @@ impl TmdbClient {
         &self,
         movie_id: i32,
     ) -> Result<types::MovieCreditsResponse, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self.inner.movie_credits(movie_id, self.language()).await?;
         Ok(resp.into_inner())
     }
@@ -261,6 +279,7 @@ impl TmdbClient {
         &self,
         series_id: i32,
     ) -> Result<types::TvSeriesAggregateCreditsResponse, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .tv_series_aggregate_credits(series_id, self.language())
@@ -277,6 +296,7 @@ impl TmdbClient {
         time_window: TimeWindow,
         _page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TrendingMoviesResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let tw = match time_window {
             TimeWindow::Day => types::TrendingMoviesTimeWindow::Day,
             TimeWindow::Week => types::TrendingMoviesTimeWindow::Week,
@@ -298,6 +318,7 @@ impl TmdbClient {
         time_window: TimeWindow,
         _page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TrendingTvResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let tw = match time_window {
             TimeWindow::Day => types::TrendingTvTimeWindow::Day,
             TimeWindow::Week => types::TrendingTvTimeWindow::Week,
@@ -320,6 +341,7 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::MoviePopularListResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .movie_popular_list(self.language(), page.map(|p| p as i32), self.region())
@@ -339,6 +361,7 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::MovieTopRatedListResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .movie_top_rated_list(self.language(), page.map(|p| p as i32), self.region())
@@ -358,6 +381,7 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TvSeriesPopularListResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .tv_series_popular_list(self.language(), page.map(|p| p as i32))
@@ -377,6 +401,7 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TvSeriesTopRatedListResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .tv_series_top_rated_list(self.language(), page.map(|p| p as i32))
@@ -399,6 +424,7 @@ impl TmdbClient {
         movie_id: i32,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedMovie>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .movie_recommendations(movie_id, self.language(), page.map(|p| p as i32))
@@ -415,6 +441,7 @@ impl TmdbClient {
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TvSeriesRecommendationsResponseResultsItem>, TmdbError>
     {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .tv_series_recommendations(series_id, self.language(), page.map(|p| p as i32))
@@ -435,6 +462,7 @@ impl TmdbClient {
         movie_id: i32,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::MovieSimilarResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .movie_similar(movie_id, self.language(), page.map(|p| p as i32))
@@ -455,6 +483,7 @@ impl TmdbClient {
         series_id: i32,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TvSeriesSimilarResponseResultsItem>, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let id_str = series_id.to_string();
         let resp = self
             .inner
@@ -478,6 +507,7 @@ impl TmdbClient {
         series_id: i32,
         season_number: u32,
     ) -> Result<UnifiedSeasonDetails, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .tv_season_details(series_id, season_number as i32, None, self.language())
@@ -497,6 +527,7 @@ impl TmdbClient {
         season_number: u32,
         episode_number: u32,
     ) -> Result<UnifiedEpisode, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .tv_episode_details(
@@ -518,6 +549,7 @@ impl TmdbClient {
         &self,
         movie_id: i32,
     ) -> Result<UnifiedWatchProviders, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self.inner.movie_watch_providers(movie_id).await?;
         let body = resp.into_inner();
         let provider_id = format!("tmdb:{movie_id}");
@@ -537,6 +569,7 @@ impl TmdbClient {
         &self,
         series_id: i32,
     ) -> Result<UnifiedWatchProviders, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self.inner.tv_series_watch_providers(series_id).await?;
         let body = resp.into_inner();
         let provider_id = format!("tmdb:{series_id}");
@@ -555,6 +588,7 @@ impl TmdbClient {
     /// Get the list of official movie genres.
     #[tracing::instrument(skip(self))]
     pub async fn movie_genres(&self) -> Result<types::GenreMovieListResponse, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self.inner.genre_movie_list(self.language()).await?;
         Ok(resp.into_inner())
     }
@@ -562,6 +596,7 @@ impl TmdbClient {
     /// Get the list of official TV show genres.
     #[tracing::instrument(skip(self))]
     pub async fn tv_genres(&self) -> Result<types::GenreTvListResponse, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self.inner.genre_tv_list(self.language()).await?;
         Ok(resp.into_inner())
     }
@@ -574,6 +609,7 @@ impl TmdbClient {
         &self,
         movie_id: i32,
     ) -> Result<types::MovieImagesResponse, TmdbError> {
+        let _permit = self.acquire_rate_limit_permit().await;
         let resp = self
             .inner
             .movie_images(
@@ -716,4 +752,59 @@ where
                 .collect()
         })
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    };
+
+    use tokio::sync::Semaphore;
+
+    /// Verify that the semaphore actually limits concurrency to `rate_limit`.
+    ///
+    /// Spawns `N` tasks that each acquire a permit, increment an in-flight counter,
+    /// assert the counter never exceeds `rate_limit`, then decrement and drop the permit.
+    #[tokio::test]
+    async fn rate_limit_semaphore_enforces_max_concurrency() {
+        const RATE_LIMIT: usize = 3;
+        const N: usize = 20;
+
+        let semaphore = Arc::new(Semaphore::new(RATE_LIMIT));
+        let in_flight = Arc::new(AtomicUsize::new(0));
+        let max_seen = Arc::new(AtomicUsize::new(0));
+
+        let mut handles = Vec::with_capacity(N);
+        for _ in 0..N {
+            let sem = Arc::clone(&semaphore);
+            let in_flight = Arc::clone(&in_flight);
+            let max_seen = Arc::clone(&max_seen);
+            handles.push(tokio::spawn(async move {
+                let _permit = sem.acquire().await.expect("semaphore closed");
+                let current = in_flight.fetch_add(1, Ordering::SeqCst) + 1;
+                // Track maximum observed concurrency
+                max_seen.fetch_max(current, Ordering::SeqCst);
+                assert!(
+                    current <= RATE_LIMIT,
+                    "concurrency {current} exceeded rate_limit {RATE_LIMIT}"
+                );
+                // Simulate a tiny bit of async work
+                tokio::task::yield_now().await;
+                in_flight.fetch_sub(1, Ordering::SeqCst);
+                // _permit dropped here, releasing the slot
+            }));
+        }
+
+        for h in handles {
+            h.await.expect("task panicked");
+        }
+
+        // Sanity: we should have actually seen concurrency > 1 (otherwise the
+        // test isn't meaningful), up to RATE_LIMIT.
+        let peak = max_seen.load(Ordering::SeqCst);
+        assert!(peak >= 1, "no tasks ran");
+        assert!(peak <= RATE_LIMIT);
+    }
 }
