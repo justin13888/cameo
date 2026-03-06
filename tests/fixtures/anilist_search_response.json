@@ -1,0 +1,39 @@
+{
+  "data": {
+    "Page": {
+      "pageInfo": {
+        "total": 1,
+        "currentPage": 1,
+        "lastPage": 1,
+        "hasNextPage": false,
+        "perPage": 20
+      },
+      "media": [
+        {
+          "id": 1535,
+          "title": {
+            "romaji": "Your Name.",
+            "english": "Your Name.",
+            "native": "君の名は。"
+          },
+          "description": "Two strangers find themselves linked in a bizarre way.",
+          "startDate": {"year": 2016, "month": 8, "day": 26},
+          "coverImage": {
+            "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1535.jpg",
+            "extraLarge": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1535.jpg"
+          },
+          "bannerImage": null,
+          "genres": ["Drama", "Romance", "Supernatural"],
+          "popularity": 489384,
+          "averageScore": 86,
+          "episodes": 1,
+          "duration": 106,
+          "status": "FINISHED",
+          "format": "MOVIE",
+          "countryOfOrigin": "JP",
+          "isAdult": false
+        }
+      ]
+    }
+  }
+}
