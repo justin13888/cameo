@@ -1,0 +1,23 @@
+{
+  "data": {
+    "Staff": {
+      "id": 95061,
+      "name": {
+        "full": "Yuki Kaji",
+        "native": "梶裕貴",
+        "alternative": []
+      },
+      "image": {
+        "large": "https://s4.anilist.co/file/anilistcdn/staff/large/n95061.jpg"
+      },
+      "description": "Yuki Kaji is a Japanese voice actor.",
+      "primaryOccupations": ["Voice Actor"],
+      "gender": "Male",
+      "dateOfBirth": {"year": 1986, "month": 9, "day": 3},
+      "dateOfDeath": null,
+      "homeTown": "Osaka, Japan",
+      "siteUrl": "https://anilist.co/staff/95061",
+      "languageV2": "Japanese"
+    }
+  }
+}

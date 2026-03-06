@@ -12,43 +12,31 @@ async fn mock_client(body: serde_json::Value) -> (MockServer, AniListClient) {
     (server, client)
 }
 
+async fn mock_client_str(body: &'static str) -> (MockServer, AniListClient) {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(body, "application/json"))
+        .mount(&server)
+        .await;
+    let client = AniListClient::new(AniListConfig::new_with_base_url(server.uri())).unwrap();
+    (server, client)
+}
+
 // ── movie_details ─────────────────────────────────────────────────────────────
 
 #[tokio::test]
 async fn movie_details_returns_correct_fields() {
-    let body = json!({
-        "data": {
-            "Media": {
-                "id": 1575,
-                "title": { "romaji": "Spirited Away", "english": "Spirited Away", "native": "千と千尋の神隠し" },
-                "description": "A girl in a spirit world.",
-                "startDate": { "year": 2001, "month": 7, "day": 20 },
-                "endDate": { "year": 2001, "month": 7, "day": 20 },
-                "coverImage": { "large": "https://example.com/cover.jpg", "extraLarge": "https://example.com/cover_xl.jpg" },
-                "bannerImage": null,
-                "genres": ["Adventure", "Fantasy"],
-                "popularity": 450000,
-                "averageScore": 92,
-                "episodes": 1,
-                "duration": 125,
-                "status": "FINISHED",
-                "format": "MOVIE",
-                "countryOfOrigin": "JP",
-                "isAdult": false,
-                "season": null,
-                "seasonYear": null,
-                "studios": { "nodes": [{ "name": "Studio Ghibli" }] }
-            }
-        }
-    });
-    let (_server, client) = mock_client(body).await;
+    let (_server, client) = mock_client_str(include_str!(
+        "../fixtures/anilist_media_details_response.json"
+    ))
+    .await;
 
-    let result = client.movie_details(1575).await.unwrap();
+    let result = client.movie_details(1535).await.unwrap();
 
-    assert_eq!(result.movie.provider_id, "anilist:1575");
-    assert_eq!(result.movie.title, "Spirited Away");
-    assert_eq!(result.runtime, Some(125));
-    assert_eq!(result.production_companies, vec!["Studio Ghibli"]);
+    assert_eq!(result.movie.provider_id, "anilist:1535");
+    assert_eq!(result.movie.title, "Your Name.");
+    assert_eq!(result.runtime, Some(106));
+    assert_eq!(result.production_companies, vec!["CoMix Wave Films"]);
     assert!(!result.movie.adult);
 }
 
@@ -148,24 +136,10 @@ async fn tv_show_details_graphql_error_propagates() {
 
 #[tokio::test]
 async fn person_details_returns_correct_fields() {
-    let body = json!({
-        "data": {
-            "Staff": {
-                "id": 95061,
-                "name": { "full": "Yuki Kaji", "native": "梶裕貴", "alternative": [] },
-                "image": { "large": "https://example.com/profile.jpg" },
-                "description": "A voice actor.",
-                "primaryOccupations": ["Voice Actor"],
-                "gender": "Male",
-                "dateOfBirth": { "year": 1986, "month": 9, "day": 3 },
-                "dateOfDeath": null,
-                "homeTown": "Tokyo, Japan",
-                "siteUrl": "https://anilist.co/staff/95061",
-                "languageV2": "Japanese"
-            }
-        }
-    });
-    let (_server, client) = mock_client(body).await;
+    let (_server, client) = mock_client_str(include_str!(
+        "../fixtures/anilist_staff_details_response.json"
+    ))
+    .await;
 
     let result = client.person_details(95061).await.unwrap();
 
