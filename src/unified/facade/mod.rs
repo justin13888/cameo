@@ -49,10 +49,25 @@ pub enum CameoClientError {
 struct Cache {
     backend: Arc<dyn CacheBackend>,
     ttl: CacheTtlConfig,
+    /// Tracks the number of background write tasks currently in flight.
+    /// Used by [`Cache::wait_for_writes`] to provide a deterministic flush
+    /// point (e.g. in tests) without artificial sleeps.
+    inflight_tx: Arc<tokio::sync::watch::Sender<usize>>,
+    inflight_rx: tokio::sync::watch::Receiver<usize>,
 }
 
 #[cfg(feature = "cache")]
 impl Cache {
+    fn new(backend: Arc<dyn CacheBackend>, ttl: CacheTtlConfig) -> Self {
+        let (inflight_tx, inflight_rx) = tokio::sync::watch::channel(0_usize);
+        Self {
+            backend,
+            ttl,
+            inflight_tx: Arc::new(inflight_tx),
+            inflight_rx,
+        }
+    }
+
     async fn get<T: DeserializeOwned>(&self, key: &CacheKey) -> Option<T> {
         match self.backend.get(key).await {
             Ok(Some(v)) => serde_json::from_value(v).ok(),
@@ -60,12 +75,37 @@ impl Cache {
         }
     }
 
-    async fn set<T: Serialize>(&self, key: CacheKey, value: &T, ttl: std::time::Duration) {
-        if let Ok(v) = serde_json::to_value(value)
-            && let Err(e) = self.backend.set(key, v, ttl).await
-        {
-            tracing::warn!(error = %e, "cache write failed");
+    /// Serialize `value` and enqueue a background write. Returns immediately;
+    /// the actual I/O happens in a spawned task. The inflight counter is
+    /// incremented before spawning and decremented once the write finishes,
+    /// so [`Cache::wait_for_writes`] can detect quiescence precisely.
+    fn set<T: Serialize>(&self, key: CacheKey, value: &T, ttl: std::time::Duration) {
+        match serde_json::to_value(value) {
+            Ok(v) => {
+                self.inflight_tx.send_modify(|n| *n += 1);
+                let backend = Arc::clone(&self.backend);
+                let tx = Arc::clone(&self.inflight_tx);
+                tokio::spawn(async move {
+                    if let Err(e) = backend.set(key, v, ttl).await {
+                        tracing::warn!(error = %e, "cache write failed");
+                    }
+                    tx.send_modify(|n| *n -= 1);
+                });
+            }
+            Err(e) => {
+                tracing::warn!(error = %e, "cache serialization failed");
+            }
         }
+    }
+
+    /// Wait until all in-flight background writes have completed.
+    ///
+    /// [`tokio::sync::watch::Receiver::wait_for`] atomically checks the
+    /// current value and subscribes before returning, so there is no race
+    /// between "check zero" and "start waiting".
+    async fn wait_for_writes(&self) {
+        // Clone creates a new subscriber that sees the current value.
+        let _ = self.inflight_rx.clone().wait_for(|&n| n == 0).await;
     }
 }
 
@@ -169,10 +209,9 @@ impl CameoClientBuilder {
         }
 
         #[cfg(feature = "cache")]
-        let cache = self.cache_backend.map(|backend| Cache {
-            backend,
-            ttl: self.cache_ttl.unwrap_or_default(),
-        });
+        let cache = self
+            .cache_backend
+            .map(|backend| Cache::new(backend, self.cache_ttl.unwrap_or_default()));
 
         Ok(CameoClient {
             #[cfg(feature = "tmdb")]
@@ -410,6 +449,41 @@ impl CameoClient {
     pub async fn clear_cache(&self) {
         if let Some(cache) = self.cache.as_ref() {
             let _ = cache.backend.clear().await;
+        }
+    }
+
+    /// Wait until all pending background cache writes have completed.
+    ///
+    /// Cache writes are enqueued as fire-and-forget background tasks to
+    /// avoid adding I/O latency to the hot path. Call this method when you
+    /// need a synchronisation point — most commonly in tests to avoid
+    /// artificial sleeps:
+    ///
+    /// ```no_run
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # #[cfg(all(feature = "tmdb", feature = "cache"))]
+    /// # {
+    /// use cameo::providers::tmdb::TmdbConfig;
+    /// use cameo::unified::{CameoClient, DetailProvider};
+    ///
+    /// let client = CameoClient::builder()
+    ///     .with_tmdb(TmdbConfig::new("token"))
+    ///     .with_cache()
+    ///     .build()?;
+    ///
+    /// client.movie_details(550).await?;
+    /// client.flush_cache_writes().await; // ensure the write landed
+    /// assert!(client.cached_movie_details("tmdb:550").await.is_some());
+    /// # }
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// In production code this is a no-op when no writes are in flight.
+    #[cfg(feature = "cache")]
+    pub async fn flush_cache_writes(&self) {
+        if let Some(cache) = self.cache.as_ref() {
+            cache.wait_for_writes().await;
         }
     }
 }

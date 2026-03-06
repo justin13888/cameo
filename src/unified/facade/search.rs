@@ -61,13 +61,13 @@ impl SearchProvider for CameoClient {
                     query: query.to_string(),
                     page: page_num,
                 };
-                cache.set(search_key, &unified, cache.ttl.search).await;
+                cache.set(search_key, &unified, cache.ttl.search);
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::Movie,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(item_key, item, cache.ttl.items).await;
+                    cache.set(item_key, item, cache.ttl.items);
                 }
             }
 
@@ -86,13 +86,13 @@ impl SearchProvider for CameoClient {
                     query: query.to_string(),
                     page: page_num,
                 };
-                cache.set(search_key, &unified, cache.ttl.search).await;
+                cache.set(search_key, &unified, cache.ttl.search);
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::Movie,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(item_key, item, cache.ttl.items).await;
+                    cache.set(item_key, item, cache.ttl.items);
                 }
             }
 
@@ -148,13 +148,13 @@ impl SearchProvider for CameoClient {
                     query: query.to_string(),
                     page: page_num,
                 };
-                cache.set(search_key, &unified, cache.ttl.search).await;
+                cache.set(search_key, &unified, cache.ttl.search);
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::TvShow,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(item_key, item, cache.ttl.items).await;
+                    cache.set(item_key, item, cache.ttl.items);
                 }
             }
 
@@ -173,13 +173,13 @@ impl SearchProvider for CameoClient {
                     query: query.to_string(),
                     page: page_num,
                 };
-                cache.set(search_key, &unified, cache.ttl.search).await;
+                cache.set(search_key, &unified, cache.ttl.search);
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::TvShow,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(item_key, item, cache.ttl.items).await;
+                    cache.set(item_key, item, cache.ttl.items);
                 }
             }
 
@@ -235,13 +235,13 @@ impl SearchProvider for CameoClient {
                     query: query.to_string(),
                     page: page_num,
                 };
-                cache.set(search_key, &unified, cache.ttl.search).await;
+                cache.set(search_key, &unified, cache.ttl.search);
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::Person,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(item_key, item, cache.ttl.items).await;
+                    cache.set(item_key, item, cache.ttl.items);
                 }
             }
 
@@ -260,13 +260,13 @@ impl SearchProvider for CameoClient {
                     query: query.to_string(),
                     page: page_num,
                 };
-                cache.set(search_key, &unified, cache.ttl.search).await;
+                cache.set(search_key, &unified, cache.ttl.search);
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::Person,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(item_key, item, cache.ttl.items).await;
+                    cache.set(item_key, item, cache.ttl.items);
                 }
             }
 
@@ -322,7 +322,7 @@ impl SearchProvider for CameoClient {
                     query: query.to_string(),
                     page: page_num,
                 };
-                cache.set(search_key, &unified, cache.ttl.search).await;
+                cache.set(search_key, &unified, cache.ttl.search);
                 // Index individual items by provider_id.
                 for item in &unified.results {
                     match item {
@@ -331,21 +331,21 @@ impl SearchProvider for CameoClient {
                                 media_type: MediaType::Movie,
                                 provider_id: m.provider_id.clone(),
                             };
-                            cache.set(k, m, cache.ttl.items).await;
+                            cache.set(k, m, cache.ttl.items);
                         }
                         UnifiedSearchResult::TvShow(t) => {
                             let k = CacheKey::Item {
                                 media_type: MediaType::TvShow,
                                 provider_id: t.provider_id.clone(),
                             };
-                            cache.set(k, t, cache.ttl.items).await;
+                            cache.set(k, t, cache.ttl.items);
                         }
                         UnifiedSearchResult::Person(p) => {
                             let k = CacheKey::Item {
                                 media_type: MediaType::Person,
                                 provider_id: p.provider_id.clone(),
                             };
-                            cache.set(k, p, cache.ttl.items).await;
+                            cache.set(k, p, cache.ttl.items);
                         }
                     }
                 }
@@ -366,7 +366,7 @@ impl SearchProvider for CameoClient {
                     query: query.to_string(),
                     page: page_num,
                 };
-                cache.set(search_key, &unified, cache.ttl.search).await;
+                cache.set(search_key, &unified, cache.ttl.search);
                 for item in &unified.results {
                     match item {
                         UnifiedSearchResult::Movie(m) => {
@@ -374,21 +374,21 @@ impl SearchProvider for CameoClient {
                                 media_type: MediaType::Movie,
                                 provider_id: m.provider_id.clone(),
                             };
-                            cache.set(k, m, cache.ttl.items).await;
+                            cache.set(k, m, cache.ttl.items);
                         }
                         UnifiedSearchResult::TvShow(t) => {
                             let k = CacheKey::Item {
                                 media_type: MediaType::TvShow,
                                 provider_id: t.provider_id.clone(),
                             };
-                            cache.set(k, t, cache.ttl.items).await;
+                            cache.set(k, t, cache.ttl.items);
                         }
                         UnifiedSearchResult::Person(p) => {
                             let k = CacheKey::Item {
                                 media_type: MediaType::Person,
                                 provider_id: p.provider_id.clone(),
                             };
-                            cache.set(k, p, cache.ttl.items).await;
+                            cache.set(k, p, cache.ttl.items);
                         }
                     }
                 }
