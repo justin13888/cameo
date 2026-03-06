@@ -48,12 +48,12 @@ impl DetailProvider for CameoClient {
                     media_type: MediaType::Movie,
                     provider_id: provider_id.clone(),
                 };
-                cache.set(detail_key, &details, detail_ttl).await;
+                cache.set(detail_key, &details, detail_ttl);
                 let item_key = CacheKey::Item {
                     media_type: MediaType::Movie,
                     provider_id,
                 };
-                cache.set(item_key, &details.movie, cache.ttl.items).await;
+                cache.set(item_key, &details.movie, cache.ttl.items);
             }
 
             return Ok(details);
@@ -94,12 +94,12 @@ impl DetailProvider for CameoClient {
                     media_type: MediaType::Movie,
                     provider_id: provider_id.clone(),
                 };
-                cache.set(detail_key, &details, detail_ttl).await;
+                cache.set(detail_key, &details, detail_ttl);
                 let item_key = CacheKey::Item {
                     media_type: MediaType::Movie,
                     provider_id,
                 };
-                cache.set(item_key, &details.movie, cache.ttl.items).await;
+                cache.set(item_key, &details.movie, cache.ttl.items);
             }
 
             return Ok(details);
@@ -146,12 +146,12 @@ impl DetailProvider for CameoClient {
                     media_type: MediaType::TvShow,
                     provider_id: provider_id.clone(),
                 };
-                cache.set(detail_key, &details, detail_ttl).await;
+                cache.set(detail_key, &details, detail_ttl);
                 let item_key = CacheKey::Item {
                     media_type: MediaType::TvShow,
                     provider_id,
                 };
-                cache.set(item_key, &details.show, cache.ttl.items).await;
+                cache.set(item_key, &details.show, cache.ttl.items);
             }
 
             return Ok(details);
@@ -194,12 +194,12 @@ impl DetailProvider for CameoClient {
                     media_type: MediaType::TvShow,
                     provider_id: provider_id.clone(),
                 };
-                cache.set(detail_key, &details, detail_ttl).await;
+                cache.set(detail_key, &details, detail_ttl);
                 let item_key = CacheKey::Item {
                     media_type: MediaType::TvShow,
                     provider_id,
                 };
-                cache.set(item_key, &details.show, cache.ttl.items).await;
+                cache.set(item_key, &details.show, cache.ttl.items);
             }
 
             return Ok(details);
@@ -240,12 +240,12 @@ impl DetailProvider for CameoClient {
                     media_type: MediaType::Person,
                     provider_id: provider_id.clone(),
                 };
-                cache.set(detail_key, &details, cache.ttl.details).await;
+                cache.set(detail_key, &details, cache.ttl.details);
                 let item_key = CacheKey::Item {
                     media_type: MediaType::Person,
                     provider_id,
                 };
-                cache.set(item_key, &details.person, cache.ttl.items).await;
+                cache.set(item_key, &details.person, cache.ttl.items);
             }
 
             return Ok(details);
@@ -282,12 +282,12 @@ impl DetailProvider for CameoClient {
                     media_type: MediaType::Person,
                     provider_id: provider_id.clone(),
                 };
-                cache.set(detail_key, &details, cache.ttl.details).await;
+                cache.set(detail_key, &details, cache.ttl.details);
                 let item_key = CacheKey::Item {
                     media_type: MediaType::Person,
                     provider_id,
                 };
-                cache.set(item_key, &details.person, cache.ttl.items).await;
+                cache.set(item_key, &details.person, cache.ttl.items);
             }
 
             return Ok(details);

@@ -62,15 +62,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint: endpoint.clone(),
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::Movie,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -88,15 +86,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint,
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::Movie,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -153,15 +149,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint: endpoint.clone(),
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::TvShow,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -179,15 +173,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint,
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::TvShow,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -243,15 +235,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint,
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::Movie,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -269,15 +259,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint,
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::Movie,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -333,15 +321,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint: endpoint.clone(),
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::TvShow,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -359,15 +345,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint,
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::TvShow,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -423,15 +407,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint: endpoint.clone(),
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::TvShow,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -449,15 +431,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint,
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::TvShow,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -513,15 +493,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint,
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::Movie,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 
@@ -539,15 +517,13 @@ impl DiscoveryProvider for CameoClient {
                     endpoint,
                     page: page_num,
                 };
-                cache
-                    .set(discovery_key, &unified, cache.ttl.discovery)
-                    .await;
+                cache.set(discovery_key, &unified, cache.ttl.discovery);
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::Movie,
                         provider_id: item.provider_id.clone(),
                     };
-                    cache.set(k, item, cache.ttl.items).await;
+                    cache.set(k, item, cache.ttl.items);
                 }
             }
 

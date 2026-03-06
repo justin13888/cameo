@@ -27,33 +27,74 @@ CREATE INDEX IF NOT EXISTS idx_expires ON cache_entries(expires_at);
 
 /// SQLite-backed cache backend.
 ///
-/// Uses a single `cache_entries` table. All rusqlite calls are run on a
-/// blocking thread pool via [`tokio::task::spawn_blocking`] to keep the async
-/// interface non-blocking.
+/// Uses a single `cache_entries` table with separate read and write
+/// connections. For file-based databases, WAL journal mode is enabled so
+/// that reads and background writes can proceed concurrently without
+/// blocking each other: the read connection holds its own SQLite shared
+/// lock while the write connection can proceed under WAL's snapshot
+/// isolation.
+///
+/// For in-memory databases (e.g. in tests) a single connection is shared
+/// because SQLite in-memory databases are not accessible from a second
+/// connection. Reads and writes therefore still serialise through the same
+/// mutex, which is correct and safe.
+///
+/// All rusqlite calls are dispatched to the blocking thread pool via
+/// [`tokio::task::spawn_blocking`] to keep the async interface non-blocking.
 #[derive(Clone)]
 pub struct SqliteCache {
-    conn: Arc<Mutex<Connection>>,
+    /// Connection used exclusively for read (`SELECT`) queries.
+    read_conn: Arc<Mutex<Connection>>,
+    /// Connection used exclusively for write (`INSERT/DELETE`) queries.
+    write_conn: Arc<Mutex<Connection>>,
     write_count: Arc<std::sync::atomic::AtomicU64>,
 }
 
 impl SqliteCache {
-    /// Open or create a SQLite cache database at the given path.
+    /// Open or create a file-backed SQLite cache database.
+    ///
+    /// The write connection is switched to WAL journal mode and
+    /// `synchronous=NORMAL`, which trades a small amount of durability
+    /// (acceptable for a cache) for significantly reduced write latency.
+    /// A separate read connection is opened so that concurrent reads do
+    /// not contend with background writes.
     pub fn new(path: impl AsRef<Path>) -> Result<Self, CacheError> {
-        let conn = Connection::open(path).map_err(|e| CacheError::Backend(Box::new(e)))?;
-        Self::init(conn)
+        let path = path.as_ref();
+
+        // Writer: enable WAL for better concurrency and lower write latency.
+        let write_conn = Connection::open(path).map_err(|e| CacheError::Backend(Box::new(e)))?;
+        write_conn
+            .execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")
+            .map_err(|e| CacheError::Backend(Box::new(e)))?;
+        write_conn
+            .execute_batch(CREATE_TABLE)
+            .map_err(|e| CacheError::Backend(Box::new(e)))?;
+
+        // Separate reader: in WAL mode this connection can read without
+        // blocking the writer connection.
+        let read_conn = Connection::open(path).map_err(|e| CacheError::Backend(Box::new(e)))?;
+
+        Ok(Self {
+            read_conn: Arc::new(Mutex::new(read_conn)),
+            write_conn: Arc::new(Mutex::new(write_conn)),
+            write_count: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+        })
     }
 
     /// Create an in-memory SQLite cache (useful for testing).
+    ///
+    /// A single connection is used for both reads and writes because
+    /// SQLite in-memory databases are not shared across connections.
     pub fn in_memory() -> Result<Self, CacheError> {
         let conn = Connection::open_in_memory().map_err(|e| CacheError::Backend(Box::new(e)))?;
-        Self::init(conn)
-    }
-
-    fn init(conn: Connection) -> Result<Self, CacheError> {
         conn.execute_batch(CREATE_TABLE)
             .map_err(|e| CacheError::Backend(Box::new(e)))?;
+        let conn = Arc::new(Mutex::new(conn));
         Ok(Self {
-            conn: Arc::new(Mutex::new(conn)),
+            // Both arcs point at the same mutex so reads and writes
+            // serialise correctly with a single in-memory connection.
+            read_conn: Arc::clone(&conn),
+            write_conn: conn,
             write_count: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         })
     }
@@ -81,7 +122,7 @@ impl SqliteCache {
 impl CacheBackend for SqliteCache {
     #[tracing::instrument(skip(self, key), fields(key_type = key.key_type(), key_id = %key.key_id()))]
     async fn get(&self, key: &CacheKey) -> Result<Option<serde_json::Value>, CacheError> {
-        let conn = Arc::clone(&self.conn);
+        let conn = Arc::clone(&self.read_conn);
         let key_type = key.key_type().to_string();
         let key_id = key.key_id();
         let now = Self::now_secs();
@@ -115,7 +156,7 @@ impl CacheBackend for SqliteCache {
         value: serde_json::Value,
         ttl: Duration,
     ) -> Result<(), CacheError> {
-        let conn = Arc::clone(&self.conn);
+        let conn = Arc::clone(&self.write_conn);
         let write_count = Arc::clone(&self.write_count);
         let key_type = key.key_type().to_string();
         let key_id = key.key_id();
@@ -143,7 +184,7 @@ impl CacheBackend for SqliteCache {
 
     #[tracing::instrument(skip(self, key), fields(key_type = key.key_type(), key_id = %key.key_id()))]
     async fn invalidate(&self, key: &CacheKey) -> Result<(), CacheError> {
-        let conn = Arc::clone(&self.conn);
+        let conn = Arc::clone(&self.write_conn);
         let key_type = key.key_type().to_string();
         let key_id = key.key_id();
 
@@ -163,7 +204,7 @@ impl CacheBackend for SqliteCache {
     }
 
     async fn clear(&self) -> Result<(), CacheError> {
-        let conn = Arc::clone(&self.conn);
+        let conn = Arc::clone(&self.write_conn);
 
         tokio::task::spawn_blocking(move || {
             let conn = conn

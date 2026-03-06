@@ -48,6 +48,7 @@ async fn search_result_is_cached_second_call_skips_server() {
         .await;
 
     let r1 = client.search_movies("fight club", None).await.unwrap();
+    client.flush_cache_writes().await;
     let r2 = client.search_movies("fight club", None).await.unwrap();
 
     assert_eq!(r1.results.len(), 1);
@@ -72,6 +73,7 @@ async fn search_indexes_individual_items_into_item_cache() {
 
     // Trigger the search so the result is cached and items are indexed.
     client.search_movies("fight club", None).await.unwrap();
+    client.flush_cache_writes().await;
 
     // The item for "tmdb:550" should be retrievable from cache without another HTTP call.
     let cached = client.cached_movie("tmdb:550").await;
@@ -96,6 +98,7 @@ async fn detail_result_is_cached_second_call_skips_server() {
         .await;
 
     let d1 = client.movie_details(550).await.unwrap();
+    client.flush_cache_writes().await;
     let d2 = client.movie_details(550).await.unwrap();
 
     assert_eq!(d1.movie.provider_id, d2.movie.provider_id);
@@ -115,6 +118,7 @@ async fn detail_fetch_populates_both_detail_and_item_caches() {
         .await;
 
     client.movie_details(550).await.unwrap();
+    client.flush_cache_writes().await;
 
     // Detail cache should be populated.
     let detail = client.cached_movie_details("tmdb:550").await;
@@ -145,6 +149,7 @@ async fn cached_movie_details_returns_none_if_only_search_was_done() {
 
     // Do a search (no detail fetch).
     client.search_movies("fight club", None).await.unwrap();
+    client.flush_cache_writes().await;
 
     // Item should be in cache, but NOT the full details.
     let detail = client.cached_movie_details("tmdb:550").await;
@@ -170,6 +175,7 @@ async fn invalidate_cached_removes_all_entries_for_provider_id() {
         .await;
 
     client.movie_details(550).await.unwrap();
+    client.flush_cache_writes().await;
 
     // Verify entries exist.
     assert!(client.cached_movie("tmdb:550").await.is_some());
@@ -195,6 +201,7 @@ async fn clear_cache_empties_everything() {
         .await;
 
     client.movie_details(550).await.unwrap();
+    client.flush_cache_writes().await;
     assert!(client.cached_movie("tmdb:550").await.is_some());
 
     client.clear_cache().await;
