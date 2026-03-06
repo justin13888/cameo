@@ -211,6 +211,7 @@ impl<'a> DiscoverTvBuilder<'a> {
     pub async fn execute(
         self,
     ) -> Result<PaginatedResponse<DiscoverTvResponseResultsItem>, TmdbError> {
+        let _permit = self.client.acquire_rate_limit_permit().await;
         let resp = self
             .client
             .inner()

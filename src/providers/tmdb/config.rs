@@ -13,7 +13,10 @@ pub struct TmdbConfig {
     pub region: Option<String>,
     /// Whether to include adult content in results.
     pub include_adult: Option<bool>,
-    /// Maximum concurrent requests per second (defaults to 40).
+    /// Maximum number of concurrent in-flight requests (defaults to 40).
+    ///
+    /// This limits how many HTTP requests can be in-flight simultaneously,
+    /// not how many requests per second are made.
     pub rate_limit: u32,
 }
 
