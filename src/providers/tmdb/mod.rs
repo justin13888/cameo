@@ -6,8 +6,6 @@ pub mod client;
 pub mod config;
 /// TMDB-specific error types.
 pub mod error;
-/// Hand-written endpoint extensions for anything the spec misses.
-pub mod ext;
 /// Image URL construction helpers.
 pub mod image_url;
 
