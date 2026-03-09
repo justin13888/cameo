@@ -15,7 +15,7 @@ categories = ["api-bindings", "asynchronous", "web-programming::http-client"]
 exclude = ["scripts/", ".sidecar*", "AGENTS.md", "CLAUDE.md"]
 
 [features]
-default = ["tmdb", "cache"]
+default = ["tmdb", "anilist", "cache"]
 tmdb = []
 anilist = []
 cache = ["dep:rusqlite", "dep:dirs"]
