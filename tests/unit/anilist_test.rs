@@ -203,7 +203,8 @@ async fn test_graphql_errors_propagate() {
     let (_server, client) = setup_server_with_response(body).await;
 
     let err = client.search_movies("anything", None).await.unwrap_err();
-    assert!(matches!(err, AniListError::GraphQL(_)));
+    // "Not Found." message triggers the dedicated NotFound variant (ERR-3).
+    assert!(matches!(err, AniListError::NotFound));
 }
 
 #[tokio::test]

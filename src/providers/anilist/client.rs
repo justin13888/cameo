@@ -94,11 +94,18 @@ impl AniListClient {
 
         let gql_resp: GraphQlResponse<T> = resp.json().await?;
 
-        if let Some(errors) = gql_resp.errors {
-            if !errors.is_empty() {
-                tracing::warn!(?errors, "anilist: graphql errors");
-                return Err(AniListError::GraphQL(errors));
+        if let Some(errors) = gql_resp.errors
+            && !errors.is_empty()
+        {
+            tracing::warn!(?errors, "anilist: graphql errors");
+            // Detect "not found" errors and raise the dedicated variant.
+            let is_not_found = errors
+                .iter()
+                .any(|e| e.message.to_lowercase().contains("not found"));
+            if is_not_found {
+                return Err(AniListError::NotFound);
             }
+            return Err(AniListError::GraphQL(errors));
         }
 
         gql_resp.data.ok_or(AniListError::NoData)
@@ -188,7 +195,7 @@ impl AniListClient {
                 .page
                 .staff
                 .into_iter()
-                .map(|s| crate::unified::conversions::anilist::staff_to_person(s))
+                .map(crate::unified::conversions::anilist::staff_to_person)
                 .collect(),
         })
     }
@@ -255,7 +262,13 @@ impl AniListClient {
 
     // ── Discovery ──────────────────────────────────────────────────────────────
 
-    /// Get trending anime movies. AniList has no time window concept; `time_window` is ignored.
+    /// Get trending anime movies.
+    ///
+    /// # Note
+    ///
+    /// AniList has no time-window concept. The `time_window` argument is
+    /// accepted for trait compatibility but is always ignored — AniList
+    /// returns a single global trending list regardless of the requested window.
     pub async fn trending_movies(
         &self,
         _time_window: TimeWindow,
@@ -275,7 +288,13 @@ impl AniListClient {
         Ok(media_page_to_movies(resp))
     }
 
-    /// Get trending anime series. AniList has no time window concept; `time_window` is ignored.
+    /// Get trending anime series.
+    ///
+    /// # Note
+    ///
+    /// AniList has no time-window concept. The `time_window` argument is
+    /// accepted for trait compatibility but is always ignored — AniList
+    /// returns a single global trending list regardless of the requested window.
     pub async fn trending_tv(
         &self,
         _time_window: TimeWindow,

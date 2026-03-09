@@ -1,6 +1,6 @@
 const DEFAULT_PER_PAGE: u32 = 20;
 
-/// Configuration for the [`AniListClient`].
+/// Configuration for the [`AniListClient`](super::client::AniListClient).
 #[derive(Debug, Clone)]
 pub struct AniListConfig {
     /// Base URL for the AniList GraphQL endpoint.

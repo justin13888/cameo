@@ -22,8 +22,17 @@ jobs:
         run: cargo fmt --all -- --check
 
   check:
-    name: Check
+    name: Check (${{ matrix.features }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        features:
+          - "tmdb,cache"          # defaults
+          - "anilist"             # AniList only, no TMDB, no cache
+          - "tmdb"                # TMDB without cache
+          - "tmdb,anilist"        # TMDB + AniList, no cache
+          - "tmdb,anilist,cache"  # all features
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -32,12 +41,34 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: "true"
+          key: ${{ matrix.features }}
 
       - name: Build
-        run: cargo build --all-targets
+        run: cargo build --all-targets --no-default-features --features "${{ matrix.features }}"
 
       - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --all-targets --no-default-features --features "${{ matrix.features }}" -- -D warnings
 
       - name: Test
-        run: cargo test
+        run: cargo test --no-default-features --features "${{ matrix.features }}"
+
+  doc-test:
+    name: Doc tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      - name: Doc tests
+        run: cargo test --doc --features tmdb,anilist,cache
+
+  audit:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

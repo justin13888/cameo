@@ -1,4 +1,7 @@
-use cameo::providers::anilist::{AniListClient, AniListConfig, AniListError};
+use cameo::{
+    providers::anilist::{AniListClient, AniListConfig, AniListError},
+    unified::genre::Genre,
+};
 use serde_json::json;
 use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
@@ -33,11 +36,36 @@ async fn movie_details_returns_correct_fields() {
 
     let result = client.movie_details(1535).await.unwrap();
 
+    // Provider ID and title
     assert_eq!(result.movie.provider_id, "anilist:1535");
     assert_eq!(result.movie.title, "Your Name.");
+    // Overview / description
+    assert!(
+        result
+            .movie
+            .overview
+            .as_deref()
+            .unwrap_or("")
+            .contains("strangers")
+    );
+    // Release date
+    assert_eq!(result.movie.release_date.as_deref(), Some("2016-08-26"));
+    // Poster URL from coverImage.extraLarge
+    assert!(result.movie.poster_url.is_some());
+    // vote_average (86 / 10)
+    assert_eq!(result.movie.vote_average, Some(8.6));
+    // Runtime
     assert_eq!(result.runtime, Some(106));
+    // Production companies
     assert_eq!(result.production_companies, vec!["CoMix Wave Films"]);
+    // Adult flag
     assert!(!result.movie.adult);
+    // Original language from countryOfOrigin "JP"
+    assert_eq!(result.movie.original_language.as_deref(), Some("ja"));
+    // Genres: Drama, Romance, Supernatural
+    assert!(result.movie.genres.contains(&Genre::Drama));
+    assert!(result.movie.genres.contains(&Genre::Romance));
+    assert!(result.movie.genres.contains(&Genre::Supernatural));
 }
 
 #[tokio::test]
@@ -81,7 +109,7 @@ async fn movie_details_graphql_error_propagates() {
 
     let err = client.movie_details(9999).await.unwrap_err();
 
-    assert!(matches!(err, AniListError::GraphQL(_)));
+    assert!(matches!(err, AniListError::NotFound));
 }
 
 // ── tv_show_details ───────────────────────────────────────────────────────────
@@ -129,7 +157,7 @@ async fn tv_show_details_graphql_error_propagates() {
 
     let err = client.tv_show_details(9999).await.unwrap_err();
 
-    assert!(matches!(err, AniListError::GraphQL(_)));
+    assert!(matches!(err, AniListError::NotFound));
 }
 
 // ── person_details ────────────────────────────────────────────────────────────
@@ -155,5 +183,5 @@ async fn person_details_graphql_error_propagates() {
 
     let err = client.person_details(9999).await.unwrap_err();
 
-    assert!(matches!(err, AniListError::GraphQL(_)));
+    assert!(matches!(err, AniListError::NotFound));
 }

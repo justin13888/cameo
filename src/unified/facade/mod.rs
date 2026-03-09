@@ -317,7 +317,7 @@ impl CameoClient {
 
     /// Look up full movie details from the cache by provider_id.
     ///
-    /// Only available if [`CameoClient::movie_details`] was previously called
+    /// Only available if `CameoClient::movie_details` was previously called
     /// for this provider_id.
     #[cfg(feature = "cache")]
     pub async fn cached_movie_details(

@@ -105,13 +105,20 @@ impl<'a> DiscoverTvBuilder<'a> {
         self
     }
 
-    /// Filter by genre IDs (comma-separated).
+    /// Filter by genre IDs.
+    ///
+    /// Accepts a comma-separated list of TMDB TV genre IDs (e.g. `"10765"`
+    /// for Sci-Fi & Fantasy). AND semantics: only items matching **all** listed
+    /// genres are returned.
     pub fn with_genres(mut self, genres: impl Into<String>) -> Self {
         self.with_genres = Some(genres.into());
         self
     }
 
-    /// Exclude genre IDs (comma-separated).
+    /// Exclude genre IDs.
+    ///
+    /// Accepts a comma-separated list of TMDB TV genre IDs. Items matching any
+    /// of the listed genres are excluded from results.
     pub fn without_genres(mut self, genres: impl Into<String>) -> Self {
         self.without_genres = Some(genres.into());
         self
@@ -171,13 +178,17 @@ impl<'a> DiscoverTvBuilder<'a> {
         self
     }
 
-    /// Filter by original language (ISO 639-1).
+    /// Filter by original language.
+    ///
+    /// Accepts an ISO 639-1 language code (e.g. `"en"`, `"ja"`, `"ko"`).
     pub fn with_original_language(mut self, lang: impl Into<String>) -> Self {
         self.with_original_language = Some(lang.into());
         self
     }
 
-    /// Filter by origin country (ISO 3166-1).
+    /// Filter by origin country.
+    ///
+    /// Accepts an ISO 3166-1 alpha-2 country code (e.g. `"US"`, `"JP"`, `"KR"`).
     pub fn with_origin_country(mut self, country: impl Into<String>) -> Self {
         self.with_origin_country = Some(country.into());
         self
@@ -208,10 +219,17 @@ impl<'a> DiscoverTvBuilder<'a> {
     }
 
     /// Execute the discover query and return a single page of results.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TmdbError::RateLimitExceeded`] if all concurrency permits are
+    /// occupied and a `rate_limit_timeout` is configured. Returns
+    /// [`TmdbError::Api`] on non-2xx HTTP responses. Returns
+    /// [`TmdbError::Http`] on network failures.
     pub async fn execute(
         self,
     ) -> Result<PaginatedResponse<DiscoverTvResponseResultsItem>, TmdbError> {
-        let _permit = self.client.acquire_rate_limit_permit().await;
+        let _permit = self.client.acquire_rate_limit_permit().await?;
         let resp = self
             .client
             .inner()

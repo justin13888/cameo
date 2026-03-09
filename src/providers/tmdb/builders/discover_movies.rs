@@ -115,13 +115,20 @@ impl<'a> DiscoverMoviesBuilder<'a> {
         self
     }
 
-    /// Filter by genre IDs (comma-separated).
+    /// Filter by genre IDs.
+    ///
+    /// Accepts a comma-separated list of TMDB genre IDs (e.g. `"28,12"` for
+    /// Action + Adventure). AND semantics: only items matching **all** listed
+    /// genres are returned.
     pub fn with_genres(mut self, genres: impl Into<String>) -> Self {
         self.with_genres = Some(genres.into());
         self
     }
 
-    /// Exclude genre IDs (comma-separated).
+    /// Exclude genre IDs.
+    ///
+    /// Accepts a comma-separated list of TMDB genre IDs. Items matching any
+    /// of the listed genres are excluded from results.
     pub fn without_genres(mut self, genres: impl Into<String>) -> Self {
         self.without_genres = Some(genres.into());
         self
@@ -193,13 +200,17 @@ impl<'a> DiscoverMoviesBuilder<'a> {
         self
     }
 
-    /// Filter by original language (ISO 639-1).
+    /// Filter by original language.
+    ///
+    /// Accepts an ISO 639-1 language code (e.g. `"en"`, `"ja"`, `"fr"`).
     pub fn with_original_language(mut self, lang: impl Into<String>) -> Self {
         self.with_original_language = Some(lang.into());
         self
     }
 
-    /// Filter by origin country (ISO 3166-1).
+    /// Filter by origin country.
+    ///
+    /// Accepts an ISO 3166-1 alpha-2 country code (e.g. `"US"`, `"JP"`, `"GB"`).
     pub fn with_origin_country(mut self, country: impl Into<String>) -> Self {
         self.with_origin_country = Some(country.into());
         self
@@ -230,22 +241,35 @@ impl<'a> DiscoverMoviesBuilder<'a> {
     }
 
     /// Certification country.
+    ///
+    /// Accepts an ISO 3166-1 alpha-2 country code. Required when filtering by
+    /// certification. Example: `"US"`.
     pub fn certification_country(mut self, country: impl Into<String>) -> Self {
         self.certification_country = Some(country.into());
         self
     }
 
-    /// Exact certification.
+    /// Filter by exact certification rating.
+    ///
+    /// Example values: `"G"`, `"PG"`, `"PG-13"`, `"R"`. Requires
+    /// [`certification_country`](Self::certification_country) to also be set.
     pub fn certification(mut self, cert: impl Into<String>) -> Self {
         self.certification = Some(cert.into());
         self
     }
 
     /// Execute the discover query and return a single page of results.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TmdbError::RateLimitExceeded`] if all concurrency permits are
+    /// occupied and a `rate_limit_timeout` is configured. Returns
+    /// [`TmdbError::Api`] on non-2xx HTTP responses. Returns
+    /// [`TmdbError::Http`] on network failures.
     pub async fn execute(
         self,
     ) -> Result<PaginatedResponse<DiscoverMovieResponseResultsItem>, TmdbError> {
-        let _permit = self.client.acquire_rate_limit_permit().await;
+        let _permit = self.client.acquire_rate_limit_permit().await?;
         let resp = self
             .client
             .inner()

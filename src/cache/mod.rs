@@ -47,9 +47,6 @@ pub struct CacheTtlConfig {
     /// TTL applied to actively-airing TV shows (`in_production = true` or
     /// `last_air_date` within the past 90 days). Default: 4 hours.
     pub active_content_details_ttl: Duration,
-    /// TTL for volatile/dynamic data such as popularity scores and vote counts.
-    /// Default: 1 hour.
-    pub volatile_ttl: Duration,
 }
 
 impl Default for CacheTtlConfig {
@@ -64,7 +61,6 @@ impl Default for CacheTtlConfig {
             old_content_details_ttl: Duration::from_secs(7 * 24 * 3600), // 7 days
             recent_content_details_ttl: Duration::from_secs(6 * 3600), // 6 hours
             active_content_details_ttl: Duration::from_secs(4 * 3600), // 4 hours
-            volatile_ttl: Duration::from_secs(3600), // 1 hour
         }
     }
 }

@@ -33,12 +33,25 @@ cameo = "0.1"
 |||-|
 | `tmdb` | yes | TMDB provider support |
 | `cache` | yes | SQLite caching layer (requires `rusqlite`) |
+| `anilist` | no | AniList GraphQL provider (anime; no API key required) |
 | `live-tests` | no | Gates tests that hit the real TMDB API |
 
 **Minimal install (no cache):**
 
 ```toml
 cameo = { version = "0.1", default-features = false, features = ["tmdb"] }
+```
+
+**AniList only (no TMDB, no cache):**
+
+```toml
+cameo = { version = "0.1", default-features = false, features = ["anilist"] }
+```
+
+**TMDB + AniList:**
+
+```toml
+cameo = { version = "0.1", features = ["anilist"] }
 ```
 
 ## Quick Start

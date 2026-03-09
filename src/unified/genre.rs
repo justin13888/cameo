@@ -94,7 +94,7 @@ pub enum Genre {
 impl Genre {
     /// Convert a TMDB genre ID to a [`Genre`].
     ///
-    /// Returns [`Genre::Other(UnknownGenre::TmdbId(id))`] for unknown IDs.
+    /// Returns `Genre::Other(UnknownGenre::TmdbId(id))` for unknown IDs.
     pub fn from_tmdb_id(id: i64) -> Genre {
         match id {
             // Movie-only
@@ -134,7 +134,7 @@ impl Genre {
 
     /// Convert a genre name string to a [`Genre`] (case-insensitive).
     ///
-    /// Returns [`Genre::Other(UnknownGenre::Named(s))`] for unrecognized names.
+    /// Returns `Genre::Other(UnknownGenre::Named(s))` for unrecognized names.
     pub fn from_name(name: &str) -> Genre {
         match name.to_lowercase().as_str() {
             "action" => Genre::Action,
@@ -178,7 +178,7 @@ impl Genre {
     /// Convert an AniList genre name string to a [`Genre`] (case-insensitive).
     ///
     /// Handles AniList-specific genre names in addition to common genre names.
-    /// Returns [`Genre::Other(UnknownGenre::Named(s))`] for unrecognized names.
+    /// Returns `Genre::Other(UnknownGenre::Named(s))` for unrecognized names.
     pub fn from_anilist_genre(name: &str) -> Genre {
         match name.to_lowercase().as_str() {
             "action" => Genre::Action,

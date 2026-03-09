@@ -2,7 +2,10 @@
 /// These just verify that the builders can be created and chained without panicking.
 /// (Network calls are not made in unit tests.)
 use cameo::generated::tmdb::types::{DiscoverMovieSortBy, DiscoverTvSortBy};
-use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
+use cameo::{
+    providers::tmdb::{TmdbClient, TmdbConfig},
+    unified::{CameoClient, CameoClientError},
+};
 use chrono::NaiveDate;
 
 fn make_client() -> TmdbClient {
@@ -82,4 +85,38 @@ fn tmdb_config_builder() {
 fn tmdb_client_empty_token_fails() {
     let result = TmdbClient::new(TmdbConfig::new(""));
     assert!(result.is_err());
+}
+
+// ── CameoClientBuilder error cases ─────────────────────────────────────────
+
+#[test]
+fn cameo_builder_no_providers_fails() {
+    let result = CameoClient::builder().build();
+    assert!(
+        matches!(result, Err(CameoClientError::NoProviders)),
+        "expected NoProviders error"
+    );
+}
+
+#[test]
+fn cameo_builder_empty_tmdb_token_fails() {
+    let result = CameoClient::builder()
+        .with_tmdb(TmdbConfig::new(""))
+        .build();
+    assert!(
+        result.is_err(),
+        "expected error for empty TMDB token, got Ok"
+    );
+}
+
+#[test]
+fn tmdb_config_rate_limit_timeout_roundtrips() {
+    use std::time::Duration;
+
+    let config = TmdbConfig::new("tok")
+        .with_rate_limit(10)
+        .with_rate_limit_timeout(Duration::from_secs(5));
+
+    assert_eq!(config.rate_limit, 10);
+    assert_eq!(config.rate_limit_timeout, Some(Duration::from_secs(5)));
 }

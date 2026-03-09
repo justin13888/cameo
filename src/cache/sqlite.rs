@@ -48,6 +48,8 @@ pub struct SqliteCache {
     /// Connection used exclusively for write (`INSERT/DELETE`) queries.
     write_conn: Arc<Mutex<Connection>>,
     write_count: Arc<std::sync::atomic::AtomicU64>,
+    /// Tracks total reads; used to trigger periodic expiry purges.
+    read_count: Arc<std::sync::atomic::AtomicU64>,
 }
 
 impl SqliteCache {
@@ -78,6 +80,7 @@ impl SqliteCache {
             read_conn: Arc::new(Mutex::new(read_conn)),
             write_conn: Arc::new(Mutex::new(write_conn)),
             write_count: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+            read_count: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         })
     }
 
@@ -96,7 +99,30 @@ impl SqliteCache {
             read_conn: Arc::clone(&conn),
             write_conn: conn,
             write_count: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+            read_count: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         })
+    }
+
+    /// Delete all expired cache entries immediately.
+    ///
+    /// Normally expiry is handled lazily on reads and periodically on writes.
+    /// Call this to force immediate eviction of stale rows.
+    pub async fn purge_expired(&self) -> Result<(), CacheError> {
+        let conn = Arc::clone(&self.write_conn);
+        let now = Self::now_secs();
+        tokio::task::spawn_blocking(move || {
+            let conn = conn
+                .lock()
+                .map_err(|e| CacheError::Backend(Box::from(format!("mutex poisoned: {e}"))))?;
+            conn.execute(
+                "DELETE FROM cache_entries WHERE expires_at < ?1",
+                rusqlite::params![now as i64],
+            )
+            .map_err(|e| CacheError::Backend(Box::new(e)))?;
+            Ok(())
+        })
+        .await
+        .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?
     }
 
     fn now_secs() -> u64 {
@@ -116,6 +142,28 @@ impl SqliteCache {
             );
         }
     }
+
+    /// Trigger a best-effort expiry purge on the write connection every ~1000 reads.
+    ///
+    /// On read-heavy workloads the write-side purge (every 100 writes) may
+    /// not fire often enough. This companion method ensures expired rows are
+    /// eventually reclaimed even when writes are rare.
+    fn maybe_purge_on_read(write_conn: Arc<Mutex<Connection>>, count: u64) {
+        if count.is_multiple_of(1000) {
+            std::mem::drop(tokio::task::spawn_blocking(move || {
+                if let Ok(conn) = write_conn.lock() {
+                    let now = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs();
+                    let _ = conn.execute(
+                        "DELETE FROM cache_entries WHERE expires_at < ?1",
+                        params![now as i64],
+                    );
+                }
+            }));
+        }
+    }
 }
 
 #[async_trait]
@@ -123,11 +171,13 @@ impl CacheBackend for SqliteCache {
     #[tracing::instrument(skip(self, key), fields(key_type = key.key_type(), key_id = %key.key_id()))]
     async fn get(&self, key: &CacheKey) -> Result<Option<serde_json::Value>, CacheError> {
         let conn = Arc::clone(&self.read_conn);
+        let write_conn = Arc::clone(&self.write_conn);
+        let read_count = Arc::clone(&self.read_count);
         let key_type = key.key_type().to_string();
         let key_id = key.key_id();
         let now = Self::now_secs();
 
-        tokio::task::spawn_blocking(move || {
+        let result = tokio::task::spawn_blocking(move || {
             let conn = conn.lock().map_err(|e| {
                 CacheError::Backend(Box::from(format!("mutex poisoned: {e}")))
             })?;
@@ -146,7 +196,13 @@ impl CacheBackend for SqliteCache {
             }
         })
         .await
-        .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?
+        .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?;
+
+        // Periodically evict expired rows even on read-heavy workloads.
+        let count = read_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        Self::maybe_purge_on_read(write_conn, count);
+
+        result
     }
 
     #[tracing::instrument(skip(self, key, value), fields(key_type = key.key_type(), key_id = %key.key_id(), ttl_secs = ttl.as_secs()))]
