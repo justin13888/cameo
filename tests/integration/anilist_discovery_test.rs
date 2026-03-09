@@ -201,6 +201,8 @@ async fn live_discovery_smoke() {
     let trending = c.trending_tv(TimeWindow::Week, None).await.unwrap();
     assert!(!trending.results.is_empty());
 
+    tokio::time::sleep(tokio::time::Duration::from_millis(750)).await;
+
     // top_rated_movies — exercises score-sorted path and confirms vote_average is set
     let top = c.top_rated_movies(None).await.unwrap();
     assert!(!top.results.is_empty());

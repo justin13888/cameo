@@ -27,8 +27,11 @@ cargo test --no-default-features --features anilist
 # Live TMDB tests (requires API token)
 TMDB_API_TOKEN=xxx cargo test --features live-tests
 
-# Everything
-TMDB_API_TOKEN=xxx cargo test --all-features
+# With a .env file (set -a exports all vars to child processes)
+set -a; source .env; set +a && cargo test --features live-tests
+
+# Everything (TMDB + AniList live tests; sequential to avoid AniList rate limits)
+set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 ```
 
 ---

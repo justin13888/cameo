@@ -215,6 +215,7 @@ async fn search_multi_graphql_error_propagates() {
 #[tokio::test]
 async fn live_search_smoke() {
     let c = AniListClient::new(AniListConfig::new()).unwrap();
+    let delay = tokio::time::Duration::from_millis(750);
 
     // search_movies
     let movies = c.search_movies("Your Name", None).await.unwrap();
@@ -222,15 +223,21 @@ async fn live_search_smoke() {
     assert!(!movies.results[0].title.is_empty());
     assert!(movies.results[0].provider_id.starts_with("anilist:"));
 
+    tokio::time::sleep(delay).await;
+
     // search_tv_shows
     let tv = c.search_tv_shows("Attack on Titan", None).await.unwrap();
     assert!(tv.total_results > 0);
     assert!(!tv.results[0].name.is_empty());
 
+    tokio::time::sleep(delay).await;
+
     // search_people
     let people = c.search_people("Yuki Kaji", None).await.unwrap();
     assert!(people.total_results > 0);
     assert!(people.results[0].provider_id.starts_with("anilist:staff:"));
+
+    tokio::time::sleep(delay).await;
 
     // search_multi
     let multi = c.search_multi("Spirited Away", None).await.unwrap();

@@ -194,6 +194,7 @@ async fn person_details_graphql_error_propagates() {
 #[tokio::test]
 async fn live_details_smoke() {
     let c = AniListClient::new(AniListConfig::new()).unwrap();
+    let delay = tokio::time::Duration::from_millis(750);
 
     // movie_details: AniList ID 1535 = "Your Name."
     let movie = c.movie_details(1535).await.unwrap();
@@ -201,10 +202,14 @@ async fn live_details_smoke() {
     assert!(!movie.movie.title.is_empty());
     assert!(movie.movie.vote_average.is_some());
 
+    tokio::time::sleep(delay).await;
+
     // tv_show_details: AniList ID 16498 = Attack on Titan
     let tv = c.tv_show_details(16498).await.unwrap();
     assert_eq!(tv.show.provider_id, "anilist:16498");
     assert!(!tv.show.name.is_empty());
+
+    tokio::time::sleep(delay).await;
 
     // person_details: AniList staff ID 95061 = Yuki Kaji
     let person = c.person_details(95061).await.unwrap();
