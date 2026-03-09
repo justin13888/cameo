@@ -20,41 +20,27 @@ async fn setup_mock_client() -> (MockServer, GeneratedClient) {
 }
 
 #[tokio::test]
-async fn movie_watch_providers_deserializes_response() {
+async fn tv_episode_details_deserializes_response() {
     let (server, client) = setup_mock_client().await;
 
     Mock::given(method("GET"))
-        .and(path("/3/movie/550/watch/providers"))
+        .and(path("/3/tv/1396/season/1/episode/1"))
         .respond_with(ResponseTemplate::new(200).set_body_raw(
-            include_str!("../fixtures/movie_watch_providers_response.json"),
+            include_str!("../fixtures/tv_episode_details_response.json"),
             "application/json",
         ))
         .mount(&server)
         .await;
 
-    let resp = client.movie_watch_providers(550).await.unwrap();
+    let resp = client
+        .tv_episode_details(1396, 1, 1, None, None)
+        .await
+        .unwrap();
     let body = resp.into_inner();
 
-    assert_eq!(body.id, 550);
-    assert!(body.results.is_some());
-}
-
-#[tokio::test]
-async fn tv_watch_providers_deserializes_response() {
-    let (server, client) = setup_mock_client().await;
-
-    Mock::given(method("GET"))
-        .and(path("/3/tv/1396/watch/providers"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            include_str!("../fixtures/tv_watch_providers_response.json"),
-            "application/json",
-        ))
-        .mount(&server)
-        .await;
-
-    let resp = client.tv_series_watch_providers(1396).await.unwrap();
-    let body = resp.into_inner();
-
-    assert_eq!(body.id, 1396);
-    assert!(body.results.is_some());
+    assert_eq!(body.id, 62085);
+    assert_eq!(body.episode_number, 1);
+    assert_eq!(body.season_number, 1);
+    assert_eq!(body.name.as_deref(), Some("Pilot"));
+    assert_eq!(body.runtime, 58);
 }

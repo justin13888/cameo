@@ -147,7 +147,7 @@ impl AniListClient {
             "anilist: graphql SEARCH_ANIME (search_movies)"
         );
         let resp: MediaPageResponse = self.graphql(query::SEARCH_ANIME, vars).await?;
-        Ok(media_page_to_movies(resp))
+        media_page_to_movies(resp)
     }
 
     /// Search for anime series (TV, OVA, ONA, Special) by title.
@@ -169,7 +169,7 @@ impl AniListClient {
             "anilist: graphql SEARCH_ANIME (search_tv_shows)"
         );
         let resp: MediaPageResponse = self.graphql(query::SEARCH_ANIME, vars).await?;
-        Ok(media_page_to_tv(resp))
+        media_page_to_tv(resp)
     }
 
     /// Search for staff (voice actors, directors, animators, etc.) by name.
@@ -186,13 +186,13 @@ impl AniListClient {
         });
         tracing::debug!(query, page = page_num, "anilist: graphql SEARCH_STAFF");
         let resp: StaffPageResponse = self.graphql(query::SEARCH_STAFF, vars).await?;
-        let pi = &resp.page.page_info;
+        let page_data = resp.page.ok_or(AniListError::NoData)?;
+        let pi = &page_data.page_info;
         Ok(PaginatedResponse {
             page: pi.current_page.unwrap_or(1) as u32,
             total_pages: pi.last_page.unwrap_or(1) as u32,
             total_results: pi.total.unwrap_or(0) as u32,
-            results: resp
-                .page
+            results: page_data
                 .staff
                 .into_iter()
                 .map(crate::unified::conversions::anilist::staff_to_person)
@@ -207,11 +207,11 @@ impl AniListClient {
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedSearchResult>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
+        // Omit formatIn entirely (do not pass null) so AniList searches all formats.
         let vars = json!({
             "query": query,
             "page": page_num,
             "perPage": per_page,
-            "formatIn": Value::Null,
         });
         tracing::debug!(
             query,
@@ -219,9 +219,9 @@ impl AniListClient {
             "anilist: graphql SEARCH_ANIME (search_multi)"
         );
         let resp: MediaPageResponse = self.graphql(query::SEARCH_ANIME, vars).await?;
-        let pi = &resp.page.page_info;
-        let results = resp
-            .page
+        let page_data = resp.page.ok_or(AniListError::NoData)?;
+        let pi = &page_data.page_info;
+        let results = page_data
             .media
             .into_iter()
             .map(crate::unified::conversions::anilist::anilist_media_to_search_result)
@@ -285,7 +285,7 @@ impl AniListClient {
             "anilist: graphql LIST_TRENDING_ANIME (trending_movies)"
         );
         let resp: MediaPageResponse = self.graphql(query::LIST_TRENDING_ANIME, vars).await?;
-        Ok(media_page_to_movies(resp))
+        media_page_to_movies(resp)
     }
 
     /// Get trending anime series.
@@ -311,7 +311,7 @@ impl AniListClient {
             "anilist: graphql LIST_TRENDING_ANIME (trending_tv)"
         );
         let resp: MediaPageResponse = self.graphql(query::LIST_TRENDING_ANIME, vars).await?;
-        Ok(media_page_to_tv(resp))
+        media_page_to_tv(resp)
     }
 
     /// Get popular anime movies (sorted by popularity).
@@ -330,7 +330,7 @@ impl AniListClient {
             "anilist: graphql LIST_POPULAR_ANIME (popular_movies)"
         );
         let resp: MediaPageResponse = self.graphql(query::LIST_POPULAR_ANIME, vars).await?;
-        Ok(media_page_to_movies(resp))
+        media_page_to_movies(resp)
     }
 
     /// Get top-scored anime movies (sorted by average score).
@@ -349,7 +349,7 @@ impl AniListClient {
             "anilist: graphql LIST_TOP_SCORED_ANIME (top_rated_movies)"
         );
         let resp: MediaPageResponse = self.graphql(query::LIST_TOP_SCORED_ANIME, vars).await?;
-        Ok(media_page_to_movies(resp))
+        media_page_to_movies(resp)
     }
 
     /// Get popular anime TV shows (sorted by popularity).
@@ -368,7 +368,7 @@ impl AniListClient {
             "anilist: graphql LIST_POPULAR_ANIME (popular_tv_shows)"
         );
         let resp: MediaPageResponse = self.graphql(query::LIST_POPULAR_ANIME, vars).await?;
-        Ok(media_page_to_tv(resp))
+        media_page_to_tv(resp)
     }
 
     /// Get top-scored anime TV shows (sorted by average score).
@@ -387,38 +387,34 @@ impl AniListClient {
             "anilist: graphql LIST_TOP_SCORED_ANIME (top_rated_tv_shows)"
         );
         let resp: MediaPageResponse = self.graphql(query::LIST_TOP_SCORED_ANIME, vars).await?;
-        Ok(media_page_to_tv(resp))
+        media_page_to_tv(resp)
     }
 }
 
 // ── Page conversion helpers ───────────────────────────────────────────────────
 
-fn media_page_to_movies(resp: MediaPageResponse) -> PaginatedResponse<UnifiedMovie> {
-    let pi = &resp.page.page_info;
-    PaginatedResponse {
+fn media_page_to_movies(
+    resp: MediaPageResponse,
+) -> Result<PaginatedResponse<UnifiedMovie>, super::error::AniListError> {
+    let page = resp.page.ok_or(super::error::AniListError::NoData)?;
+    let pi = &page.page_info;
+    Ok(PaginatedResponse {
         page: pi.current_page.unwrap_or(1) as u32,
         total_pages: pi.last_page.unwrap_or(1) as u32,
         total_results: pi.total.unwrap_or(0) as u32,
-        results: resp
-            .page
-            .media
-            .into_iter()
-            .map(anilist_media_to_movie)
-            .collect(),
-    }
+        results: page.media.into_iter().map(anilist_media_to_movie).collect(),
+    })
 }
 
-fn media_page_to_tv(resp: MediaPageResponse) -> PaginatedResponse<UnifiedTvShow> {
-    let pi = &resp.page.page_info;
-    PaginatedResponse {
+fn media_page_to_tv(
+    resp: MediaPageResponse,
+) -> Result<PaginatedResponse<UnifiedTvShow>, super::error::AniListError> {
+    let page = resp.page.ok_or(super::error::AniListError::NoData)?;
+    let pi = &page.page_info;
+    Ok(PaginatedResponse {
         page: pi.current_page.unwrap_or(1) as u32,
         total_pages: pi.last_page.unwrap_or(1) as u32,
         total_results: pi.total.unwrap_or(0) as u32,
-        results: resp
-            .page
-            .media
-            .into_iter()
-            .map(anilist_media_to_tv)
-            .collect(),
-    }
+        results: page.media.into_iter().map(anilist_media_to_tv).collect(),
+    })
 }

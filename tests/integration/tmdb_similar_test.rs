@@ -20,41 +20,47 @@ async fn setup_mock_client() -> (MockServer, GeneratedClient) {
 }
 
 #[tokio::test]
-async fn movie_watch_providers_deserializes_response() {
+async fn similar_movies_deserializes_response() {
     let (server, client) = setup_mock_client().await;
 
     Mock::given(method("GET"))
-        .and(path("/3/movie/550/watch/providers"))
+        .and(path("/3/movie/550/similar"))
         .respond_with(ResponseTemplate::new(200).set_body_raw(
-            include_str!("../fixtures/movie_watch_providers_response.json"),
+            include_str!("../fixtures/similar_movies_response.json"),
             "application/json",
         ))
         .mount(&server)
         .await;
 
-    let resp = client.movie_watch_providers(550).await.unwrap();
+    let resp = client.movie_similar(550, None, None).await.unwrap();
     let body = resp.into_inner();
 
-    assert_eq!(body.id, 550);
-    assert!(body.results.is_some());
+    assert_eq!(body.page, 1);
+    assert_eq!(body.total_results, 40);
+    assert_eq!(body.results.len(), 1);
+    assert_eq!(body.results[0].id, 9300);
+    assert_eq!(body.results[0].title.as_deref(), Some("Orlando"));
 }
 
 #[tokio::test]
-async fn tv_watch_providers_deserializes_response() {
+async fn similar_tv_shows_deserializes_response() {
     let (server, client) = setup_mock_client().await;
 
     Mock::given(method("GET"))
-        .and(path("/3/tv/1396/watch/providers"))
+        .and(path("/3/tv/1396/similar"))
         .respond_with(ResponseTemplate::new(200).set_body_raw(
-            include_str!("../fixtures/tv_watch_providers_response.json"),
+            include_str!("../fixtures/similar_tv_response.json"),
             "application/json",
         ))
         .mount(&server)
         .await;
 
-    let resp = client.tv_series_watch_providers(1396).await.unwrap();
+    let resp = client.tv_series_similar("1396", None, None).await.unwrap();
     let body = resp.into_inner();
 
-    assert_eq!(body.id, 1396);
-    assert!(body.results.is_some());
+    assert_eq!(body.page, 1);
+    assert_eq!(body.total_results, 1);
+    assert_eq!(body.results.len(), 1);
+    assert_eq!(body.results[0].id, 202250);
+    assert_eq!(body.results[0].name.as_deref(), Some("Dirty Linen"));
 }

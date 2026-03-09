@@ -1,0 +1,52 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "adult": false,
+      "backdrop_path": "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg",
+      "genre_ids": [18, 53],
+      "id": 550,
+      "media_type": "movie",
+      "original_language": "en",
+      "original_title": "Fight Club",
+      "overview": "A ticking-time-bomb insomniac and a slippery soap salesman.",
+      "popularity": 73.433,
+      "poster_path": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+      "release_date": "1999-10-15",
+      "title": "Fight Club",
+      "video": false,
+      "vote_average": 8.433,
+      "vote_count": 26280
+    },
+    {
+      "backdrop_path": "/mAJ84W6I8I272Da87qplS2Dp9ST.jpg",
+      "first_air_date": "2023-01-23",
+      "genre_ids": [9648, 18],
+      "id": 202250,
+      "media_type": "tv",
+      "name": "Dirty Linen",
+      "origin_country": ["PH"],
+      "original_language": "tl",
+      "original_name": "Dirty Linen",
+      "overview": "To exact vengeance, a young woman infiltrates the household.",
+      "popularity": 2797.914,
+      "poster_path": "/aoAZgnmMzY9vVy9VWnO3U5PZENh.jpg",
+      "vote_average": 5,
+      "vote_count": 13
+    },
+    {
+      "adult": false,
+      "gender": 2,
+      "id": 287,
+      "known_for": [],
+      "known_for_department": "Acting",
+      "media_type": "person",
+      "name": "Brad Pitt",
+      "original_name": "Brad Pitt",
+      "popularity": 12.654,
+      "profile_path": "/kU3B75TyRiCgE270EyZnHjfivoq.jpg"
+    }
+  ],
+  "total_pages": 1,
+  "total_results": 3
+}

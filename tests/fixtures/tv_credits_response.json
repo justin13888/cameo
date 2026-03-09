@@ -1,0 +1,45 @@
+{
+  "cast": [
+    {
+      "adult": false,
+      "gender": 2,
+      "id": 17419,
+      "known_for_department": "Acting",
+      "name": "Bryan Cranston",
+      "original_name": "Bryan Cranston",
+      "popularity": 35.0,
+      "profile_path": "/7Jahy5LZX2Fo8fGJltMreAI49hC.jpg",
+      "roles": [
+        {
+          "credit_id": "52542282760ee313280017f9",
+          "character": "Walter White",
+          "episode_count": 62
+        }
+      ],
+      "total_episode_count": 62,
+      "order": 0
+    }
+  ],
+  "crew": [
+    {
+      "adult": false,
+      "gender": 2,
+      "id": 66633,
+      "known_for_department": "Writing",
+      "name": "Vince Gilligan",
+      "original_name": "Vince Gilligan",
+      "popularity": 6.0,
+      "profile_path": "/4vAHBj3wlj6q5dKqOtAKDG9DKQJ.jpg",
+      "jobs": [
+        {
+          "credit_id": "5256cc6819c29571140d9df5",
+          "job": "Executive Producer",
+          "episode_count": 62
+        }
+      ],
+      "department": "Production",
+      "total_episode_count": 62
+    }
+  ],
+  "id": 1396
+}

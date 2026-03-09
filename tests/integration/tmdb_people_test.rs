@@ -1,4 +1,6 @@
 use cameo::generated::tmdb::Client as GeneratedClient;
+#[cfg(feature = "live-tests")]
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path, query_param},

@@ -5963,7 +5963,7 @@
                             "example": "/ujlkQtHAVShWyWTloGU2Vh5Jbo9.jpg"
                           },
                           "vote_average": {
-                            "type": "integer",
+                            "type": "number",
                             "example": 5,
                             "default": 0
                           },
@@ -7399,7 +7399,7 @@
                             "default": true
                           },
                           "vote_average": {
-                            "type": "integer",
+                            "type": "number",
                             "example": 8,
                             "default": 0
                           },
@@ -8084,7 +8084,7 @@
                             "default": true
                           },
                           "vote_average": {
-                            "type": "integer",
+                            "type": "number",
                             "example": 7,
                             "default": 0
                           },
@@ -9164,7 +9164,7 @@
                       "default": true
                     },
                     "vote_average": {
-                      "type": "integer",
+                      "type": "number",
                       "example": 0,
                       "default": 0
                     },
@@ -20176,7 +20176,7 @@
                             "example": "/aoAZgnmMzY9vVy9VWnO3U5PZENh.jpg"
                           },
                           "vote_average": {
-                            "type": "integer",
+                            "type": "number",
                             "example": 5,
                             "default": 0
                           },
@@ -20315,7 +20315,7 @@
                             "example": "/aoAZgnmMzY9vVy9VWnO3U5PZENh.jpg"
                           },
                           "vote_average": {
-                            "type": "integer",
+                            "type": "number",
                             "example": 5,
                             "default": 0
                           },
@@ -20447,7 +20447,7 @@
                             "example": "/aoAZgnmMzY9vVy9VWnO3U5PZENh.jpg"
                           },
                           "vote_average": {
-                            "type": "integer",
+                            "type": "number",
                             "example": 5,
                             "default": 0
                           },
@@ -20954,7 +20954,7 @@
                             "default": 0
                           },
                           "vote_average": {
-                            "type": "integer",
+                            "type": "number",
                             "example": 0,
                             "default": 0
                           }
@@ -22209,7 +22209,7 @@
                           "example": ""
                         },
                         "vote_average": {
-                          "type": "integer",
+                          "type": "number",
                           "example": 0,
                           "default": 0
                         },
@@ -22343,7 +22343,7 @@
                       "example": "Scripted"
                     },
                     "vote_average": {
-                      "type": "integer",
+                      "type": "number",
                       "example": 0,
                       "default": 0
                     },
@@ -22935,7 +22935,7 @@
                             "example": "Pale Moon"
                           },
                           "vote_average": {
-                            "type": "integer",
+                            "type": "number",
                             "example": 7,
                             "default": 0
                           },

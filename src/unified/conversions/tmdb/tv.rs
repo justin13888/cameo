@@ -40,7 +40,7 @@ impl_tv_from!(types::SearchTvResponseResultsItem);
 impl_tv_from!(types::TrendingTvResponseResultsItem);
 impl_tv_from!(types::TvSeriesRecommendationsResponseResultsItem);
 
-// DiscoverTvResponseResultsItem has vote_average: i64 (not Option<f64>) and no adult field
+// DiscoverTvResponseResultsItem has vote_average: Option<f64> and no adult field
 impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
     fn from(t: types::DiscoverTvResponseResultsItem) -> Self {
         UnifiedTvShow {
@@ -57,11 +57,7 @@ impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
             popularity: t.popularity,
-            vote_average: if t.vote_average != 0 {
-                Some(t.vote_average as f64)
-            } else {
-                None
-            },
+            vote_average: t.vote_average,
             vote_count: t.vote_count as u64,
             original_language: t.original_language,
             origin_country: t.origin_country,
@@ -70,7 +66,7 @@ impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
     }
 }
 
-// TvSeriesPopularListResponseResultsItem has vote_average: i64 and no adult field
+// TvSeriesPopularListResponseResultsItem has vote_average: Option<f64> and no adult field
 impl From<types::TvSeriesPopularListResponseResultsItem> for UnifiedTvShow {
     fn from(t: types::TvSeriesPopularListResponseResultsItem) -> Self {
         UnifiedTvShow {
@@ -87,11 +83,7 @@ impl From<types::TvSeriesPopularListResponseResultsItem> for UnifiedTvShow {
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
             popularity: t.popularity,
-            vote_average: if t.vote_average != 0 {
-                Some(t.vote_average as f64)
-            } else {
-                None
-            },
+            vote_average: t.vote_average,
             vote_count: t.vote_count as u64,
             original_language: t.original_language,
             origin_country: t.origin_country,
@@ -126,7 +118,7 @@ impl From<types::TvSeriesTopRatedListResponseResultsItem> for UnifiedTvShow {
     }
 }
 
-// TvSeriesSimilarResponseResultsItem has vote_average: i64 (not Option<f64>)
+// TvSeriesSimilarResponseResultsItem has vote_average: Option<f64>
 impl From<types::TvSeriesSimilarResponseResultsItem> for UnifiedTvShow {
     fn from(t: types::TvSeriesSimilarResponseResultsItem) -> Self {
         UnifiedTvShow {
@@ -143,11 +135,7 @@ impl From<types::TvSeriesSimilarResponseResultsItem> for UnifiedTvShow {
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
             popularity: t.popularity,
-            vote_average: if t.vote_average != 0 {
-                Some(t.vote_average as f64)
-            } else {
-                None
-            },
+            vote_average: t.vote_average,
             vote_count: t.vote_count as u64,
             original_language: t.original_language,
             origin_country: t.origin_country,

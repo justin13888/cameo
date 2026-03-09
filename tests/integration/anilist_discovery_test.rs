@@ -151,3 +151,58 @@ async fn top_rated_movies_returns_results() {
     assert_eq!(result.results[0].title, "Top Rated Movie");
     assert_eq!(result.results[0].vote_average, Some(9.5));
 }
+
+// ── popular_tv_shows ──────────────────────────────────────────────────────────
+
+#[tokio::test]
+async fn popular_tv_shows_returns_results() {
+    let body = page_response(
+        vec![
+            media_item(100, "Popular TV A", "TV"),
+            media_item(101, "Popular TV B", "TV"),
+        ],
+        2,
+    );
+    let (_server, client) = mock_client(body).await;
+
+    let result = client.popular_tv_shows(None).await.unwrap();
+
+    assert_eq!(result.results.len(), 2);
+    assert_eq!(result.results[0].name, "Popular TV A");
+    assert_eq!(result.results[1].name, "Popular TV B");
+}
+
+// ── top_rated_tv_shows ────────────────────────────────────────────────────────
+
+#[tokio::test]
+async fn top_rated_tv_shows_returns_results() {
+    let mut item = media_item(200, "Top Rated TV", "TV");
+    item["averageScore"] = json!(90);
+    let body = page_response(vec![item], 1);
+    let (_server, client) = mock_client(body).await;
+
+    let result = client.top_rated_tv_shows(None).await.unwrap();
+
+    assert_eq!(result.results.len(), 1);
+    assert_eq!(result.results[0].name, "Top Rated TV");
+    assert_eq!(result.results[0].vote_average, Some(9.0));
+}
+
+// ── Live tests (require real AniList network access) ──────────────────────────
+//
+// Kept to one test to stay well within AniList's rate limit.
+
+#[cfg(feature = "live-tests")]
+#[tokio::test]
+async fn live_discovery_smoke() {
+    let c = AniListClient::new(AniListConfig::new()).unwrap();
+
+    // trending_tv — exercises trending path
+    let trending = c.trending_tv(TimeWindow::Week, None).await.unwrap();
+    assert!(!trending.results.is_empty());
+
+    // top_rated_movies — exercises score-sorted path and confirms vote_average is set
+    let top = c.top_rated_movies(None).await.unwrap();
+    assert!(!top.results.is_empty());
+    assert!(top.results[0].vote_average.is_some());
+}

@@ -1,4 +1,6 @@
 use cameo::generated::tmdb::Client as GeneratedClient;
+#[cfg(feature = "live-tests")]
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path, query_param},
@@ -78,6 +80,56 @@ async fn tv_series_details_deserializes_response() {
     assert_eq!(body.status.as_deref(), Some("Ended"));
     assert_eq!(body.genres.len(), 2);
     assert_eq!(body.genres[0].name.as_deref(), Some("Drama"));
+}
+
+#[tokio::test]
+async fn tv_genres_deserializes_response() {
+    let (server, client) = setup_mock_client().await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/genre/tv/list"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../fixtures/tv_genres_response.json"),
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let resp = client.genre_tv_list(None).await.unwrap();
+    let body = resp.into_inner();
+
+    assert!(!body.genres.is_empty());
+    let drama = body.genres.iter().find(|g| g.id == 18);
+    assert!(drama.is_some());
+    assert_eq!(drama.unwrap().name.as_deref(), Some("Drama"));
+}
+
+#[tokio::test]
+async fn trending_tv_deserializes_response() {
+    use cameo::generated::tmdb::types::TrendingTvTimeWindow;
+
+    let (server, client) = setup_mock_client().await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/trending/tv/week"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../fixtures/trending_tv_response.json"),
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let resp = client
+        .trending_tv(TrendingTvTimeWindow::Week, None)
+        .await
+        .unwrap();
+    let body = resp.into_inner();
+
+    assert_eq!(body.page, 1);
+    assert_eq!(body.total_results, 1);
+    assert_eq!(body.results.len(), 1);
+    assert_eq!(body.results[0].id, 202250);
+    assert_eq!(body.results[0].name.as_deref(), Some("Dirty Linen"));
 }
 
 #[cfg(feature = "live-tests")]

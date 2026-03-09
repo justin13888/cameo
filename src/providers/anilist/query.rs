@@ -205,7 +205,7 @@ query SearchStaff($query: String, $page: Int, $perPage: Int) {
       hasNextPage
       perPage
     }
-    staff(search: $query, sort: [SEARCH_MATCH, RELEVANCE]) {
+    staff(search: $query, sort: [SEARCH_MATCH]) {
       id
       name { full native }
       image { large }

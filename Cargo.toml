@@ -57,37 +57,13 @@ wiremock = "0.6"
 pretty_assertions = "1"
 
 [[example]]
-name = "search_movies"
+name = "facade_showcase"
 required-features = ["tmdb"]
 
 [[example]]
-name = "movie_details"
+name = "tmdb_lowlevel"
 required-features = ["tmdb"]
 
 [[example]]
-name = "discover"
-required-features = ["tmdb"]
-
-[[example]]
-name = "trending"
-required-features = ["tmdb"]
-
-[[example]]
-name = "unified_search"
-required-features = ["tmdb"]
-
-[[example]]
-name = "anilist_search"
+name = "anilist_showcase"
 required-features = ["anilist"]
-
-[[example]]
-name = "recommendations"
-required-features = ["tmdb"]
-
-[[example]]
-name = "season_details"
-required-features = ["tmdb"]
-
-[[example]]
-name = "watch_providers"
-required-features = ["tmdb"]

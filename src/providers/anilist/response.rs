@@ -163,8 +163,9 @@ pub struct AniListMediaDetail {
 /// `data` object for media list queries.
 #[derive(Debug, Deserialize)]
 pub(crate) struct MediaPageResponse {
+    /// `Page` may be null in AniList error responses (e.g. rate-limited).
     #[serde(rename = "Page")]
-    pub page: MediaPageData,
+    pub page: Option<MediaPageData>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -239,8 +240,9 @@ pub struct AniListStaffDetail {
 /// `data` object for staff list queries.
 #[derive(Debug, Deserialize)]
 pub(crate) struct StaffPageResponse {
+    /// `Page` may be null in AniList error responses (e.g. rate-limited).
     #[serde(rename = "Page")]
-    pub page: StaffPageData,
+    pub page: Option<StaffPageData>,
 }
 
 #[derive(Debug, Deserialize)]

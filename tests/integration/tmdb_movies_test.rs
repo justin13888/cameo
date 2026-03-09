@@ -82,6 +82,78 @@ async fn movie_details_deserializes_response() {
 }
 
 #[tokio::test]
+async fn movie_genres_deserializes_response() {
+    let (server, client) = setup_mock_client().await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/genre/movie/list"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../fixtures/movie_genres_response.json"),
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let resp = client.genre_movie_list(None).await.unwrap();
+    let body = resp.into_inner();
+
+    assert!(!body.genres.is_empty());
+    let action = body.genres.iter().find(|g| g.id == 28);
+    assert!(action.is_some());
+    assert_eq!(action.unwrap().name.as_deref(), Some("Action"));
+}
+
+#[tokio::test]
+async fn movie_images_deserializes_response() {
+    let (server, client) = setup_mock_client().await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/movie/550/images"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../fixtures/movie_images_response.json"),
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let resp = client.movie_images(550, None, None).await.unwrap();
+    let body = resp.into_inner();
+
+    assert_eq!(body.id, 550);
+    assert_eq!(body.backdrops.len(), 1);
+    assert_eq!(
+        body.backdrops[0].file_path.as_deref(),
+        Some("/hZkgoQYus5vegHoetLkCJzb17zJ.jpg")
+    );
+    assert_eq!(body.posters.len(), 1);
+}
+
+#[tokio::test]
+async fn search_multi_deserializes_response() {
+    let (server, client) = setup_mock_client().await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/search/multi"))
+        .and(query_param("query", "fight club"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../fixtures/search_multi_response.json"),
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let resp = client
+        .search_multi(None, None, None, "fight club")
+        .await
+        .unwrap();
+    let body = resp.into_inner();
+
+    assert_eq!(body.page, 1);
+    assert_eq!(body.total_results, 3);
+    assert_eq!(body.results.len(), 3);
+}
+
+#[tokio::test]
 async fn bearer_token_is_sent() {
     let (server, client) = setup_mock_client().await;
 

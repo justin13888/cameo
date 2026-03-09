@@ -185,3 +185,29 @@ async fn person_details_graphql_error_propagates() {
 
     assert!(matches!(err, AniListError::NotFound));
 }
+
+// ── Live tests (require real AniList network access) ──────────────────────────
+//
+// Kept to one test to stay well within AniList's rate limit.
+
+#[cfg(feature = "live-tests")]
+#[tokio::test]
+async fn live_details_smoke() {
+    let c = AniListClient::new(AniListConfig::new()).unwrap();
+
+    // movie_details: AniList ID 1535 = "Your Name."
+    let movie = c.movie_details(1535).await.unwrap();
+    assert_eq!(movie.movie.provider_id, "anilist:1535");
+    assert!(!movie.movie.title.is_empty());
+    assert!(movie.movie.vote_average.is_some());
+
+    // tv_show_details: AniList ID 16498 = Attack on Titan
+    let tv = c.tv_show_details(16498).await.unwrap();
+    assert_eq!(tv.show.provider_id, "anilist:16498");
+    assert!(!tv.show.name.is_empty());
+
+    // person_details: AniList staff ID 95061 = Yuki Kaji
+    let person = c.person_details(95061).await.unwrap();
+    assert_eq!(person.person.provider_id, "anilist:staff:95061");
+    assert!(!person.person.name.is_empty());
+}

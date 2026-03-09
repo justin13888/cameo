@@ -206,3 +206,33 @@ async fn search_multi_graphql_error_propagates() {
 
     assert!(matches!(err, AniListError::GraphQL(_)));
 }
+
+// ── Live tests (require real AniList network access) ──────────────────────────
+//
+// Kept to one test per domain to stay well within AniList's rate limit.
+
+#[cfg(feature = "live-tests")]
+#[tokio::test]
+async fn live_search_smoke() {
+    let c = AniListClient::new(AniListConfig::new()).unwrap();
+
+    // search_movies
+    let movies = c.search_movies("Your Name", None).await.unwrap();
+    assert!(movies.total_results > 0);
+    assert!(!movies.results[0].title.is_empty());
+    assert!(movies.results[0].provider_id.starts_with("anilist:"));
+
+    // search_tv_shows
+    let tv = c.search_tv_shows("Attack on Titan", None).await.unwrap();
+    assert!(tv.total_results > 0);
+    assert!(!tv.results[0].name.is_empty());
+
+    // search_people
+    let people = c.search_people("Yuki Kaji", None).await.unwrap();
+    assert!(people.total_results > 0);
+    assert!(people.results[0].provider_id.starts_with("anilist:staff:"));
+
+    // search_multi
+    let multi = c.search_multi("Spirited Away", None).await.unwrap();
+    assert!(multi.total_results > 0);
+}
