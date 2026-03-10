@@ -37,8 +37,10 @@ impl AniListConfig {
     }
 
     /// Set the number of results per page.
+    ///
+    /// Valid range is 1–50 (AniList API limit); values outside this range are clamped.
     pub fn with_per_page(mut self, per_page: u32) -> Self {
-        self.per_page = per_page;
+        self.per_page = per_page.clamp(1, 50);
         self
     }
 }

@@ -82,8 +82,10 @@ impl TmdbConfig {
     }
 
     /// Set the rate limit (max concurrent requests).
-    pub fn with_rate_limit(mut self, rate_limit: u32) -> Self {
-        self.rate_limit = rate_limit;
+    ///
+    /// Minimum value is 1; lower values are clamped.
+    pub fn with_rate_limit(mut self, limit: u32) -> Self {
+        self.rate_limit = limit.max(1);
         self
     }
 

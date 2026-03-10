@@ -1,5 +1,5 @@
 /// Time window for trending endpoints.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TimeWindow {
     /// Results from the past day.
     Day,

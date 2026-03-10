@@ -119,26 +119,35 @@ impl ImageUrl {
     /// Build a full poster image URL.
     ///
     /// `path` is the raw path from the API (e.g. `"/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg"`).
+    /// The `path` should start with `/` as returned by the TMDB API (e.g. `"/abc123.jpg"`).
     pub fn poster(path: &str, size: PosterSize) -> String {
         format!("{IMAGE_BASE_URL}{}{path}", size.as_str())
     }
 
     /// Build a full backdrop image URL.
+    ///
+    /// The `path` should start with `/` as returned by the TMDB API (e.g. `"/abc123.jpg"`).
     pub fn backdrop(path: &str, size: BackdropSize) -> String {
         format!("{IMAGE_BASE_URL}{}{path}", size.as_str())
     }
 
     /// Build a full profile (person) image URL.
+    ///
+    /// The `path` should start with `/` as returned by the TMDB API (e.g. `"/abc123.jpg"`).
     pub fn profile(path: &str, size: ProfileSize) -> String {
         format!("{IMAGE_BASE_URL}{}{path}", size.as_str())
     }
 
     /// Build a full still (episode) image URL.
+    ///
+    /// The `path` should start with `/` as returned by the TMDB API (e.g. `"/abc123.jpg"`).
     pub fn still(path: &str, size: StillSize) -> String {
         format!("{IMAGE_BASE_URL}{}{path}", size.as_str())
     }
 
     /// Build a full logo image URL.
+    ///
+    /// The `path` should start with `/` as returned by the TMDB API (e.g. `"/abc123.jpg"`).
     pub fn logo(path: &str, size: LogoSize) -> String {
         format!("{IMAGE_BASE_URL}{}{path}", size.as_str())
     }
