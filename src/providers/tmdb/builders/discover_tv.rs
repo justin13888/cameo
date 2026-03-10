@@ -218,6 +218,103 @@ impl<'a> DiscoverTvBuilder<'a> {
         self
     }
 
+    /// Air date on or after.
+    pub fn air_date_gte(mut self, date: NaiveDate) -> Self {
+        self.air_date_gte = Some(date);
+        self
+    }
+
+    /// Air date on or before.
+    pub fn air_date_lte(mut self, date: NaiveDate) -> Self {
+        self.air_date_lte = Some(date);
+        self
+    }
+
+    /// Include shows with no first air date.
+    pub fn include_null_first_air_dates(mut self, include: bool) -> Self {
+        self.include_null_first_air_dates = Some(include);
+        self
+    }
+
+    /// Include shows that have been screened theatrically.
+    pub fn screened_theatrically(mut self, screened: bool) -> Self {
+        self.screened_theatrically = Some(screened);
+        self
+    }
+
+    /// Timezone for air date filtering (e.g. `"America/New_York"`).
+    pub fn timezone(mut self, tz: impl Into<String>) -> Self {
+        self.timezone = Some(tz.into());
+        self
+    }
+
+    /// Maximum vote count.
+    pub fn vote_count_lte(mut self, max: f32) -> Self {
+        self.vote_count_lte = Some(max);
+        self
+    }
+
+    /// Watch region for streaming filters.
+    ///
+    /// Accepts an ISO 3166-1 alpha-2 country code (e.g. `"US"`).
+    /// Required when using [`with_watch_providers`](Self::with_watch_providers).
+    pub fn watch_region(mut self, region: impl Into<String>) -> Self {
+        self.watch_region = Some(region.into());
+        self
+    }
+
+    /// Filter by show status (comma-separated).
+    ///
+    /// Values: `"0"` (Returning), `"1"` (Planned), `"2"` (In Production),
+    /// `"3"` (Ended), `"4"` (Cancelled), `"5"` (Pilot).
+    pub fn with_status(mut self, status: impl Into<String>) -> Self {
+        self.with_status = Some(status.into());
+        self
+    }
+
+    /// Filter by show type (comma-separated).
+    ///
+    /// Values: `"0"` (Documentary), `"1"` (News), `"2"` (Miniseries),
+    /// `"3"` (Reality), `"4"` (Scripted), `"5"` (Talk Show), `"6"` (Video).
+    pub fn with_type(mut self, show_type: impl Into<String>) -> Self {
+        self.with_type = Some(show_type.into());
+        self
+    }
+
+    /// Filter by watch monetization types (comma-separated).
+    ///
+    /// Values: `"flatrate"`, `"free"`, `"ads"`, `"rent"`, `"buy"`.
+    pub fn with_watch_monetization_types(mut self, types: impl Into<String>) -> Self {
+        self.with_watch_monetization_types = Some(types.into());
+        self
+    }
+
+    /// Filter by watch provider IDs (comma-separated).
+    ///
+    /// Requires [`watch_region`](Self::watch_region) to also be set.
+    pub fn with_watch_providers(mut self, providers: impl Into<String>) -> Self {
+        self.with_watch_providers = Some(providers.into());
+        self
+    }
+
+    /// Exclude company IDs (comma-separated).
+    pub fn without_companies(mut self, companies: impl Into<String>) -> Self {
+        self.without_companies = Some(companies.into());
+        self
+    }
+
+    /// Exclude keyword IDs (comma-separated).
+    pub fn without_keywords(mut self, keywords: impl Into<String>) -> Self {
+        self.without_keywords = Some(keywords.into());
+        self
+    }
+
+    /// Exclude watch provider IDs (comma-separated).
+    pub fn without_watch_providers(mut self, providers: impl Into<String>) -> Self {
+        self.without_watch_providers = Some(providers.into());
+        self
+    }
+
     /// Execute the discover query and return a single page of results.
     ///
     /// # Errors

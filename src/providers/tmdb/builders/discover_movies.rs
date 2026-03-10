@@ -258,6 +258,100 @@ impl<'a> DiscoverMoviesBuilder<'a> {
         self
     }
 
+    /// Minimum certification (e.g. `"PG-13"`). Requires [`certification_country`](Self::certification_country).
+    pub fn certification_gte(mut self, cert: impl Into<String>) -> Self {
+        self.certification_gte = Some(cert.into());
+        self
+    }
+
+    /// Maximum certification (e.g. `"R"`). Requires [`certification_country`](Self::certification_country).
+    pub fn certification_lte(mut self, cert: impl Into<String>) -> Self {
+        self.certification_lte = Some(cert.into());
+        self
+    }
+
+    /// Include movies with a video entry.
+    pub fn include_video(mut self, include: bool) -> Self {
+        self.include_video = Some(include);
+        self
+    }
+
+    /// Release date on or after (any release type).
+    pub fn release_date_gte(mut self, date: NaiveDate) -> Self {
+        self.release_date_gte = Some(date);
+        self
+    }
+
+    /// Release date on or before (any release type).
+    pub fn release_date_lte(mut self, date: NaiveDate) -> Self {
+        self.release_date_lte = Some(date);
+        self
+    }
+
+    /// Maximum vote count.
+    pub fn vote_count_lte(mut self, max: f32) -> Self {
+        self.vote_count_lte = Some(max);
+        self
+    }
+
+    /// Watch region for streaming filters.
+    ///
+    /// Accepts an ISO 3166-1 alpha-2 country code (e.g. `"US"`).
+    /// Required when using [`with_watch_providers`](Self::with_watch_providers).
+    pub fn watch_region(mut self, region: impl Into<String>) -> Self {
+        self.watch_region = Some(region.into());
+        self
+    }
+
+    /// Filter by person IDs (cast or crew, comma-separated).
+    pub fn with_people(mut self, people: impl Into<String>) -> Self {
+        self.with_people = Some(people.into());
+        self
+    }
+
+    /// Filter by release type (1–6).
+    ///
+    /// Values: 1=Premiere, 2=Theatrical (limited), 3=Theatrical,
+    /// 4=Digital, 5=Physical, 6=TV.
+    pub fn with_release_type(mut self, release_type: i32) -> Self {
+        self.with_release_type = Some(release_type);
+        self
+    }
+
+    /// Filter by watch monetization types (comma-separated).
+    ///
+    /// Values: `"flatrate"`, `"free"`, `"ads"`, `"rent"`, `"buy"`.
+    pub fn with_watch_monetization_types(mut self, types: impl Into<String>) -> Self {
+        self.with_watch_monetization_types = Some(types.into());
+        self
+    }
+
+    /// Filter by watch provider IDs (comma-separated).
+    ///
+    /// Requires [`watch_region`](Self::watch_region) to also be set.
+    pub fn with_watch_providers(mut self, providers: impl Into<String>) -> Self {
+        self.with_watch_providers = Some(providers.into());
+        self
+    }
+
+    /// Exclude company IDs (comma-separated).
+    pub fn without_companies(mut self, companies: impl Into<String>) -> Self {
+        self.without_companies = Some(companies.into());
+        self
+    }
+
+    /// Exclude keyword IDs (comma-separated).
+    pub fn without_keywords(mut self, keywords: impl Into<String>) -> Self {
+        self.without_keywords = Some(keywords.into());
+        self
+    }
+
+    /// Exclude watch provider IDs (comma-separated).
+    pub fn without_watch_providers(mut self, providers: impl Into<String>) -> Self {
+        self.without_watch_providers = Some(providers.into());
+        self
+    }
+
     /// Execute the discover query and return a single page of results.
     ///
     /// # Errors

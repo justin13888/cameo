@@ -43,5 +43,4 @@ pub enum CameoError {
     #[cfg(feature = "anilist")]
     #[error(transparent)]
     AniList(#[from] crate::providers::anilist::AniListError),
-
 }
