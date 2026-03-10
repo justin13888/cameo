@@ -26,7 +26,7 @@ macro_rules! impl_tv_from {
                         .collect(),
                     popularity: t.popularity,
                     vote_average: t.vote_average,
-                    vote_count: t.vote_count as u64,
+                    vote_count: t.vote_count.max(0) as u64,
                     original_language: t.original_language,
                     origin_country: t.origin_country,
                     adult: t.adult,
@@ -58,7 +58,7 @@ impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
                 .collect(),
             popularity: t.popularity,
             vote_average: t.vote_average,
-            vote_count: t.vote_count as u64,
+            vote_count: t.vote_count.max(0) as u64,
             original_language: t.original_language,
             origin_country: t.origin_country,
             adult: false,
@@ -84,7 +84,7 @@ impl From<types::TvSeriesPopularListResponseResultsItem> for UnifiedTvShow {
                 .collect(),
             popularity: t.popularity,
             vote_average: t.vote_average,
-            vote_count: t.vote_count as u64,
+            vote_count: t.vote_count.max(0) as u64,
             original_language: t.original_language,
             origin_country: t.origin_country,
             adult: false,
@@ -110,7 +110,7 @@ impl From<types::TvSeriesTopRatedListResponseResultsItem> for UnifiedTvShow {
                 .collect(),
             popularity: t.popularity,
             vote_average: t.vote_average,
-            vote_count: t.vote_count as u64,
+            vote_count: t.vote_count.max(0) as u64,
             original_language: t.original_language,
             origin_country: t.origin_country,
             adult: false,
@@ -136,7 +136,7 @@ impl From<types::TvSeriesSimilarResponseResultsItem> for UnifiedTvShow {
                 .collect(),
             popularity: t.popularity,
             vote_average: t.vote_average,
-            vote_count: t.vote_count as u64,
+            vote_count: t.vote_count.max(0) as u64,
             original_language: t.original_language,
             origin_country: t.origin_country,
             adult: t.adult,
@@ -148,7 +148,7 @@ impl From<types::TvSeasonDetailsResponse> for UnifiedSeasonDetails {
     fn from(t: types::TvSeasonDetailsResponse) -> Self {
         UnifiedSeasonDetails {
             show_id: String::new(), // filled in by the caller
-            season_number: t.season_number as u32,
+            season_number: t.season_number.max(0) as u32,
             name: t.name,
             overview: t.overview,
             air_date: t.air_date,
@@ -161,12 +161,12 @@ impl From<types::TvSeasonDetailsResponse> for UnifiedSeasonDetails {
 impl From<types::TvSeasonDetailsResponseEpisodesItem> for UnifiedEpisode {
     fn from(e: types::TvSeasonDetailsResponseEpisodesItem) -> Self {
         UnifiedEpisode {
-            episode_number: e.episode_number as u32,
+            episode_number: e.episode_number.max(0) as u32,
             name: e.name,
             overview: e.overview,
             air_date: e.air_date,
             runtime: if e.runtime > 0 {
-                Some(e.runtime as u32)
+                Some(e.runtime.max(0) as u32)
             } else {
                 None
             },
@@ -182,12 +182,12 @@ impl From<types::TvSeasonDetailsResponseEpisodesItem> for UnifiedEpisode {
 impl From<types::TvEpisodeDetailsResponse> for UnifiedEpisode {
     fn from(e: types::TvEpisodeDetailsResponse) -> Self {
         UnifiedEpisode {
-            episode_number: e.episode_number as u32,
+            episode_number: e.episode_number.max(0) as u32,
             name: e.name,
             overview: e.overview,
             air_date: e.air_date,
             runtime: if e.runtime > 0 {
-                Some(e.runtime as u32)
+                Some(e.runtime.max(0) as u32)
             } else {
                 None
             },
@@ -219,14 +219,14 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                     .collect(),
                 popularity: t.popularity,
                 vote_average: t.vote_average,
-                vote_count: t.vote_count as u64,
+                vote_count: t.vote_count.max(0) as u64,
                 original_language: t.original_language,
                 origin_country: t.origin_country,
                 adult: t.adult,
             },
             tagline: t.tagline,
-            number_of_seasons: t.number_of_seasons as u32,
-            number_of_episodes: t.number_of_episodes as u32,
+            number_of_seasons: t.number_of_seasons.max(0) as u32,
+            number_of_episodes: t.number_of_episodes.max(0) as u32,
             in_production: t.in_production,
             status: t.status,
             homepage: t.homepage,
@@ -239,7 +239,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
             last_air_date: t.last_air_date,
             type_: t.type_,
             created_by: t.created_by.iter().filter_map(|c| c.name.clone()).collect(),
-            episode_run_time: t.episode_run_time.iter().map(|&r| r as u32).collect(),
+            episode_run_time: t.episode_run_time.iter().map(|&r| r.max(0) as u32).collect(),
             spoken_languages: t
                 .spoken_languages
                 .iter()

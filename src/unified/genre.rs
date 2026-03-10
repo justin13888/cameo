@@ -128,7 +128,7 @@ impl Genre {
             9648 => Genre::Mystery,
             37 => Genre::Western,
             // Fallback
-            other => Genre::Other(UnknownGenre::TmdbId(other as u32)),
+            other => Genre::Other(UnknownGenre::TmdbId(other.max(0) as u32)),
         }
     }
 

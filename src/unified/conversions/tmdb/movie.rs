@@ -25,7 +25,7 @@ macro_rules! impl_movie_from {
                         .collect(),
                     popularity: m.popularity,
                     vote_average: m.vote_average,
-                    vote_count: m.vote_count as u64,
+                    vote_count: m.vote_count.max(0) as u64,
                     original_language: m.original_language,
                     adult: m.adult,
                 }
@@ -67,23 +67,23 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
                     .collect(),
                 popularity: m.popularity,
                 vote_average: m.vote_average,
-                vote_count: m.vote_count as u64,
+                vote_count: m.vote_count.max(0) as u64,
                 original_language: m.original_language,
                 adult: m.adult,
             },
             tagline: m.tagline,
             runtime: if m.runtime > 0 {
-                Some(m.runtime as u32)
+                Some(m.runtime.max(0) as u32)
             } else {
                 None
             },
             budget: if m.budget > 0 {
-                Some(m.budget as u64)
+                Some(m.budget.max(0) as u64)
             } else {
                 None
             },
             revenue: if m.revenue > 0 {
-                Some(m.revenue as u64)
+                Some(m.revenue.max(0) as u64)
             } else {
                 None
             },

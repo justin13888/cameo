@@ -61,7 +61,12 @@ pub fn staff_detail_to_person_details(s: AniListStaffDetail) -> UnifiedPersonDet
             known_for_department: department,
             profile_url: s.image.and_then(|i| i.large),
             popularity: None,
-            gender: None,
+            gender: s.gender.as_deref().map(|g| match g {
+                "Female" => 1,
+                "Male" => 2,
+                "Non-binary" => 3,
+                _ => 0,
+            }),
             adult: false,
         },
         biography: s.description,

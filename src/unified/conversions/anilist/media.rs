@@ -177,7 +177,7 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
             adult: m.is_adult.unwrap_or(false),
         },
         tagline: None,
-        runtime: m.duration.map(|d| d as u32),
+        runtime: m.duration.map(|d| d.max(0) as u32),
         budget: None,
         revenue: None,
         status: m.status.clone(),
@@ -220,7 +220,7 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         m.status.as_deref(),
         Some("RELEASING") | Some("NOT_YET_RELEASED")
     );
-    let episode_run_time = m.duration.map(|d| vec![d as u32]).unwrap_or_default();
+    let episode_run_time = m.duration.map(|d| vec![d.max(0) as u32]).unwrap_or_default();
 
     UnifiedTvShowDetails {
         show: UnifiedTvShow {
@@ -236,7 +236,7 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
             vote_average: score_to_vote_average(m.average_score),
             vote_count: 0,
             original_language: origin_lang,
-            origin_country,
+            origin_country: origin_country.clone(),
             adult: m.is_adult.unwrap_or(false),
         },
         tagline: None,
@@ -253,7 +253,7 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         created_by: Vec::new(),
         episode_run_time,
         spoken_languages: Vec::new(),
-        production_countries: Vec::new(),
+        production_countries: origin_country,
     }
 }
 

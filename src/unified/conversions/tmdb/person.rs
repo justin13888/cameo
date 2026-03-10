@@ -58,7 +58,7 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                     .collect(),
                 popularity: item.popularity,
                 vote_average: item.vote_average,
-                vote_count: item.vote_count as u64,
+                vote_count: item.vote_count.max(0) as u64,
                 original_language: item.original_language,
                 adult: item.adult,
             }),
@@ -77,20 +77,25 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                     .collect(),
                 popularity: item.popularity,
                 vote_average: item.vote_average,
-                vote_count: item.vote_count as u64,
+                vote_count: item.vote_count.max(0) as u64,
                 original_language: item.original_language,
                 origin_country: Vec::new(),
                 adult: item.adult,
             }),
-            _ => UnifiedSearchResult::Person(UnifiedPerson {
-                provider_id: format!("tmdb:{}", item.id),
-                name: item.name.or(item.title).unwrap_or_default(),
-                known_for_department: None,
-                profile_url: resolve_poster(&item.poster_path), // multi uses poster_path
-                popularity: item.popularity,
-                gender: None,
-                adult: item.adult,
-            }),
+            other => {
+                if other != Some("person") {
+                    tracing::warn!(media_type = ?other, "unknown media_type in multi-search result, defaulting to Person");
+                }
+                UnifiedSearchResult::Person(UnifiedPerson {
+                    provider_id: format!("tmdb:{}", item.id),
+                    name: item.name.or(item.title).unwrap_or_default(),
+                    known_for_department: None,
+                    profile_url: resolve_poster(&item.poster_path), // multi uses poster_path
+                    popularity: item.popularity,
+                    gender: None,
+                    adult: item.adult,
+                })
+            }
         }
     }
 }

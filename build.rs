@@ -13,8 +13,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let ast = syn::parse2(tokens)?;
         let content = prettyplease::unparse(&ast);
 
-        let out_file =
-            std::path::Path::new(&std::env::var("OUT_DIR")?).join("tmdb_generated.rs");
+        let out_file = std::path::Path::new(&std::env::var("OUT_DIR")?).join("tmdb_generated.rs");
         std::fs::write(&out_file, content)?;
     }
 
