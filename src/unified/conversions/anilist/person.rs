@@ -80,7 +80,7 @@ pub fn staff_detail_to_person_details(s: AniListStaffDetail) -> UnifiedPersonDet
 }
 
 /// Normalize an AniList primary occupation to a consistent department string.
-fn normalize_occupation(occupation: &str) -> String {
+pub(crate) fn normalize_occupation(occupation: &str) -> String {
     match occupation.to_lowercase().as_str() {
         "voice actor" | "voice actress" => "Voice Acting".to_string(),
         "director" => "Directing".to_string(),
@@ -88,5 +88,43 @@ fn normalize_occupation(occupation: &str) -> String {
         "animation director" | "animator" => "Animation".to_string(),
         "character design" => "Art".to_string(),
         _ => occupation.to_string(),
+    }
+}
+
+/// Map an AniList gender string to a numeric code.
+fn map_gender(g: &str) -> u8 {
+    match g {
+        "Female" => 1,
+        "Male" => 2,
+        "Non-binary" => 3,
+        _ => 0,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{map_gender, normalize_occupation};
+
+    #[test]
+    fn gender_mapping() {
+        assert_eq!(map_gender("Female"), 1);
+        assert_eq!(map_gender("Male"), 2);
+        assert_eq!(map_gender("Non-binary"), 3);
+        assert_eq!(map_gender("Unknown"), 0);
+    }
+
+    #[test]
+    fn normalize_occupation_known() {
+        assert_eq!(normalize_occupation("Voice Actor"), "Voice Acting");
+        assert_eq!(normalize_occupation("voice actress"), "Voice Acting");
+        assert_eq!(normalize_occupation("Director"), "Directing");
+        assert_eq!(normalize_occupation("music"), "Music");
+        assert_eq!(normalize_occupation("Composer"), "Music");
+    }
+
+    #[test]
+    fn normalize_occupation_unknown_passthrough() {
+        assert_eq!(normalize_occupation("Storyboard"), "Storyboard");
+        assert_eq!(normalize_occupation("Producer"), "Producer");
     }
 }

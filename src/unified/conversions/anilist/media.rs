@@ -264,12 +264,57 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
 
 #[cfg(test)]
 mod tests {
-    use super::score_to_vote_average;
+    use super::*;
+    use crate::providers::anilist::response::AniListMedia;
+
+    fn make_media(id: i32, format: Option<&str>) -> AniListMedia {
+        AniListMedia {
+            id,
+            title: None,
+            description: None,
+            start_date: None,
+            cover_image: None,
+            banner_image: None,
+            genres: None,
+            popularity: None,
+            average_score: None,
+            episodes: None,
+            duration: None,
+            status: None,
+            format: format.map(String::from),
+            country_of_origin: None,
+            is_adult: None,
+        }
+    }
 
     #[test]
     fn test_score_conversion() {
         assert_eq!(score_to_vote_average(Some(85)), Some(8.5));
         assert_eq!(score_to_vote_average(Some(100)), Some(10.0));
         assert_eq!(score_to_vote_average(None), None);
+    }
+
+    #[test]
+    fn search_result_movie_format() {
+        let result = anilist_media_to_search_result(make_media(1, Some("MOVIE")));
+        assert!(matches!(result, UnifiedSearchResult::Movie(_)));
+    }
+
+    #[test]
+    fn search_result_tv_format() {
+        let result = anilist_media_to_search_result(make_media(2, Some("TV")));
+        assert!(matches!(result, UnifiedSearchResult::TvShow(_)));
+    }
+
+    #[test]
+    fn search_result_unknown_format_defaults_to_tv() {
+        let result = anilist_media_to_search_result(make_media(3, Some("OVA")));
+        assert!(matches!(result, UnifiedSearchResult::TvShow(_)));
+    }
+
+    #[test]
+    fn search_result_none_format_defaults_to_tv() {
+        let result = anilist_media_to_search_result(make_media(4, None));
+        assert!(matches!(result, UnifiedSearchResult::TvShow(_)));
     }
 }

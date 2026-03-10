@@ -15,3 +15,19 @@ impl std::fmt::Display for TimeWindow {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::TimeWindow;
+
+    #[test]
+    fn time_window_as_hashmap_key() {
+        let mut map = HashMap::new();
+        map.insert(TimeWindow::Day, "daily");
+        map.insert(TimeWindow::Week, "weekly");
+        assert_eq!(map[&TimeWindow::Day], "daily");
+        assert_eq!(map[&TimeWindow::Week], "weekly");
+    }
+}

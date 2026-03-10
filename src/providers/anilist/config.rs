@@ -44,3 +44,32 @@ impl AniListConfig {
         self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::AniListConfig;
+
+    #[test]
+    fn with_per_page_normal() {
+        let cfg = AniListConfig::new().with_per_page(25);
+        assert_eq!(cfg.per_page, 25);
+    }
+
+    #[test]
+    fn with_per_page_clamp_below_min() {
+        let cfg = AniListConfig::new().with_per_page(0);
+        assert_eq!(cfg.per_page, 1);
+    }
+
+    #[test]
+    fn with_per_page_clamp_above_max() {
+        let cfg = AniListConfig::new().with_per_page(100);
+        assert_eq!(cfg.per_page, 50);
+    }
+
+    #[test]
+    fn with_per_page_boundary_values() {
+        assert_eq!(AniListConfig::new().with_per_page(1).per_page, 1);
+        assert_eq!(AniListConfig::new().with_per_page(50).per_page, 50);
+    }
+}

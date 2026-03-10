@@ -249,3 +249,67 @@ impl fmt::Display for Genre {
         f.write_str(self.name())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Genre, UnknownGenre};
+
+    #[test]
+    fn from_anilist_genre_common() {
+        assert_eq!(Genre::from_anilist_genre("Action"), Genre::Action);
+        assert_eq!(Genre::from_anilist_genre("adventure"), Genre::Adventure);
+        assert_eq!(Genre::from_anilist_genre("Comedy"), Genre::Comedy);
+        assert_eq!(Genre::from_anilist_genre("Drama"), Genre::Drama);
+        assert_eq!(Genre::from_anilist_genre("Fantasy"), Genre::Fantasy);
+        assert_eq!(Genre::from_anilist_genre("Horror"), Genre::Horror);
+        assert_eq!(Genre::from_anilist_genre("Music"), Genre::Music);
+        assert_eq!(Genre::from_anilist_genre("Mystery"), Genre::Mystery);
+        assert_eq!(Genre::from_anilist_genre("Romance"), Genre::Romance);
+        assert_eq!(Genre::from_anilist_genre("Sci-Fi"), Genre::ScienceFiction);
+        assert_eq!(Genre::from_anilist_genre("Thriller"), Genre::Thriller);
+    }
+
+    #[test]
+    fn from_anilist_genre_anime_specific() {
+        assert_eq!(Genre::from_anilist_genre("Mecha"), Genre::Mecha);
+        assert_eq!(Genre::from_anilist_genre("Mahou Shoujo"), Genre::MahouShoujo);
+        assert_eq!(Genre::from_anilist_genre("Slice of Life"), Genre::SliceOfLife);
+        assert_eq!(Genre::from_anilist_genre("Sports"), Genre::Sports);
+        assert_eq!(Genre::from_anilist_genre("Supernatural"), Genre::Supernatural);
+        assert_eq!(Genre::from_anilist_genre("Ecchi"), Genre::Ecchi);
+    }
+
+    #[test]
+    fn from_anilist_genre_fallback() {
+        assert_eq!(
+            Genre::from_anilist_genre("Isekai"),
+            Genre::Other(UnknownGenre::Named("isekai".to_string()))
+        );
+        assert_eq!(
+            Genre::from_anilist_genre("Harem"),
+            Genre::Other(UnknownGenre::Named("harem".to_string()))
+        );
+    }
+
+    #[test]
+    fn from_tmdb_id_unknown() {
+        assert_eq!(
+            Genre::from_tmdb_id(99999),
+            Genre::Other(UnknownGenre::TmdbId(99999))
+        );
+        assert_eq!(
+            Genre::from_tmdb_id(0),
+            Genre::Other(UnknownGenre::TmdbId(0))
+        );
+    }
+
+    #[test]
+    fn name_anime_specific() {
+        assert_eq!(Genre::Mecha.name(), "Mecha");
+        assert_eq!(Genre::MahouShoujo.name(), "Mahou Shoujo");
+        assert_eq!(Genre::SliceOfLife.name(), "Slice of Life");
+        assert_eq!(Genre::Sports.name(), "Sports");
+        assert_eq!(Genre::Supernatural.name(), "Supernatural");
+        assert_eq!(Genre::Ecchi.name(), "Ecchi");
+    }
+}
