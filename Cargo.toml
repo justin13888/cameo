@@ -67,3 +67,11 @@ required-features = ["tmdb"]
 [[example]]
 name = "anilist_showcase"
 required-features = ["anilist"]
+
+[[example]]
+name = "cache_showcase"
+required-features = ["tmdb", "cache"]
+
+[[example]]
+name = "error_handling"
+required-features = ["tmdb"]

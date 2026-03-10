@@ -20,7 +20,43 @@ mod search;
 mod season;
 mod watch_providers;
 
-/// Error type for the `CameoClient` facade.
+/// Error type returned by [`CameoClient`] methods and [`CameoClientBuilder::build`].
+///
+/// Extends the core provider errors with two facade-specific variants:
+/// [`NoProviders`](CameoClientError::NoProviders) (build time) and
+/// [`Cache`](CameoClientError::Cache) (runtime, non-fatal in normal use).
+///
+/// # Matching on variants
+///
+/// ```no_run
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// # #[cfg(feature = "tmdb")]
+/// # {
+/// use cameo::providers::tmdb::TmdbConfig;
+/// use cameo::unified::{CameoClient, CameoClientError, SearchProvider};
+/// use cameo::TmdbError;
+///
+/// let client = CameoClient::builder()
+///     .with_tmdb(TmdbConfig::new("your-token"))
+///     .build()?;
+///
+/// match client.search_movies("Inception", None).await {
+///     Ok(results) => println!("{} results", results.total_results),
+///     Err(CameoClientError::Tmdb(TmdbError::Api { status: 401, .. })) => {
+///         eprintln!("authentication failed");
+///     }
+///     Err(CameoClientError::Tmdb(TmdbError::Api { status: 404, .. })) => {
+///         eprintln!("not found");
+///     }
+///     Err(CameoClientError::NoProviders) => {
+///         eprintln!("no providers configured");
+///     }
+///     Err(e) => eprintln!("error: {e}"),
+/// }
+/// # }
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug, thiserror::Error)]
 pub enum CameoClientError {
     /// No providers have been configured.
