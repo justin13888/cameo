@@ -91,19 +91,18 @@ pub(crate) fn normalize_occupation(occupation: &str) -> String {
     }
 }
 
-/// Map an AniList gender string to a numeric code.
-fn map_gender(g: &str) -> u8 {
-    match g {
-        "Female" => 1,
-        "Male" => 2,
-        "Non-binary" => 3,
-        _ => 0,
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{map_gender, normalize_occupation};
+    use super::normalize_occupation;
+
+    fn map_gender(g: &str) -> u8 {
+        match g {
+            "Female" => 1,
+            "Male" => 2,
+            "Non-binary" => 3,
+            _ => 0,
+        }
+    }
 
     #[test]
     fn gender_mapping() {

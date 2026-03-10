@@ -272,10 +272,19 @@ mod tests {
     #[test]
     fn from_anilist_genre_anime_specific() {
         assert_eq!(Genre::from_anilist_genre("Mecha"), Genre::Mecha);
-        assert_eq!(Genre::from_anilist_genre("Mahou Shoujo"), Genre::MahouShoujo);
-        assert_eq!(Genre::from_anilist_genre("Slice of Life"), Genre::SliceOfLife);
+        assert_eq!(
+            Genre::from_anilist_genre("Mahou Shoujo"),
+            Genre::MahouShoujo
+        );
+        assert_eq!(
+            Genre::from_anilist_genre("Slice of Life"),
+            Genre::SliceOfLife
+        );
         assert_eq!(Genre::from_anilist_genre("Sports"), Genre::Sports);
-        assert_eq!(Genre::from_anilist_genre("Supernatural"), Genre::Supernatural);
+        assert_eq!(
+            Genre::from_anilist_genre("Supernatural"),
+            Genre::Supernatural
+        );
         assert_eq!(Genre::from_anilist_genre("Ecchi"), Genre::Ecchi);
     }
 
