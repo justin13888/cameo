@@ -87,16 +87,14 @@ async fn demo_api_errors() {
         Ok(results) => {
             println!("  [unexpected] got {} results", results.total_results);
         }
-        Err(CameoClientError::Tmdb(TmdbError::Api { status, message })) => {
-            match status {
-                401 => println!("  [ok] 401 Unauthorized — check your API token: {message}"),
-                403 => println!("  [ok] 403 Forbidden — token lacks required permissions"),
-                404 => println!("  [ok] 404 Not Found — endpoint may have moved"),
-                429 => println!("  [ok] 429 Rate Limited — back off and retry"),
-                500..=599 => println!("  [ok] {status} Server Error — TMDB is having issues"),
-                _ => println!("  [ok] HTTP {status}: {message}"),
-            }
-        }
+        Err(CameoClientError::Tmdb(TmdbError::Api { status, message })) => match status {
+            401 => println!("  [ok] 401 Unauthorized — check your API token: {message}"),
+            403 => println!("  [ok] 403 Forbidden — token lacks required permissions"),
+            404 => println!("  [ok] 404 Not Found — endpoint may have moved"),
+            429 => println!("  [ok] 429 Rate Limited — back off and retry"),
+            500..=599 => println!("  [ok] {status} Server Error — TMDB is having issues"),
+            _ => println!("  [ok] HTTP {status}: {message}"),
+        },
         Err(CameoClientError::Tmdb(TmdbError::Http(e))) => {
             // No network connectivity, DNS failure, TLS error, etc.
             println!("  transport error (no network?): {e}");

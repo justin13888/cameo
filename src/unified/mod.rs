@@ -1,8 +1,8 @@
 /// Conversion implementations from provider types to unified types.
-pub mod conversions;
+pub(crate) mod conversions;
 /// Multi-provider facade client.
 pub mod facade;
-/// Genre enum covering all known TMDB genres.
+/// Genre enum covering all known media genres.
 pub mod genre;
 /// Unified data models.
 pub mod models;

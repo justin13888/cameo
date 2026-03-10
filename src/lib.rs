@@ -74,6 +74,21 @@ pub use core::pagination::PaginatedResponse;
 pub use cache::{CacheBackend, CacheError, CacheTtlConfig, SqliteCache};
 #[cfg(feature = "anilist")]
 pub use providers::anilist::{AniListClient, AniListConfig, AniListError};
+#[cfg(feature = "anilist")]
+pub use providers::anilist::error::AniListGqlError;
 #[cfg(feature = "tmdb")]
 pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
 pub use unified::{CameoClient, CameoClientBuilder};
+pub use core::config::TimeWindow;
+pub use unified::CameoClientError;
+pub use unified::{Genre, UnknownGenre};
+pub use unified::{
+    UnifiedMovie, UnifiedMovieDetails, UnifiedTvShow, UnifiedTvShowDetails,
+    UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult,
+    UnifiedSeasonDetails, UnifiedEpisode, UnifiedWatchProviders,
+    UnifiedWatchProviderEntry, UnifiedStreamingService,
+};
+pub use unified::{
+    DetailProvider, DiscoveryProvider, MediaProvider, RecommendationProvider,
+    SearchProvider, SeasonProvider, WatchProviderTrait,
+};
