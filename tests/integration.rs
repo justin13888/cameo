@@ -5,7 +5,7 @@ mod integration {
     mod anilist_discovery_test;
     #[cfg(feature = "anilist")]
     mod anilist_search_test;
-    #[cfg(feature = "cache")]
+    #[cfg(all(feature = "cache", feature = "tmdb"))]
     mod cache_integration_test;
     #[cfg(feature = "tmdb")]
     mod facade_dispatch_test;

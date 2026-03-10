@@ -1,4 +1,4 @@
-#![cfg(feature = "cache")]
+#![cfg(all(feature = "cache", feature = "tmdb"))]
 
 use std::sync::Arc;
 
