@@ -163,6 +163,21 @@ pub struct CameoClientBuilder {
     cache_ttl: Option<CacheTtlConfig>,
 }
 
+impl std::fmt::Debug for CameoClientBuilder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut d = f.debug_struct("CameoClientBuilder");
+        #[cfg(feature = "tmdb")]
+        d.field("tmdb_config", &self.tmdb_config);
+        #[cfg(feature = "anilist")]
+        d.field("anilist_config", &self.anilist_config);
+        #[cfg(feature = "cache")]
+        d.field("cache_backend", &self.cache_backend.as_ref().map(|_| ".."));
+        #[cfg(feature = "cache")]
+        d.field("cache_ttl", &self.cache_ttl);
+        d.finish()
+    }
+}
+
 impl CameoClientBuilder {
     /// Configure the TMDB provider.
     #[cfg(feature = "tmdb")]
@@ -291,13 +306,26 @@ impl CameoClientBuilder {
 /// ```
 pub struct CameoClient {
     #[cfg(feature = "tmdb")]
-    pub(self) tmdb: Option<TmdbClient>,
+    tmdb: Option<TmdbClient>,
 
     #[cfg(feature = "anilist")]
-    pub(self) anilist: Option<AniListClient>,
+    anilist: Option<AniListClient>,
 
     #[cfg(feature = "cache")]
-    pub(self) cache: Option<Cache>,
+    cache: Option<Cache>,
+}
+
+impl std::fmt::Debug for CameoClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut d = f.debug_struct("CameoClient");
+        #[cfg(feature = "tmdb")]
+        d.field("tmdb", &self.tmdb.as_ref().map(|_| ".."));
+        #[cfg(feature = "anilist")]
+        d.field("anilist", &self.anilist.as_ref().map(|_| ".."));
+        #[cfg(feature = "cache")]
+        d.field("cache", &self.cache.as_ref().map(|_| ".."));
+        d.finish()
+    }
 }
 
 impl CameoClient {

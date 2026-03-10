@@ -52,6 +52,7 @@ const TV_FORMATS: &[&str] = &["TV", "TV_SHORT", "ONA", "OVA", "SPECIAL"];
 /// # Ok(())
 /// # }
 /// ```
+#[derive(Clone)]
 pub struct AniListClient {
     http: reqwest::Client,
     config: AniListConfig,
