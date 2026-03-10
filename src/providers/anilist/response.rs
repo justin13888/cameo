@@ -17,6 +17,7 @@ pub(crate) struct GraphQlResponse<T> {
 
 /// AniList pagination info returned by `Page.pageInfo`.
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // Mirrors AniList API schema; not all fields are read
 pub struct PageInfo {
     /// Total items across all pages.
     pub total: Option<i32>,
@@ -91,6 +92,7 @@ pub struct AniListStudios {
 
 /// Core AniList media entry (anime) — used in list/search results.
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // Mirrors AniList API schema; not all fields are read
 pub struct AniListMedia {
     pub id: i32,
     pub title: Option<AniListTitle>,
@@ -124,6 +126,7 @@ pub struct AniListMedia {
 
 /// Extended AniList media entry — used in detail queries (includes studios, etc.).
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // Mirrors AniList API schema; not all fields are read
 pub struct AniListMediaDetail {
     pub id: i32,
     pub title: Option<AniListTitle>,
@@ -154,8 +157,6 @@ pub struct AniListMediaDetail {
     pub season: Option<String>,
     #[serde(rename = "seasonYear")]
     pub season_year: Option<i32>,
-    /// Number of episodes in the series (TV-specific).
-    pub episodes_count: Option<i32>,
 }
 
 // ── Page response wrappers ────────────────────────────────────────────────────
@@ -202,6 +203,7 @@ pub struct AniListStaffImage {
 
 /// AniList staff member (real person — voice actor, director, etc.).
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // Mirrors AniList API schema; not all fields are read
 pub struct AniListStaff {
     pub id: i32,
     pub name: Option<AniListStaffName>,
@@ -217,6 +219,7 @@ pub struct AniListStaff {
 
 /// Extended staff info returned by detail queries.
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // Mirrors AniList API schema; not all fields are read
 pub struct AniListStaffDetail {
     pub id: i32,
     pub name: Option<AniListStaffName>,

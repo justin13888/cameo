@@ -44,7 +44,4 @@ pub enum CameoError {
     #[error(transparent)]
     AniList(#[from] crate::providers::anilist::AniListError),
 
-    /// A provider returned an invalid or unexpected response.
-    #[error("invalid response: {0}")]
-    InvalidResponse(String),
 }
