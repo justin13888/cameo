@@ -13,7 +13,7 @@ cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the
 
 **Key capabilities:**
 
-- Ergonomic async Rust API over TMDB (152 operations via progenitor code generation)
+- Ergonomic async Rust API over TMDB (152 operations) and AniList (GraphQL; no API key required)
 - Unified model types: `UnifiedMovie`, `UnifiedTvShow`, `UnifiedPerson`, and their detailed variants
 - Transparent SQLite caching with per-category TTL control
 - Paginated response helpers (`has_next_page`, `next_page`) and lazy streaming via `into_stream`
@@ -356,6 +356,7 @@ match client.movie_details(999_999_999).await {
 - `AniListError` — AniList-specific
   - `GraphQL(Vec<AniListGqlError>)` — GraphQL errors from AniList API
   - `Http(reqwest::Error)` — network failure (includes non-2xx HTTP status and deserialization failures)
+  - `NoData` — successful response with empty data field
   - `NotFound` — resource not found
 - `CacheError` — cache backend errors
   - `Serialization(serde_json::Error)`
@@ -373,7 +374,7 @@ match client.movie_details(999_999_999).await {
 | `UnifiedPersonDetails` | `person: UnifiedPerson`, `biography`, `birthday`, `deathday`, `place_of_birth`, `imdb_id`, `also_known_as` |
 | `UnifiedSearchResult` | `Movie(UnifiedMovie)`, `TvShow(UnifiedTvShow)`, `Person(UnifiedPerson)` |
 
-**`provider_id` format:** `"tmdb:{id}"` — e.g. `"tmdb:550"` for Fight Club. All image fields (`poster_url`, `backdrop_url`, `profile_url`) are fully resolved HTTPS URLs.
+**`provider_id` format:** `"tmdb:{id}"` for TMDB (e.g. `"tmdb:550"` for Fight Club), `"anilist:{id}"` for AniList media (e.g. `"anilist:21"`), `"anilist:staff:{id}"` for AniList staff. All image fields (`poster_url`, `backdrop_url`, `profile_url`) are fully resolved HTTPS URLs.
 
 ## Traits Reference
 
@@ -429,7 +430,7 @@ export TMDB_API_TOKEN=your_token_here
 
 cargo run --example facade_showcase -- "Inception"
 cargo run --example tmdb_lowlevel -- "Inception"
-cargo run --example anilist_showcase --features anilist -- "Your Name"
+cargo run --example anilist_showcase -- "Your Name"
 cargo run --example cache_showcase
 cargo run --example error_handling
 ```
@@ -455,6 +456,7 @@ TMDB_API_TOKEN=your_token cargo test --features live-tests
 ## MSRV
 
 The minimum supported Rust version is **1.88**. This crate uses [let-chains](https://blog.rust-lang.org/2025/06/26/Rust-1.88.0.html) (`if let A = x && let B = y`) which were stabilized in Rust 1.88. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
+
 ## License
 
 Licensed under either of:
