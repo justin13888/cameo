@@ -68,27 +68,20 @@ pub mod unified;
 
 /// Re-export the most common types.
 pub use core::error::CameoError;
-pub use core::pagination::PaginatedResponse;
+pub use core::{config::TimeWindow, pagination::PaginatedResponse};
 
 #[cfg(feature = "cache")]
 pub use cache::{CacheBackend, CacheError, CacheTtlConfig, SqliteCache};
 #[cfg(feature = "anilist")]
-pub use providers::anilist::{AniListClient, AniListConfig, AniListError};
-#[cfg(feature = "anilist")]
 pub use providers::anilist::error::AniListGqlError;
+#[cfg(feature = "anilist")]
+pub use providers::anilist::{AniListClient, AniListConfig, AniListError};
 #[cfg(feature = "tmdb")]
 pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
-pub use unified::{CameoClient, CameoClientBuilder};
-pub use core::config::TimeWindow;
-pub use unified::CameoClientError;
-pub use unified::{Genre, UnknownGenre};
 pub use unified::{
-    UnifiedMovie, UnifiedMovieDetails, UnifiedTvShow, UnifiedTvShowDetails,
-    UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult,
-    UnifiedSeasonDetails, UnifiedEpisode, UnifiedWatchProviders,
-    UnifiedWatchProviderEntry, UnifiedStreamingService,
-};
-pub use unified::{
-    DetailProvider, DiscoveryProvider, MediaProvider, RecommendationProvider,
-    SearchProvider, SeasonProvider, WatchProviderTrait,
+    CameoClient, CameoClientBuilder, CameoClientError, DetailProvider, DiscoveryProvider, Genre,
+    MediaProvider, RecommendationProvider, SearchProvider, SeasonProvider, UnifiedEpisode,
+    UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult,
+    UnifiedSeasonDetails, UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails,
+    UnifiedWatchProviderEntry, UnifiedWatchProviders, UnknownGenre, WatchProviderTrait,
 };

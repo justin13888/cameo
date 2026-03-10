@@ -9,7 +9,7 @@
 
 ## Overview
 
-cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the [TMDB API](https://developer.themoviedb.org/) behind a unified, ergonomic interface with type-safe models, transparent SQLite caching, and first-class pagination support.
+cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the [TMDB API](https://developer.themoviedb.org/) and [AniList GraphQL API](https://anilist.gitbook.io/anilist-apiv2-docs/) behind a unified, ergonomic interface with type-safe models, transparent SQLite caching, and first-class pagination support.
 
 **Key capabilities:**
 
@@ -18,7 +18,7 @@ cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the
 - Transparent SQLite caching with per-category TTL control
 - Paginated response helpers (`has_next_page`, `next_page`) and lazy streaming via `into_stream`
 - Type-safe image URL resolution for poster, backdrop, profile, still, and logo sizes
-- 28-genre taxonomy spanning movies and TV, with `Genre::from_tmdb_id` mapping
+- 33-genre taxonomy spanning movies and TV, with `Genre::from_tmdb_id` mapping
 
 ## Installation
 
@@ -33,7 +33,7 @@ cameo = "0.1"
 |||-|
 | `tmdb` | yes | TMDB provider support |
 | `cache` | yes | SQLite caching layer (requires `rusqlite`) |
-| `anilist` | no | AniList GraphQL provider (anime; no API key required) |
+| `anilist` | yes | AniList GraphQL provider (anime; no API key required) |
 | `live-tests` | no | Gates tests that hit the real TMDB API |
 
 **Minimal install (no cache):**
@@ -48,17 +48,11 @@ cameo = { version = "0.1", default-features = false, features = ["tmdb"] }
 cameo = { version = "0.1", default-features = false, features = ["anilist"] }
 ```
 
-**TMDB + AniList:**
-
-```toml
-cameo = { version = "0.1", features = ["anilist"] }
-```
-
 ## Quick Start
 
 ```rust
 use cameo::{CameoClient, TmdbConfig};
-use cameo::unified::SearchProvider;
+use cameo::SearchProvider;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -80,7 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Searching
 
 ```rust
-use cameo::unified::SearchProvider;
+use cameo::SearchProvider;
 
 // Search for movies
 let movies = client.search_movies("Dune", None).await?;
@@ -98,7 +92,7 @@ let mixed = client.search_multi("Dune", None).await?;
 **Matching on `UnifiedSearchResult`:**
 
 ```rust
-use cameo::unified::models::UnifiedSearchResult;
+use cameo::UnifiedSearchResult;
 
 for result in &mixed.results {
     match result {
@@ -122,7 +116,7 @@ if page1.has_next_page() {
 ### Getting Details
 
 ```rust
-use cameo::unified::DetailProvider;
+use cameo::DetailProvider;
 
 // Movie details by numeric TMDB ID
 let movie = client.movie_details(550).await?;
@@ -142,8 +136,8 @@ println!("{}", person.biography.as_deref().unwrap_or("No bio"));
 ### Discovery & Trending
 
 ```rust
-use cameo::core::config::TimeWindow;
-use cameo::unified::DiscoveryProvider;
+use cameo::TimeWindow;
+use cameo::DiscoveryProvider;
 
 // Trending movies (daily or weekly)
 let daily = client.trending_movies(TimeWindow::Day, None).await?;
@@ -180,7 +174,7 @@ while let Some(result) = stream.next().await {
 ### Genres
 
 ```rust
-use cameo::unified::genre::Genre;
+use cameo::Genre;
 
 // Map a TMDB genre ID to the Genre enum
 let genre = Genre::from_tmdb_id(28);
@@ -335,8 +329,8 @@ use cameo::{CameoClientError, TmdbError};
 
 match client.movie_details(999_999_999).await {
     Ok(details) => println!("{}", details.movie.title),
-    Err(CameoClientError::Tmdb(TmdbError::Api(msg))) => {
-        eprintln!("API error: {msg}");
+    Err(CameoClientError::Tmdb(TmdbError::Api { status, message })) => {
+        eprintln!("API error {status}: {message}");
     }
     Err(CameoClientError::Tmdb(TmdbError::RateLimitExceeded)) => {
         eprintln!("Rate limited — back off and retry");
@@ -350,13 +344,20 @@ match client.movie_details(999_999_999).await {
 - `CameoClientError` — top-level facade errors
   - `NoProviders` — no providers configured
   - `Tmdb(TmdbError)` — from the TMDB provider
+  - `AniList(AniListError)` — from the AniList provider
   - `Cache(CacheError)` — non-fatal cache errors
 - `TmdbError` — TMDB-specific
   - `Http(reqwest::Error)` — network failure
-  - `Api(String)` — non-2xx API response
+  - `Api { status: u16, message: String }` — non-2xx API response with HTTP status code
   - `Deserialization(serde_json::Error)` — unexpected response shape
-  - `RateLimitExceeded` — 429 from TMDB
+  - `RateLimitExceeded` — client-side semaphore timeout (when `rate_limit_timeout` is configured)
+  - `Closed` — rate-limit semaphore unexpectedly closed (internal error)
   - `InvalidConfig(String)` — bad configuration
+- `AniListError` — AniList-specific
+  - `GraphQL(Vec<AniListGqlError>)` — GraphQL errors from AniList API
+  - `Http(reqwest::Error)` — network failure
+  - `Deserialization(serde_json::Error)` — unexpected response shape
+  - `NotFound` — resource not found
 - `CacheError` — cache backend errors
   - `Serialization(serde_json::Error)`
   - `Backend(...)` — storage-level error
@@ -378,14 +379,14 @@ match client.movie_details(999_999_999).await {
 ## Traits Reference
 
 ```rust
-use cameo::unified::{SearchProvider, DetailProvider, DiscoveryProvider, MediaProvider};
+use cameo::{SearchProvider, DetailProvider, DiscoveryProvider, MediaProvider};
 
 // Accept any configured provider generically
 async fn show_trending<P>(provider: &P) -> Result<(), P::Error>
 where
     P: DiscoveryProvider,
 {
-    use cameo::core::config::TimeWindow;
+    use cameo::TimeWindow;
     let movies = provider.trending_movies(TimeWindow::Week, None).await?;
     for m in &movies.results {
         println!("{}", m.title);
@@ -398,7 +399,7 @@ where
 |-||
 | `SearchProvider` | `search_movies`, `search_tv_shows`, `search_people`, `search_multi` |
 | `DetailProvider` | `movie_details`, `tv_show_details`, `person_details` |
-| `DiscoveryProvider` | `trending_movies`, `trending_tv_shows`, `popular_movies`, `top_rated_movies` |
+| `DiscoveryProvider` | `trending_movies`, `trending_tv_shows`, `popular_movies`, `top_rated_movies`, `popular_tv_shows`, `top_rated_tv_shows` |
 | `MediaProvider` | Blanket — requires all three above |
 
 ## Architecture
@@ -407,14 +408,17 @@ where
 CameoClient (unified facade)
 ├── SearchProvider / DetailProvider / DiscoveryProvider traits
 ├── Cache layer (optional — SqliteCache or custom CacheBackend)
-└── TmdbClient
-    └── Generated progenitor client (152 TMDB API operations)
+├── TmdbClient
+│   └── Generated progenitor client (152 TMDB API operations)
+└── AniListClient
+    └── GraphQL client (reqwest POST to graphql.anilist.co)
 ```
 
 | Module | Purpose |
 |--||
 | `cameo::unified` | `CameoClient` facade, traits, unified model types, `Genre` |
 | `cameo::providers::tmdb` | `TmdbClient`, `TmdbConfig`, `ImageUrl`, discover builders |
+| `cameo::providers::anilist` | `AniListClient`, `AniListConfig`, `AniListError` |
 | `cameo::cache` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig` |
 | `cameo::core` | `PaginatedResponse`, `into_stream`, `TimeWindow`, `CameoError` |
 | `cameo::generated` | Progenitor-generated low-level TMDB client (do not use directly) |
@@ -424,11 +428,11 @@ CameoClient (unified facade)
 ```bash
 export TMDB_API_TOKEN=your_token_here
 
-cargo run --example search_movies -- "Inception"
-cargo run --example movie_details -- 550
-cargo run --example trending
-cargo run --example discover
-cargo run --example unified_search -- "Breaking Bad"
+cargo run --example facade_showcase -- "Inception"
+cargo run --example tmdb_lowlevel -- "Inception"
+cargo run --example anilist_showcase --features anilist -- "Your Name"
+cargo run --example cache_showcase
+cargo run --example error_handling
 ```
 
 ## Testing
@@ -451,7 +455,7 @@ TMDB_API_TOKEN=your_token cargo test --features live-tests
 
 ## MSRV
 
-The minimum supported Rust version is **1.88**. This crate uses [let-chains](https://blog.rust-lang.org/2024/09/05/Rust-1.88.0.html#let-chains) (`if let A = x && let B = y`) which were stabilized in Rust 1.88. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
+The minimum supported Rust version is **1.88**. This crate uses [let-chains](https://blog.rust-lang.org/2025/06/26/Rust-1.88.0.html) (`if let A = x && let B = y`) which were stabilized in Rust 1.88. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
 ## License
 
 Licensed under either of:
