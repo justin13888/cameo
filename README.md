@@ -355,8 +355,7 @@ match client.movie_details(999_999_999).await {
   - `InvalidConfig(String)` — bad configuration
 - `AniListError` — AniList-specific
   - `GraphQL(Vec<AniListGqlError>)` — GraphQL errors from AniList API
-  - `Http(reqwest::Error)` — network failure
-  - `Deserialization(serde_json::Error)` — unexpected response shape
+  - `Http(reqwest::Error)` — network failure (includes non-2xx HTTP status and deserialization failures)
   - `NotFound` — resource not found
 - `CacheError` — cache backend errors
   - `Serialization(serde_json::Error)`

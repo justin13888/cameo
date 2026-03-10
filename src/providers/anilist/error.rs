@@ -18,10 +18,6 @@ pub enum AniListError {
     #[error("GraphQL errors: {}", .0.iter().map(|e| e.message.as_str()).collect::<Vec<_>>().join("; "))]
     GraphQL(Vec<AniListGqlError>),
 
-    /// JSON deserialization failure.
-    #[error("deserialization error: {0}")]
-    Deserialization(#[from] serde_json::Error),
-
     /// The API returned a successful response but no `data` field.
     #[error("no data returned from AniList")]
     NoData,

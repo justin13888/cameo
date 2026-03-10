@@ -180,7 +180,7 @@ pub(crate) struct MediaPageData {
 #[derive(Debug, Deserialize)]
 pub(crate) struct MediaDetailResponse {
     #[serde(rename = "Media")]
-    pub media: AniListMediaDetail,
+    pub media: Option<AniListMediaDetail>,
 }
 
 // ── Staff types ───────────────────────────────────────────────────────────────
@@ -257,5 +257,5 @@ pub(crate) struct StaffPageData {
 #[derive(Debug, Deserialize)]
 pub(crate) struct StaffDetailResponse {
     #[serde(rename = "Staff")]
-    pub staff: AniListStaffDetail,
+    pub staff: Option<AniListStaffDetail>,
 }

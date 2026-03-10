@@ -36,6 +36,10 @@ const TV_FORMATS: &[&str] = &["TV", "TV_SHORT", "ONA", "OVA", "SPECIAL"];
 /// Sends typed GraphQL queries to the AniList API and returns deserialized
 /// results. No authentication is needed for public data.
 ///
+/// **Rate limit:** AniList enforces 90 requests per minute. This client does
+/// not perform client-side rate limiting, so callers should throttle requests
+/// when running in bulk (e.g. with `--test-threads=1` for tests).
+///
 /// # Example
 ///
 /// ```no_run
@@ -90,7 +94,8 @@ impl AniListClient {
             .header(reqwest::header::ACCEPT, "application/json")
             .json(&body)
             .send()
-            .await?;
+            .await?
+            .error_for_status()?;
 
         let gql_resp: GraphQlResponse<T> = resp.json().await?;
 
@@ -241,7 +246,8 @@ impl AniListClient {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql MEDIA_DETAILS (movie_details)");
         let resp: MediaDetailResponse = self.graphql(query::MEDIA_DETAILS, vars).await?;
-        Ok(crate::unified::conversions::anilist::anilist_media_detail_to_movie_details(resp.media))
+        let media = resp.media.ok_or(AniListError::NotFound)?;
+        Ok(crate::unified::conversions::anilist::anilist_media_detail_to_movie_details(media))
     }
 
     /// Get full details for an anime TV series by AniList ID.
@@ -249,7 +255,8 @@ impl AniListClient {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql MEDIA_DETAILS (tv_show_details)");
         let resp: MediaDetailResponse = self.graphql(query::MEDIA_DETAILS, vars).await?;
-        Ok(crate::unified::conversions::anilist::anilist_media_detail_to_tv_details(resp.media))
+        let media = resp.media.ok_or(AniListError::NotFound)?;
+        Ok(crate::unified::conversions::anilist::anilist_media_detail_to_tv_details(media))
     }
 
     /// Get full details for a staff member by AniList ID.
@@ -257,7 +264,8 @@ impl AniListClient {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql STAFF_DETAILS (person_details)");
         let resp: StaffDetailResponse = self.graphql(query::STAFF_DETAILS, vars).await?;
-        Ok(crate::unified::conversions::anilist::staff_detail_to_person_details(resp.staff))
+        let staff = resp.staff.ok_or(AniListError::NotFound)?;
+        Ok(crate::unified::conversions::anilist::staff_detail_to_person_details(staff))
     }
 
     // ── Discovery ──────────────────────────────────────────────────────────────
