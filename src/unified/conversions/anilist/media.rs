@@ -220,7 +220,10 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         m.status.as_deref(),
         Some("RELEASING") | Some("NOT_YET_RELEASED")
     );
-    let episode_run_time = m.duration.map(|d| vec![d.max(0) as u32]).unwrap_or_default();
+    let episode_run_time = m
+        .duration
+        .map(|d| vec![d.max(0) as u32])
+        .unwrap_or_default();
 
     UnifiedTvShowDetails {
         show: UnifiedTvShow {

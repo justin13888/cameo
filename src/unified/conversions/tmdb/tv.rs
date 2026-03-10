@@ -239,7 +239,11 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
             last_air_date: t.last_air_date,
             type_: t.type_,
             created_by: t.created_by.iter().filter_map(|c| c.name.clone()).collect(),
-            episode_run_time: t.episode_run_time.iter().map(|&r| r.max(0) as u32).collect(),
+            episode_run_time: t
+                .episode_run_time
+                .iter()
+                .map(|&r| r.max(0) as u32)
+                .collect(),
             spoken_languages: t
                 .spoken_languages
                 .iter()

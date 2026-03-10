@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustfmt
       - name: Format check
@@ -30,6 +30,7 @@ jobs:
         features:
           - "tmdb,cache"          # defaults
           - "anilist"             # AniList only, no TMDB, no cache
+          - "anilist,cache"       # AniList + cache, no TMDB
           - "tmdb"                # TMDB without cache
           - "tmdb,anilist"        # TMDB + AniList, no cache
           - "tmdb,anilist,cache"  # all features
@@ -63,6 +64,18 @@ jobs:
           cache-on-failure: "true"
       - name: Doc tests
         run: cargo test --doc --features tmdb,anilist,cache
+
+  msrv:
+    name: MSRV (1.88)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.88
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      - name: Check MSRV
+        run: cargo check --all-targets --features tmdb,anilist,cache
 
   audit:
     name: Security audit
