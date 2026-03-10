@@ -1,12 +1,9 @@
-use async_trait::async_trait;
-
 use super::{CameoClient, CameoClientError};
 use crate::unified::{
     models::{UnifiedEpisode, UnifiedSeasonDetails},
     traits::SeasonProvider,
 };
 
-#[async_trait]
 impl SeasonProvider for CameoClient {
     type Error = CameoClientError;
 

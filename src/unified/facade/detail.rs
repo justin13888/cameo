@@ -1,5 +1,3 @@
-use async_trait::async_trait;
-
 use super::{CameoClient, CameoClientError};
 #[cfg(feature = "cache")]
 use crate::cache::{CacheKey, MediaType};
@@ -8,7 +6,6 @@ use crate::unified::{
     traits::DetailProvider,
 };
 
-#[async_trait]
 impl DetailProvider for CameoClient {
     type Error = CameoClientError;
 

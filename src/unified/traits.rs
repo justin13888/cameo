@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+#![allow(async_fn_in_trait)]
 
 use super::models::{
     UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
@@ -8,7 +8,6 @@ use super::models::{
 use crate::core::pagination::PaginatedResponse;
 
 /// Provider that can search for movies, TV shows, and people.
-#[async_trait]
 pub trait SearchProvider {
     /// The error type returned by this provider.
     type Error: std::error::Error + Send + Sync + 'static;
@@ -43,7 +42,6 @@ pub trait SearchProvider {
 }
 
 /// Provider that can fetch detailed information about individual items.
-#[async_trait]
 pub trait DetailProvider {
     /// The error type returned by this provider.
     type Error: std::error::Error + Send + Sync + 'static;
@@ -59,7 +57,6 @@ pub trait DetailProvider {
 }
 
 /// Provider that can discover trending and popular content.
-#[async_trait]
 pub trait DiscoveryProvider {
     /// The error type returned by this provider.
     type Error: std::error::Error + Send + Sync + 'static;
@@ -104,7 +101,6 @@ pub trait DiscoveryProvider {
 }
 
 /// Provider that can fetch recommendations and similar content.
-#[async_trait]
 pub trait RecommendationProvider {
     /// The error type returned by this provider.
     type Error: std::error::Error + Send + Sync + 'static;
@@ -139,7 +135,6 @@ pub trait RecommendationProvider {
 }
 
 /// Provider that can fetch season and episode details.
-#[async_trait]
 pub trait SeasonProvider {
     /// The error type returned by this provider.
     type Error: std::error::Error + Send + Sync + 'static;
@@ -161,7 +156,6 @@ pub trait SeasonProvider {
 }
 
 /// Provider that can fetch streaming availability.
-#[async_trait]
 pub trait WatchProviderTrait {
     /// The error type returned by this provider.
     type Error: std::error::Error + Send + Sync + 'static;

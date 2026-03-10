@@ -1,5 +1,3 @@
-use async_trait::async_trait;
-
 use super::{CameoClient, CameoClientError};
 #[cfg(feature = "cache")]
 use crate::cache::{CacheKey, MediaType};
@@ -11,7 +9,6 @@ use crate::{
     },
 };
 
-#[async_trait]
 impl SearchProvider for CameoClient {
     type Error = CameoClientError;
 

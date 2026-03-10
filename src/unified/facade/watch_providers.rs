@@ -1,9 +1,6 @@
-use async_trait::async_trait;
-
 use super::{CameoClient, CameoClientError};
 use crate::unified::{models::UnifiedWatchProviders, traits::WatchProviderTrait};
 
-#[async_trait]
 impl WatchProviderTrait for CameoClient {
     type Error = CameoClientError;
 
