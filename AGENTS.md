@@ -18,10 +18,13 @@ Use td usage -q for subsequent reads.
 
 ## Architecture
 
-This is a Rust library crate exposing a typed, ergonomic client for an internal API.
-Structure suggestions:
+This is a Rust library crate exposing a typed, ergonomic client for movie/TV metadata.
+Actual structure:
 - `src/lib.rs` — public API re-exports
-- `src/client.rs` — main client struct and configuration
-- `src/error.rs` — unified error type
-- `src/models/` — request/response types
-- `src/endpoints/` — per-resource endpoint implementations
+- `src/core/` — pagination, error types, config (TimeWindow)
+- `src/providers/tmdb/` — TmdbClient, TmdbConfig, builders, image_url
+- `src/providers/anilist/` — AniListClient, AniListConfig, GraphQL queries
+- `src/unified/` — traits, models, conversions, CameoClient facade
+- `src/cache/` — CacheBackend trait, SqliteCache
+- `src/generated/` — progenitor-generated TMDB client (build.rs)
+- `build.rs` — progenitor code generation from openapi/tmdb-api.json
