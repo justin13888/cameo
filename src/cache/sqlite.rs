@@ -134,7 +134,7 @@ impl SqliteCache {
 
     /// Periodically purge expired rows (every ~100 writes).
     fn maybe_purge(conn: &Connection, count: u64) {
-        if count.is_multiple_of(100) {
+        if count != 0 && count.is_multiple_of(100) {
             let now = Self::now_secs();
             let _ = conn.execute(
                 "DELETE FROM cache_entries WHERE expires_at < ?1",
@@ -149,8 +149,8 @@ impl SqliteCache {
     /// not fire often enough. This companion method ensures expired rows are
     /// eventually reclaimed even when writes are rare.
     fn maybe_purge_on_read(write_conn: Arc<Mutex<Connection>>, count: u64) {
-        if count.is_multiple_of(1000) {
-            std::mem::drop(tokio::task::spawn_blocking(move || {
+        if count != 0 && count.is_multiple_of(1000) {
+            let _ = tokio::task::spawn_blocking(move || {
                 if let Ok(conn) = write_conn.lock() {
                     let now = SystemTime::now()
                         .duration_since(UNIX_EPOCH)
@@ -161,7 +161,7 @@ impl SqliteCache {
                         params![now as i64],
                     );
                 }
-            }));
+            });
         }
     }
 }
