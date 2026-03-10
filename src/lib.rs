@@ -51,6 +51,7 @@
 //! ```
 
 /// Auto-generated low-level API client code (from progenitor).
+#[cfg(feature = "tmdb")]
 pub mod generated;
 
 /// Caching layer for transparent API response caching.
