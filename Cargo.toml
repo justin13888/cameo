@@ -73,5 +73,9 @@ name = "cache_showcase"
 required-features = ["tmdb", "cache"]
 
 [[example]]
+name = "caching"
+required-features = ["tmdb", "cache"]
+
+[[example]]
 name = "error_handling"
 required-features = ["tmdb"]
