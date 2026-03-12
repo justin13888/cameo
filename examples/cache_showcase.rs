@@ -24,6 +24,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
     let query = args.get(1).map(String::as_str).unwrap_or("Inception");
 
+    // ── 0. File-backed cache via .with_cache() ──────────────────────────────
+    //
+    // The simplest way to enable caching. A SQLite database is created under
+    // the OS cache directory (e.g. ~/.cache/cameo/cache.db on Linux) and
+    // survives across process restarts.
+
+    println!("=== 0. File-backed cache (.with_cache()) ===\n");
+
+    let file_client = CameoClient::builder()
+        .with_tmdb(TmdbConfig::new(token.clone()).with_language("en-US"))
+        .with_cache()
+        .build()?;
+
+    let t0a = Instant::now();
+    let fb_movies = file_client.search_movies(query, None).await?;
+    let elapsed0a = t0a.elapsed();
+    println!(
+        "  Search \"{query}\": {} results ({:.0?})",
+        fb_movies.total_results, elapsed0a
+    );
+
+    file_client.flush_cache_writes().await;
+
+    let t0b = Instant::now();
+    let _ = file_client.search_movies(query, None).await?;
+    let elapsed0b = t0b.elapsed();
+    println!("  Repeat  (cache hit): {:.0?}", elapsed0b);
+    println!(
+        "  Speedup: ~{:.0}x\n",
+        elapsed0a.as_secs_f64() / elapsed0b.as_secs_f64().max(0.000_001)
+    );
+
+    // Clean up so repeated runs don't accumulate stale data.
+    file_client.clear_cache().await;
+
     // ── 1. Setup ──────────────────────────────────────────────────────────────
 
     println!("=== 1. Setup: CameoClient with in-memory cache ===\n");

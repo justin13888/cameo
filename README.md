@@ -11,15 +11,6 @@
 
 cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the [TMDB API](https://developer.themoviedb.org/) and [AniList GraphQL API](https://anilist.gitbook.io/anilist-apiv2-docs/) behind a unified, ergonomic interface with type-safe models, transparent SQLite caching, and first-class pagination support.
 
-**Key capabilities:**
-
-- Ergonomic async Rust API over TMDB (152 operations) and AniList (GraphQL; no API key required)
-- Unified model types: `UnifiedMovie`, `UnifiedTvShow`, `UnifiedPerson`, and their detailed variants
-- Transparent SQLite caching with per-category TTL control
-- Paginated response helpers (`has_next_page`, `next_page`) and lazy streaming via `into_stream`
-- Type-safe image URL resolution for poster, backdrop, profile, still, and logo sizes
-- 33-genre taxonomy spanning movies and TV, with `Genre::from_tmdb_id` mapping
-
 ## Installation
 
 ```toml
@@ -30,23 +21,13 @@ cameo = "0.1"
 ### Feature flags
 
 | Feature | Default | Description |
-|||-|
+|---------|---------|-------------|
 | `tmdb` | yes | TMDB provider support |
 | `cache` | yes | SQLite caching layer (requires `rusqlite`) |
 | `anilist` | yes | AniList GraphQL provider (anime; no API key required) |
 | `live-tests` | no | Gates tests that hit the real TMDB API |
 
-**Minimal install (no cache):**
-
-```toml
-cameo = { version = "0.1", default-features = false, features = ["tmdb"] }
-```
-
-**AniList only (no TMDB, no cache):**
-
-```toml
-cameo = { version = "0.1", default-features = false, features = ["anilist"] }
-```
+For a minimal install without caching: `cameo = { version = "0.1", default-features = false, features = ["tmdb"] }`
 
 ## Quick Start
 
@@ -69,338 +50,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## Usage
-
-### Searching
-
-```rust
-use cameo::SearchProvider;
-
-// Search for movies
-let movies = client.search_movies("Dune", None).await?;
-
-// Search for TV shows
-let shows = client.search_tv_shows("Breaking Bad", None).await?;
-
-// Search for people
-let people = client.search_people("Christopher Nolan", None).await?;
-
-// Multi-search across movies, TV, and people
-let mixed = client.search_multi("Dune", None).await?;
-```
-
-**Matching on `UnifiedSearchResult`:**
-
-```rust
-use cameo::UnifiedSearchResult;
-
-for result in &mixed.results {
-    match result {
-        UnifiedSearchResult::Movie(m) => println!("Movie: {}", m.title),
-        UnifiedSearchResult::TvShow(t) => println!("TV: {}", t.name),
-        UnifiedSearchResult::Person(p) => println!("Person: {}", p.name),
-    }
-}
-```
-
-**Pagination:**
-
-```rust
-let page1 = client.search_movies("Dune", None).await?;
-
-if page1.has_next_page() {
-    let page2 = client.search_movies("Dune", page1.next_page()).await?;
-}
-```
-
-### Getting Details
-
-```rust
-use cameo::DetailProvider;
-
-// Movie details by numeric TMDB ID
-let movie = client.movie_details(550).await?;
-println!("{} — {}", movie.movie.title, movie.tagline.as_deref().unwrap_or(""));
-println!("Runtime: {} min", movie.runtime.unwrap_or(0));
-println!("Budget: ${}", movie.budget.unwrap_or(0));
-
-// TV show details
-let show = client.tv_show_details(1396).await?;
-println!("{} — {} seasons", show.show.name, show.number_of_seasons);
-
-// Person details
-let person = client.person_details(138).await?;
-println!("{}", person.biography.as_deref().unwrap_or("No bio"));
-```
-
-### Discovery & Trending
-
-```rust
-use cameo::TimeWindow;
-use cameo::DiscoveryProvider;
-
-// Trending movies (daily or weekly)
-let daily = client.trending_movies(TimeWindow::Day, None).await?;
-let weekly = client.trending_movies(TimeWindow::Week, None).await?;
-
-// Trending TV shows
-let tv = client.trending_tv_shows(TimeWindow::Week, None).await?;
-
-// Popular and top-rated movies
-let popular = client.popular_movies(None).await?;
-let top_rated = client.top_rated_movies(None).await?;
-```
-
-### Pagination Streaming
-
-Lazily fetch all pages as an async `Stream`:
-
-```rust
-use futures::StreamExt;
-use cameo::core::pagination::into_stream;
-
-let stream = into_stream(|page| {
-    let client = client.clone();
-    async move { client.search_movies("Batman", Some(page)).await }
-});
-
-tokio::pin!(stream);
-while let Some(result) = stream.next().await {
-    let movie = result?;
-    println!("{}", movie.title);
-}
-```
-
-### Genres
-
-```rust
-use cameo::Genre;
-
-// Map a TMDB genre ID to the Genre enum
-let genre = Genre::from_tmdb_id(28);
-// Genre::Action
-
-// Display name
-println!("{}", genre.name()); // "Action"
-
-// Unknown genres are wrapped
-let unknown = Genre::from_tmdb_id(99999);
-// Genre::Other(UnknownGenre::TmdbId(99999))
-```
-
-
-
-## TMDB Provider (Direct Access)
-
-`CameoClient` covers the most common operations. For TMDB-specific features like credits, images, or advanced discovery queries, use `TmdbClient` directly.
-
-```rust
-use cameo::{TmdbClient, TmdbConfig};
-
-let config = TmdbConfig::new(token)
-    .with_language("en-US")
-    .with_region("US")
-    .with_include_adult(false)
-    .with_rate_limit(40);
-
-let client = TmdbClient::new(config)?;
-```
-
-**Extended TMDB calls:**
-
-```rust
-// Cast & crew
-let credits = client.movie_credits(550).await?;
-let agg_credits = client.tv_series_aggregate_credits(1396).await?;
-
-// Images
-let images = client.movie_images(550).await?;
-
-// Discover with filters
-use cameo::generated::tmdb::types::DiscoverMovieSortBy;
-let results = client.discover_movies()
-    .sort_by(DiscoverMovieSortBy::PopularityDesc)
-    .primary_release_year(2024)
-    .execute()
-    .await?;
-```
-
-### Image URLs
-
-```rust
-use cameo::providers::tmdb::image_url::{ImageUrl, PosterSize, BackdropSize, ProfileSize};
-
-let poster = ImageUrl::poster("/path.jpg", PosterSize::W500);
-let backdrop = ImageUrl::backdrop("/path.jpg", BackdropSize::W1280);
-let profile = ImageUrl::profile("/path.jpg", ProfileSize::W185);
-```
-
-**Available sizes:**
-
-| Type | Variants |
-|||
-| `PosterSize` | `W92`, `W154`, `W185`, `W342`, `W500`, `W780`, `Original` |
-| `BackdropSize` | `W300`, `W780`, `W1280`, `Original` |
-| `ProfileSize` | `W45`, `W185`, `H632`, `Original` |
-| `StillSize` | `W92`, `W185`, `W300`, `Original` |
-| `LogoSize` | `W45`, `W92`, `W154`, `W185`, `W300`, `W500`, `Original` |
-
-
-
-## Caching
-
-### Default SQLite Cache
-
-`.with_cache()` stores to the OS cache directory (e.g. `~/.cache/cameo/cache.db` on Linux), falling back to a temp file if that fails.
-
-```rust
-let client = CameoClient::builder()
-    .with_tmdb(config)
-    .with_cache()
-    .build()?;
-```
-
-### Custom TTLs
-
-```rust
-use cameo::CacheTtlConfig;
-use std::time::Duration;
-
-let client = CameoClient::builder()
-    .with_tmdb(config)
-    .with_cache()
-    .with_cache_ttl(CacheTtlConfig {
-        details:   Duration::from_secs(86400),  // 24 h
-        search:    Duration::from_secs(3600),   // 1 h
-        discovery: Duration::from_secs(900),    // 15 min
-        items:     Duration::from_secs(21600),  // 6 h
-    })
-    .build()?;
-```
-
-### Custom Cache Backend
-
-Implement `CacheBackend` to plug in Redis, an in-memory store, or any other backend:
-
-```rust
-use cameo::CacheBackend;
-use std::sync::Arc;
-
-// impl CacheBackend for MyBackend { ... }
-
-let client = CameoClient::builder()
-    .with_tmdb(config)
-    .with_cache_backend(Arc::new(MyBackend::new()))
-    .build()?;
-```
-
-### Cache Lookup & Management
-
-Results from any API call are automatically cached. You can also query the cache directly:
-
-```rust
-// Check cache without making an API call
-if let Some(movie) = client.cached_movie("tmdb:550").await {
-    println!("Cache hit: {}", movie.title);
-}
-
-// Full details from cache
-let details = client.cached_movie_details("tmdb:550").await;
-let show = client.cached_tv_show("tmdb:1396").await;
-let show_details = client.cached_tv_show_details("tmdb:1396").await;
-let person = client.cached_person("tmdb:138").await;
-let person_details = client.cached_person_details("tmdb:138").await;
-
-// Invalidate entries for a specific item
-client.invalidate_cached("tmdb:550").await;
-
-// Clear the entire cache
-client.clear_cache().await;
-```
-
-> **Note:** Cache errors are non-fatal. They are logged internally but do not cause API calls to fail.
-
-## Error Handling
-
-All errors implement `std::error::Error` and work naturally with `?`.
-
-```rust
-use cameo::{CameoClientError, TmdbError};
-
-match client.movie_details(999_999_999).await {
-    Ok(details) => println!("{}", details.movie.title),
-    Err(CameoClientError::Tmdb(TmdbError::Api { status, message })) => {
-        eprintln!("API error {status}: {message}");
-    }
-    Err(CameoClientError::Tmdb(TmdbError::RateLimitExceeded)) => {
-        eprintln!("Rate limited — back off and retry");
-    }
-    Err(e) => eprintln!("Error: {e}"),
-}
-```
-
-**Error type hierarchy:**
-
-- `CameoClientError` — top-level facade errors
-  - `NoProviders` — no providers configured
-  - `Tmdb(TmdbError)` — from the TMDB provider
-  - `AniList(AniListError)` — from the AniList provider
-  - `Cache(CacheError)` — non-fatal cache errors
-- `TmdbError` — TMDB-specific
-  - `Http(reqwest::Error)` — network failure
-  - `Api { status: u16, message: String }` — non-2xx API response with HTTP status code
-  - `Deserialization(serde_json::Error)` — unexpected response shape
-  - `RateLimitExceeded` — client-side semaphore timeout (when `rate_limit_timeout` is configured)
-  - `Closed` — rate-limit semaphore unexpectedly closed (internal error)
-  - `InvalidConfig(String)` — bad configuration
-- `AniListError` — AniList-specific
-  - `GraphQL(Vec<AniListGqlError>)` — GraphQL errors from AniList API
-  - `Http(reqwest::Error)` — network failure (includes non-2xx HTTP status and deserialization failures)
-  - `NoData` — successful response with empty data field
-  - `NotFound` — resource not found
-- `CacheError` — cache backend errors
-  - `Serialization(serde_json::Error)`
-  - `Backend(...)` — storage-level error
-
-## Data Models Reference
-
-| Type | Key fields |
-||--|
-| `UnifiedMovie` | `provider_id`, `title`, `overview`, `release_date`, `poster_url`, `backdrop_url`, `genres`, `vote_average`, `vote_count`, `popularity` |
-| `UnifiedMovieDetails` | `movie: UnifiedMovie`, `tagline`, `runtime`, `budget`, `revenue`, `status`, `imdb_id`, `production_companies`, `belongs_to_collection` |
-| `UnifiedTvShow` | `provider_id`, `name`, `overview`, `first_air_date`, `poster_url`, `backdrop_url`, `genres`, `vote_average`, `origin_country` |
-| `UnifiedTvShowDetails` | `show: UnifiedTvShow`, `tagline`, `number_of_seasons`, `number_of_episodes`, `in_production`, `networks`, `created_by`, `last_air_date` |
-| `UnifiedPerson` | `provider_id`, `name`, `known_for_department`, `profile_url`, `popularity`, `gender` |
-| `UnifiedPersonDetails` | `person: UnifiedPerson`, `biography`, `birthday`, `deathday`, `place_of_birth`, `imdb_id`, `also_known_as` |
-| `UnifiedSearchResult` | `Movie(UnifiedMovie)`, `TvShow(UnifiedTvShow)`, `Person(UnifiedPerson)` |
-
-**`provider_id` format:** `"tmdb:{id}"` for TMDB (e.g. `"tmdb:550"` for Fight Club), `"anilist:{id}"` for AniList media (e.g. `"anilist:21"`), `"anilist:staff:{id}"` for AniList staff. All image fields (`poster_url`, `backdrop_url`, `profile_url`) are fully resolved HTTPS URLs.
-
-## Traits Reference
-
-```rust
-use cameo::{SearchProvider, DetailProvider, DiscoveryProvider, MediaProvider};
-
-// Accept any configured provider generically
-async fn show_trending<P>(provider: &P) -> Result<(), P::Error>
-where
-    P: DiscoveryProvider,
-{
-    use cameo::TimeWindow;
-    let movies = provider.trending_movies(TimeWindow::Week, None).await?;
-    for m in &movies.results {
-        println!("{}", m.title);
-    }
-    Ok(())
-}
-```
-
-| Trait | Methods |
-|-||
-| `SearchProvider` | `search_movies`, `search_tv_shows`, `search_people`, `search_multi` |
-| `DetailProvider` | `movie_details`, `tv_show_details`, `person_details` |
-| `DiscoveryProvider` | `trending_movies`, `trending_tv_shows`, `popular_movies`, `top_rated_movies`, `popular_tv_shows`, `top_rated_tv_shows` |
-| `MediaProvider` | Blanket — requires all three above |
+## Examples
+
+| Example | Covers | Run command |
+|---------|--------|-------------|
+| `facade_showcase` | Search, details, discovery, recommendations, seasons, watch providers | `TMDB_API_TOKEN=xxx cargo run --example facade_showcase -- "query"` |
+| `tmdb_lowlevel` | Direct TmdbClient: pagination, images, discover builder, credits | `TMDB_API_TOKEN=xxx cargo run --example tmdb_lowlevel -- "query"` |
+| `anilist_showcase` | AniList search, details, discovery (no API key needed) | `cargo run --example anilist_showcase --features anilist -- "query"` |
+| `cache_showcase` | File-backed/in-memory cache, custom TTLs, invalidation, clearing | `TMDB_API_TOKEN=xxx cargo run --example cache_showcase` |
+| `error_handling` | Error variants, status matching, recovery patterns | `cargo run --example error_handling` |
 
 ## Architecture
 
@@ -415,25 +73,13 @@ CameoClient (unified facade)
 ```
 
 | Module | Purpose |
-|--||
+|--------|---------|
 | `cameo::unified` | `CameoClient` facade, traits, unified model types, `Genre` |
 | `cameo::providers::tmdb` | `TmdbClient`, `TmdbConfig`, `ImageUrl`, discover builders |
 | `cameo::providers::anilist` | `AniListClient`, `AniListConfig`, `AniListError` |
 | `cameo::cache` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig` |
 | `cameo::core` | `PaginatedResponse`, `into_stream`, `TimeWindow`, `CameoError` |
 | `cameo::generated` | Progenitor-generated low-level TMDB client (do not use directly) |
-
-## Examples
-
-```bash
-export TMDB_API_TOKEN=your_token_here
-
-cargo run --example facade_showcase -- "Inception"
-cargo run --example tmdb_lowlevel -- "Inception"
-cargo run --example anilist_showcase -- "Your Name"
-cargo run --example cache_showcase
-cargo run --example error_handling
-```
 
 ## Testing
 
