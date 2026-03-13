@@ -83,13 +83,7 @@ CameoClient (unified facade)
 
 ## Testing
 
-```bash
-# Unit tests + wiremock integration tests (no network required)
-cargo test
-
-# Live API tests against the real TMDB API
-TMDB_API_TOKEN=your_token cargo test --features live-tests
-```
+See [TESTING.md](TESTING.md) for the full test guide, run commands, and coverage matrix.
 
 ## Contributing
 
