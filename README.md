@@ -87,11 +87,14 @@ See [TESTING.md](TESTING.md) for the full test guide, run commands, and coverage
 
 ## Contributing
 
-1. Clone the repo and run `cargo test` to verify your environment
-2. Use [conventional commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `refactor:`, etc.
-3. All public API items must have `///` doc comments
-4. No `unwrap()` in library code — use `?` and proper error types
-5. Add tests for all public API surface (unit tests preferred; wiremock for network calls)
+Prerequisites: `rustup`, `lefthook`, [`just`](https://github.com/casey/just) (command runner)
+
+1. Clone the repo and run `just setup` to install hooks and build, then `just test` to verify your environment
+2. Run `just` to see all available recipes
+3. Use [conventional commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `refactor:`, etc.
+4. All public API items must have `///` doc comments
+5. No `unwrap()` in library code — use `?` and proper error types
+6. Add tests for all public API surface (unit tests preferred; wiremock for network calls)
 
 ## MSRV
 

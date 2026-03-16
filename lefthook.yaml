@@ -2,17 +2,20 @@ pre-commit:
   piped: true
   commands:
     fmt:
-      run: cargo fmt --all
+      priority: 1
+      run: just fmt
     clippy-fix:
-      run: cargo clippy --fix --allow-dirty --allow-staged --all-targets -- -D warnings
+      priority: 2
+      run: just clippy-fix
     check-modified:
-      run: git diff --exit-code || { echo "Auto-fixes were applied. Stage the changes and re-commit."; exit 1; }
+      priority: 3
+      run: just check-modified
 
 pre-push:
   commands:
     fmt:
-      run: cargo fmt --all -- --check
+      run: just fmt-check
     clippy:
-      run: cargo clippy --all-targets -- -D warnings
+      run: just clippy
     test:
-      run: cargo test
+      run: just test
