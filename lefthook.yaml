@@ -9,7 +9,7 @@ pre-commit:
       run: just clippy-fix
     check-modified:
       priority: 3
-      run: just check-modified
+      run: git diff --exit-code || { echo "Auto-fixes were applied. Stage the changes and re-commit."; exit 1; }
 
 pre-push:
   commands:

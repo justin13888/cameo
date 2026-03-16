@@ -70,6 +70,3 @@ setup:
     lefthook install
     cargo build
 
-# Check for modified files (used by pre-commit hook)
-check-modified:
-    git diff --exit-code || { echo "Auto-fixes were applied. Stage the changes and re-commit."; exit 1; }
