@@ -83,9 +83,9 @@ impl TmdbConfig {
 
     /// Set the rate limit (max concurrent requests).
     ///
-    /// Minimum value is 1; lower values are clamped.
+    /// A value of 0 creates a semaphore with no permits, meaning all requests will block.
     pub fn with_rate_limit(mut self, limit: u32) -> Self {
-        self.rate_limit = limit.max(1);
+        self.rate_limit = limit;
         self
     }
 

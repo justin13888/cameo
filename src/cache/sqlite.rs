@@ -150,7 +150,7 @@ impl SqliteCache {
     /// eventually reclaimed even when writes are rare.
     fn maybe_purge_on_read(write_conn: Arc<Mutex<Connection>>, count: u64) {
         if count != 0 && count.is_multiple_of(1000) {
-            let _ = tokio::task::spawn_blocking(move || {
+            let _purge_task = tokio::task::spawn_blocking(move || {
                 if let Ok(conn) = write_conn.lock() {
                     let now = SystemTime::now()
                         .duration_since(UNIX_EPOCH)
