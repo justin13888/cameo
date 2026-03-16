@@ -36,11 +36,11 @@ test-features features:
 
 # Run all tests including AniList
 test-all:
-    cargo test --features anilist
+    cargo test --features full
 
 # Run live tests (requires TMDB_API_TOKEN in env or .env)
 test-live:
-    set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
+    set -a; source .env; set +a && cargo test --features full,live-tests -- --test-threads=1
 
 # Generate docs
 doc:
@@ -48,16 +48,16 @@ doc:
 
 # Check docs build (no open)
 doc-check:
-    cargo doc --no-deps --features tmdb,anilist,cache
+    cargo doc --no-deps --features full
 
 # Run doc tests
 doc-test:
-    cargo test --doc --features tmdb,anilist,cache
+    cargo test --doc --features full
 
 # Pre-publish checks
 publish-check:
-    cargo clippy --all-targets --all-features -- -D warnings
-    cargo test --all-features
+    cargo clippy --all-targets --features full -- -D warnings
+    cargo test --features full
     cargo doc --no-deps
     cargo publish --dry-run
 
