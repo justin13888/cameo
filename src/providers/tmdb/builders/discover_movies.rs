@@ -22,6 +22,7 @@ use crate::{
 /// # Ok(())
 /// # }
 /// ```
+#[derive(Debug, Clone)]
 pub struct DiscoverMoviesBuilder<'a> {
     client: &'a TmdbClient,
     certification: Option<String>,

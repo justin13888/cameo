@@ -22,6 +22,7 @@ use crate::{
 /// # Ok(())
 /// # }
 /// ```
+#[derive(Debug, Clone)]
 pub struct DiscoverTvBuilder<'a> {
     client: &'a TmdbClient,
     air_date_gte: Option<NaiveDate>,

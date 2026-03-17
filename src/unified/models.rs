@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::genre::Genre;
 
 /// A movie in the unified model.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedMovie {
     /// Provider-qualified ID (e.g. `"tmdb:550"`).
     pub provider_id: String,
@@ -34,7 +34,7 @@ pub struct UnifiedMovie {
 }
 
 /// Detailed movie information in the unified model.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedMovieDetails {
     /// Base movie info.
     pub movie: UnifiedMovie,
@@ -65,7 +65,7 @@ pub struct UnifiedMovieDetails {
 }
 
 /// A TV show in the unified model.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedTvShow {
     /// Provider-qualified ID (e.g. `"tmdb:1396"`).
     pub provider_id: String,
@@ -98,7 +98,7 @@ pub struct UnifiedTvShow {
 }
 
 /// Detailed TV show information in the unified model.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedTvShowDetails {
     /// Base TV show info.
     pub show: UnifiedTvShow,
@@ -133,7 +133,7 @@ pub struct UnifiedTvShowDetails {
 }
 
 /// A person in the unified model.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedPerson {
     /// Provider-qualified ID (e.g. `"tmdb:287"`).
     pub provider_id: String,
@@ -152,7 +152,7 @@ pub struct UnifiedPerson {
 }
 
 /// Detailed person information in the unified model.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedPersonDetails {
     /// Base person info.
     pub person: UnifiedPerson,
@@ -173,7 +173,7 @@ pub struct UnifiedPersonDetails {
 }
 
 /// A search result that can be a movie, TV show, or person.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum UnifiedSearchResult {
     /// Movie result.
     Movie(UnifiedMovie),
@@ -184,7 +184,7 @@ pub enum UnifiedSearchResult {
 }
 
 /// Detailed season information for a TV show.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedSeasonDetails {
     /// Provider-qualified show ID (e.g. `"tmdb:1396"`).
     pub show_id: String,
@@ -203,7 +203,7 @@ pub struct UnifiedSeasonDetails {
 }
 
 /// A single episode in a TV show season.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedEpisode {
     /// Episode number within the season.
     pub episode_number: u32,
@@ -222,7 +222,7 @@ pub struct UnifiedEpisode {
 }
 
 /// Streaming availability for a movie or TV show.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedWatchProviders {
     /// Provider-qualified media ID (e.g. `"tmdb:550"`).
     pub provider_id: String,
@@ -231,7 +231,7 @@ pub struct UnifiedWatchProviders {
 }
 
 /// Streaming services available in a specific country.
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct UnifiedWatchProviderEntry {
     /// Services offering flat-rate / subscription streaming.
     pub flatrate: Vec<UnifiedStreamingService>,
@@ -242,7 +242,7 @@ pub struct UnifiedWatchProviderEntry {
 }
 
 /// A single streaming service.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedStreamingService {
     /// Service name (e.g. "Netflix").
     pub name: String,

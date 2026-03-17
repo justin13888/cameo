@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Only run TMDB codegen when the tmdb feature is enabled
     if std::env::var_os("CARGO_FEATURE_TMDB").is_some() {

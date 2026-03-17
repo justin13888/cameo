@@ -52,6 +52,12 @@ pub struct SqliteCache {
     read_count: Arc<std::sync::atomic::AtomicU64>,
 }
 
+impl std::fmt::Debug for SqliteCache {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SqliteCache").finish_non_exhaustive()
+    }
+}
+
 impl SqliteCache {
     /// Open or create a file-backed SQLite cache database.
     ///

@@ -26,22 +26,34 @@ impl MediaType {
 pub enum CacheKey {
     /// Full detail response: (media_type, provider_id).
     Detail {
+        /// Media type of the cached item.
         media_type: MediaType,
+        /// Provider-qualified ID (e.g. `"tmdb:550"`).
         provider_id: String,
     },
     /// Individual item indexed from a list result: (media_type, provider_id).
     Item {
+        /// Media type of the cached item.
         media_type: MediaType,
+        /// Provider-qualified ID (e.g. `"tmdb:550"`).
         provider_id: String,
     },
     /// Search results page: (optional media_type, normalized query, page).
     Search {
+        /// Optional media type filter (`None` means multi-search).
         media_type: Option<MediaType>,
+        /// Search query string (will be normalized for the key).
         query: String,
+        /// Page number (1-based).
         page: u32,
     },
     /// Discovery/list results page: (endpoint name, page).
-    Discovery { endpoint: String, page: u32 },
+    Discovery {
+        /// Endpoint or list name (e.g. `"trending_movies"`).
+        endpoint: String,
+        /// Page number (1-based).
+        page: u32,
+    },
 }
 
 impl CacheKey {

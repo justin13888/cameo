@@ -167,7 +167,7 @@ All fixtures live in `tests/fixtures/` and are trimmed to 1–2 results for spee
 | `trending_tv_response.json` | `/3/trending/tv/week` |
 | `discover_tv_response.json` | `/3/discover/tv` |
 
-AniList fixtures use inline JSON constructed via `serde_json::json!` helpers in each test file — no separate fixture files.
+AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture files (`anilist_media_details_response.json`, `anilist_staff_details_response.json`). Search and discovery tests use inline JSON constructed via `serde_json::json!` helpers — no separate fixture files for those.
 
 ---
 

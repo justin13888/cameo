@@ -17,6 +17,13 @@ const TMDB_BASE_URL: &str = "https://api.themoviedb.org";
 /// High-level TMDB API client wrapping the generated progenitor client.
 ///
 /// Adds bearer token authentication, rate limiting, and ergonomic pagination.
+///
+/// # Cloning
+///
+/// `TmdbClient` is cheaply cloneable — the underlying HTTP client,
+/// configuration, and rate-limit semaphore are all reference-counted so
+/// clones share the same connection pool and concurrency pool.
+#[derive(Debug, Clone)]
 pub struct TmdbClient {
     inner: tmdb::Client,
     config: TmdbConfig,

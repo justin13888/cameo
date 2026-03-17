@@ -319,9 +319,9 @@ impl std::fmt::Debug for CameoClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut d = f.debug_struct("CameoClient");
         #[cfg(feature = "tmdb")]
-        d.field("tmdb", &self.tmdb.as_ref().map(|_| ".."));
+        d.field("tmdb", &self.tmdb);
         #[cfg(feature = "anilist")]
-        d.field("anilist", &self.anilist.as_ref().map(|_| ".."));
+        d.field("anilist", &self.anilist);
         #[cfg(feature = "cache")]
         d.field("cache", &self.cache.as_ref().map(|_| ".."));
         d.finish()

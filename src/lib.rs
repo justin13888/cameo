@@ -75,7 +75,7 @@ pub use core::{
 };
 
 #[cfg(feature = "cache")]
-pub use cache::{CacheBackend, CacheError, CacheTtlConfig, SqliteCache};
+pub use cache::{CacheBackend, CacheError, CacheKey, CacheTtlConfig, MediaType, SqliteCache};
 #[cfg(feature = "anilist")]
 pub use providers::anilist::error::AniListGqlError;
 #[cfg(feature = "anilist")]

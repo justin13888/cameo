@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 | Example | Covers | Run command |
 |---------|--------|-------------|
 | `facade_showcase` | Search, details, discovery, recommendations, seasons, watch providers | `TMDB_API_TOKEN=xxx cargo run --example facade_showcase -- "query"` |
-| `tmdb_lowlevel` | Direct TmdbClient: pagination, images, discover builder, credits | `TMDB_API_TOKEN=xxx cargo run --example tmdb_lowlevel -- "query"` |
+| `tmdb_lowlevel` | Direct TmdbClient: pagination, images, discover builder, credits, trending, genres | `TMDB_API_TOKEN=xxx cargo run --example tmdb_lowlevel -- "query"` |
 | `anilist_showcase` | AniList search, details, discovery (no API key needed) | `cargo run --example anilist_showcase --features anilist -- "query"` |
 | `cache_showcase` | File-backed/in-memory cache, custom TTLs, invalidation, clearing | `TMDB_API_TOKEN=xxx cargo run --example cache_showcase` |
 | `error_handling` | Error variants, status matching, recovery patterns | `cargo run --example error_handling` |
