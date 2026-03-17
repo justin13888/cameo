@@ -101,6 +101,12 @@ pub trait DiscoveryProvider {
 }
 
 /// Provider that can fetch recommendations and similar content.
+///
+/// # Provider support
+///
+/// Not all providers implement this trait. When a [`crate::unified::CameoClient`] is
+/// configured without any provider that supports recommendations, calls will return
+/// [`crate::unified::CameoError::NoProviders`].
 pub trait RecommendationProvider {
     /// The error type returned by this provider.
     type Error: std::error::Error + Send + Sync + 'static;
@@ -135,6 +141,12 @@ pub trait RecommendationProvider {
 }
 
 /// Provider that can fetch season and episode details.
+///
+/// # Provider support
+///
+/// Not all providers implement this trait. When a [`crate::unified::CameoClient`] is
+/// configured without any provider that supports season/episode data, calls will return
+/// [`crate::unified::CameoError::NoProviders`].
 pub trait SeasonProvider {
     /// The error type returned by this provider.
     type Error: std::error::Error + Send + Sync + 'static;
@@ -156,6 +168,12 @@ pub trait SeasonProvider {
 }
 
 /// Provider that can fetch streaming availability.
+///
+/// # Provider support
+///
+/// Not all providers implement this trait. When a [`crate::unified::CameoClient`] is
+/// configured without any provider that supports watch provider data, calls will return
+/// [`crate::unified::CameoError::NoProviders`].
 pub trait WatchProviderTrait {
     /// The error type returned by this provider.
     type Error: std::error::Error + Send + Sync + 'static;

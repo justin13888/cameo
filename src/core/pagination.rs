@@ -35,6 +35,33 @@ impl<T> PaginatedResponse<T> {
 ///
 /// `fetch_page` receives a 1-indexed page number and returns the items on that page
 /// along with pagination metadata.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use cameo::core::pagination::{into_stream, PaginatedResponse};
+/// use futures::StreamExt;
+///
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// // `fetch_page` is any async closure that takes a 1-indexed page number
+/// // and returns a PaginatedResponse.  Replace the body with a real client call.
+/// let stream = into_stream(|page: u32| async move {
+///     // e.g. client.search_movies("Inception", Some(page)).await
+///     Ok::<PaginatedResponse<String>, std::convert::Infallible>(PaginatedResponse {
+///         page,
+///         results: vec!["Inception".to_string()],
+///         total_pages: 1,
+///         total_results: 1,
+///     })
+/// });
+///
+/// tokio::pin!(stream);
+/// while let Some(item) = stream.next().await {
+///     println!("{}", item?);
+/// }
+/// # Ok(())
+/// # }
+/// ```
 pub fn into_stream<T, E, F, Fut>(fetch_page: F) -> impl Stream<Item = Result<T, E>>
 where
     T: 'static,
