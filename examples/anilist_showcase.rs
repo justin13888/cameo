@@ -175,6 +175,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             UnifiedSearchResult::Movie(m) => println!("    Movie: {}", m.title),
             UnifiedSearchResult::TvShow(t) => println!("    TV:    {}", t.name),
             UnifiedSearchResult::Person(p) => println!("    Person:{}", p.name),
+            _ => {}
         }
     }
 

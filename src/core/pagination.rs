@@ -2,7 +2,8 @@ use futures::Stream;
 use serde::{Deserialize, Serialize};
 
 /// A paginated response from a provider API.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PaginatedResponse<T> {
     /// Current page number (1-indexed).
     pub page: u32,
@@ -15,6 +16,16 @@ pub struct PaginatedResponse<T> {
 }
 
 impl<T> PaginatedResponse<T> {
+    /// Create a new `PaginatedResponse`.
+    pub fn new(page: u32, results: Vec<T>, total_pages: u32, total_results: u32) -> Self {
+        Self {
+            page,
+            results,
+            total_pages,
+            total_results,
+        }
+    }
+
     /// Returns `true` if there are more pages after this one.
     pub fn has_next_page(&self) -> bool {
         self.page < self.total_pages
@@ -47,12 +58,12 @@ impl<T> PaginatedResponse<T> {
 /// // and returns a PaginatedResponse.  Replace the body with a real client call.
 /// let stream = into_stream(|page: u32| async move {
 ///     // e.g. client.search_movies("Inception", Some(page)).await
-///     Ok::<PaginatedResponse<String>, std::convert::Infallible>(PaginatedResponse {
+///     Ok::<PaginatedResponse<String>, std::convert::Infallible>(PaginatedResponse::new(
 ///         page,
-///         results: vec!["Inception".to_string()],
-///         total_pages: 1,
-///         total_results: 1,
-///     })
+///         vec!["Inception".to_string()],
+///         1,
+///         1,
+///     ))
 /// });
 ///
 /// tokio::pin!(stream);

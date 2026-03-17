@@ -1,4 +1,5 @@
 /// Error type for the TMDB provider.
+#[non_exhaustive]
 #[derive(Debug, thiserror::Error)]
 pub enum TmdbError {
     /// Error from the underlying HTTP client.

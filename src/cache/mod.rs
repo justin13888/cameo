@@ -20,6 +20,7 @@ pub use sqlite::SqliteCache;
 /// Different response types have different staleness tolerances.
 /// Age-aware TTL fields allow stable/old content to be cached longer while
 /// keeping volatile or recently-released content fresher.
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct CacheTtlConfig {
     /// Fallback TTL for detail responses when no age policy matches.

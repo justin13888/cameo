@@ -1,6 +1,7 @@
 //! Cache key types for the cameo cache layer.
 
 /// The media type of a cached item.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MediaType {
     /// Movie media type.
@@ -22,6 +23,7 @@ impl MediaType {
 }
 
 /// A key identifying a cache entry.
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum CacheKey {
     /// Full detail response: (media_type, provider_id).

@@ -8,6 +8,7 @@ pub struct AniListGqlError {
 }
 
 /// Error type for the AniList provider.
+#[non_exhaustive]
 #[derive(Debug, thiserror::Error)]
 pub enum AniListError {
     /// HTTP transport error.

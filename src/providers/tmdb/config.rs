@@ -3,6 +3,7 @@ use std::time::Duration;
 const DEFAULT_RATE_LIMIT: u32 = 40;
 
 /// Configuration for the TMDB client.
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct TmdbConfig {
     /// TMDB API read access token (v4 auth / bearer token).

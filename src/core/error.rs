@@ -32,6 +32,7 @@
 /// }
 /// # }
 /// ```
+#[non_exhaustive]
 #[derive(Debug, thiserror::Error)]
 pub enum CameoError {
     /// Error from the TMDB provider.

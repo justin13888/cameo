@@ -2,12 +2,7 @@ use cameo::core::pagination::{PaginatedResponse, into_stream};
 use futures::StreamExt;
 
 fn make_page(page: u32, total: u32, items: Vec<u32>) -> PaginatedResponse<u32> {
-    PaginatedResponse {
-        page,
-        results: items,
-        total_pages: total,
-        total_results: total * 2,
-    }
+    PaginatedResponse::new(page, items, total, total * 2)
 }
 
 #[test]
@@ -53,12 +48,7 @@ async fn stream_collects_all_pages() {
         async move {
             let idx = (page - 1) as usize;
             let items = data[idx].clone();
-            Ok::<_, String>(PaginatedResponse {
-                page,
-                results: items,
-                total_pages: total,
-                total_results: 5,
-            })
+            Ok::<_, String>(PaginatedResponse::new(page, items, total, 5))
         }
     });
 
@@ -70,12 +60,7 @@ async fn stream_collects_all_pages() {
 #[tokio::test]
 async fn stream_single_page() {
     let stream = into_stream(|_page| async {
-        Ok::<_, String>(PaginatedResponse {
-            page: 1,
-            results: vec![42u32],
-            total_pages: 1,
-            total_results: 1,
-        })
+        Ok::<_, String>(PaginatedResponse::new(1, vec![42u32], 1, 1))
     });
 
     let values: Vec<u32> = stream.map(|r| r.unwrap()).collect().await;
@@ -86,12 +71,7 @@ async fn stream_single_page() {
 async fn stream_propagates_error() {
     let stream = into_stream(|page| async move {
         if page == 1 {
-            Ok::<_, String>(PaginatedResponse {
-                page: 1,
-                results: vec![1u32],
-                total_pages: 2,
-                total_results: 2,
-            })
+            Ok::<_, String>(PaginatedResponse::new(1, vec![1u32], 2, 2))
         } else {
             Err("fetch error".to_string())
         }

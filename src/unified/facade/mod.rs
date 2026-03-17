@@ -57,6 +57,7 @@ mod watch_providers;
 /// # Ok(())
 /// # }
 /// ```
+#[non_exhaustive]
 #[derive(Debug, thiserror::Error)]
 pub enum CameoClientError {
     /// No providers have been configured.

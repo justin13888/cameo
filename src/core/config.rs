@@ -1,5 +1,6 @@
 /// Time window for trending endpoints.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TimeWindow {
     /// Results from the past day.
     Day,

@@ -3,6 +3,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 /// An unknown genre that could not be mapped to a known variant.
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnknownGenre {
     /// A genre identified by name (e.g. from a provider's genre list).
@@ -15,6 +16,7 @@ pub enum UnknownGenre {
 ///
 /// Use [`Genre::from_tmdb_id`], [`Genre::from_name`], or [`Genre::from_anilist_genre`] to
 /// convert provider data. Unknown genres are wrapped in [`Genre::Other`].
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Genre {
     // Movie-only genres

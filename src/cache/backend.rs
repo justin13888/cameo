@@ -7,6 +7,7 @@ use async_trait::async_trait;
 use super::key::CacheKey;
 
 /// Error type for cache operations.
+#[non_exhaustive]
 #[derive(Debug, thiserror::Error)]
 pub enum CacheError {
     /// Serialization or deserialization failed.
