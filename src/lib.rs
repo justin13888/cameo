@@ -69,7 +69,10 @@ pub mod unified;
 
 /// Re-export the most common types.
 pub use core::error::CameoError;
-pub use core::{config::TimeWindow, pagination::PaginatedResponse};
+pub use core::{
+    config::TimeWindow,
+    pagination::{PaginatedResponse, into_stream},
+};
 
 #[cfg(feature = "cache")]
 pub use cache::{CacheBackend, CacheError, CacheTtlConfig, SqliteCache};

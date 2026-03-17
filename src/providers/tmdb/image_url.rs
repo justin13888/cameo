@@ -3,12 +3,19 @@ const IMAGE_BASE_URL: &str = "https://image.tmdb.org/t/p/";
 /// Poster image sizes available from TMDB.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PosterSize {
+    /// 92px wide.
     W92,
+    /// 154px wide.
     W154,
+    /// 185px wide.
     W185,
+    /// 342px wide.
     W342,
+    /// 500px wide.
     W500,
+    /// 780px wide.
     W780,
+    /// Original resolution.
     Original,
 }
 
@@ -29,9 +36,13 @@ impl PosterSize {
 /// Backdrop image sizes available from TMDB.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BackdropSize {
+    /// 300px wide.
     W300,
+    /// 780px wide.
     W780,
+    /// 1280px wide.
     W1280,
+    /// Original resolution.
     Original,
 }
 
@@ -49,9 +60,13 @@ impl BackdropSize {
 /// Profile (person) image sizes available from TMDB.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProfileSize {
+    /// 45px wide.
     W45,
+    /// 185px wide.
     W185,
+    /// 632px tall.
     H632,
+    /// Original resolution.
     Original,
 }
 
@@ -69,9 +84,13 @@ impl ProfileSize {
 /// Still (episode) image sizes available from TMDB.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StillSize {
+    /// 92px wide.
     W92,
+    /// 185px wide.
     W185,
+    /// 300px wide.
     W300,
+    /// Original resolution.
     Original,
 }
 
@@ -89,12 +108,19 @@ impl StillSize {
 /// Logo image sizes available from TMDB.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogoSize {
+    /// 45px wide.
     W45,
+    /// 92px wide.
     W92,
+    /// 154px wide.
     W154,
+    /// 185px wide.
     W185,
+    /// 300px wide.
     W300,
+    /// 500px wide.
     W500,
+    /// Original resolution.
     Original,
 }
 

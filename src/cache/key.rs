@@ -3,8 +3,11 @@
 /// The media type of a cached item.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MediaType {
+    /// Movie media type.
     Movie,
+    /// TV show media type.
     TvShow,
+    /// Person (cast/crew) media type.
     Person,
 }
 
