@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 mod integration {
     #[cfg(feature = "anilist")]
     mod anilist_details_test;
