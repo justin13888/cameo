@@ -3,7 +3,8 @@
 //! Shows construction, search, details+credits, image URL building, the
 //! discover builder API, trending, and genre lists.
 //!
-//! Usage: TMDB_API_TOKEN=xxx cargo run --example tmdb_lowlevel [query]
+//! Usage: cargo run --example tmdb_lowlevel [query]
+//!   (reads TMDB_API_TOKEN from .env or the environment)
 
 use cameo::{
     generated::tmdb::types::DiscoverMovieSortBy,
@@ -15,6 +16,7 @@ use cameo::{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _ = dotenvy::dotenv();
     let token =
         std::env::var("TMDB_API_TOKEN").expect("TMDB_API_TOKEN environment variable must be set");
 

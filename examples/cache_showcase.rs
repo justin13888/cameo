@@ -2,7 +2,8 @@
 //! eliminates redundant API calls and keeps frequently-accessed data
 //! available instantly.
 //!
-//! Usage: TMDB_API_TOKEN=xxx cargo run --example cache_showcase [query]
+//! Usage: cargo run --example cache_showcase [query]
+//!   (reads TMDB_API_TOKEN from .env or the environment)
 
 use std::{
     sync::Arc,
@@ -18,6 +19,7 @@ use cameo::{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _ = dotenvy::dotenv();
     let token =
         std::env::var("TMDB_API_TOKEN").expect("TMDB_API_TOKEN environment variable must be set");
 

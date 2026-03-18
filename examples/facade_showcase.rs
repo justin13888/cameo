@@ -4,7 +4,8 @@
 //! seasons, and watch providers. This example doubles as an end-to-end smoke
 //! test for the unified interface.
 //!
-//! Usage: TMDB_API_TOKEN=xxx cargo run --example facade_showcase [query]
+//! Usage: cargo run --example facade_showcase [query]
+//!   (reads TMDB_API_TOKEN from .env or the environment)
 
 use cameo::{
     CameoClient,
@@ -18,6 +19,7 @@ use cameo::{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _ = dotenvy::dotenv();
     let token =
         std::env::var("TMDB_API_TOKEN").expect("TMDB_API_TOKEN environment variable must be set");
 

@@ -15,6 +15,7 @@ use cameo::{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _ = dotenvy::dotenv();
     #[cfg(not(feature = "anilist"))]
     {
         eprintln!("This example requires the `anilist` feature.");

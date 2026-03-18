@@ -11,8 +11,8 @@
 //! Some demos require network access; see each function's comment.
 //!
 //! Usage:
-//!   cargo run --example error_handling                     # build-time only
-//!   TMDB_API_TOKEN=xxx cargo run --example error_handling  # all demos
+//!   cargo run --example error_handling           # build-time only
+//!   cargo run --example error_handling           # all demos (reads TMDB_API_TOKEN from .env)
 
 use cameo::{
     CameoClient, TmdbConfig, TmdbError,
@@ -23,6 +23,7 @@ use cameo::{
 
 #[tokio::main]
 async fn main() {
+    let _ = dotenvy::dotenv();
     demo_build_time_errors();
     demo_api_errors().await;
     demo_not_found().await;

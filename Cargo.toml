@@ -59,6 +59,7 @@ prettyplease = "0.2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 wiremock = "0.6"
 pretty_assertions = "1"
+dotenvy = "0.15"
 
 [[example]]
 name = "facade_showcase"
