@@ -12,6 +12,7 @@ impl SeasonProvider for CameoClient {
         show_id: i32,
         season_number: u32,
     ) -> Result<UnifiedSeasonDetails, CameoClientError> {
+        let _ = (show_id, season_number);
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
             tracing::debug!(show_id, season_number, "dispatching season_details to tmdb");
@@ -27,6 +28,7 @@ impl SeasonProvider for CameoClient {
         season_number: u32,
         episode_number: u32,
     ) -> Result<UnifiedEpisode, CameoClientError> {
+        let _ = (show_id, season_number, episode_number);
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
             tracing::debug!(

@@ -17,6 +17,7 @@ impl RecommendationProvider for CameoClient {
         id: i32,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedMovie>, CameoClientError> {
+        let _ = (id, page);
         #[cfg(feature = "cache")]
         let endpoint = format!("recommendations:movie:{id}");
 
@@ -74,6 +75,7 @@ impl RecommendationProvider for CameoClient {
         id: i32,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedTvShow>, CameoClientError> {
+        let _ = (id, page);
         #[cfg(feature = "cache")]
         let endpoint = format!("recommendations:tv:{id}");
 
@@ -137,6 +139,7 @@ impl RecommendationProvider for CameoClient {
         id: i32,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedMovie>, CameoClientError> {
+        let _ = (id, page);
         #[cfg(feature = "cache")]
         let endpoint = format!("similar:movie:{id}");
 
@@ -200,6 +203,7 @@ impl RecommendationProvider for CameoClient {
         id: i32,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedTvShow>, CameoClientError> {
+        let _ = (id, page);
         #[cfg(feature = "cache")]
         let endpoint = format!("similar:tv:{id}");
 

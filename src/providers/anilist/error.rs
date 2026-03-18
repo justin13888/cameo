@@ -1,6 +1,7 @@
 use serde::Deserialize;
 
 /// A GraphQL error object returned by the AniList API.
+#[non_exhaustive]
 #[derive(Debug, Clone, Deserialize)]
 pub struct AniListGqlError {
     /// Human-readable error message.

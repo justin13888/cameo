@@ -17,6 +17,7 @@ impl DiscoveryProvider for CameoClient {
         time_window: TimeWindow,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedMovie>, CameoClientError> {
+        let _ = (time_window, page);
         #[cfg(feature = "cache")]
         let endpoint = format!("trending_movies:{}", time_window_str(time_window));
 
@@ -104,6 +105,7 @@ impl DiscoveryProvider for CameoClient {
         time_window: TimeWindow,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedTvShow>, CameoClientError> {
+        let _ = (time_window, page);
         #[cfg(feature = "cache")]
         let endpoint = format!("trending_tv:{}", time_window_str(time_window));
 
@@ -190,6 +192,7 @@ impl DiscoveryProvider for CameoClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedMovie>, CameoClientError> {
+        let _ = page;
         #[cfg(feature = "cache")]
         let endpoint = "popular_movies".to_string();
 
@@ -276,6 +279,7 @@ impl DiscoveryProvider for CameoClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedTvShow>, CameoClientError> {
+        let _ = page;
         #[cfg(feature = "cache")]
         let endpoint = "popular_tv_shows".to_string();
 
@@ -362,6 +366,7 @@ impl DiscoveryProvider for CameoClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedTvShow>, CameoClientError> {
+        let _ = page;
         #[cfg(feature = "cache")]
         let endpoint = "top_rated_tv_shows".to_string();
 
@@ -448,6 +453,7 @@ impl DiscoveryProvider for CameoClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedMovie>, CameoClientError> {
+        let _ = page;
         #[cfg(feature = "cache")]
         let endpoint = "top_rated_movies".to_string();
 

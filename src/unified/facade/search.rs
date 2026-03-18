@@ -17,6 +17,7 @@ impl SearchProvider for CameoClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedMovie>, CameoClientError> {
+        let _ = (query, page);
         #[cfg(feature = "cache")]
         let page_num = page.unwrap_or(1);
 
@@ -104,6 +105,7 @@ impl SearchProvider for CameoClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedTvShow>, CameoClientError> {
+        let _ = (query, page);
         #[cfg(feature = "cache")]
         let page_num = page.unwrap_or(1);
 
@@ -191,6 +193,7 @@ impl SearchProvider for CameoClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedPerson>, CameoClientError> {
+        let _ = (query, page);
         #[cfg(feature = "cache")]
         let page_num = page.unwrap_or(1);
 
@@ -278,6 +281,7 @@ impl SearchProvider for CameoClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedSearchResult>, CameoClientError> {
+        let _ = (query, page);
         #[cfg(feature = "cache")]
         let page_num = page.unwrap_or(1);
 

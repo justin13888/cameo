@@ -10,6 +10,7 @@ impl DetailProvider for CameoClient {
     type Error = CameoClientError;
 
     async fn movie_details(&self, id: i32) -> Result<UnifiedMovieDetails, CameoClientError> {
+        let _ = id;
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
             #[cfg(feature = "cache")]
@@ -106,6 +107,7 @@ impl DetailProvider for CameoClient {
     }
 
     async fn tv_show_details(&self, id: i32) -> Result<UnifiedTvShowDetails, CameoClientError> {
+        let _ = id;
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
             #[cfg(feature = "cache")]
@@ -206,6 +208,7 @@ impl DetailProvider for CameoClient {
     }
 
     async fn person_details(&self, id: i32) -> Result<UnifiedPersonDetails, CameoClientError> {
+        let _ = id;
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
             #[cfg(feature = "cache")]

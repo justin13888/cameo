@@ -8,6 +8,7 @@ impl WatchProviderTrait for CameoClient {
         &self,
         id: i32,
     ) -> Result<UnifiedWatchProviders, CameoClientError> {
+        let _ = id;
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
             tracing::debug!(id, "dispatching movie_watch_providers to tmdb");
@@ -18,6 +19,7 @@ impl WatchProviderTrait for CameoClient {
     }
 
     async fn tv_watch_providers(&self, id: i32) -> Result<UnifiedWatchProviders, CameoClientError> {
+        let _ = id;
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
             tracing::debug!(id, "dispatching tv_watch_providers to tmdb");
