@@ -65,6 +65,10 @@ publish-check:
 fetch-openapi:
     ./scripts/fetch-openapi.sh
 
+# Preview changelog for next release (requires release-plz CLI)
+changelog:
+    release-plz generate-changelog
+
 # Install git hooks
 setup:
     lefthook install

@@ -12,7 +12,7 @@ documentation = "https://docs.rs/cameo"
 readme = "README.md"
 keywords = ["tmdb", "anilist", "movies", "tv", "metadata"]
 categories = ["api-bindings", "asynchronous", "web-programming::http-client"]
-exclude = ["scripts/", ".sidecar*", "AGENTS.md", "CLAUDE.md", ".github/", "lefthook.yaml", "rust-toolchain.toml", "DEVELOPMENT.md", "RELEASING.md", "TESTING.md", ".claude/", "CHANGELOG.md", "justfile", "rustfmt.toml"]
+exclude = ["scripts/", ".sidecar*", "AGENTS.md", "CLAUDE.md", ".github/", "lefthook.yaml", "rust-toolchain.toml", "DEVELOPMENT.md", "TESTING.md", ".claude/", "CHANGELOG.md", "justfile", "rustfmt.toml", "release-plz.toml"]
 
 [lints.rust]
 missing_docs = "warn"

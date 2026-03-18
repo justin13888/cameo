@@ -122,6 +122,55 @@ What it does:
 
 ---
 
+## Releasing
+
+Releases are fully automated via [release-plz](https://release-plz.dev/) — no manual steps on dev machines.
+
+### How it works
+
+1. Push conventional commits to `master` → `release-plz` creates or updates a **Release PR** with a version bump and generated changelog entry.
+2. Review and merge the Release PR → `release-plz` publishes to crates.io, creates the git tag, and creates a GitHub Release.
+
+### Prerequisites (one-time repo setup)
+
+- **`CARGO_REGISTRY_TOKEN` secret** — add a crates.io API token under *Settings → Secrets → Actions*.
+- **Actions PR write permission** — under *Settings → Actions → General*, set "Workflow permissions" to "Read and write permissions" and enable "Allow GitHub Actions to create and approve pull requests".
+
+### Day-to-day workflow
+
+Write conventional commits (`feat:`, `fix:`, `refactor:`, `docs:`, etc.) — that's it.
+When you're ready to ship, merge the Release PR that release-plz keeps open.
+
+### Versioning
+
+release-plz derives the next version from commit types:
+
+| Commit type | Bump |
+|---|---|
+| `fix:` | patch (0.1.x) |
+| `feat:` | minor (0.x.0) |
+| Any `!` breaking change | major (x.0.0) |
+
+### Skipping a release
+
+Close the Release PR. release-plz will reopen it on the next push to `master` with accumulated changes.
+
+### Emergency / manual publish
+
+```bash
+cargo publish
+```
+
+Ensure `CARGO_REGISTRY_TOKEN` is set in your environment and tests pass first (`just publish-check`).
+
+### Local changelog preview
+
+```bash
+just changelog   # requires: cargo install release-plz
+```
+
+---
+
 ## Known Generated-Type Quirks
 
 These apply to types in `src/generated/` (auto-generated from `openapi/tmdb-api.json`):
