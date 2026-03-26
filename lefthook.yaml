@@ -16,6 +16,6 @@ pre-push:
     fmt:
       run: just fmt-check
     clippy:
-      run: just clippy
+      run: just clippy-all
     test:
-      run: just test
+      run: just test-all-features

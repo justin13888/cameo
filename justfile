@@ -10,9 +10,18 @@ fmt:
 fmt-check:
     cargo fmt --all -- --check
 
-# Run clippy lints
+# Run clippy lints (default features)
 clippy:
     cargo clippy --all-targets -- -D warnings
+
+# Run clippy across all CI feature combinations
+clippy-all:
+    #!/usr/bin/env sh
+    set -e
+    for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tmdb,anilist,cache"; do
+        echo "==> clippy --features $features"
+        cargo clippy --all-targets --no-default-features --features "$features" -- -D warnings
+    done
 
 # Auto-fix clippy lints
 clippy-fix:
@@ -33,6 +42,15 @@ test:
 # Run tests with specific features
 test-features features:
     cargo test --no-default-features --features "{{features}}"
+
+# Run tests across all CI feature combinations
+test-all-features:
+    #!/usr/bin/env sh
+    set -e
+    for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tmdb,anilist,cache"; do
+        echo "==> test --features $features"
+        cargo test --no-default-features --features "$features"
+    done
 
 # Run all tests including AniList
 test-all:
