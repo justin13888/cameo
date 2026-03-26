@@ -1,6 +1,8 @@
 use super::{CameoClient, CameoClientError};
 #[cfg(feature = "cache")]
-use crate::cache::{CacheKey, MediaType};
+use crate::cache::CacheKey;
+#[cfg(all(feature = "cache", feature = "tmdb"))]
+use crate::cache::MediaType;
 use crate::{
     core::pagination::PaginatedResponse,
     unified::{
