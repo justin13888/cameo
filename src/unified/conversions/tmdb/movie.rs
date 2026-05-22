@@ -23,8 +23,8 @@ macro_rules! impl_movie_from {
                         .iter()
                         .map(|&id| Genre::from_tmdb_id(id))
                         .collect(),
-                    popularity: m.popularity,
-                    vote_average: m.vote_average,
+                    popularity: Some(m.popularity),
+                    vote_average: Some(m.vote_average),
                     vote_count: m.vote_count.max(0) as u64,
                     original_language: m.original_language,
                     adult: m.adult,
@@ -65,8 +65,8 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
                     .filter_map(|g| g.name.as_deref())
                     .map(Genre::from_name)
                     .collect(),
-                popularity: m.popularity,
-                vote_average: m.vote_average,
+                popularity: Some(m.popularity),
+                vote_average: Some(m.vote_average),
                 vote_count: m.vote_count.max(0) as u64,
                 original_language: m.original_language,
                 adult: m.adult,

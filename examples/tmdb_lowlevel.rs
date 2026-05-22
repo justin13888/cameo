@@ -44,10 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .as_deref()
             .and_then(|d| d.get(..4))
             .unwrap_or("????");
-        let rating = movie
-            .vote_average
-            .map(|r| format!("{r:.1}"))
-            .unwrap_or_else(|| "N/A".into());
+        let rating = format!("{:.1}", movie.vote_average);
         println!("  [{year}] {title}  ★ {rating}  (id: {})", movie.id);
     }
     if resp.has_next_page() {
@@ -106,10 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  {} total matches", discover_resp.total_results);
     for movie in discover_resp.results.iter().take(5) {
         let title = movie.title.as_deref().unwrap_or("Unknown");
-        let rating = movie
-            .vote_average
-            .map(|r| format!("{r:.1}"))
-            .unwrap_or_else(|| "N/A".into());
+        let rating = format!("{:.1}", movie.vote_average);
         println!("  {title}  ★ {rating}");
     }
 
@@ -121,10 +115,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  {} trending movies", trending.total_results);
     for m in trending.results.iter().take(5) {
         let title = m.title.as_deref().unwrap_or("Unknown");
-        let pop = m
-            .popularity
-            .map(|p| format!("{p:.0}"))
-            .unwrap_or_else(|| "?".into());
+        let pop = format!("{:.0}", m.popularity);
         println!("  {title}  ↑ {pop}");
     }
 
