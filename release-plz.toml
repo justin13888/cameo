@@ -16,17 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 """
 
 body = """
-## [{{ version | trim_start_matches(pat="v") }}](https://github.com/justin13888/cameo/releases/tag/v{{ version | trim_start_matches(pat="v") }}){% if timestamp %} - {{ timestamp | date(format="%Y-%m-%d") }}{% endif %}
-
+{% if version %}\
+    ## [{{ version | trim_start_matches(pat="v") }}](https://github.com/justin13888/cameo/releases/tag/v{{ version | trim_start_matches(pat="v") }}){% if timestamp %} - {{ timestamp | date(format="%Y-%m-%d") }}{% endif %}
+{% else %}\
+    ## [Unreleased]
+{% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
-### {{ group }}
-
-{% for commit in commits %}
-- {{ commit.message | upper_first }}\
-{% if commit.breaking %} [**breaking**]{% endif %}
-{% endfor %}
-{% endfor %}
-
+    ### {{ group | striptags | trim | upper_first }}
+    {% for commit in commits %}
+        - {{ commit.message | upper_first }}{% if commit.breaking %} [**breaking**]{% endif %}\
+    {% endfor %}
+{% endfor %}\n
 """
 
 trim = true
