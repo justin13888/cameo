@@ -131,10 +131,16 @@ Releases are fully automated via [release-plz](https://release-plz.dev/) — no 
 1. Push conventional commits to `master` → `release-plz` creates or updates a **Release PR** with a version bump and generated changelog entry.
 2. Review and merge the Release PR → `release-plz` publishes to crates.io, creates the git tag, and creates a GitHub Release.
 
+Publishing authenticates via [crates.io Trusted Publishing](https://crates.io/docs/trusted-publishing): the workflow exchanges a GitHub OIDC token (`rust-lang/crates-io-auth-action`) for a short-lived crates.io token. No long-lived API token is stored in the repo.
+
 ### Prerequisites (one-time repo setup)
 
-- **`CARGO_REGISTRY_TOKEN` secret** — add a crates.io API token under *Settings → Secrets → Actions*.
 - **Actions PR write permission** — under *Settings → Actions → General*, set "Workflow permissions" to "Read and write permissions" and enable "Allow GitHub Actions to create and approve pull requests".
+- **Trusted Publisher** — Trusted Publishing can only be configured *after* a crate exists on crates.io, so the **first** release must be bootstrapped with a token:
+  1. Create a crates.io API token and add it as the repo secret `CARGO_REGISTRY_TOKEN`.
+  2. Let `release-plz` publish the first version (`v0.1.0`).
+  3. On crates.io → crate `cameo` → *Settings → Trusted Publishing*, add a publisher: owner `justin13888`, repo `cameo`, workflow `release-plz.yml`.
+  4. **Delete the `CARGO_REGISTRY_TOKEN` secret.** All subsequent releases use OIDC with no stored secret.
 
 ### Day-to-day workflow
 
@@ -157,11 +163,13 @@ Close the Release PR. release-plz will reopen it on the next push to `master` wi
 
 ### Emergency / manual publish
 
+Steady-state releases need no token — only the one-time bootstrap (above) or an emergency manual publish does. For an emergency publish:
+
 ```bash
 cargo publish
 ```
 
-Ensure `CARGO_REGISTRY_TOKEN` is set in your environment and tests pass first (`just publish-check`).
+Set a temporary `CARGO_REGISTRY_TOKEN` in your environment and ensure tests pass first (`just publish-check`).
 
 ### Local changelog preview
 
