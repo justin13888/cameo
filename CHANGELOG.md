@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/justin13888/cameo/releases/tag/v0.1.1) - 2026-05-22
+
+### Fixed
+
+- Pin typify >=0.6.2 and adapt TMDB conversions to bare f64 fields
+
+
 ## [0.1.0] - 2026-03-08
 
 ### Added
