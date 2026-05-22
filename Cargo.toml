@@ -54,6 +54,10 @@ progenitor = "0.13"
 serde_json = "1"
 syn = "2"
 prettyplease = "0.2"
+# Transitive dep of progenitor; pinned so build-script codegen is deterministic.
+# typify < 0.6.2 emits Option<f64> for default-valued schema fields; >= 0.6.2
+# emits bare f64. The TMDB conversions depend on the >= 0.6.2 behaviour.
+typify = ">=0.6.2"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

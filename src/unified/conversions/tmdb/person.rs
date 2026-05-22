@@ -10,7 +10,7 @@ impl From<types::SearchPersonResponseResultsItem> for UnifiedPerson {
             name: p.name.unwrap_or_default(),
             known_for_department: p.known_for_department,
             profile_url: resolve_profile(&p.profile_path),
-            popularity: p.popularity,
+            popularity: Some(p.popularity),
             gender: Some(p.gender as i32),
             adult: p.adult,
         }
@@ -25,7 +25,7 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
                 name: p.name.unwrap_or_default(),
                 known_for_department: p.known_for_department,
                 profile_url: resolve_profile(&p.profile_path),
-                popularity: p.popularity,
+                popularity: Some(p.popularity),
                 gender: Some(p.gender as i32),
                 adult: p.adult,
             },
@@ -56,8 +56,8 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                     .iter()
                     .map(|&id| crate::unified::genre::Genre::from_tmdb_id(id))
                     .collect(),
-                popularity: item.popularity,
-                vote_average: item.vote_average,
+                popularity: Some(item.popularity),
+                vote_average: Some(item.vote_average),
                 vote_count: item.vote_count.max(0) as u64,
                 original_language: item.original_language,
                 adult: item.adult,
@@ -75,8 +75,8 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                     .iter()
                     .map(|&id| crate::unified::genre::Genre::from_tmdb_id(id))
                     .collect(),
-                popularity: item.popularity,
-                vote_average: item.vote_average,
+                popularity: Some(item.popularity),
+                vote_average: Some(item.vote_average),
                 vote_count: item.vote_count.max(0) as u64,
                 original_language: item.original_language,
                 origin_country: Vec::new(),
@@ -91,7 +91,7 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                     name: item.name.or(item.title).unwrap_or_default(),
                     known_for_department: None,
                     profile_url: resolve_poster(&item.poster_path), // multi uses poster_path
-                    popularity: item.popularity,
+                    popularity: Some(item.popularity),
                     gender: None,
                     adult: item.adult,
                 })
