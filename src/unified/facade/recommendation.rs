@@ -67,7 +67,7 @@ impl RecommendationProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn tv_recommendations(
@@ -124,7 +124,7 @@ impl RecommendationProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn similar_movies(
@@ -181,7 +181,7 @@ impl RecommendationProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn similar_tv_shows(
@@ -238,6 +238,6 @@ impl RecommendationProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 }

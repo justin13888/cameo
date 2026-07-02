@@ -98,8 +98,8 @@ fn tmdb_client_empty_token_fails() {
 fn cameo_builder_no_providers_fails() {
     let result = CameoClient::builder().build();
     assert!(
-        matches!(result, Err(CameoClientError::NoProviders)),
-        "expected NoProviders error"
+        matches!(result, Err(CameoClientError::NotConfigured)),
+        "expected NotConfigured error"
     );
 }
 

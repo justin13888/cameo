@@ -233,8 +233,8 @@ mod anilist_tests {
         let result = client.movie_recommendations(1, None).await;
 
         assert!(
-            matches!(result, Err(CameoClientError::NoProviders)),
-            "expected NoProviders, got: {result:?}"
+            matches!(result, Err(CameoClientError::NotConfigured)),
+            "expected NotConfigured, got: {result:?}"
         );
     }
 
@@ -248,8 +248,8 @@ mod anilist_tests {
         let result = client.season_details(1, 1).await;
 
         assert!(
-            matches!(result, Err(CameoClientError::NoProviders)),
-            "expected NoProviders, got: {result:?}"
+            matches!(result, Err(CameoClientError::NotConfigured)),
+            "expected NotConfigured, got: {result:?}"
         );
     }
 
@@ -262,8 +262,8 @@ mod anilist_tests {
         let result = client.movie_watch_providers(1).await;
 
         assert!(
-            matches!(result, Err(CameoClientError::NoProviders)),
-            "expected NoProviders, got: {result:?}"
+            matches!(result, Err(CameoClientError::NotConfigured)),
+            "expected NotConfigured, got: {result:?}"
         );
     }
 }

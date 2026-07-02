@@ -103,7 +103,7 @@ impl DetailProvider for CameoClient {
             return Ok(details);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn tv_show_details(&self, id: i32) -> Result<UnifiedTvShowDetails, CameoClientError> {
@@ -204,7 +204,7 @@ impl DetailProvider for CameoClient {
             return Ok(details);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn person_details(&self, id: i32) -> Result<UnifiedPersonDetails, CameoClientError> {
@@ -293,6 +293,6 @@ impl DetailProvider for CameoClient {
             return Ok(details);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 }

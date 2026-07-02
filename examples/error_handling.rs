@@ -39,11 +39,11 @@ async fn main() {
 fn demo_build_time_errors() {
     println!("=== Build-time errors ===");
 
-    // Building with no providers configured → NoProviders
+    // Building with no providers configured → NotConfigured
     match CameoClient::builder().build() {
         Ok(_) => println!("  [unexpected] client built with no providers"),
-        Err(CameoClientError::NoProviders) => {
-            println!("  [ok] NoProviders: must configure at least one provider");
+        Err(CameoClientError::NotConfigured) => {
+            println!("  [ok] NotConfigured: must configure at least one provider");
         }
         Err(e) => println!("  [unexpected] {e}"),
     }
@@ -191,7 +191,7 @@ async fn search_with_match(query: &str) {
         .build()
     {
         Ok(c) => c,
-        Err(CameoClientError::NoProviders) => {
+        Err(CameoClientError::NotConfigured) => {
             println!("  [match-style] no providers configured");
             return;
         }

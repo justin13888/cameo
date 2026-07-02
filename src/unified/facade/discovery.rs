@@ -90,7 +90,7 @@ impl DiscoveryProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn trending_tv_shows(
@@ -171,7 +171,7 @@ impl DiscoveryProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn popular_movies(
@@ -251,7 +251,7 @@ impl DiscoveryProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn popular_tv_shows(
@@ -331,7 +331,7 @@ impl DiscoveryProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn top_rated_tv_shows(
@@ -411,7 +411,7 @@ impl DiscoveryProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn top_rated_movies(
@@ -491,7 +491,7 @@ impl DiscoveryProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 }
 

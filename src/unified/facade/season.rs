@@ -19,7 +19,7 @@ impl SeasonProvider for CameoClient {
             return Ok(client.tv_season_details(show_id, season_number).await?);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn episode_details(
@@ -42,6 +42,6 @@ impl SeasonProvider for CameoClient {
                 .await?);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 }

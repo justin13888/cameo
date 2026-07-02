@@ -68,10 +68,10 @@ pub mod providers;
 pub mod unified;
 
 /// Re-export the most common types.
-pub use core::error::CameoError;
+pub use core::error::ProviderError;
 pub use core::{
     config::TimeWindow,
-    pagination::{Page, into_stream},
+    pagination::{Page, PageToken, into_stream},
 };
 
 #[cfg(feature = "cache")]

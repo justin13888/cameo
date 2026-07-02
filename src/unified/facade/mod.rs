@@ -7,7 +7,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 
 #[cfg(feature = "cache")]
-use crate::cache::{CacheBackend, CacheError, CacheKey, CacheTtlConfig, MediaType, SqliteCache};
+use crate::cache::{CacheBackend, CacheKey, CacheTtlConfig, MediaType, SqliteCache};
 #[cfg(feature = "anilist")]
 use crate::providers::anilist::{AniListClient, AniListConfig};
 #[cfg(feature = "tmdb")]
@@ -22,9 +22,10 @@ mod watch_providers;
 
 /// Error type returned by [`CameoClient`] methods and [`CameoClientBuilder::build`].
 ///
-/// Extends the core provider errors with two facade-specific variants:
-/// [`NoProviders`](CameoClientError::NoProviders) (build time) and
-/// [`Cache`](CameoClientError::Cache) (runtime, non-fatal in normal use).
+/// Distinguishes three situations a caller may want to handle differently:
+/// [`NotConfigured`](CameoClientError::NotConfigured) (no provider is configured
+/// at all), [`Unsupported`](CameoClientError::Unsupported) (a provider is
+/// configured but none supports the requested capability), and a provider error.
 ///
 /// # Matching on variants
 ///
@@ -48,8 +49,11 @@ mod watch_providers;
 ///     Err(CameoClientError::Tmdb(TmdbError::Api { status: 404, .. })) => {
 ///         eprintln!("not found");
 ///     }
-///     Err(CameoClientError::NoProviders) => {
+///     Err(CameoClientError::NotConfigured) => {
 ///         eprintln!("no providers configured");
+///     }
+///     Err(CameoClientError::Unsupported) => {
+///         eprintln!("no configured provider supports this");
 ///     }
 ///     Err(e) => eprintln!("error: {e}"),
 /// }
@@ -60,9 +64,13 @@ mod watch_providers;
 #[non_exhaustive]
 #[derive(Debug, thiserror::Error)]
 pub enum CameoClientError {
-    /// No providers have been configured.
+    /// No providers have been configured (or compiled in).
     #[error("no providers configured")]
-    NoProviders,
+    NotConfigured,
+
+    /// A provider is configured, but none supports the requested capability.
+    #[error("no configured provider supports this operation")]
+    Unsupported,
 
     /// Error from the TMDB provider.
     #[cfg(feature = "tmdb")]
@@ -73,11 +81,6 @@ pub enum CameoClientError {
     #[cfg(feature = "anilist")]
     #[error(transparent)]
     AniList(#[from] crate::providers::anilist::AniListError),
-
-    /// Cache error (non-fatal; logged but does not fail the request).
-    #[cfg(feature = "cache")]
-    #[error("cache error: {0}")]
-    Cache(#[from] CacheError),
 }
 
 // ── Cache helper ─────────────────────────────────────────────────────────────
@@ -257,7 +260,7 @@ impl CameoClientBuilder {
         let anilist: Option<()> = None;
 
         if tmdb.is_none() && anilist.is_none() {
-            return Err(CameoClientError::NoProviders);
+            return Err(CameoClientError::NotConfigured);
         }
 
         #[cfg(feature = "cache")]

@@ -15,7 +15,7 @@ impl WatchProviderTrait for CameoClient {
             return Ok(client.movie_watch_providers(id).await?);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn tv_watch_providers(&self, id: i32) -> Result<UnifiedWatchProviders, CameoClientError> {
@@ -26,6 +26,6 @@ impl WatchProviderTrait for CameoClient {
             return Ok(client.tv_watch_providers(id).await?);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 }

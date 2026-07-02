@@ -90,7 +90,7 @@ impl SearchProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn search_tv_shows(
@@ -171,7 +171,7 @@ impl SearchProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn search_people(
@@ -252,7 +252,7 @@ impl SearchProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 
     async fn search_multi(
@@ -370,6 +370,6 @@ impl SearchProvider for CameoClient {
             return Ok(unified);
         }
 
-        Err(CameoClientError::NoProviders)
+        Err(CameoClientError::NotConfigured)
     }
 }
