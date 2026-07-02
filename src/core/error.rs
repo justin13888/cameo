@@ -21,7 +21,7 @@
 ///         CameoError::Tmdb(TmdbError::Api { status: 401, .. }) => {
 ///             eprintln!("authentication failed — check your token");
 ///         }
-///         CameoError::Tmdb(TmdbError::Api { status, message }) => {
+///         CameoError::Tmdb(TmdbError::Api { status, message, .. }) => {
 ///             eprintln!("TMDB API error {status}: {message}");
 ///         }
 ///         CameoError::Tmdb(TmdbError::Http(e)) => {

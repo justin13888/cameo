@@ -88,7 +88,9 @@ async fn demo_api_errors() {
         Ok(results) => {
             println!("  [unexpected] got {} results", results.total_results);
         }
-        Err(CameoClientError::Tmdb(TmdbError::Api { status, message })) => match status {
+        Err(CameoClientError::Tmdb(TmdbError::Api {
+            status, message, ..
+        })) => match status {
             401 => println!("  [ok] 401 Unauthorized — check your API token: {message}"),
             403 => println!("  [ok] 403 Forbidden — token lacks required permissions"),
             404 => println!("  [ok] 404 Not Found — endpoint may have moved"),

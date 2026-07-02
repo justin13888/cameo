@@ -113,6 +113,30 @@ impl TmdbClient {
         }
     }
 
+    /// Execute a generated-client call under the rate limiter, unwrap the
+    /// response body, and map any failure into a structured [`TmdbError`]
+    /// (decoding TMDB's `{status_code, status_message}` body and `Retry-After`
+    /// header via [`TmdbError::from_progenitor`]).
+    ///
+    /// `make_call` is a closure returning a fresh request future each time it is
+    /// invoked, so a retry layer can re-issue it. This is the single seam
+    /// through which every endpoint runs — rate limiting and retries are
+    /// applied here rather than at each call site.
+    async fn execute<T, E, F, Fut>(&self, make_call: F) -> Result<T, TmdbError>
+    where
+        F: Fn() -> Fut,
+        Fut: std::future::Future<
+                Output = Result<progenitor_client::ResponseValue<T>, progenitor_client::Error<E>>,
+            >,
+        E: std::fmt::Debug + Send + Sync + 'static,
+    {
+        let _permit = self.acquire_rate_limit_permit().await?;
+        match make_call().await {
+            Ok(rv) => Ok(rv.into_inner()),
+            Err(err) => Err(TmdbError::from_progenitor(err).await),
+        }
+    }
+
     // ── Search ──
 
     /// Search for movies by title.
@@ -122,20 +146,19 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::SearchMovieResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .search_movie(
-                self.include_adult(),
-                self.language(),
-                page.map(|p| p as i32),
-                None, // primary_release_year
-                query,
-                self.region(),
-                None, // year
-            )
+        let body = self
+            .execute(|| {
+                self.inner.search_movie(
+                    self.include_adult(),
+                    self.language(),
+                    page.map(|p| p as i32),
+                    None, // primary_release_year
+                    query,
+                    self.region(),
+                    None, // year
+                )
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -151,19 +174,18 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::SearchTvResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .search_tv(
-                None, // first_air_date_year
-                self.include_adult(),
-                self.language(),
-                page.map(|p| p as i32),
-                query,
-                None, // year
-            )
+        let body = self
+            .execute(|| {
+                self.inner.search_tv(
+                    None, // first_air_date_year
+                    self.include_adult(),
+                    self.language(),
+                    page.map(|p| p as i32),
+                    query,
+                    None, // year
+                )
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -179,17 +201,16 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::SearchPersonResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .search_person(
-                self.include_adult(),
-                self.language(),
-                page.map(|p| p as i32),
-                query,
-            )
+        let body = self
+            .execute(|| {
+                self.inner.search_person(
+                    self.include_adult(),
+                    self.language(),
+                    page.map(|p| p as i32),
+                    query,
+                )
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -205,17 +226,16 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::SearchMultiResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .search_multi(
-                self.include_adult(),
-                self.language(),
-                page.map(|p| p as i32),
-                query,
-            )
+        let body = self
+            .execute(|| {
+                self.inner.search_multi(
+                    self.include_adult(),
+                    self.language(),
+                    page.map(|p| p as i32),
+                    query,
+                )
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -232,12 +252,8 @@ impl TmdbClient {
         &self,
         movie_id: i32,
     ) -> Result<types::MovieDetailsResponse, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .movie_details(movie_id, None, self.language())
-            .await?;
-        Ok(resp.into_inner())
+        self.execute(|| self.inner.movie_details(movie_id, None, self.language()))
+            .await
     }
 
     /// Get detailed information about a movie with appended responses.
@@ -247,12 +263,11 @@ impl TmdbClient {
         movie_id: i32,
         append: &str,
     ) -> Result<types::MovieDetailsResponse, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .movie_details(movie_id, Some(append), self.language())
-            .await?;
-        Ok(resp.into_inner())
+        self.execute(|| {
+            self.inner
+                .movie_details(movie_id, Some(append), self.language())
+        })
+        .await
     }
 
     /// Get detailed information about a TV series.
@@ -261,12 +276,11 @@ impl TmdbClient {
         &self,
         series_id: i32,
     ) -> Result<types::TvSeriesDetailsResponse, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .tv_series_details(series_id, None, self.language())
-            .await?;
-        Ok(resp.into_inner())
+        self.execute(|| {
+            self.inner
+                .tv_series_details(series_id, None, self.language())
+        })
+        .await
     }
 
     /// Get detailed information about a person.
@@ -275,12 +289,8 @@ impl TmdbClient {
         &self,
         person_id: i32,
     ) -> Result<types::PersonDetailsResponse, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .person_details(person_id, None, self.language())
-            .await?;
-        Ok(resp.into_inner())
+        self.execute(|| self.inner.person_details(person_id, None, self.language()))
+            .await
     }
 
     // ── Credits ──
@@ -291,9 +301,8 @@ impl TmdbClient {
         &self,
         movie_id: i32,
     ) -> Result<types::MovieCreditsResponse, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self.inner.movie_credits(movie_id, self.language()).await?;
-        Ok(resp.into_inner())
+        self.execute(|| self.inner.movie_credits(movie_id, self.language()))
+            .await
     }
 
     /// Get the cast and crew for a TV series.
@@ -302,12 +311,11 @@ impl TmdbClient {
         &self,
         series_id: i32,
     ) -> Result<types::TvSeriesAggregateCreditsResponse, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .tv_series_aggregate_credits(series_id, self.language())
-            .await?;
-        Ok(resp.into_inner())
+        self.execute(|| {
+            self.inner
+                .tv_series_aggregate_credits(series_id, self.language())
+        })
+        .await
     }
 
     // ── Trending ──
@@ -325,13 +333,13 @@ impl TmdbClient {
         time_window: TimeWindow,
         _page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TrendingMoviesResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
         let tw = match time_window {
             TimeWindow::Day => types::TrendingMoviesTimeWindow::Day,
             TimeWindow::Week => types::TrendingMoviesTimeWindow::Week,
         };
-        let resp = self.inner.trending_movies(tw, self.language()).await?;
-        let body = resp.into_inner();
+        let body = self
+            .execute(|| self.inner.trending_movies(tw, self.language()))
+            .await?;
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -353,13 +361,13 @@ impl TmdbClient {
         time_window: TimeWindow,
         _page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TrendingTvResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
         let tw = match time_window {
             TimeWindow::Day => types::TrendingTvTimeWindow::Day,
             TimeWindow::Week => types::TrendingTvTimeWindow::Week,
         };
-        let resp = self.inner.trending_tv(tw, self.language()).await?;
-        let body = resp.into_inner();
+        let body = self
+            .execute(|| self.inner.trending_tv(tw, self.language()))
+            .await?;
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -376,12 +384,15 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::MoviePopularListResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .movie_popular_list(self.language(), page.map(|p| p as i32), self.region())
+        let body = self
+            .execute(|| {
+                self.inner.movie_popular_list(
+                    self.language(),
+                    page.map(|p| p as i32),
+                    self.region(),
+                )
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -396,12 +407,15 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::MovieTopRatedListResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .movie_top_rated_list(self.language(), page.map(|p| p as i32), self.region())
+        let body = self
+            .execute(|| {
+                self.inner.movie_top_rated_list(
+                    self.language(),
+                    page.map(|p| p as i32),
+                    self.region(),
+                )
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -416,12 +430,12 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TvSeriesPopularListResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .tv_series_popular_list(self.language(), page.map(|p| p as i32))
+        let body = self
+            .execute(|| {
+                self.inner
+                    .tv_series_popular_list(self.language(), page.map(|p| p as i32))
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -436,12 +450,12 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TvSeriesTopRatedListResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .tv_series_top_rated_list(self.language(), page.map(|p| p as i32))
+        let body = self
+            .execute(|| {
+                self.inner
+                    .tv_series_top_rated_list(self.language(), page.map(|p| p as i32))
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -459,12 +473,12 @@ impl TmdbClient {
         movie_id: i32,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<UnifiedMovie>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .movie_recommendations(movie_id, self.language(), page.map(|p| p as i32))
+        let map = self
+            .execute(|| {
+                self.inner
+                    .movie_recommendations(movie_id, self.language(), page.map(|p| p as i32))
+            })
             .await?;
-        let map = resp.into_inner();
         parse_movie_recs_from_map(map)
     }
 
@@ -476,12 +490,15 @@ impl TmdbClient {
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TvSeriesRecommendationsResponseResultsItem>, TmdbError>
     {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .tv_series_recommendations(series_id, self.language(), page.map(|p| p as i32))
+        let body = self
+            .execute(|| {
+                self.inner.tv_series_recommendations(
+                    series_id,
+                    self.language(),
+                    page.map(|p| p as i32),
+                )
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -497,12 +514,12 @@ impl TmdbClient {
         movie_id: i32,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::MovieSimilarResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .movie_similar(movie_id, self.language(), page.map(|p| p as i32))
+        let body = self
+            .execute(|| {
+                self.inner
+                    .movie_similar(movie_id, self.language(), page.map(|p| p as i32))
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -525,13 +542,13 @@ impl TmdbClient {
         series_id: i32,
         page: Option<u32>,
     ) -> Result<PaginatedResponse<types::TvSeriesSimilarResponseResultsItem>, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
         let id_str = series_id.to_string();
-        let resp = self
-            .inner
-            .tv_series_similar(&id_str, self.language(), page.map(|p| p as i32))
+        let body = self
+            .execute(|| {
+                self.inner
+                    .tv_series_similar(&id_str, self.language(), page.map(|p| p as i32))
+            })
             .await?;
-        let body = resp.into_inner();
         Ok(PaginatedResponse {
             page: body.page as u32,
             results: body.results,
@@ -549,12 +566,12 @@ impl TmdbClient {
         series_id: i32,
         season_number: u32,
     ) -> Result<UnifiedSeasonDetails, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .tv_season_details(series_id, season_number as i32, None, self.language())
+        let body = self
+            .execute(|| {
+                self.inner
+                    .tv_season_details(series_id, season_number as i32, None, self.language())
+            })
             .await?;
-        let body = resp.into_inner();
         let show_id = format!("tmdb:{series_id}");
         let mut details: UnifiedSeasonDetails = body.into();
         details.show_id = show_id;
@@ -569,18 +586,18 @@ impl TmdbClient {
         season_number: u32,
         episode_number: u32,
     ) -> Result<UnifiedEpisode, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .tv_episode_details(
-                series_id,
-                season_number as i32,
-                episode_number as i32,
-                None,
-                self.language(),
-            )
+        let body = self
+            .execute(|| {
+                self.inner.tv_episode_details(
+                    series_id,
+                    season_number as i32,
+                    episode_number as i32,
+                    None,
+                    self.language(),
+                )
+            })
             .await?;
-        Ok(resp.into_inner().into())
+        Ok(body.into())
     }
 
     // ── Watch Providers ──
@@ -591,9 +608,9 @@ impl TmdbClient {
         &self,
         movie_id: i32,
     ) -> Result<UnifiedWatchProviders, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self.inner.movie_watch_providers(movie_id).await?;
-        let body = resp.into_inner();
+        let body = self
+            .execute(|| self.inner.movie_watch_providers(movie_id))
+            .await?;
         let provider_id = format!("tmdb:{movie_id}");
         let results = match body.results {
             Some(r) => parse_watch_provider_results(serde_json::to_value(r)?),
@@ -611,9 +628,9 @@ impl TmdbClient {
         &self,
         series_id: i32,
     ) -> Result<UnifiedWatchProviders, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self.inner.tv_series_watch_providers(series_id).await?;
-        let body = resp.into_inner();
+        let body = self
+            .execute(|| self.inner.tv_series_watch_providers(series_id))
+            .await?;
         let provider_id = format!("tmdb:{series_id}");
         let results = match body.results {
             Some(r) => parse_watch_provider_results(serde_json::to_value(r)?),
@@ -630,17 +647,15 @@ impl TmdbClient {
     /// Get the list of official movie genres.
     #[tracing::instrument(skip(self))]
     pub async fn movie_genres(&self) -> Result<types::GenreMovieListResponse, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self.inner.genre_movie_list(self.language()).await?;
-        Ok(resp.into_inner())
+        self.execute(|| self.inner.genre_movie_list(self.language()))
+            .await
     }
 
     /// Get the list of official TV show genres.
     #[tracing::instrument(skip(self))]
     pub async fn tv_genres(&self) -> Result<types::GenreTvListResponse, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self.inner.genre_tv_list(self.language()).await?;
-        Ok(resp.into_inner())
+        self.execute(|| self.inner.genre_tv_list(self.language()))
+            .await
     }
 
     // ── Images ──
@@ -651,16 +666,14 @@ impl TmdbClient {
         &self,
         movie_id: i32,
     ) -> Result<types::MovieImagesResponse, TmdbError> {
-        let _permit = self.acquire_rate_limit_permit().await?;
-        let resp = self
-            .inner
-            .movie_images(
+        self.execute(|| {
+            self.inner.movie_images(
                 movie_id,
                 None, // include_image_language
                 self.language(),
             )
-            .await?;
-        Ok(resp.into_inner())
+        })
+        .await
     }
 
     // ── Discover Builders ──
