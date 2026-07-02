@@ -3,7 +3,7 @@
 use super::{resolve_backdrop, resolve_poster};
 use crate::{
     generated::tmdb::types,
-    unified::{genre::Genre, models::*},
+    unified::{genre::Genre, media_id::MediaId, models::*},
 };
 
 macro_rules! impl_movie_from {
@@ -11,7 +11,7 @@ macro_rules! impl_movie_from {
         impl From<$ty> for UnifiedMovie {
             fn from(m: $ty) -> Self {
                 UnifiedMovie {
-                    provider_id: format!("tmdb:{}", m.id),
+                    provider_id: MediaId::tmdb(m.id as u64),
                     title: m.title.unwrap_or_default(),
                     original_title: m.original_title,
                     overview: m.overview,
@@ -52,7 +52,7 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
 
         UnifiedMovieDetails {
             movie: UnifiedMovie {
-                provider_id: format!("tmdb:{}", m.id),
+                provider_id: MediaId::tmdb(m.id as u64),
                 title: m.title.unwrap_or_default(),
                 original_title: m.original_title,
                 overview: m.overview,

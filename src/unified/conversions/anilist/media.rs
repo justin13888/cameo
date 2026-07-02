@@ -4,6 +4,7 @@ use crate::{
     providers::anilist::response::{AniListMedia, AniListMediaDetail},
     unified::{
         genre::Genre,
+        media_id::MediaId,
         models::{
             UnifiedMovie, UnifiedMovieDetails, UnifiedSearchResult, UnifiedTvShow,
             UnifiedTvShowDetails,
@@ -79,7 +80,7 @@ fn map_genres(genres: &Option<Vec<String>>) -> Vec<Genre> {
 /// Convert an AniList media entry to a [`UnifiedMovie`].
 pub fn anilist_media_to_movie(m: AniListMedia) -> UnifiedMovie {
     UnifiedMovie {
-        provider_id: format!("anilist:{}", m.id),
+        provider_id: MediaId::anilist(m.id as u64),
         title: resolve_title(&m),
         original_title: m.title.as_ref().and_then(|t| t.native.clone()),
         overview: m.description.clone(),
@@ -107,7 +108,7 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
     let lang = m.country_of_origin.as_deref().map(country_to_language);
 
     UnifiedTvShow {
-        provider_id: format!("anilist:{}", m.id),
+        provider_id: MediaId::anilist(m.id as u64),
         name: resolve_title(&m),
         original_name: m.title.as_ref().and_then(|t| t.native.clone()),
         overview: m.description.clone(),
@@ -162,7 +163,7 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
 
     UnifiedMovieDetails {
         movie: UnifiedMovie {
-            provider_id: format!("anilist:{}", m.id),
+            provider_id: MediaId::anilist(m.id as u64),
             title: resolve_detail_title(&m),
             original_title: m.title.as_ref().and_then(|t| t.native.clone()),
             overview: m.description.clone(),
@@ -227,7 +228,7 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
 
     UnifiedTvShowDetails {
         show: UnifiedTvShow {
-            provider_id: format!("anilist:{}", m.id),
+            provider_id: MediaId::anilist(m.id as u64),
             name: resolve_detail_title(&m),
             original_name: m.title.as_ref().and_then(|t| t.native.clone()),
             overview: m.description.clone(),

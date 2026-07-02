@@ -89,10 +89,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     // ── Details ───────────────────────────────────────────────────────────────
 
     if let Some(movie) = movies.results.first() {
-        // Extract numeric ID from "anilist:{id}"
-        if let Some(id_str) = movie.provider_id.strip_prefix("anilist:")
-            && let Ok(id) = id_str.parse::<i32>()
-        {
+        // Extract the numeric AniList id from the typed MediaId.
+        if let Some(id) = movie.provider_id.as_u64().map(|n| n as i32) {
             println!("\n=== movie_details: {} (id={id}) ===", movie.title);
             let md = client.movie_details(id).await?;
             println!("  Title:   {}", md.movie.title);

@@ -2,7 +2,10 @@
 
 use crate::{
     providers::anilist::response::{AniListStaff, AniListStaffDetail},
-    unified::models::{UnifiedPerson, UnifiedPersonDetails},
+    unified::{
+        media_id::MediaId,
+        models::{UnifiedPerson, UnifiedPersonDetails},
+    },
 };
 
 // ── AniListStaff → UnifiedPerson ──────────────────────────────────────────────
@@ -16,7 +19,7 @@ pub fn staff_to_person(s: AniListStaff) -> UnifiedPerson {
         .map(|occ| normalize_occupation(occ));
 
     UnifiedPerson {
-        provider_id: format!("anilist:staff:{}", s.id),
+        provider_id: MediaId::anilist_staff(s.id as u64),
         name: s
             .name
             .as_ref()
@@ -52,7 +55,7 @@ pub fn staff_detail_to_person_details(s: AniListStaffDetail) -> UnifiedPersonDet
 
     UnifiedPersonDetails {
         person: UnifiedPerson {
-            provider_id: format!("anilist:staff:{}", s.id),
+            provider_id: MediaId::anilist_staff(s.id as u64),
             name: s
                 .name
                 .as_ref()

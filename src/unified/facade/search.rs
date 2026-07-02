@@ -63,7 +63,7 @@ impl SearchProvider for CameoClient {
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::Movie,
-                        provider_id: item.provider_id.clone(),
+                        provider_id: item.provider_id.to_string(),
                     };
                     cache.set(item_key, item, cache.ttl.items);
                 }
@@ -88,7 +88,7 @@ impl SearchProvider for CameoClient {
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::Movie,
-                        provider_id: item.provider_id.clone(),
+                        provider_id: item.provider_id.to_string(),
                     };
                     cache.set(item_key, item, cache.ttl.items);
                 }
@@ -151,7 +151,7 @@ impl SearchProvider for CameoClient {
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::TvShow,
-                        provider_id: item.provider_id.clone(),
+                        provider_id: item.provider_id.to_string(),
                     };
                     cache.set(item_key, item, cache.ttl.items);
                 }
@@ -176,7 +176,7 @@ impl SearchProvider for CameoClient {
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::TvShow,
-                        provider_id: item.provider_id.clone(),
+                        provider_id: item.provider_id.to_string(),
                     };
                     cache.set(item_key, item, cache.ttl.items);
                 }
@@ -239,7 +239,7 @@ impl SearchProvider for CameoClient {
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::Person,
-                        provider_id: item.provider_id.clone(),
+                        provider_id: item.provider_id.to_string(),
                     };
                     cache.set(item_key, item, cache.ttl.items);
                 }
@@ -264,7 +264,7 @@ impl SearchProvider for CameoClient {
                 for item in &unified.results {
                     let item_key = CacheKey::Item {
                         media_type: MediaType::Person,
-                        provider_id: item.provider_id.clone(),
+                        provider_id: item.provider_id.to_string(),
                     };
                     cache.set(item_key, item, cache.ttl.items);
                 }
@@ -330,21 +330,21 @@ impl SearchProvider for CameoClient {
                         UnifiedSearchResult::Movie(m) => {
                             let k = CacheKey::Item {
                                 media_type: MediaType::Movie,
-                                provider_id: m.provider_id.clone(),
+                                provider_id: m.provider_id.to_string(),
                             };
                             cache.set(k, m, cache.ttl.items);
                         }
                         UnifiedSearchResult::TvShow(t) => {
                             let k = CacheKey::Item {
                                 media_type: MediaType::TvShow,
-                                provider_id: t.provider_id.clone(),
+                                provider_id: t.provider_id.to_string(),
                             };
                             cache.set(k, t, cache.ttl.items);
                         }
                         UnifiedSearchResult::Person(p) => {
                             let k = CacheKey::Item {
                                 media_type: MediaType::Person,
-                                provider_id: p.provider_id.clone(),
+                                provider_id: p.provider_id.to_string(),
                             };
                             cache.set(k, p, cache.ttl.items);
                         }
@@ -373,21 +373,21 @@ impl SearchProvider for CameoClient {
                         UnifiedSearchResult::Movie(m) => {
                             let k = CacheKey::Item {
                                 media_type: MediaType::Movie,
-                                provider_id: m.provider_id.clone(),
+                                provider_id: m.provider_id.to_string(),
                             };
                             cache.set(k, m, cache.ttl.items);
                         }
                         UnifiedSearchResult::TvShow(t) => {
                             let k = CacheKey::Item {
                                 media_type: MediaType::TvShow,
-                                provider_id: t.provider_id.clone(),
+                                provider_id: t.provider_id.to_string(),
                             };
                             cache.set(k, t, cache.ttl.items);
                         }
                         UnifiedSearchResult::Person(p) => {
                             let k = CacheKey::Item {
                                 media_type: MediaType::Person,
-                                provider_id: p.provider_id.clone(),
+                                provider_id: p.provider_id.to_string(),
                             };
                             cache.set(k, p, cache.ttl.items);
                         }

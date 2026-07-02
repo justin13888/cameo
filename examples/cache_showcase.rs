@@ -124,8 +124,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\n=== 3. Item-level cache from search ===\n");
 
     if let Some(first_movie) = movies.results.first() {
-        let pid = &first_movie.provider_id;
-        let cached = client.cached_movie(pid).await;
+        let pid = first_movie.provider_id.to_string();
+        let cached = client.cached_movie(&pid).await;
         match cached {
             Some(m) => println!("  cached_movie(\"{pid}\"): found \"{}\"", m.title),
             None => println!("  cached_movie(\"{pid}\"): not found (unexpected!)"),
@@ -234,8 +234,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\n=== 7. Cache clearing ===\n");
 
     if let Some(first_trending) = trending.results.first() {
-        let pid = &first_trending.provider_id;
-        let before = client.cached_movie(pid).await;
+        let pid = first_trending.provider_id.to_string();
+        let before = client.cached_movie(&pid).await;
         println!(
             "  Before clear_cache(): cached_movie(\"{pid}\"): {}",
             if before.is_some() {
@@ -248,7 +248,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         client.clear_cache().await;
         println!("  Called clear_cache()");
 
-        let after = client.cached_movie(pid).await;
+        let after = client.cached_movie(&pid).await;
         println!(
             "  After clear_cache():  cached_movie(\"{pid}\"): {}",
             if after.is_some() {

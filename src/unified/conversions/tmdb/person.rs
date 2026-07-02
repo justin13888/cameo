@@ -1,12 +1,15 @@
 //! TMDB person and multi-search type → unified model conversions.
 
 use super::{resolve_backdrop, resolve_poster, resolve_profile};
-use crate::{generated::tmdb::types, unified::models::*};
+use crate::{
+    generated::tmdb::types,
+    unified::{media_id::MediaId, models::*},
+};
 
 impl From<types::SearchPersonResponseResultsItem> for UnifiedPerson {
     fn from(p: types::SearchPersonResponseResultsItem) -> Self {
         UnifiedPerson {
-            provider_id: format!("tmdb:{}", p.id),
+            provider_id: MediaId::tmdb(p.id as u64),
             name: p.name.unwrap_or_default(),
             known_for_department: p.known_for_department,
             profile_url: resolve_profile(&p.profile_path),
@@ -21,7 +24,7 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
     fn from(p: types::PersonDetailsResponse) -> Self {
         UnifiedPersonDetails {
             person: UnifiedPerson {
-                provider_id: format!("tmdb:{}", p.id),
+                provider_id: MediaId::tmdb(p.id as u64),
                 name: p.name.unwrap_or_default(),
                 known_for_department: p.known_for_department,
                 profile_url: resolve_profile(&p.profile_path),
@@ -44,7 +47,7 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
     fn from(item: types::SearchMultiResponseResultsItem) -> Self {
         match item.media_type.as_deref() {
             Some("movie") => UnifiedSearchResult::Movie(UnifiedMovie {
-                provider_id: format!("tmdb:{}", item.id),
+                provider_id: MediaId::tmdb(item.id as u64),
                 title: item.title.or(item.name).unwrap_or_default(),
                 original_title: item.original_title,
                 overview: item.overview,
@@ -63,7 +66,7 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                 adult: item.adult,
             }),
             Some("tv") => UnifiedSearchResult::TvShow(UnifiedTvShow {
-                provider_id: format!("tmdb:{}", item.id),
+                provider_id: MediaId::tmdb(item.id as u64),
                 name: item.name.or(item.title).unwrap_or_default(),
                 original_name: item.original_name,
                 overview: item.overview,
@@ -87,7 +90,7 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                     tracing::warn!(media_type = ?other, "unknown media_type in multi-search result, defaulting to Person");
                 }
                 UnifiedSearchResult::Person(UnifiedPerson {
-                    provider_id: format!("tmdb:{}", item.id),
+                    provider_id: MediaId::tmdb(item.id as u64),
                     name: item.name.or(item.title).unwrap_or_default(),
                     known_for_department: None,
                     profile_url: resolve_poster(&item.poster_path), // multi uses poster_path

@@ -222,7 +222,7 @@ mod anilist_tests {
 
         assert_eq!(result.results.len(), 1);
         assert_eq!(result.results[0].title, "Your Name");
-        assert!(result.results[0].provider_id.starts_with("anilist:"));
+        assert!(result.results[0].provider_id.provider() == "anilist");
     }
 
     #[tokio::test]

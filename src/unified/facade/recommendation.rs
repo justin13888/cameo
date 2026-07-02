@@ -60,7 +60,7 @@ impl RecommendationProvider for CameoClient {
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::Movie,
-                        provider_id: item.provider_id.clone(),
+                        provider_id: item.provider_id.to_string(),
                     };
                     cache.set(k, item, cache.ttl.items);
                 }
@@ -124,7 +124,7 @@ impl RecommendationProvider for CameoClient {
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::TvShow,
-                        provider_id: item.provider_id.clone(),
+                        provider_id: item.provider_id.to_string(),
                     };
                     cache.set(k, item, cache.ttl.items);
                 }
@@ -188,7 +188,7 @@ impl RecommendationProvider for CameoClient {
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::Movie,
-                        provider_id: item.provider_id.clone(),
+                        provider_id: item.provider_id.to_string(),
                     };
                     cache.set(k, item, cache.ttl.items);
                 }
@@ -252,7 +252,7 @@ impl RecommendationProvider for CameoClient {
                 for item in &unified.results {
                     let k = CacheKey::Item {
                         media_type: MediaType::TvShow,
-                        provider_id: item.provider_id.clone(),
+                        provider_id: item.provider_id.to_string(),
                     };
                     cache.set(k, item, cache.ttl.items);
                 }

@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-use super::genre::Genre;
+use super::{genre::Genre, media_id::MediaId};
 
 /// A movie in the unified model.
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedMovie {
-    /// Provider-qualified ID (e.g. `"tmdb:550"`).
-    pub provider_id: String,
+    /// Provider-qualified media id (e.g. `tmdb:550`).
+    pub provider_id: MediaId,
     /// Movie title.
     pub title: String,
     /// Original title in the original language.
@@ -70,8 +70,8 @@ pub struct UnifiedMovieDetails {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedTvShow {
-    /// Provider-qualified ID (e.g. `"tmdb:1396"`).
-    pub provider_id: String,
+    /// Provider-qualified media id (e.g. `tmdb:1396`).
+    pub provider_id: MediaId,
     /// Show name.
     pub name: String,
     /// Original name in the original language.
@@ -140,8 +140,8 @@ pub struct UnifiedTvShowDetails {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedPerson {
-    /// Provider-qualified ID (e.g. `"tmdb:287"`).
-    pub provider_id: String,
+    /// Provider-qualified person id (e.g. `tmdb:287`).
+    pub provider_id: MediaId,
     /// Person's name.
     pub name: String,
     /// Known-for department (e.g. "Acting", "Directing").
@@ -194,8 +194,8 @@ pub enum UnifiedSearchResult {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedSeasonDetails {
-    /// Provider-qualified show ID (e.g. `"tmdb:1396"`).
-    pub show_id: String,
+    /// Provider-qualified show id (e.g. `tmdb:1396`).
+    pub show_id: MediaId,
     /// Season number.
     pub season_number: u32,
     /// Season name.
@@ -234,8 +234,8 @@ pub struct UnifiedEpisode {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedWatchProviders {
-    /// Provider-qualified media ID (e.g. `"tmdb:550"`).
-    pub provider_id: String,
+    /// Provider-qualified media id (e.g. `tmdb:550`).
+    pub provider_id: MediaId,
     /// Per-country watch provider entries, keyed by ISO 3166-1 alpha-2 country code.
     pub results: std::collections::HashMap<String, UnifiedWatchProviderEntry>,
 }

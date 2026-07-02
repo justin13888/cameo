@@ -4,7 +4,7 @@ use super::{resolve_backdrop, resolve_poster};
 use crate::{
     generated::tmdb::types,
     providers::tmdb::image_url::{ImageUrl, StillSize},
-    unified::{genre::Genre, models::*},
+    unified::{genre::Genre, media_id::MediaId, models::*},
 };
 
 macro_rules! impl_tv_from {
@@ -12,7 +12,7 @@ macro_rules! impl_tv_from {
         impl From<$ty> for UnifiedTvShow {
             fn from(t: $ty) -> Self {
                 UnifiedTvShow {
-                    provider_id: format!("tmdb:{}", t.id),
+                    provider_id: MediaId::tmdb(t.id as u64),
                     name: t.name.unwrap_or_default(),
                     original_name: t.original_name,
                     overview: t.overview,
@@ -44,7 +44,7 @@ impl_tv_from!(types::TvSeriesRecommendationsResponseResultsItem);
 impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
     fn from(t: types::DiscoverTvResponseResultsItem) -> Self {
         UnifiedTvShow {
-            provider_id: format!("tmdb:{}", t.id),
+            provider_id: MediaId::tmdb(t.id as u64),
             name: t.name.unwrap_or_default(),
             original_name: t.original_name,
             overview: t.overview,
@@ -70,7 +70,7 @@ impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
 impl From<types::TvSeriesPopularListResponseResultsItem> for UnifiedTvShow {
     fn from(t: types::TvSeriesPopularListResponseResultsItem) -> Self {
         UnifiedTvShow {
-            provider_id: format!("tmdb:{}", t.id),
+            provider_id: MediaId::tmdb(t.id as u64),
             name: t.name.unwrap_or_default(),
             original_name: t.original_name,
             overview: t.overview,
@@ -96,7 +96,7 @@ impl From<types::TvSeriesPopularListResponseResultsItem> for UnifiedTvShow {
 impl From<types::TvSeriesTopRatedListResponseResultsItem> for UnifiedTvShow {
     fn from(t: types::TvSeriesTopRatedListResponseResultsItem) -> Self {
         UnifiedTvShow {
-            provider_id: format!("tmdb:{}", t.id),
+            provider_id: MediaId::tmdb(t.id as u64),
             name: t.name.unwrap_or_default(),
             original_name: t.original_name,
             overview: t.overview,
@@ -121,7 +121,7 @@ impl From<types::TvSeriesTopRatedListResponseResultsItem> for UnifiedTvShow {
 impl From<types::TvSeriesSimilarResponseResultsItem> for UnifiedTvShow {
     fn from(t: types::TvSeriesSimilarResponseResultsItem) -> Self {
         UnifiedTvShow {
-            provider_id: format!("tmdb:{}", t.id),
+            provider_id: MediaId::tmdb(t.id as u64),
             name: t.name.unwrap_or_default(),
             original_name: t.original_name,
             overview: t.overview,
@@ -146,7 +146,7 @@ impl From<types::TvSeriesSimilarResponseResultsItem> for UnifiedTvShow {
 impl From<types::TvSeasonDetailsResponse> for UnifiedSeasonDetails {
     fn from(t: types::TvSeasonDetailsResponse) -> Self {
         UnifiedSeasonDetails {
-            show_id: String::new(), // filled in by the caller
+            show_id: MediaId::tmdb(0), // filled in by the caller
             season_number: t.season_number.max(0) as u32,
             name: t.name,
             overview: t.overview,
@@ -203,7 +203,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
     fn from(t: types::TvSeriesDetailsResponse) -> Self {
         UnifiedTvShowDetails {
             show: UnifiedTvShow {
-                provider_id: format!("tmdb:{}", t.id),
+                provider_id: MediaId::tmdb(t.id as u64),
                 name: t.name.unwrap_or_default(),
                 original_name: t.original_name,
                 overview: t.overview,

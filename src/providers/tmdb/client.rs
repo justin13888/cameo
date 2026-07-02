@@ -5,9 +5,12 @@ use crate::{
     core::{config::TimeWindow, pagination::PaginatedResponse},
     generated::tmdb::{self, types},
     providers::rate_limit::RateLimiter,
-    unified::models::{
-        UnifiedEpisode, UnifiedMovie, UnifiedSeasonDetails, UnifiedStreamingService,
-        UnifiedWatchProviderEntry, UnifiedWatchProviders,
+    unified::{
+        media_id::MediaId,
+        models::{
+            UnifiedEpisode, UnifiedMovie, UnifiedSeasonDetails, UnifiedStreamingService,
+            UnifiedWatchProviderEntry, UnifiedWatchProviders,
+        },
     },
 };
 
@@ -581,7 +584,7 @@ impl TmdbClient {
                     .tv_season_details(series_id, season_number as i32, None, self.language())
             })
             .await?;
-        let show_id = format!("tmdb:{series_id}");
+        let show_id = MediaId::tmdb(series_id as u64);
         let mut details: UnifiedSeasonDetails = body.into();
         details.show_id = show_id;
         Ok(details)
@@ -620,7 +623,7 @@ impl TmdbClient {
         let body = self
             .execute(|| self.inner.movie_watch_providers(movie_id))
             .await?;
-        let provider_id = format!("tmdb:{movie_id}");
+        let provider_id = MediaId::tmdb(movie_id as u64);
         let results = match body.results {
             Some(r) => parse_watch_provider_results(serde_json::to_value(r)?),
             None => HashMap::new(),
@@ -640,7 +643,7 @@ impl TmdbClient {
         let body = self
             .execute(|| self.inner.tv_series_watch_providers(series_id))
             .await?;
-        let provider_id = format!("tmdb:{series_id}");
+        let provider_id = MediaId::tmdb(series_id as u64);
         let results = match body.results {
             Some(r) => parse_watch_provider_results(serde_json::to_value(r)?),
             None => HashMap::new(),
@@ -744,7 +747,7 @@ fn parse_movie_recs_from_map(
             let original_language = v["original_language"].as_str().map(String::from);
             let adult = v["adult"].as_bool().unwrap_or(false);
             Some(UnifiedMovie {
-                provider_id: format!("tmdb:{id}"),
+                provider_id: MediaId::tmdb(id as u64),
                 title,
                 original_title,
                 overview,
