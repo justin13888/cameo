@@ -87,6 +87,34 @@ pub enum AniListError {
     InvalidConfig(String),
 }
 
+impl AniListError {
+    /// Whether this failure is transient and worth retrying: a 429/5xx status
+    /// (surfaced either as `Status` or as a GraphQL error), or a connect/timeout
+    /// transport error.
+    pub(crate) fn is_retryable(&self) -> bool {
+        fn retryable_status(status: i64) -> bool {
+            status == 429 || (500..=599).contains(&status)
+        }
+        match self {
+            AniListError::Status { status, .. } => retryable_status(i64::from(*status)),
+            AniListError::GraphQL { errors, .. } => {
+                errors.iter().filter_map(|e| e.status).any(retryable_status)
+            }
+            AniListError::Http(e) => e.is_timeout() || e.is_connect(),
+            _ => false,
+        }
+    }
+
+    /// The server-supplied `Retry-After` delay, if any.
+    pub(crate) fn retry_after(&self) -> Option<Duration> {
+        match self {
+            AniListError::Status { retry_after, .. }
+            | AniListError::GraphQL { retry_after, .. } => *retry_after,
+            _ => None,
+        }
+    }
+}
+
 /// Parse an AniList `Retry-After` header (integer seconds) into a [`Duration`].
 ///
 /// AniList sends `Retry-After` (seconds) on 429 responses alongside the

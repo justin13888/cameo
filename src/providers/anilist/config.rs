@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::providers::rate_limit::RateLimit;
+use crate::providers::{rate_limit::RateLimit, retry::RetryPolicy};
 
 const DEFAULT_PER_PAGE: u32 = 20;
 
@@ -26,6 +26,9 @@ pub struct AniListConfig {
     /// [`RateLimit::Unlimited`] to disable client-side limiting. Invalid values
     /// are rejected when the client is constructed.
     pub rate_limit: RateLimit,
+    /// Retry policy for transient failures (429/5xx/transport). Defaults to
+    /// [`RetryPolicy::default`]; use [`RetryPolicy::disabled`] to turn it off.
+    pub retry: RetryPolicy,
     /// Timeout for establishing a connection. Defaults to 10s when `None`.
     pub connect_timeout: Option<Duration>,
     /// Timeout for a complete request (connect through full response body).
@@ -39,6 +42,7 @@ impl Default for AniListConfig {
             base_url: "https://graphql.anilist.co".to_string(),
             per_page: DEFAULT_PER_PAGE,
             rate_limit: DEFAULT_RATE_LIMIT,
+            retry: RetryPolicy::default(),
             connect_timeout: None,
             request_timeout: None,
         }
@@ -75,6 +79,15 @@ impl AniListConfig {
     /// [`RateLimit::Unlimited`] to disable client-side limiting.
     pub fn with_rate_limit(mut self, limit: RateLimit) -> Self {
         self.rate_limit = limit;
+        self
+    }
+
+    /// Set the retry policy for transient failures.
+    ///
+    /// Defaults to [`RetryPolicy::default`]; use [`RetryPolicy::disabled`] to
+    /// disable retrying.
+    pub fn with_retry(mut self, retry: RetryPolicy) -> Self {
+        self.retry = retry;
         self
     }
 

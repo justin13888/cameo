@@ -122,15 +122,40 @@ impl AniListClient {
             "variables": variables,
         });
 
-        // Pace requests within AniList's rate limit before issuing.
-        self.rate_limiter.acquire().await;
+        let policy = self.config.retry;
+        let mut retry_index = 0u32;
+        loop {
+            // Pace requests (including retries) within the rate limit.
+            self.rate_limiter.acquire().await;
+            match self.graphql_attempt::<T>(&body).await {
+                Ok(data) => return Ok(data),
+                Err(err) => {
+                    if policy.should_retry(retry_index) && err.is_retryable() {
+                        let delay = policy.backoff(retry_index, err.retry_after());
+                        tracing::debug!(
+                            retry = retry_index,
+                            ?delay,
+                            error = %err,
+                            "anilist: retrying transient error"
+                        );
+                        tokio::time::sleep(delay).await;
+                        retry_index += 1;
+                        continue;
+                    }
+                    return Err(err);
+                }
+            }
+        }
+    }
 
+    /// A single GraphQL request attempt (no rate limiting or retrying).
+    async fn graphql_attempt<T: DeserializeOwned>(&self, body: &Value) -> Result<T, AniListError> {
         let resp = self
             .http
             .post(&self.config.base_url)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
             .header(reqwest::header::ACCEPT, "application/json")
-            .json(&body)
+            .json(body)
             .send()
             .await?;
 

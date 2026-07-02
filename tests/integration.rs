@@ -12,6 +12,8 @@ mod integration {
     mod facade_dispatch_test;
     #[cfg(any(feature = "tmdb", feature = "anilist"))]
     mod http_config_test;
+    #[cfg(any(feature = "tmdb", feature = "anilist"))]
+    mod retry_test;
     #[cfg(feature = "tmdb")]
     mod tmdb_credits_test;
     #[cfg(feature = "tmdb")]

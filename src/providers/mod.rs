@@ -10,6 +10,10 @@ pub(crate) mod http;
 #[cfg(any(feature = "tmdb", feature = "anilist"))]
 pub mod rate_limit;
 
+/// Retry policy for transient provider failures.
+#[cfg(any(feature = "tmdb", feature = "anilist"))]
+pub mod retry;
+
 /// TMDB (The Movie Database) provider.
 #[cfg(feature = "tmdb")]
 pub mod tmdb;

@@ -82,6 +82,8 @@ pub use providers::anilist::error::{AniListErrorLocation, AniListGqlError};
 pub use providers::anilist::{AniListClient, AniListConfig, AniListError};
 #[cfg(any(feature = "tmdb", feature = "anilist"))]
 pub use providers::rate_limit::RateLimit;
+#[cfg(any(feature = "tmdb", feature = "anilist"))]
+pub use providers::retry::RetryPolicy;
 #[cfg(feature = "tmdb")]
 pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
 pub use unified::{

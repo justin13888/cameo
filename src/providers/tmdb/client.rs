@@ -105,9 +105,10 @@ impl TmdbClient {
     /// header via [`TmdbError::from_progenitor`]).
     ///
     /// `make_call` is a closure returning a fresh request future each time it is
-    /// invoked, so a retry layer can re-issue it. This is the single seam
+    /// invoked, so the retry loop can re-issue it. This is the single seam
     /// through which every endpoint runs — rate limiting and retries are
-    /// applied here rather than at each call site.
+    /// applied here rather than at each call site. Retries re-acquire the rate
+    /// limiter, so they are paced like any other request.
     async fn execute<T, E, F, Fut>(&self, make_call: F) -> Result<T, TmdbError>
     where
         F: Fn() -> Fut,
@@ -116,10 +117,32 @@ impl TmdbClient {
             >,
         E: std::fmt::Debug + Send + Sync + 'static,
     {
-        self.acquire_rate_limit().await;
-        match make_call().await {
-            Ok(rv) => Ok(rv.into_inner()),
-            Err(err) => Err(TmdbError::from_progenitor(err).await),
+        let policy = self.config.retry;
+        let mut retry_index = 0u32;
+        loop {
+            self.acquire_rate_limit().await;
+            let outcome = match make_call().await {
+                Ok(rv) => Ok(rv.into_inner()),
+                Err(err) => Err(TmdbError::from_progenitor(err).await),
+            };
+            match outcome {
+                Ok(value) => return Ok(value),
+                Err(err) => {
+                    if policy.should_retry(retry_index) && err.is_retryable() {
+                        let delay = policy.backoff(retry_index, err.retry_after());
+                        tracing::debug!(
+                            retry = retry_index,
+                            ?delay,
+                            error = %err,
+                            "tmdb: retrying transient error"
+                        );
+                        tokio::time::sleep(delay).await;
+                        retry_index += 1;
+                        continue;
+                    }
+                    return Err(err);
+                }
+            }
         }
     }
 

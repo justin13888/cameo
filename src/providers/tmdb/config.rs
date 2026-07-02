@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::providers::rate_limit::RateLimit;
+use crate::providers::{rate_limit::RateLimit, retry::RetryPolicy};
 
 /// TMDB's documented limit: ~40 requests per 10 seconds per IP.
 const DEFAULT_RATE_LIMIT: RateLimit = RateLimit::Limited {
@@ -30,6 +30,10 @@ pub struct TmdbConfig {
     /// [`RateLimit::Unlimited`] to disable it. Invalid values (zero requests or
     /// a zero window) are rejected when the client is constructed.
     pub rate_limit: RateLimit,
+    /// Retry policy for transient failures (429/5xx/transport). Defaults to
+    /// [`RetryPolicy::default`] (3 retries with exponential backoff); use
+    /// [`RetryPolicy::disabled`] to turn retrying off.
+    pub retry: RetryPolicy,
     /// Timeout for establishing a connection. Defaults to 10s when `None`.
     pub connect_timeout: Option<Duration>,
     /// Timeout for a complete request (connect through full response body).
@@ -47,6 +51,7 @@ impl TmdbConfig {
             region: None,
             include_adult: None,
             rate_limit: DEFAULT_RATE_LIMIT,
+            retry: RetryPolicy::default(),
             connect_timeout: None,
             request_timeout: None,
         }
@@ -84,6 +89,15 @@ impl TmdbConfig {
     /// [`RateLimit::Unlimited`] to disable client-side limiting.
     pub fn with_rate_limit(mut self, limit: RateLimit) -> Self {
         self.rate_limit = limit;
+        self
+    }
+
+    /// Set the retry policy for transient failures.
+    ///
+    /// Defaults to [`RetryPolicy::default`]; use [`RetryPolicy::disabled`] to
+    /// disable retrying.
+    pub fn with_retry(mut self, retry: RetryPolicy) -> Self {
+        self.retry = retry;
         self
     }
 

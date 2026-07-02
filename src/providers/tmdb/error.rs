@@ -62,6 +62,26 @@ struct TmdbErrorBody {
 }
 
 impl TmdbError {
+    /// Whether this failure is transient and worth retrying: a 429/5xx API
+    /// status, or a connect/timeout transport error.
+    pub(crate) fn is_retryable(&self) -> bool {
+        match self {
+            TmdbError::Api { status, .. } => *status == 429 || (500..=599).contains(status),
+            TmdbError::Http(e) => e.is_timeout() || e.is_connect(),
+            _ => false,
+        }
+    }
+
+    /// The server-supplied `Retry-After` delay, if any.
+    pub(crate) fn retry_after(&self) -> Option<Duration> {
+        match self {
+            TmdbError::Api { retry_after, .. } => *retry_after,
+            _ => None,
+        }
+    }
+}
+
+impl TmdbError {
     /// Map a progenitor client error into a structured [`TmdbError`], decoding
     /// the TMDB error body and `Retry-After` header for error responses.
     ///
