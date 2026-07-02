@@ -71,7 +71,7 @@ pub mod unified;
 pub use core::error::CameoError;
 pub use core::{
     config::TimeWindow,
-    pagination::{PaginatedResponse, into_stream},
+    pagination::{Page, into_stream},
 };
 
 #[cfg(feature = "cache")]

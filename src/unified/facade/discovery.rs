@@ -2,7 +2,7 @@ use super::{CameoClient, CameoClientError};
 #[cfg(feature = "cache")]
 use crate::cache::{CacheKey, MediaType};
 use crate::{
-    core::{config::TimeWindow, pagination::PaginatedResponse},
+    core::{config::TimeWindow, pagination::Page},
     unified::{
         models::{UnifiedMovie, UnifiedTvShow},
         traits::DiscoveryProvider,
@@ -16,7 +16,7 @@ impl DiscoveryProvider for CameoClient {
         &self,
         time_window: TimeWindow,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedMovie>, CameoClientError> {
+    ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         let _ = (time_window, page);
         #[cfg(feature = "cache")]
         let endpoint = format!("trending_movies:{}", time_window_str(time_window));
@@ -31,9 +31,7 @@ impl DiscoveryProvider for CameoClient {
                 page: page_num,
             };
             if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache
-                    .get::<PaginatedResponse<UnifiedMovie>>(&discovery_key)
-                    .await
+                && let Some(cached) = cache.get::<Page<UnifiedMovie>>(&discovery_key).await
             {
                 tracing::debug!(page = page_num, "cache hit: trending_movies");
                 return Ok(cached);
@@ -47,12 +45,7 @@ impl DiscoveryProvider for CameoClient {
         if let Some(client) = &self.tmdb {
             tracing::debug!(page = ?page, "dispatching trending_movies to tmdb");
             let page_resp = client.trending_movies(time_window, page).await?;
-            let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
-                page: page_resp.page,
-                total_pages: page_resp.total_pages,
-                total_results: page_resp.total_results,
-                results: page_resp.results.into_iter().map(Into::into).collect(),
-            };
+            let unified: Page<UnifiedMovie> = page_resp.map(Into::into);
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
@@ -104,7 +97,7 @@ impl DiscoveryProvider for CameoClient {
         &self,
         time_window: TimeWindow,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedTvShow>, CameoClientError> {
+    ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         let _ = (time_window, page);
         #[cfg(feature = "cache")]
         let endpoint = format!("trending_tv:{}", time_window_str(time_window));
@@ -119,9 +112,7 @@ impl DiscoveryProvider for CameoClient {
                 page: page_num,
             };
             if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache
-                    .get::<PaginatedResponse<UnifiedTvShow>>(&discovery_key)
-                    .await
+                && let Some(cached) = cache.get::<Page<UnifiedTvShow>>(&discovery_key).await
             {
                 tracing::debug!(page = page_num, "cache hit: trending_tv_shows");
                 return Ok(cached);
@@ -135,12 +126,7 @@ impl DiscoveryProvider for CameoClient {
         if let Some(client) = &self.tmdb {
             tracing::debug!(page = ?page, "dispatching trending_tv_shows to tmdb");
             let page_resp = client.trending_tv(time_window, page).await?;
-            let unified: PaginatedResponse<UnifiedTvShow> = PaginatedResponse {
-                page: page_resp.page,
-                total_pages: page_resp.total_pages,
-                total_results: page_resp.total_results,
-                results: page_resp.results.into_iter().map(Into::into).collect(),
-            };
+            let unified: Page<UnifiedTvShow> = page_resp.map(Into::into);
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
@@ -191,7 +177,7 @@ impl DiscoveryProvider for CameoClient {
     async fn popular_movies(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedMovie>, CameoClientError> {
+    ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         let _ = page;
         #[cfg(feature = "cache")]
         let endpoint = "popular_movies".to_string();
@@ -206,9 +192,7 @@ impl DiscoveryProvider for CameoClient {
                 page: page_num,
             };
             if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache
-                    .get::<PaginatedResponse<UnifiedMovie>>(&discovery_key)
-                    .await
+                && let Some(cached) = cache.get::<Page<UnifiedMovie>>(&discovery_key).await
             {
                 tracing::debug!(page = page_num, "cache hit: popular_movies");
                 return Ok(cached);
@@ -222,12 +206,7 @@ impl DiscoveryProvider for CameoClient {
         if let Some(client) = &self.tmdb {
             tracing::debug!(page = ?page, "dispatching popular_movies to tmdb");
             let page_resp = client.popular_movies(page).await?;
-            let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
-                page: page_resp.page,
-                total_pages: page_resp.total_pages,
-                total_results: page_resp.total_results,
-                results: page_resp.results.into_iter().map(Into::into).collect(),
-            };
+            let unified: Page<UnifiedMovie> = page_resp.map(Into::into);
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
@@ -278,7 +257,7 @@ impl DiscoveryProvider for CameoClient {
     async fn popular_tv_shows(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedTvShow>, CameoClientError> {
+    ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         let _ = page;
         #[cfg(feature = "cache")]
         let endpoint = "popular_tv_shows".to_string();
@@ -293,9 +272,7 @@ impl DiscoveryProvider for CameoClient {
                 page: page_num,
             };
             if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache
-                    .get::<PaginatedResponse<UnifiedTvShow>>(&discovery_key)
-                    .await
+                && let Some(cached) = cache.get::<Page<UnifiedTvShow>>(&discovery_key).await
             {
                 tracing::debug!(page = page_num, "cache hit: popular_tv_shows");
                 return Ok(cached);
@@ -309,12 +286,7 @@ impl DiscoveryProvider for CameoClient {
         if let Some(client) = &self.tmdb {
             tracing::debug!(page = ?page, "dispatching popular_tv_shows to tmdb");
             let page_resp = client.popular_tv_shows(page).await?;
-            let unified: PaginatedResponse<UnifiedTvShow> = PaginatedResponse {
-                page: page_resp.page,
-                total_pages: page_resp.total_pages,
-                total_results: page_resp.total_results,
-                results: page_resp.results.into_iter().map(Into::into).collect(),
-            };
+            let unified: Page<UnifiedTvShow> = page_resp.map(Into::into);
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
@@ -365,7 +337,7 @@ impl DiscoveryProvider for CameoClient {
     async fn top_rated_tv_shows(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedTvShow>, CameoClientError> {
+    ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         let _ = page;
         #[cfg(feature = "cache")]
         let endpoint = "top_rated_tv_shows".to_string();
@@ -380,9 +352,7 @@ impl DiscoveryProvider for CameoClient {
                 page: page_num,
             };
             if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache
-                    .get::<PaginatedResponse<UnifiedTvShow>>(&discovery_key)
-                    .await
+                && let Some(cached) = cache.get::<Page<UnifiedTvShow>>(&discovery_key).await
             {
                 tracing::debug!(page = page_num, "cache hit: top_rated_tv_shows");
                 return Ok(cached);
@@ -396,12 +366,7 @@ impl DiscoveryProvider for CameoClient {
         if let Some(client) = &self.tmdb {
             tracing::debug!(page = ?page, "dispatching top_rated_tv_shows to tmdb");
             let page_resp = client.top_rated_tv_shows(page).await?;
-            let unified: PaginatedResponse<UnifiedTvShow> = PaginatedResponse {
-                page: page_resp.page,
-                total_pages: page_resp.total_pages,
-                total_results: page_resp.total_results,
-                results: page_resp.results.into_iter().map(Into::into).collect(),
-            };
+            let unified: Page<UnifiedTvShow> = page_resp.map(Into::into);
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
@@ -452,7 +417,7 @@ impl DiscoveryProvider for CameoClient {
     async fn top_rated_movies(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedMovie>, CameoClientError> {
+    ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         let _ = page;
         #[cfg(feature = "cache")]
         let endpoint = "top_rated_movies".to_string();
@@ -467,9 +432,7 @@ impl DiscoveryProvider for CameoClient {
                 page: page_num,
             };
             if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache
-                    .get::<PaginatedResponse<UnifiedMovie>>(&discovery_key)
-                    .await
+                && let Some(cached) = cache.get::<Page<UnifiedMovie>>(&discovery_key).await
             {
                 tracing::debug!(page = page_num, "cache hit: top_rated_movies");
                 return Ok(cached);
@@ -483,12 +446,7 @@ impl DiscoveryProvider for CameoClient {
         if let Some(client) = &self.tmdb {
             tracing::debug!(page = ?page, "dispatching top_rated_movies to tmdb");
             let page_resp = client.top_rated_movies(page).await?;
-            let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
-                page: page_resp.page,
-                total_pages: page_resp.total_pages,
-                total_results: page_resp.total_results,
-                results: page_resp.results.into_iter().map(Into::into).collect(),
-            };
+            let unified: Page<UnifiedMovie> = page_resp.map(Into::into);
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {

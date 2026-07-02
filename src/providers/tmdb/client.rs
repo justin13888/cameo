@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::{config::TmdbConfig, error::TmdbError};
 use crate::{
-    core::{config::TimeWindow, pagination::PaginatedResponse},
+    core::{config::TimeWindow, pagination::Page},
     generated::tmdb::{self, types},
     providers::rate_limit::RateLimiter,
     unified::{
@@ -95,6 +95,12 @@ impl TmdbClient {
         self.config.include_adult
     }
 
+    /// Clamp a page to TMDB's supported `1..=500` range and convert to the
+    /// generated client's `i32` without a wrapping cast.
+    fn tmdb_page(page: Option<u32>) -> Option<i32> {
+        page.map(|p| p.clamp(1, 500) as i32)
+    }
+
     /// Wait for a rate-limit slot before issuing a request. Returns once the
     /// token-bucket limiter permits another request (immediately if a token is
     /// available). Used by [`Self::execute`] and the discover builders.
@@ -157,13 +163,13 @@ impl TmdbClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::SearchMovieResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::SearchMovieResponseResultsItem>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.search_movie(
                     self.include_adult(),
                     self.language(),
-                    page.map(|p| p as i32),
+                    Self::tmdb_page(page),
                     None, // primary_release_year
                     query,
                     self.region(),
@@ -171,12 +177,12 @@ impl TmdbClient {
                 )
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     /// Search for TV shows by name.
@@ -185,25 +191,25 @@ impl TmdbClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::SearchTvResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::SearchTvResponseResultsItem>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.search_tv(
                     None, // first_air_date_year
                     self.include_adult(),
                     self.language(),
-                    page.map(|p| p as i32),
+                    Self::tmdb_page(page),
                     query,
                     None, // year
                 )
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     /// Search for people by name.
@@ -212,23 +218,23 @@ impl TmdbClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::SearchPersonResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::SearchPersonResponseResultsItem>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.search_person(
                     self.include_adult(),
                     self.language(),
-                    page.map(|p| p as i32),
+                    Self::tmdb_page(page),
                     query,
                 )
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     /// Multi-search across movies, TV shows, and people.
@@ -237,23 +243,23 @@ impl TmdbClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::SearchMultiResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::SearchMultiResponseResultsItem>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.search_multi(
                     self.include_adult(),
                     self.language(),
-                    page.map(|p| p as i32),
+                    Self::tmdb_page(page),
                     query,
                 )
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     // ── Details ──
@@ -344,7 +350,7 @@ impl TmdbClient {
         &self,
         time_window: TimeWindow,
         _page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::TrendingMoviesResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::TrendingMoviesResponseResultsItem>, TmdbError> {
         let tw = match time_window {
             TimeWindow::Day => types::TrendingMoviesTimeWindow::Day,
             TimeWindow::Week => types::TrendingMoviesTimeWindow::Week,
@@ -352,12 +358,12 @@ impl TmdbClient {
         let body = self
             .execute(|| self.inner.trending_movies(tw, self.language()))
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     /// Get trending TV shows.
@@ -372,7 +378,7 @@ impl TmdbClient {
         &self,
         time_window: TimeWindow,
         _page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::TrendingTvResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::TrendingTvResponseResultsItem>, TmdbError> {
         let tw = match time_window {
             TimeWindow::Day => types::TrendingTvTimeWindow::Day,
             TimeWindow::Week => types::TrendingTvTimeWindow::Week,
@@ -380,12 +386,12 @@ impl TmdbClient {
         let body = self
             .execute(|| self.inner.trending_tv(tw, self.language()))
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     // ── Popular / Top Rated ──
@@ -395,22 +401,19 @@ impl TmdbClient {
     pub async fn popular_movies(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::MoviePopularListResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::MoviePopularListResponseResultsItem>, TmdbError> {
         let body = self
             .execute(|| {
-                self.inner.movie_popular_list(
-                    self.language(),
-                    page.map(|p| p as i32),
-                    self.region(),
-                )
+                self.inner
+                    .movie_popular_list(self.language(), Self::tmdb_page(page), self.region())
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     /// Get top-rated movies.
@@ -418,22 +421,22 @@ impl TmdbClient {
     pub async fn top_rated_movies(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::MovieTopRatedListResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::MovieTopRatedListResponseResultsItem>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.movie_top_rated_list(
                     self.language(),
-                    page.map(|p| p as i32),
+                    Self::tmdb_page(page),
                     self.region(),
                 )
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     /// Get popular TV shows.
@@ -441,19 +444,19 @@ impl TmdbClient {
     pub async fn popular_tv_shows(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::TvSeriesPopularListResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::TvSeriesPopularListResponseResultsItem>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner
-                    .tv_series_popular_list(self.language(), page.map(|p| p as i32))
+                    .tv_series_popular_list(self.language(), Self::tmdb_page(page))
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     /// Get top-rated TV shows.
@@ -461,19 +464,19 @@ impl TmdbClient {
     pub async fn top_rated_tv_shows(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::TvSeriesTopRatedListResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::TvSeriesTopRatedListResponseResultsItem>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner
-                    .tv_series_top_rated_list(self.language(), page.map(|p| p as i32))
+                    .tv_series_top_rated_list(self.language(), Self::tmdb_page(page))
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     // ── Recommendations / Similar ──
@@ -484,11 +487,11 @@ impl TmdbClient {
         &self,
         movie_id: i32,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedMovie>, TmdbError> {
+    ) -> Result<Page<UnifiedMovie>, TmdbError> {
         let map = self
             .execute(|| {
                 self.inner
-                    .movie_recommendations(movie_id, self.language(), page.map(|p| p as i32))
+                    .movie_recommendations(movie_id, self.language(), Self::tmdb_page(page))
             })
             .await?;
         parse_movie_recs_from_map(map)
@@ -500,23 +503,22 @@ impl TmdbClient {
         &self,
         series_id: i32,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::TvSeriesRecommendationsResponseResultsItem>, TmdbError>
-    {
+    ) -> Result<Page<types::TvSeriesRecommendationsResponseResultsItem>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.tv_series_recommendations(
                     series_id,
                     self.language(),
-                    page.map(|p| p as i32),
+                    Self::tmdb_page(page),
                 )
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     /// Get movies similar to a given movie.
@@ -525,19 +527,19 @@ impl TmdbClient {
         &self,
         movie_id: i32,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::MovieSimilarResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::MovieSimilarResponseResultsItem>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner
-                    .movie_similar(movie_id, self.language(), page.map(|p| p as i32))
+                    .movie_similar(movie_id, self.language(), Self::tmdb_page(page))
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     /// Get TV shows similar to a given TV show.
@@ -553,20 +555,20 @@ impl TmdbClient {
         &self,
         series_id: i32,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<types::TvSeriesSimilarResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<types::TvSeriesSimilarResponseResultsItem>, TmdbError> {
         let id_str = series_id.to_string();
         let body = self
             .execute(|| {
                 self.inner
-                    .tv_series_similar(&id_str, self.language(), page.map(|p| p as i32))
+                    .tv_series_similar(&id_str, self.language(), Self::tmdb_page(page))
             })
             .await?;
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 
     // ── Season / Episode ──
@@ -706,7 +708,7 @@ impl TmdbClient {
 /// Parse movie recommendations from the raw JSON map returned by the generated client.
 fn parse_movie_recs_from_map(
     map: serde_json::Map<String, serde_json::Value>,
-) -> Result<PaginatedResponse<UnifiedMovie>, TmdbError> {
+) -> Result<Page<UnifiedMovie>, TmdbError> {
     use crate::{
         providers::tmdb::image_url::{BackdropSize, ImageUrl, PosterSize},
         unified::genre::Genre,
@@ -764,12 +766,7 @@ fn parse_movie_recs_from_map(
         })
         .collect();
 
-    Ok(PaginatedResponse {
-        page,
-        total_pages,
-        total_results,
-        results,
-    })
+    Ok(Page::offset(page, results, total_pages, total_results))
 }
 
 /// Parse watch provider results from a serde_json::Value (serialized country map).

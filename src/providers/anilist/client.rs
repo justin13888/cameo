@@ -13,7 +13,7 @@ use super::{
     },
 };
 use crate::{
-    core::{config::TimeWindow, pagination::PaginatedResponse},
+    core::{config::TimeWindow, pagination::Page},
     unified::{
         conversions::anilist::{anilist_media_to_movie, anilist_media_to_tv},
         models::{
@@ -235,7 +235,7 @@ impl AniListClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedMovie>, AniListError> {
+    ) -> Result<Page<UnifiedMovie>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
         let vars = json!({
             "query": query,
@@ -257,7 +257,7 @@ impl AniListClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedTvShow>, AniListError> {
+    ) -> Result<Page<UnifiedTvShow>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
         let vars = json!({
             "query": query,
@@ -279,7 +279,7 @@ impl AniListClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedPerson>, AniListError> {
+    ) -> Result<Page<UnifiedPerson>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
         let vars = json!({
             "query": query,
@@ -290,16 +290,17 @@ impl AniListClient {
         let resp: StaffPageResponse = self.graphql(query::SEARCH_STAFF, vars).await?;
         let page_data = resp.page.ok_or(AniListError::NoData)?;
         let pi = &page_data.page_info;
-        Ok(PaginatedResponse {
-            page: pi.current_page.unwrap_or(1) as u32,
-            total_pages: pi.last_page.unwrap_or(1) as u32,
-            total_results: pi.total.unwrap_or(0) as u32,
-            results: page_data
+        Ok(Page::with_has_next(
+            pi.current_page.unwrap_or(1) as u32,
+            page_data
                 .staff
                 .into_iter()
                 .map(crate::unified::conversions::anilist::staff_to_person)
                 .collect(),
-        })
+            pi.has_next_page,
+            pi.last_page.unwrap_or(1) as u32,
+            pi.total.unwrap_or(0) as u32,
+        ))
     }
 
     /// Search across all anime formats. Returns movies and TV shows mixed.
@@ -307,7 +308,7 @@ impl AniListClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedSearchResult>, AniListError> {
+    ) -> Result<Page<UnifiedSearchResult>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
         // Omit formatIn entirely (do not pass null) so AniList searches all formats.
         let vars = json!({
@@ -328,12 +329,13 @@ impl AniListClient {
             .into_iter()
             .map(crate::unified::conversions::anilist::anilist_media_to_search_result)
             .collect();
-        Ok(PaginatedResponse {
-            page: pi.current_page.unwrap_or(1) as u32,
-            total_pages: pi.last_page.unwrap_or(1) as u32,
-            total_results: pi.total.unwrap_or(0) as u32,
+        Ok(Page::with_has_next(
+            pi.current_page.unwrap_or(1) as u32,
             results,
-        })
+            pi.has_next_page,
+            pi.last_page.unwrap_or(1) as u32,
+            pi.total.unwrap_or(0) as u32,
+        ))
     }
 
     // ── Details ────────────────────────────────────────────────────────────────
@@ -378,7 +380,7 @@ impl AniListClient {
         &self,
         _time_window: TimeWindow,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedMovie>, AniListError> {
+    ) -> Result<Page<UnifiedMovie>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
         let vars = json!({
             "page": page_num,
@@ -404,7 +406,7 @@ impl AniListClient {
         &self,
         _time_window: TimeWindow,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedTvShow>, AniListError> {
+    ) -> Result<Page<UnifiedTvShow>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
         let vars = json!({
             "page": page_num,
@@ -423,7 +425,7 @@ impl AniListClient {
     pub async fn popular_movies(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedMovie>, AniListError> {
+    ) -> Result<Page<UnifiedMovie>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
         let vars = json!({
             "page": page_num,
@@ -442,7 +444,7 @@ impl AniListClient {
     pub async fn top_rated_movies(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedMovie>, AniListError> {
+    ) -> Result<Page<UnifiedMovie>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
         let vars = json!({
             "page": page_num,
@@ -461,7 +463,7 @@ impl AniListClient {
     pub async fn popular_tv_shows(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedTvShow>, AniListError> {
+    ) -> Result<Page<UnifiedTvShow>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
         let vars = json!({
             "page": page_num,
@@ -480,7 +482,7 @@ impl AniListClient {
     pub async fn top_rated_tv_shows(
         &self,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedTvShow>, AniListError> {
+    ) -> Result<Page<UnifiedTvShow>, AniListError> {
         let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
         let vars = json!({
             "page": page_num,
@@ -515,26 +517,28 @@ fn truncate_body(body: &str) -> String {
 
 fn media_page_to_movies(
     resp: MediaPageResponse,
-) -> Result<PaginatedResponse<UnifiedMovie>, super::error::AniListError> {
+) -> Result<Page<UnifiedMovie>, super::error::AniListError> {
     let page = resp.page.ok_or(super::error::AniListError::NoData)?;
     let pi = &page.page_info;
-    Ok(PaginatedResponse {
-        page: pi.current_page.unwrap_or(1) as u32,
-        total_pages: pi.last_page.unwrap_or(1) as u32,
-        total_results: pi.total.unwrap_or(0) as u32,
-        results: page.media.into_iter().map(anilist_media_to_movie).collect(),
-    })
+    Ok(Page::with_has_next(
+        pi.current_page.unwrap_or(1) as u32,
+        page.media.into_iter().map(anilist_media_to_movie).collect(),
+        pi.has_next_page,
+        pi.last_page.unwrap_or(1) as u32,
+        pi.total.unwrap_or(0) as u32,
+    ))
 }
 
 fn media_page_to_tv(
     resp: MediaPageResponse,
-) -> Result<PaginatedResponse<UnifiedTvShow>, super::error::AniListError> {
+) -> Result<Page<UnifiedTvShow>, super::error::AniListError> {
     let page = resp.page.ok_or(super::error::AniListError::NoData)?;
     let pi = &page.page_info;
-    Ok(PaginatedResponse {
-        page: pi.current_page.unwrap_or(1) as u32,
-        total_pages: pi.last_page.unwrap_or(1) as u32,
-        total_results: pi.total.unwrap_or(0) as u32,
-        results: page.media.into_iter().map(anilist_media_to_tv).collect(),
-    })
+    Ok(Page::with_has_next(
+        pi.current_page.unwrap_or(1) as u32,
+        page.media.into_iter().map(anilist_media_to_tv).collect(),
+        pi.has_next_page,
+        pi.last_page.unwrap_or(1) as u32,
+        pi.total.unwrap_or(0) as u32,
+    ))
 }

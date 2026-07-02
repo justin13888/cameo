@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 
 use crate::{
-    core::pagination::PaginatedResponse,
+    core::pagination::Page,
     generated::tmdb::types::{DiscoverTvResponseResultsItem, DiscoverTvSortBy},
     providers::tmdb::{TmdbClient, error::TmdbError},
 };
@@ -209,7 +209,7 @@ impl<'a> DiscoverTvBuilder<'a> {
 
     /// Set the page number.
     pub fn page(mut self, page: u32) -> Self {
-        self.page = Some(page as i32);
+        self.page = Some(page.clamp(1, 500) as i32);
         self
     }
 
@@ -324,9 +324,7 @@ impl<'a> DiscoverTvBuilder<'a> {
     /// occupied and a `rate_limit_timeout` is configured. Returns
     /// [`TmdbError::Api`] on non-2xx HTTP responses. Returns
     /// [`TmdbError::Http`] on network failures.
-    pub async fn execute(
-        self,
-    ) -> Result<PaginatedResponse<DiscoverTvResponseResultsItem>, TmdbError> {
+    pub async fn execute(self) -> Result<Page<DiscoverTvResponseResultsItem>, TmdbError> {
         self.client.acquire_rate_limit().await;
         let resp = self
             .client
@@ -368,11 +366,11 @@ impl<'a> DiscoverTvBuilder<'a> {
             )
             .await?;
         let body = resp.into_inner();
-        Ok(PaginatedResponse {
-            page: body.page as u32,
-            results: body.results,
-            total_pages: body.total_pages as u32,
-            total_results: body.total_results as u32,
-        })
+        Ok(Page::offset(
+            body.page as u32,
+            body.results,
+            body.total_pages as u32,
+            body.total_results as u32,
+        ))
     }
 }

@@ -2,7 +2,7 @@ use super::{CameoClient, CameoClientError};
 #[cfg(feature = "cache")]
 use crate::cache::{CacheKey, MediaType};
 use crate::{
-    core::pagination::PaginatedResponse,
+    core::pagination::Page,
     unified::{
         models::{UnifiedMovie, UnifiedPerson, UnifiedSearchResult, UnifiedTvShow},
         traits::SearchProvider,
@@ -16,7 +16,7 @@ impl SearchProvider for CameoClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedMovie>, CameoClientError> {
+    ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         let _ = (query, page);
         #[cfg(feature = "cache")]
         let page_num = page.unwrap_or(1);
@@ -29,9 +29,7 @@ impl SearchProvider for CameoClient {
                 page: page_num,
             };
             if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache
-                    .get::<PaginatedResponse<UnifiedMovie>>(&search_key)
-                    .await
+                && let Some(cached) = cache.get::<Page<UnifiedMovie>>(&search_key).await
             {
                 tracing::debug!(query, page = page_num, "cache hit: search_movies");
                 return Ok(cached);
@@ -45,12 +43,7 @@ impl SearchProvider for CameoClient {
         if let Some(client) = &self.tmdb {
             tracing::debug!(query, page = ?page, "dispatching search_movies to tmdb");
             let page_resp = client.search_movies(query, page).await?;
-            let unified: PaginatedResponse<UnifiedMovie> = PaginatedResponse {
-                page: page_resp.page,
-                total_pages: page_resp.total_pages,
-                total_results: page_resp.total_results,
-                results: page_resp.results.into_iter().map(Into::into).collect(),
-            };
+            let unified: Page<UnifiedMovie> = page_resp.map(Into::into);
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
@@ -104,7 +97,7 @@ impl SearchProvider for CameoClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedTvShow>, CameoClientError> {
+    ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         let _ = (query, page);
         #[cfg(feature = "cache")]
         let page_num = page.unwrap_or(1);
@@ -117,9 +110,7 @@ impl SearchProvider for CameoClient {
                 page: page_num,
             };
             if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache
-                    .get::<PaginatedResponse<UnifiedTvShow>>(&search_key)
-                    .await
+                && let Some(cached) = cache.get::<Page<UnifiedTvShow>>(&search_key).await
             {
                 tracing::debug!(query, page = page_num, "cache hit: search_tv_shows");
                 return Ok(cached);
@@ -133,12 +124,7 @@ impl SearchProvider for CameoClient {
         if let Some(client) = &self.tmdb {
             tracing::debug!(query, page = ?page, "dispatching search_tv_shows to tmdb");
             let page_resp = client.search_tv_shows(query, page).await?;
-            let unified: PaginatedResponse<UnifiedTvShow> = PaginatedResponse {
-                page: page_resp.page,
-                total_pages: page_resp.total_pages,
-                total_results: page_resp.total_results,
-                results: page_resp.results.into_iter().map(Into::into).collect(),
-            };
+            let unified: Page<UnifiedTvShow> = page_resp.map(Into::into);
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
@@ -192,7 +178,7 @@ impl SearchProvider for CameoClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedPerson>, CameoClientError> {
+    ) -> Result<Page<UnifiedPerson>, CameoClientError> {
         let _ = (query, page);
         #[cfg(feature = "cache")]
         let page_num = page.unwrap_or(1);
@@ -205,9 +191,7 @@ impl SearchProvider for CameoClient {
                 page: page_num,
             };
             if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache
-                    .get::<PaginatedResponse<UnifiedPerson>>(&search_key)
-                    .await
+                && let Some(cached) = cache.get::<Page<UnifiedPerson>>(&search_key).await
             {
                 tracing::debug!(query, page = page_num, "cache hit: search_people");
                 return Ok(cached);
@@ -221,12 +205,7 @@ impl SearchProvider for CameoClient {
         if let Some(client) = &self.tmdb {
             tracing::debug!(query, page = ?page, "dispatching search_people to tmdb");
             let page_resp = client.search_people(query, page).await?;
-            let unified: PaginatedResponse<UnifiedPerson> = PaginatedResponse {
-                page: page_resp.page,
-                total_pages: page_resp.total_pages,
-                total_results: page_resp.total_results,
-                results: page_resp.results.into_iter().map(Into::into).collect(),
-            };
+            let unified: Page<UnifiedPerson> = page_resp.map(Into::into);
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {
@@ -280,7 +259,7 @@ impl SearchProvider for CameoClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<PaginatedResponse<UnifiedSearchResult>, CameoClientError> {
+    ) -> Result<Page<UnifiedSearchResult>, CameoClientError> {
         let _ = (query, page);
         #[cfg(feature = "cache")]
         let page_num = page.unwrap_or(1);
@@ -293,9 +272,7 @@ impl SearchProvider for CameoClient {
                 page: page_num,
             };
             if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache
-                    .get::<PaginatedResponse<UnifiedSearchResult>>(&search_key)
-                    .await
+                && let Some(cached) = cache.get::<Page<UnifiedSearchResult>>(&search_key).await
             {
                 tracing::debug!(query, page = page_num, "cache hit: search_multi");
                 return Ok(cached);
@@ -309,12 +286,7 @@ impl SearchProvider for CameoClient {
         if let Some(client) = &self.tmdb {
             tracing::debug!(query, page = ?page, "dispatching search_multi to tmdb");
             let page_resp = client.search_multi(query, page).await?;
-            let unified = PaginatedResponse {
-                page: page_resp.page,
-                total_pages: page_resp.total_pages,
-                total_results: page_resp.total_results,
-                results: page_resp.results.into_iter().map(Into::into).collect(),
-            };
+            let unified = page_resp.map(Into::into);
 
             #[cfg(feature = "cache")]
             if let Some(cache) = self.cache.as_ref() {

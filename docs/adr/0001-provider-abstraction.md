@@ -78,14 +78,19 @@ whose totals are optional.
 
 ```rust
 pub struct Page<T> {
-    pub items: Vec<T>,
+    pub page: u32,
+    pub results: Vec<T>,
     pub has_next: bool,               // authoritative (AniList hasNextPage; TMDB page<total_pages)
     pub next: Option<PageToken>,      // how to fetch the next page
-    pub total_items: Option<u64>,     // optional (cursor providers may omit)
-    pub total_pages: Option<u32>,
+    pub total_pages: u32,             // best-effort (0 when unknown)
+    pub total_results: u32,           // best-effort (0 when unknown)
 }
 pub enum PageToken { Page(u32), Cursor(String) }
 ```
+
+Totals are best-effort `u32` (`0` when a provider does not report them) rather
+than `Option`, for ergonomics; iteration relies on the authoritative `has_next`
+/ `next`, never on the totals.
 
 - `into_stream` gains `Send` bounds so the stream can cross `tokio::spawn`.
 - AniList populates `has_next` from `hasNextPage` (not reconstructed from nullable
