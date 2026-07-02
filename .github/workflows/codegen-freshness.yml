@@ -1,0 +1,45 @@
+name: Codegen freshness
+
+# Fails a PR that changes the TMDB spec or the codegen tool without committing
+# the regenerated client. The workflow-level `paths` filter means this job is
+# skipped entirely on PRs that touch none of these paths, so it never burdens
+# unrelated work.
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - "openapi/**"
+      - "xtask/**"
+      - "src/generated/**"
+      - ".github/workflows/codegen-freshness.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    name: Generated TMDB client is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: xtask
+
+      - name: Regenerate the vendored TMDB client
+        # --locked enforces the committed xtask/Cargo.lock so the pinned codegen
+        # dependencies (and thus the generated output) cannot drift.
+        run: cargo run --locked --manifest-path xtask/Cargo.toml -- codegen
+
+      - name: Verify src/generated/ is up to date
+        run: |
+          if ! git diff --quiet -- src/generated/; then
+            echo "::error::src/generated/ is out of date with openapi/tmdb-api.json."
+            echo "Run 'cargo xtask codegen' and commit the result."
+            git --no-pager diff --stat -- src/generated/
+            exit 1
+          fi
+          echo "src/generated/ is up to date with openapi/tmdb-api.json."

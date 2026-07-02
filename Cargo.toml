@@ -12,7 +12,7 @@ documentation = "https://docs.rs/cameo"
 readme = "README.md"
 keywords = ["tmdb", "anilist", "movies", "tv", "metadata"]
 categories = ["api-bindings", "asynchronous", "web-programming::http-client"]
-exclude = ["scripts/", ".sidecar*", "AGENTS.md", "CLAUDE.md", ".github/", "lefthook.yaml", "rust-toolchain.toml", "DEVELOPMENT.md", "TESTING.md", ".claude/", "CHANGELOG.md", "justfile", "rustfmt.toml", "release-plz.toml"]
+exclude = ["scripts/", "openapi/", "xtask/", ".cargo/", ".sidecar*", "AGENTS.md", "CLAUDE.md", ".github/", "lefthook.yaml", "rust-toolchain.toml", "DEVELOPMENT.md", "TESTING.md", ".claude/", "CHANGELOG.md", "justfile", "rustfmt.toml", "release-plz.toml"]
 
 [lints.rust]
 missing_docs = "warn"
@@ -48,16 +48,6 @@ tracing = "0.1"
 # Cache backend (optional)
 rusqlite = { version = "0.38", features = ["bundled"], optional = true }
 dirs = { version = "6.0", optional = true }
-
-[build-dependencies]
-progenitor = "0.13"
-serde_json = "1"
-syn = "2"
-prettyplease = "0.2"
-# Transitive dep of progenitor; pinned so build-script codegen is deterministic.
-# typify < 0.6.2 emits Option<f64> for default-valued schema fields; >= 0.6.2
-# emits bare f64. The TMDB conversions depend on the >= 0.6.2 behaviour.
-typify = ">=0.6.2"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

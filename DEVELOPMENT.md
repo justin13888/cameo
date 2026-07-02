@@ -41,7 +41,7 @@ cargo run --example anilist_showcase --features anilist -- 'Your Name'
 ```
 User call → CameoClient (src/unified/facade/)
                 ├─ TmdbClient (src/providers/tmdb/)
-                │       └─ Generated REST client (src/generated/ via build.rs + openapi/tmdb-api.json)
+                │       └─ Generated REST client (vendored src/generated/tmdb.rs; regen via `cargo xtask codegen`)
                 └─ AniListClient (src/providers/anilist/)
                             │
                             ▼  conversions (src/unified/conversions/)
@@ -53,7 +53,7 @@ User call → CameoClient (src/unified/facade/)
 
 | Path | Purpose |
 |---|---|
-| `src/generated/` | Includes `OUT_DIR/tmdb_generated.rs` (progenitor output); do not edit directly |
+| `src/generated/` | Vendored progenitor output (`tmdb.rs`), committed; regenerate with `cargo xtask codegen`, do not edit directly |
 | `src/core/` | `CameoError`, `TimeWindow`, `PaginatedResponse`, `into_stream` |
 | `src/cache/` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig`, `CacheKey`, `MediaType` |
 | `src/providers/tmdb/` | `TmdbClient` (rate-limited), `TmdbConfig`, `ImageUrl`, discover builders, `TmdbError` |
@@ -62,7 +62,7 @@ User call → CameoClient (src/unified/facade/)
 | `src/unified/models.rs` | `UnifiedMovie`, `UnifiedTvShow`, `UnifiedPerson`, detail variants, `UnifiedSearchResult` |
 | `src/unified/conversions/` | `Into` impls from provider types to unified types (tmdb/, anilist/ submodules) |
 | `src/unified/facade/` | `CameoClient`, `CameoClientBuilder`, `CameoClientError`; dispatch across providers |
-| `build.rs` | Reads `openapi/tmdb-api.json`, calls progenitor, writes formatted code to `OUT_DIR/tmdb_generated.rs` |
+| `xtask/` | Standalone codegen tool (`cargo xtask codegen`) with pinned deps + committed lockfile; regenerates `src/generated/tmdb.rs` from the spec |
 
 For feature flags, see README.md. For test commands, see TESTING.md.
 
@@ -86,7 +86,17 @@ What it does:
    - strips `example`/`examples` payloads (ignored by codegen, ~75% of the raw spec size)
 4. Writes the result to `openapi/tmdb-api.json`
 
-The pipeline is fully deterministic and requires **no manual post-editing**: given the same upstream spec, re-running the script reproduces `openapi/tmdb-api.json` byte-for-byte. `build.rs` watches `openapi/tmdb-api.json` and regenerates the client automatically on `cargo build`.
+The pipeline is fully deterministic and requires **no manual post-editing**: given the same upstream spec, re-running the script reproduces `openapi/tmdb-api.json` byte-for-byte.
+
+### Regenerating the vendored client
+
+The generated progenitor client is **vendored** at `src/generated/tmdb.rs` and committed — a normal `cargo build` performs **no** code generation. After changing `openapi/tmdb-api.json`, regenerate the client with the dedicated tool:
+
+```bash
+cargo xtask codegen
+```
+
+This reads `openapi/tmdb-api.json`, runs progenitor, and rewrites `src/generated/tmdb.rs`. The `xtask/` crate has its own committed `Cargo.lock` with pinned codegen dependencies, so the output is reproducible — a CI freshness check (`.github/workflows/codegen-freshness.yml`) regenerates and fails the PR if the committed `src/generated/` is stale. Commit both `openapi/tmdb-api.json` and `src/generated/tmdb.rs` together.
 
 ---
 

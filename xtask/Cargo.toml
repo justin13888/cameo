@@ -1,0 +1,20 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "Repository automation for cameo (TMDB client codegen)."
+
+# Standalone tooling crate with its OWN dependency graph and committed lockfile,
+# deliberately declared as its own workspace root so the codegen dependencies
+# (progenitor/typify/syn/prettyplease) never enter the cameo library's build
+# graph. Invoke via `cargo xtask <cmd>` (see .cargo/config.toml).
+[workspace]
+
+[dependencies]
+# Pinned so `cargo xtask codegen` reproduces src/generated/tmdb.rs byte-for-byte.
+progenitor = "=0.13.0"
+typify = "=0.6.2"
+syn = "=2.0.117"
+prettyplease = "=0.2.37"
+serde_json = "1"

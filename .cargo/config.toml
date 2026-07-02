@@ -1,0 +1,4 @@
+# `cargo xtask <cmd>` runs the standalone tooling crate in xtask/ without
+# pulling its dependencies into the cameo library's build graph.
+[alias]
+xtask = "run --manifest-path xtask/Cargo.toml --"
