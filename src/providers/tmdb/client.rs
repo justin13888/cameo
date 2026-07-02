@@ -47,10 +47,12 @@ impl TmdbClient {
                 .map_err(|e| TmdbError::InvalidConfig(format!("invalid API token: {e}")))?,
         );
 
-        let http_client = reqwest::ClientBuilder::new()
-            .default_headers(headers)
-            .build()
-            .map_err(TmdbError::Http)?;
+        let http_client = crate::providers::http::build_client(
+            config.connect_timeout,
+            config.request_timeout,
+            headers,
+        )
+        .map_err(TmdbError::Http)?;
 
         let base_url = config.base_url.as_deref().unwrap_or(TMDB_BASE_URL);
         let inner = tmdb::Client::new_with_client(base_url, http_client);

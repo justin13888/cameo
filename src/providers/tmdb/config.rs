@@ -35,6 +35,11 @@ pub struct TmdbConfig {
     /// available. Set this to a finite duration to fail fast when all
     /// concurrent request slots are occupied.
     pub rate_limit_timeout: Option<Duration>,
+    /// Timeout for establishing a connection. Defaults to 10s when `None`.
+    pub connect_timeout: Option<Duration>,
+    /// Timeout for a complete request (connect through full response body).
+    /// Defaults to 30s when `None`.
+    pub request_timeout: Option<Duration>,
 }
 
 impl TmdbConfig {
@@ -48,19 +53,16 @@ impl TmdbConfig {
             include_adult: None,
             rate_limit: DEFAULT_RATE_LIMIT,
             rate_limit_timeout: None,
+            connect_timeout: None,
+            request_timeout: None,
         }
     }
 
     /// Create a new config with a custom base URL (useful for testing).
     pub fn new_with_base_url(api_token: impl Into<String>, base_url: impl Into<String>) -> Self {
         Self {
-            api_token: api_token.into(),
             base_url: Some(base_url.into()),
-            language: None,
-            region: None,
-            include_adult: None,
-            rate_limit: DEFAULT_RATE_LIMIT,
-            rate_limit_timeout: None,
+            ..Self::new(api_token)
         }
     }
 
@@ -97,6 +99,18 @@ impl TmdbConfig {
     /// [`TmdbError::RateLimitExceeded`](crate::providers::tmdb::TmdbError::RateLimitExceeded).
     pub fn with_rate_limit_timeout(mut self, timeout: Duration) -> Self {
         self.rate_limit_timeout = Some(timeout);
+        self
+    }
+
+    /// Override the connection-establishment timeout (default: 10s).
+    pub fn with_connect_timeout(mut self, timeout: Duration) -> Self {
+        self.connect_timeout = Some(timeout);
+        self
+    }
+
+    /// Override the total request timeout (default: 30s).
+    pub fn with_request_timeout(mut self, timeout: Duration) -> Self {
+        self.request_timeout = Some(timeout);
         self
     }
 }

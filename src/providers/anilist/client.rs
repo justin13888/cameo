@@ -40,6 +40,11 @@ const TV_FORMATS: &[&str] = &["TV", "TV_SHORT", "ONA", "OVA", "SPECIAL"];
 /// not perform client-side rate limiting, so callers should throttle requests
 /// when running in bulk (e.g. with `--test-threads=1` for tests).
 ///
+/// # Cloning
+///
+/// `AniListClient` is cheaply cloneable — the underlying `reqwest::Client` is
+/// reference-counted, so clones share the same connection pool.
+///
 /// # Example
 ///
 /// ```no_run
@@ -66,7 +71,11 @@ impl AniListClient {
     /// Returns [`AniListError::Http`] if the underlying HTTP client cannot be built
     /// (e.g. invalid TLS configuration).
     pub fn new(config: AniListConfig) -> Result<Self, AniListError> {
-        let http = reqwest::ClientBuilder::new().build()?;
+        let http = crate::providers::http::build_client(
+            config.connect_timeout,
+            config.request_timeout,
+            reqwest::header::HeaderMap::new(),
+        )?;
         Ok(Self { http, config })
     }
 

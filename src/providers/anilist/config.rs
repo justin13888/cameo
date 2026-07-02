@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 const DEFAULT_PER_PAGE: u32 = 20;
 
 /// Configuration for the [`AniListClient`](super::client::AniListClient).
@@ -10,6 +12,11 @@ pub struct AniListConfig {
     pub base_url: String,
     /// Number of results returned per page (default: 20, max: 50).
     pub per_page: u32,
+    /// Timeout for establishing a connection. Defaults to 10s when `None`.
+    pub connect_timeout: Option<Duration>,
+    /// Timeout for a complete request (connect through full response body).
+    /// Defaults to 30s when `None`.
+    pub request_timeout: Option<Duration>,
 }
 
 impl Default for AniListConfig {
@@ -17,6 +24,8 @@ impl Default for AniListConfig {
         Self {
             base_url: "https://graphql.anilist.co".to_string(),
             per_page: DEFAULT_PER_PAGE,
+            connect_timeout: None,
+            request_timeout: None,
         }
     }
 }
@@ -42,6 +51,18 @@ impl AniListConfig {
     /// Valid range is 1–50 (AniList API limit); values outside this range are clamped.
     pub fn with_per_page(mut self, per_page: u32) -> Self {
         self.per_page = per_page.clamp(1, 50);
+        self
+    }
+
+    /// Override the connection-establishment timeout (default: 10s).
+    pub fn with_connect_timeout(mut self, timeout: Duration) -> Self {
+        self.connect_timeout = Some(timeout);
+        self
+    }
+
+    /// Override the total request timeout (default: 30s).
+    pub fn with_request_timeout(mut self, timeout: Duration) -> Self {
+        self.request_timeout = Some(timeout);
         self
     }
 }
