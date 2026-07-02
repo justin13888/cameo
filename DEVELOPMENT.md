@@ -78,12 +78,15 @@ Prerequisites: `curl`, `jq`, `npx` (Node.js).
 
 What it does:
 1. Downloads the official TMDB spec from `developer.themoviedb.org`
-2. Downgrades from OpenAPI 3.1.0 → 3.0.3 using `@apiture/openapi-down-convert` (progenitor requires 3.0.x)
-3. Writes to `openapi/tmdb-api.json`
+2. Downgrades from OpenAPI 3.1.0 → 3.0.3 using a **pinned** `@apiture/openapi-down-convert` (progenitor requires 3.0.x); the version is pinned in the script so its output cannot drift with upstream releases
+3. Applies `scripts/tmdb-spec-patch.jq` — a set of deterministic normalizations (see that file for per-fix rationale):
+   - renames the TV-season `_id` field to `mongo_id` (avoids a duplicate `id` field in the generated code)
+   - coerces integer `vote_average` schemas to `number`
+   - coerces string-typed boolean defaults (`"default": "false"`) to real booleans
+   - strips `example`/`examples` payloads (ignored by codegen, ~75% of the raw spec size)
+4. Writes the result to `openapi/tmdb-api.json`
 
-**Manual fix required after regeneration:** In the TV season details schema, rename the field `_id` to `mongo_id`. This avoids a duplicate `id` field error in the progenitor-generated code.
-
-`build.rs` watches `openapi/tmdb-api.json` and regenerates automatically on `cargo build`.
+The pipeline is fully deterministic and requires **no manual post-editing**: given the same upstream spec, re-running the script reproduces `openapi/tmdb-api.json` byte-for-byte. `build.rs` watches `openapi/tmdb-api.json` and regenerates the client automatically on `cargo build`.
 
 ---
 
@@ -187,6 +190,6 @@ These apply to types in `src/generated/` (auto-generated from `openapi/tmdb-api.
 |---|---|
 | `PersonDetailsResponse.deathday` | `Option<serde_json::Value>` — TMDB returns null or a date string; parse as string if `Some` |
 | `PersonDetailsResponse.homepage` | `Option<serde_json::Value>` — same pattern as `deathday` |
-| TV season details `mongo_id` field | TMDB's `_id` (MongoDB ObjectId) was renamed to `mongo_id` in the spec to avoid progenitor collision with the `id` field |
+| TV season details `mongo_id` field | TMDB's `_id` (MongoDB ObjectId) is renamed to `mongo_id` by `scripts/tmdb-spec-patch.jq` to avoid a progenitor collision with the `id` field |
 | `trending_movies` / `trending_tv` | No `page` parameter — these endpoints do not support pagination in the TMDB spec |
-| `vote_average` on TV list types | The spec was patched to `Option<f64>` (was `i64`); affects `DiscoverTvResponseResultsItem`, `TvSeriesPopularListResponseResultsItem`, `TvSeriesSimilarResponseResultsItem`, and similar |
+| `vote_average` on TV list types | `scripts/tmdb-spec-patch.jq` coerces the integer-typed `vote_average` schemas to `number`; affects `DiscoverTvResponseResultsItem`, `TvSeriesPopularListResponseResultsItem`, `TvSeriesSimilarResponseResultsItem`, and similar |
