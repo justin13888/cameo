@@ -68,17 +68,22 @@ fn discover_tv_builder_with_dates() {
 
 #[test]
 fn tmdb_config_builder() {
+    use std::time::Duration;
+
+    use cameo::RateLimit;
+
+    let rate = RateLimit::per(30, Duration::from_secs(10));
     let config = TmdbConfig::new("my-token")
         .with_language("en-US")
         .with_region("US")
         .with_include_adult(false)
-        .with_rate_limit(30);
+        .with_rate_limit(rate);
 
     assert_eq!(config.api_token, "my-token");
     assert_eq!(config.language.as_deref(), Some("en-US"));
     assert_eq!(config.region.as_deref(), Some("US"));
     assert_eq!(config.include_adult, Some(false));
-    assert_eq!(config.rate_limit, 30);
+    assert_eq!(config.rate_limit, rate);
 }
 
 #[test]
@@ -110,13 +115,29 @@ fn cameo_builder_empty_tmdb_token_fails() {
 }
 
 #[test]
-fn tmdb_config_rate_limit_timeout_roundtrips() {
+fn tmdb_config_rate_limit_roundtrips() {
     use std::time::Duration;
 
-    let config = TmdbConfig::new("tok")
-        .with_rate_limit(10)
-        .with_rate_limit_timeout(Duration::from_secs(5));
+    use cameo::RateLimit;
 
-    assert_eq!(config.rate_limit, 10);
-    assert_eq!(config.rate_limit_timeout, Some(Duration::from_secs(5)));
+    let config = TmdbConfig::new("tok").with_rate_limit(RateLimit::Unlimited);
+    assert_eq!(config.rate_limit, RateLimit::Unlimited);
+
+    let limited = RateLimit::per(10, Duration::from_secs(1));
+    let config = TmdbConfig::new("tok").with_rate_limit(limited);
+    assert_eq!(config.rate_limit, limited);
+}
+
+#[test]
+fn tmdb_client_zero_rate_limit_is_construction_error() {
+    use std::time::Duration;
+
+    use cameo::RateLimit;
+
+    // A misconfigured limiter is rejected at construction, not a runtime deadlock.
+    let result = TmdbClient::new(TmdbConfig::new("tok").with_rate_limit(RateLimit::Limited {
+        max_requests: 0,
+        per: Duration::from_secs(1),
+    }));
+    assert!(result.is_err(), "expected zero rate limit to be rejected");
 }

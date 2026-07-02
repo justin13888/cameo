@@ -81,6 +81,10 @@ pub enum AniListError {
     /// The requested resource was not found (a GraphQL error with `status` 404).
     #[error("not found")]
     NotFound,
+
+    /// Invalid configuration (rejected at construction time).
+    #[error("invalid configuration: {0}")]
+    InvalidConfig(String),
 }
 
 /// Parse an AniList `Retry-After` header (integer seconds) into a [`Duration`].

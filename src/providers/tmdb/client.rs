@@ -1,11 +1,10 @@
-use std::{collections::HashMap, sync::Arc};
-
-use tokio::sync::Semaphore;
+use std::collections::HashMap;
 
 use super::{config::TmdbConfig, error::TmdbError};
 use crate::{
     core::{config::TimeWindow, pagination::PaginatedResponse},
     generated::tmdb::{self, types},
+    providers::rate_limit::RateLimiter,
     unified::models::{
         UnifiedEpisode, UnifiedMovie, UnifiedSeasonDetails, UnifiedStreamingService,
         UnifiedWatchProviderEntry, UnifiedWatchProviders,
@@ -21,13 +20,13 @@ const TMDB_BASE_URL: &str = "https://api.themoviedb.org";
 /// # Cloning
 ///
 /// `TmdbClient` is cheaply cloneable — the underlying HTTP client,
-/// configuration, and rate-limit semaphore are all reference-counted so
-/// clones share the same connection pool and concurrency pool.
+/// configuration, and rate limiter are all reference-counted so clones share
+/// the same connection pool and the same rate-limit budget.
 #[derive(Debug, Clone)]
 pub struct TmdbClient {
     inner: tmdb::Client,
     config: TmdbConfig,
-    rate_limiter: Arc<Semaphore>,
+    rate_limiter: RateLimiter,
 }
 
 impl TmdbClient {
@@ -38,6 +37,10 @@ impl TmdbClient {
                 "API token must not be empty".into(),
             ));
         }
+        config
+            .rate_limit
+            .validate()
+            .map_err(TmdbError::InvalidConfig)?;
 
         let mut headers = reqwest::header::HeaderMap::new();
         let auth_value = format!("Bearer {}", config.api_token);
@@ -56,7 +59,7 @@ impl TmdbClient {
 
         let base_url = config.base_url.as_deref().unwrap_or(TMDB_BASE_URL);
         let inner = tmdb::Client::new_with_client(base_url, http_client);
-        let rate_limiter = Arc::new(Semaphore::new(config.rate_limit as usize));
+        let rate_limiter = RateLimiter::new(config.rate_limit);
 
         Ok(Self {
             inner,
@@ -89,30 +92,11 @@ impl TmdbClient {
         self.config.include_adult
     }
 
-    /// Acquire a rate-limit permit. The permit is held until the returned
-    /// `SemaphorePermit` is dropped, which should happen after the HTTP
-    /// response has been received.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`TmdbError::RateLimitExceeded`] when `rate_limit_timeout` is
-    /// configured and the timeout elapses before a permit becomes available.
-    /// Returns [`TmdbError::Closed`] if the internal semaphore is unexpectedly
-    /// dropped (should not occur in normal operation).
-    pub(crate) async fn acquire_rate_limit_permit(
-        &self,
-    ) -> Result<tokio::sync::SemaphorePermit<'_>, TmdbError> {
-        if let Some(timeout) = self.config.rate_limit_timeout {
-            tokio::time::timeout(timeout, self.rate_limiter.acquire())
-                .await
-                .map_err(|_| TmdbError::RateLimitExceeded)?
-                .map_err(|_| TmdbError::Closed)
-        } else {
-            self.rate_limiter
-                .acquire()
-                .await
-                .map_err(|_| TmdbError::Closed)
-        }
+    /// Wait for a rate-limit slot before issuing a request. Returns once the
+    /// token-bucket limiter permits another request (immediately if a token is
+    /// available). Used by [`Self::execute`] and the discover builders.
+    pub(crate) async fn acquire_rate_limit(&self) {
+        self.rate_limiter.acquire().await;
     }
 
     /// Execute a generated-client call under the rate limiter, unwrap the
@@ -132,7 +116,7 @@ impl TmdbClient {
             >,
         E: std::fmt::Debug + Send + Sync + 'static,
     {
-        let _permit = self.acquire_rate_limit_permit().await?;
+        self.acquire_rate_limit().await;
         match make_call().await {
             Ok(rv) => Ok(rv.into_inner()),
             Err(err) => Err(TmdbError::from_progenitor(err).await),
@@ -809,59 +793,4 @@ where
                 .collect()
         })
         .unwrap_or_default()
-}
-
-#[cfg(test)]
-mod tests {
-    use std::sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-    };
-
-    use tokio::sync::Semaphore;
-
-    /// Verify that the semaphore actually limits concurrency to `rate_limit`.
-    ///
-    /// Spawns `N` tasks that each acquire a permit, increment an in-flight counter,
-    /// assert the counter never exceeds `rate_limit`, then decrement and drop the permit.
-    #[tokio::test]
-    async fn rate_limit_semaphore_enforces_max_concurrency() {
-        const RATE_LIMIT: usize = 3;
-        const N: usize = 20;
-
-        let semaphore = Arc::new(Semaphore::new(RATE_LIMIT));
-        let in_flight = Arc::new(AtomicUsize::new(0));
-        let max_seen = Arc::new(AtomicUsize::new(0));
-
-        let mut handles = Vec::with_capacity(N);
-        for _ in 0..N {
-            let sem = Arc::clone(&semaphore);
-            let in_flight = Arc::clone(&in_flight);
-            let max_seen = Arc::clone(&max_seen);
-            handles.push(tokio::spawn(async move {
-                let _permit = sem.acquire().await.expect("semaphore closed");
-                let current = in_flight.fetch_add(1, Ordering::SeqCst) + 1;
-                // Track maximum observed concurrency
-                max_seen.fetch_max(current, Ordering::SeqCst);
-                assert!(
-                    current <= RATE_LIMIT,
-                    "concurrency {current} exceeded rate_limit {RATE_LIMIT}"
-                );
-                // Simulate a tiny bit of async work
-                tokio::task::yield_now().await;
-                in_flight.fetch_sub(1, Ordering::SeqCst);
-                // _permit dropped here, releasing the slot
-            }));
-        }
-
-        for h in handles {
-            h.await.expect("task panicked");
-        }
-
-        // Sanity: we should have actually seen concurrency > 1 (otherwise the
-        // test isn't meaningful), up to RATE_LIMIT.
-        let peak = max_seen.load(Ordering::SeqCst);
-        assert!(peak >= 1, "no tasks ran");
-        assert!(peak <= RATE_LIMIT);
-    }
 }

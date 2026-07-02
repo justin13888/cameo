@@ -36,9 +36,9 @@ const TV_FORMATS: &[&str] = &["TV", "TV_SHORT", "ONA", "OVA", "SPECIAL"];
 /// Sends typed GraphQL queries to the AniList API and returns deserialized
 /// results. No authentication is needed for public data.
 ///
-/// **Rate limit:** AniList enforces 90 requests per minute. This client does
-/// not perform client-side rate limiting, so callers should throttle requests
-/// when running in bulk (e.g. with `--test-threads=1` for tests).
+/// **Rate limit:** AniList enforces 90 requests per minute. This client paces
+/// requests with a token-bucket limiter matching that limit by default (see
+/// [`AniListConfig::with_rate_limit`](super::config::AniListConfig::with_rate_limit)).
 ///
 /// # Cloning
 ///
@@ -61,6 +61,7 @@ const TV_FORMATS: &[&str] = &["TV", "TV_SHORT", "ONA", "OVA", "SPECIAL"];
 pub struct AniListClient {
     http: reqwest::Client,
     config: AniListConfig,
+    rate_limiter: crate::providers::rate_limit::RateLimiter,
 }
 
 impl AniListClient {
@@ -68,15 +69,25 @@ impl AniListClient {
     ///
     /// # Errors
     ///
-    /// Returns [`AniListError::Http`] if the underlying HTTP client cannot be built
-    /// (e.g. invalid TLS configuration).
+    /// Returns [`AniListError::InvalidConfig`] if the rate-limit configuration
+    /// is invalid, or [`AniListError::Http`] if the underlying HTTP client
+    /// cannot be built (e.g. invalid TLS configuration).
     pub fn new(config: AniListConfig) -> Result<Self, AniListError> {
+        config
+            .rate_limit
+            .validate()
+            .map_err(AniListError::InvalidConfig)?;
         let http = crate::providers::http::build_client(
             config.connect_timeout,
             config.request_timeout,
             reqwest::header::HeaderMap::new(),
         )?;
-        Ok(Self { http, config })
+        let rate_limiter = crate::providers::rate_limit::RateLimiter::new(config.rate_limit);
+        Ok(Self {
+            http,
+            config,
+            rate_limiter,
+        })
     }
 
     /// Returns a reference to the client configuration.
@@ -110,6 +121,9 @@ impl AniListClient {
             "query": query,
             "variables": variables,
         });
+
+        // Pace requests within AniList's rate limit before issuing.
+        self.rate_limiter.acquire().await;
 
         let resp = self
             .http

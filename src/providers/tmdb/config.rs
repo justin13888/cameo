@@ -1,6 +1,12 @@
 use std::time::Duration;
 
-const DEFAULT_RATE_LIMIT: u32 = 40;
+use crate::providers::rate_limit::RateLimit;
+
+/// TMDB's documented limit: ~40 requests per 10 seconds per IP.
+const DEFAULT_RATE_LIMIT: RateLimit = RateLimit::Limited {
+    max_requests: 40,
+    per: Duration::from_secs(10),
+};
 
 /// Configuration for the TMDB client.
 #[non_exhaustive]
@@ -16,25 +22,14 @@ pub struct TmdbConfig {
     pub region: Option<String>,
     /// Whether to include adult content in results.
     pub include_adult: Option<bool>,
-    /// Maximum number of **concurrent** in-flight requests (defaults to 40).
+    /// Client-side request-rate limit (a real throughput limiter, not a
+    /// concurrency cap).
     ///
-    /// This is a concurrency limit, not a throughput limit. It bounds how many
-    /// HTTP requests can be simultaneously in-flight — i.e. how many calls can
-    /// be awaiting a response at the same time. It does **not** enforce a
-    /// requests-per-second rate.
-    ///
-    /// Note: TMDB's own rate limit (40 requests per 10 seconds per IP) is
-    /// separate and is enforced server-side. Setting `rate_limit` to a value
-    /// much higher than that threshold may result in HTTP 429 responses from
-    /// the TMDB API.
-    pub rate_limit: u32,
-    /// Maximum time to wait for a concurrency permit before returning
-    /// [`TmdbError::RateLimitExceeded`](crate::providers::tmdb::TmdbError::RateLimitExceeded).
-    ///
-    /// When `None` (the default), callers block indefinitely until a slot is
-    /// available. Set this to a finite duration to fail fast when all
-    /// concurrent request slots are occupied.
-    pub rate_limit_timeout: Option<Duration>,
+    /// Defaults to TMDB's documented limit of 40 requests per 10 seconds. The
+    /// limiter paces bursts so the sustained rate stays within this bound; set
+    /// [`RateLimit::Unlimited`] to disable it. Invalid values (zero requests or
+    /// a zero window) are rejected when the client is constructed.
+    pub rate_limit: RateLimit,
     /// Timeout for establishing a connection. Defaults to 10s when `None`.
     pub connect_timeout: Option<Duration>,
     /// Timeout for a complete request (connect through full response body).
@@ -52,7 +47,6 @@ impl TmdbConfig {
             region: None,
             include_adult: None,
             rate_limit: DEFAULT_RATE_LIMIT,
-            rate_limit_timeout: None,
             connect_timeout: None,
             request_timeout: None,
         }
@@ -84,21 +78,12 @@ impl TmdbConfig {
         self
     }
 
-    /// Set the rate limit (max concurrent requests).
+    /// Set the client-side request-rate limit.
     ///
-    /// A value of 0 creates a semaphore with no permits, meaning all requests will block.
-    pub fn with_rate_limit(mut self, limit: u32) -> Self {
+    /// Defaults to TMDB's documented 40 requests / 10 seconds. Use
+    /// [`RateLimit::Unlimited`] to disable client-side limiting.
+    pub fn with_rate_limit(mut self, limit: RateLimit) -> Self {
         self.rate_limit = limit;
-        self
-    }
-
-    /// Set a timeout for acquiring a concurrency permit.
-    ///
-    /// When all concurrent request slots are occupied, requests will wait at
-    /// most this long before returning
-    /// [`TmdbError::RateLimitExceeded`](crate::providers::tmdb::TmdbError::RateLimitExceeded).
-    pub fn with_rate_limit_timeout(mut self, timeout: Duration) -> Self {
-        self.rate_limit_timeout = Some(timeout);
         self
     }
 

@@ -364,7 +364,7 @@ impl<'a> DiscoverMoviesBuilder<'a> {
     pub async fn execute(
         self,
     ) -> Result<PaginatedResponse<DiscoverMovieResponseResultsItem>, TmdbError> {
-        let _permit = self.client.acquire_rate_limit_permit().await?;
+        self.client.acquire_rate_limit().await;
         let resp = self
             .client
             .inner()

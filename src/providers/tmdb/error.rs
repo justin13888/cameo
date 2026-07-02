@@ -49,20 +49,7 @@ pub enum TmdbError {
     #[error("deserialization error: {0}")]
     Deserialization(#[from] serde_json::Error),
 
-    /// Exceeded the configured request-acquisition timeout.
-    ///
-    /// Raised when [`TmdbConfig::rate_limit_timeout`](crate::providers::tmdb::TmdbConfig)
-    /// is set and a rate-limit slot could not be acquired within that duration.
-    #[error("rate limit exceeded: no slot available within timeout")]
-    RateLimitExceeded,
-
-    /// The internal rate limiter was closed (internal error).
-    ///
-    /// This should not occur in normal operation.
-    #[error("internal error: rate limiter closed")]
-    Closed,
-
-    /// Invalid configuration.
+    /// Invalid configuration (rejected at construction time).
     #[error("invalid configuration: {0}")]
     InvalidConfig(String),
 }

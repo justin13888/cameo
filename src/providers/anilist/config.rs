@@ -1,6 +1,14 @@
 use std::time::Duration;
 
+use crate::providers::rate_limit::RateLimit;
+
 const DEFAULT_PER_PAGE: u32 = 20;
+
+/// AniList's documented limit: 90 requests per minute.
+const DEFAULT_RATE_LIMIT: RateLimit = RateLimit::Limited {
+    max_requests: 90,
+    per: Duration::from_secs(60),
+};
 
 /// Configuration for the [`AniListClient`](super::client::AniListClient).
 #[non_exhaustive]
@@ -12,6 +20,12 @@ pub struct AniListConfig {
     pub base_url: String,
     /// Number of results returned per page (default: 20, max: 50).
     pub per_page: u32,
+    /// Client-side request-rate limit.
+    ///
+    /// Defaults to AniList's documented limit of 90 requests per minute. Set
+    /// [`RateLimit::Unlimited`] to disable client-side limiting. Invalid values
+    /// are rejected when the client is constructed.
+    pub rate_limit: RateLimit,
     /// Timeout for establishing a connection. Defaults to 10s when `None`.
     pub connect_timeout: Option<Duration>,
     /// Timeout for a complete request (connect through full response body).
@@ -24,6 +38,7 @@ impl Default for AniListConfig {
         Self {
             base_url: "https://graphql.anilist.co".to_string(),
             per_page: DEFAULT_PER_PAGE,
+            rate_limit: DEFAULT_RATE_LIMIT,
             connect_timeout: None,
             request_timeout: None,
         }
@@ -51,6 +66,15 @@ impl AniListConfig {
     /// Valid range is 1–50 (AniList API limit); values outside this range are clamped.
     pub fn with_per_page(mut self, per_page: u32) -> Self {
         self.per_page = per_page.clamp(1, 50);
+        self
+    }
+
+    /// Set the client-side request-rate limit.
+    ///
+    /// Defaults to AniList's documented 90 requests / minute. Use
+    /// [`RateLimit::Unlimited`] to disable client-side limiting.
+    pub fn with_rate_limit(mut self, limit: RateLimit) -> Self {
+        self.rate_limit = limit;
         self
     }
 

@@ -80,6 +80,8 @@ pub use cache::{CacheBackend, CacheError, CacheKey, CacheTtlConfig, MediaType, S
 pub use providers::anilist::error::{AniListErrorLocation, AniListGqlError};
 #[cfg(feature = "anilist")]
 pub use providers::anilist::{AniListClient, AniListConfig, AniListError};
+#[cfg(any(feature = "tmdb", feature = "anilist"))]
+pub use providers::rate_limit::RateLimit;
 #[cfg(feature = "tmdb")]
 pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
 pub use unified::{

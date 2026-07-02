@@ -166,20 +166,3 @@ async fn connection_failure_is_transport_error() {
         "expected Http transport error, got {err:?}"
     );
 }
-
-#[tokio::test]
-async fn rate_limit_timeout_fires() {
-    // A semaphore with 0 permits means no requests can proceed.
-    let server = MockServer::start().await;
-    let config = TmdbConfig::new_with_base_url("test-token", server.uri())
-        .with_rate_limit(0) // 0 permits → always blocks
-        .with_rate_limit_timeout(Duration::from_millis(50));
-    let client = TmdbClient::new(config).unwrap();
-
-    let err = client.movie_details(550).await.unwrap_err();
-
-    assert!(
-        matches!(err, TmdbError::RateLimitExceeded),
-        "expected RateLimitExceeded, got {err:?}"
-    );
-}
