@@ -198,12 +198,12 @@ async fn test_person_details_returns_staff_details() {
 #[tokio::test]
 async fn test_graphql_errors_propagate() {
     let body = json!({
-        "errors": [{ "message": "Not Found." }]
+        "errors": [{ "message": "Not Found.", "status": 404 }]
     });
     let (_server, client) = setup_server_with_response(body).await;
 
     let err = client.search_movies("anything", None).await.unwrap_err();
-    // "Not Found." message triggers the dedicated NotFound variant (ERR-3).
+    // A GraphQL error carrying `status: 404` maps to the dedicated NotFound variant.
     assert!(matches!(err, AniListError::NotFound));
 }
 

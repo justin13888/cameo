@@ -104,7 +104,7 @@ async fn movie_details_score_converted_to_ten_scale() {
 
 #[tokio::test]
 async fn movie_details_graphql_error_propagates() {
-    let body = json!({ "errors": [{ "message": "Not Found." }] });
+    let body = json!({ "errors": [{ "message": "Not Found.", "status": 404 }] });
     let (_server, client) = mock_client(body).await;
 
     let err = client.movie_details(9999).await.unwrap_err();
@@ -152,7 +152,7 @@ async fn tv_show_details_returns_correct_fields() {
 
 #[tokio::test]
 async fn tv_show_details_graphql_error_propagates() {
-    let body = json!({ "errors": [{ "message": "Not Found." }] });
+    let body = json!({ "errors": [{ "message": "Not Found.", "status": 404 }] });
     let (_server, client) = mock_client(body).await;
 
     let err = client.tv_show_details(9999).await.unwrap_err();
@@ -178,7 +178,7 @@ async fn person_details_returns_correct_fields() {
 
 #[tokio::test]
 async fn person_details_graphql_error_propagates() {
-    let body = json!({ "errors": [{ "message": "Not Found." }] });
+    let body = json!({ "errors": [{ "message": "Not Found.", "status": 404 }] });
     let (_server, client) = mock_client(body).await;
 
     let err = client.person_details(9999).await.unwrap_err();

@@ -244,7 +244,7 @@ async fn demo_anilist_errors() {
         Err(CameoClientError::AniList(AniListError::NotFound)) => {
             println!("  [ok] AniListError::NotFound — staff ID does not exist");
         }
-        Err(CameoClientError::AniList(AniListError::GraphQL(errors))) => {
+        Err(CameoClientError::AniList(AniListError::GraphQL { errors, .. })) => {
             // GraphQL errors carry structured messages from the API.
             for e in &errors {
                 println!("  GraphQL error: {}", e.message);

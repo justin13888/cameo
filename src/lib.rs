@@ -77,7 +77,7 @@ pub use core::{
 #[cfg(feature = "cache")]
 pub use cache::{CacheBackend, CacheError, CacheKey, CacheTtlConfig, MediaType, SqliteCache};
 #[cfg(feature = "anilist")]
-pub use providers::anilist::error::AniListGqlError;
+pub use providers::anilist::error::{AniListErrorLocation, AniListGqlError};
 #[cfg(feature = "anilist")]
 pub use providers::anilist::{AniListClient, AniListConfig, AniListError};
 #[cfg(feature = "tmdb")]

@@ -78,6 +78,20 @@ impl AniListClient {
     // ── GraphQL execution engine ───────────────────────────────────────────────
 
     /// Execute a GraphQL query and deserialize the `data` field.
+    ///
+    /// The response body is read **before** the HTTP status is inspected, so
+    /// GraphQL errors and rate-limit headers are surfaced for every status
+    /// (AniList returns `404`/`429` as GraphQL errors on an otherwise-2xx
+    /// response, and rate-limit info in `Retry-After`).
+    ///
+    /// # Partial-data policy
+    ///
+    /// When a response carries **both** `data` and `errors` (a partial
+    /// success), the usable `data` is returned and the errors are logged at
+    /// `warn` level rather than discarded — failing would throw away good data.
+    /// Errors are only surfaced as [`AniListError::GraphQL`] when no `data` is
+    /// present. A GraphQL error carrying `status: 404` always maps to
+    /// [`AniListError::NotFound`].
     async fn graphql<T: DeserializeOwned>(
         &self,
         query: &str,
@@ -95,26 +109,60 @@ impl AniListClient {
             .header(reqwest::header::ACCEPT, "application/json")
             .json(&body)
             .send()
-            .await?
-            .error_for_status()?;
+            .await?;
 
-        let gql_resp: GraphQlResponse<T> = resp.json().await?;
+        // Capture status and rate-limit headers before consuming the body.
+        let status = resp.status();
+        let retry_after = super::error::parse_retry_after(resp.headers());
+        let text = resp.text().await?;
 
-        if let Some(errors) = gql_resp.errors
-            && !errors.is_empty()
-        {
-            tracing::warn!(?errors, "anilist: graphql errors");
-            // Detect "not found" errors and raise the dedicated variant.
-            let is_not_found = errors
-                .iter()
-                .any(|e| e.message.to_lowercase().contains("not found"));
-            if is_not_found {
+        // Parse the GraphQL envelope regardless of HTTP status.
+        let gql_resp: GraphQlResponse<T> = match serde_json::from_str(&text) {
+            Ok(parsed) => parsed,
+            Err(parse_err) => {
+                // The body was not a GraphQL envelope. An error status is the
+                // more useful explanation; otherwise it is a real decode error.
+                if !status.is_success() {
+                    return Err(AniListError::Status {
+                        status: status.as_u16(),
+                        retry_after,
+                        message: truncate_body(&text),
+                    });
+                }
+                return Err(AniListError::Deserialization(parse_err));
+            }
+        };
+
+        if let Some(errors) = gql_resp.errors.filter(|e| !e.is_empty()) {
+            // Derive not-found from the structured `status`, not the message.
+            if errors.iter().any(|e| e.status == Some(404)) {
                 return Err(AniListError::NotFound);
             }
-            return Err(AniListError::GraphQL(errors));
+            // Partial-data policy: prefer usable data over failing.
+            if let Some(data) = gql_resp.data {
+                tracing::warn!(?errors, "anilist: returning partial data alongside errors");
+                return Ok(data);
+            }
+            tracing::warn!(?errors, "anilist: graphql errors");
+            return Err(AniListError::GraphQL {
+                errors,
+                retry_after,
+            });
         }
 
-        gql_resp.data.ok_or(AniListError::NoData)
+        if let Some(data) = gql_resp.data {
+            return Ok(data);
+        }
+
+        // No data and no errors: distinguish an error status from an empty body.
+        if !status.is_success() {
+            return Err(AniListError::Status {
+                status: status.as_u16(),
+                retry_after,
+                message: truncate_body(&text),
+            });
+        }
+        Err(AniListError::NoData)
     }
 
     // ── Helper: build JSON array for format_in variable ───────────────────────
@@ -401,6 +449,21 @@ impl AniListClient {
 }
 
 // ── Page conversion helpers ───────────────────────────────────────────────────
+
+/// Truncate a response body to a bounded length for use in an error message.
+fn truncate_body(body: &str) -> String {
+    const MAX_CHARS: usize = 200;
+    let trimmed = body.trim();
+    if trimmed.is_empty() {
+        return "empty response body".to_string();
+    }
+    let truncated: String = trimmed.chars().take(MAX_CHARS).collect();
+    if truncated.len() < trimmed.len() {
+        format!("{truncated}…")
+    } else {
+        truncated
+    }
+}
 
 fn media_page_to_movies(
     resp: MediaPageResponse,

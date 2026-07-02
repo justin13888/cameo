@@ -199,12 +199,63 @@ async fn search_multi_returns_mixed_types() {
 
 #[tokio::test]
 async fn search_multi_graphql_error_propagates() {
-    let body = json!({ "errors": [{ "message": "Rate limited." }] });
+    let body = json!({ "errors": [{ "message": "Internal Server Error.", "status": 500 }] });
     let (_server, client) = mock_client(body).await;
 
     let err = client.search_multi("test", None).await.unwrap_err();
 
-    assert!(matches!(err, AniListError::GraphQL(_)));
+    assert!(matches!(err, AniListError::GraphQL { .. }));
+}
+
+#[tokio::test]
+async fn rate_limit_error_exposes_retry_after() {
+    // AniList signals rate limiting via a GraphQL error plus a Retry-After header.
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(
+            ResponseTemplate::new(429)
+                .insert_header("Retry-After", "12")
+                .set_body_json(json!({
+                    "errors": [{ "message": "Too Many Requests.", "status": 429 }]
+                })),
+        )
+        .mount(&server)
+        .await;
+    let client = AniListClient::new(AniListConfig::new_with_base_url(server.uri())).unwrap();
+
+    let err = client.search_multi("test", None).await.unwrap_err();
+
+    match err {
+        AniListError::GraphQL {
+            retry_after,
+            errors,
+        } => {
+            assert_eq!(retry_after, Some(std::time::Duration::from_secs(12)));
+            assert_eq!(errors[0].status, Some(429));
+        }
+        other => panic!("expected GraphQL error with retry_after, got {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn partial_data_with_errors_is_returned() {
+    // A 200 carrying both data and (non-fatal) errors returns the usable data.
+    let body = json!({
+        "data": {
+            "Page": {
+                "pageInfo": {
+                    "total": 1, "currentPage": 1, "lastPage": 1,
+                    "hasNextPage": false, "perPage": 20
+                },
+                "media": [ media_item(1, "Partial Anime", "TV") ]
+            }
+        },
+        "errors": [{ "message": "Some field failed to resolve.", "status": 200 }]
+    });
+    let (_server, client) = mock_client(body).await;
+
+    let result = client.search_tv_shows("test", None).await.unwrap();
+    assert_eq!(result.results.len(), 1);
 }
 
 // ── Live tests (require real AniList network access) ──────────────────────────

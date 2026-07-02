@@ -28,7 +28,10 @@ pub struct PageInfo {
     #[serde(rename = "lastPage")]
     pub last_page: Option<i32>,
     /// Whether there is a next page.
-    #[serde(rename = "hasNextPage")]
+    ///
+    /// `#[serde(default)]` so a response that omits the field deserializes
+    /// (defaulting to `false`) rather than failing the whole page.
+    #[serde(rename = "hasNextPage", default)]
     pub has_next_page: bool,
     /// Results per page.
     #[serde(rename = "perPage")]
