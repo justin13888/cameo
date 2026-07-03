@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
 
+use super::params::{self, TvShowType, TvStatus};
 use crate::{
     core::pagination::Page,
     providers::tmdb::{TmdbClient, builders::TvSortBy, error::TmdbError},
@@ -8,14 +9,21 @@ use crate::{
 
 /// Builder for discovering TV shows with flexible filters.
 ///
+/// The ~15 filters shared with
+/// [`DiscoverMoviesBuilder`](super::DiscoverMoviesBuilder) come from the shared
+/// [`common_discover_setters`](super::params) core; the setters below are
+/// TV-specific. Provider ID filters take `&[u64]` slices and coded filters take
+/// typed enums.
+///
 /// # Example
 ///
 /// ```no_run
 /// # async fn example(client: &cameo::providers::tmdb::TmdbClient) -> Result<(), cameo::providers::tmdb::TmdbError> {
+/// use cameo::providers::tmdb::builders::TvSortBy;
 /// let results = client
 ///     .discover_tv()
-///     .sort_by(cameo::providers::tmdb::builders::TvSortBy::PopularityDesc)
-///     .with_genres("10765")
+///     .sort_by(TvSortBy::PopularityDesc)
+///     .with_genres(&[10765]) // Sci-Fi & Fantasy
 ///     .first_air_date_year(2024)
 ///     .execute()
 ///     .await?;
@@ -100,28 +108,12 @@ impl<'a> DiscoverTvBuilder<'a> {
         }
     }
 
+    // The ~15 filters common to both discover builders, defined once.
+    params::common_discover_setters!();
+
     /// Set the sort order.
     pub fn sort_by(mut self, sort_by: TvSortBy) -> Self {
         self.sort_by = Some(sort_by);
-        self
-    }
-
-    /// Filter by genre IDs.
-    ///
-    /// Accepts a comma-separated list of TMDB TV genre IDs (e.g. `"10765"`
-    /// for Sci-Fi & Fantasy). AND semantics: only items matching **all** listed
-    /// genres are returned.
-    pub fn with_genres(mut self, genres: impl Into<String>) -> Self {
-        self.with_genres = Some(genres.into());
-        self
-    }
-
-    /// Exclude genre IDs.
-    ///
-    /// Accepts a comma-separated list of TMDB TV genre IDs. Items matching any
-    /// of the listed genres are excluded from results.
-    pub fn without_genres(mut self, genres: impl Into<String>) -> Self {
-        self.without_genres = Some(genres.into());
         self
     }
 
@@ -140,82 +132,6 @@ impl<'a> DiscoverTvBuilder<'a> {
     /// Filter by first air date on or before.
     pub fn first_air_date_lte(mut self, date: NaiveDate) -> Self {
         self.first_air_date_lte = Some(date);
-        self
-    }
-
-    /// Minimum vote average.
-    pub fn vote_average_gte(mut self, min: f32) -> Self {
-        self.vote_average_gte = Some(min);
-        self
-    }
-
-    /// Maximum vote average.
-    pub fn vote_average_lte(mut self, max: f32) -> Self {
-        self.vote_average_lte = Some(max);
-        self
-    }
-
-    /// Minimum vote count.
-    pub fn vote_count_gte(mut self, min: f32) -> Self {
-        self.vote_count_gte = Some(min);
-        self
-    }
-
-    /// Filter by network ID.
-    pub fn with_networks(mut self, network_id: i32) -> Self {
-        self.with_networks = Some(network_id);
-        self
-    }
-
-    /// Filter by keyword IDs (comma-separated).
-    pub fn with_keywords(mut self, keywords: impl Into<String>) -> Self {
-        self.with_keywords = Some(keywords.into());
-        self
-    }
-
-    /// Filter by company IDs (comma-separated).
-    pub fn with_companies(mut self, companies: impl Into<String>) -> Self {
-        self.with_companies = Some(companies.into());
-        self
-    }
-
-    /// Filter by original language.
-    ///
-    /// Accepts an ISO 639-1 language code (e.g. `"en"`, `"ja"`, `"ko"`).
-    pub fn with_original_language(mut self, lang: impl Into<String>) -> Self {
-        self.with_original_language = Some(lang.into());
-        self
-    }
-
-    /// Filter by origin country.
-    ///
-    /// Accepts an ISO 3166-1 alpha-2 country code (e.g. `"US"`, `"JP"`, `"KR"`).
-    pub fn with_origin_country(mut self, country: impl Into<String>) -> Self {
-        self.with_origin_country = Some(country.into());
-        self
-    }
-
-    /// Minimum runtime in minutes.
-    pub fn with_runtime_gte(mut self, min: i32) -> Self {
-        self.with_runtime_gte = Some(min);
-        self
-    }
-
-    /// Maximum runtime in minutes.
-    pub fn with_runtime_lte(mut self, max: i32) -> Self {
-        self.with_runtime_lte = Some(max);
-        self
-    }
-
-    /// Set the page number.
-    pub fn page(mut self, page: u32) -> Self {
-        self.page = Some(page.clamp(1, 500) as i32);
-        self
-    }
-
-    /// Include adult content.
-    pub fn include_adult(mut self, include: bool) -> Self {
-        self.include_adult = Some(include);
         self
     }
 
@@ -249,80 +165,35 @@ impl<'a> DiscoverTvBuilder<'a> {
         self
     }
 
-    /// Maximum vote count.
-    pub fn vote_count_lte(mut self, max: f32) -> Self {
-        self.vote_count_lte = Some(max);
+    /// Filter by network ID.
+    pub fn with_networks(mut self, network_id: u64) -> Self {
+        self.with_networks = Some(network_id.min(i32::MAX as u64) as i32);
         self
     }
 
-    /// Watch region for streaming filters.
-    ///
-    /// Accepts an ISO 3166-1 alpha-2 country code (e.g. `"US"`).
-    /// Required when using [`with_watch_providers`](Self::with_watch_providers).
-    pub fn watch_region(mut self, region: impl Into<String>) -> Self {
-        self.watch_region = Some(region.into());
+    /// Filter by origin country (ISO 3166-1 alpha-2, e.g. `"US"`).
+    pub fn with_origin_country(mut self, country: impl Into<String>) -> Self {
+        self.with_origin_country = Some(country.into());
         self
     }
 
-    /// Filter by show status (comma-separated).
-    ///
-    /// Values: `"0"` (Returning), `"1"` (Planned), `"2"` (In Production),
-    /// `"3"` (Ended), `"4"` (Cancelled), `"5"` (Pilot).
-    pub fn with_status(mut self, status: impl Into<String>) -> Self {
-        self.with_status = Some(status.into());
+    /// Filter by show status.
+    pub fn with_status(mut self, status: TvStatus) -> Self {
+        self.with_status = Some(status.code().to_string());
         self
     }
 
-    /// Filter by show type (comma-separated).
-    ///
-    /// Values: `"0"` (Documentary), `"1"` (News), `"2"` (Miniseries),
-    /// `"3"` (Reality), `"4"` (Scripted), `"5"` (Talk Show), `"6"` (Video).
-    pub fn with_type(mut self, show_type: impl Into<String>) -> Self {
-        self.with_type = Some(show_type.into());
+    /// Filter by show type.
+    pub fn with_type(mut self, show_type: TvShowType) -> Self {
+        self.with_type = Some(show_type.code().to_string());
         self
     }
 
-    /// Filter by watch monetization types (comma-separated).
-    ///
-    /// Values: `"flatrate"`, `"free"`, `"ads"`, `"rent"`, `"buy"`.
-    pub fn with_watch_monetization_types(mut self, types: impl Into<String>) -> Self {
-        self.with_watch_monetization_types = Some(types.into());
-        self
-    }
-
-    /// Filter by watch provider IDs (comma-separated).
-    ///
-    /// Requires [`watch_region`](Self::watch_region) to also be set.
-    pub fn with_watch_providers(mut self, providers: impl Into<String>) -> Self {
-        self.with_watch_providers = Some(providers.into());
-        self
-    }
-
-    /// Exclude company IDs (comma-separated).
-    pub fn without_companies(mut self, companies: impl Into<String>) -> Self {
-        self.without_companies = Some(companies.into());
-        self
-    }
-
-    /// Exclude keyword IDs (comma-separated).
-    pub fn without_keywords(mut self, keywords: impl Into<String>) -> Self {
-        self.without_keywords = Some(keywords.into());
-        self
-    }
-
-    /// Exclude watch provider IDs (comma-separated).
-    pub fn without_watch_providers(mut self, providers: impl Into<String>) -> Self {
-        self.without_watch_providers = Some(providers.into());
-        self
-    }
-
-    /// Execute the discover query and return a single page of results.
+    /// Execute the discover query and return a single page of unified shows.
     ///
     /// # Errors
     ///
-    /// Returns [`TmdbError::RateLimitExceeded`] if all concurrency permits are
-    /// occupied and a `rate_limit_timeout` is configured. Returns
-    /// [`TmdbError::Api`] on non-2xx HTTP responses. Returns
+    /// Returns [`TmdbError::Api`] on non-2xx HTTP responses and
     /// [`TmdbError::Http`] on network failures.
     pub async fn execute(self) -> Result<Page<UnifiedTvShow>, TmdbError> {
         self.client.acquire_rate_limit().await;

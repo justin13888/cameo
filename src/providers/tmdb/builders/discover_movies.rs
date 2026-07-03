@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
 
+use super::params::{self, MovieReleaseType};
 use crate::{
     core::pagination::Page,
     providers::tmdb::{TmdbClient, builders::MovieSortBy, error::TmdbError},
@@ -8,14 +9,20 @@ use crate::{
 
 /// Builder for discovering movies with flexible filters.
 ///
+/// The ~15 filters shared with [`DiscoverTvBuilder`](super::DiscoverTvBuilder)
+/// come from the shared [`common_discover_setters`](super::params) core; the
+/// setters below are movie-specific. Provider ID filters take `&[u64]` slices
+/// and coded filters take typed enums.
+///
 /// # Example
 ///
 /// ```no_run
 /// # async fn example(client: &cameo::providers::tmdb::TmdbClient) -> Result<(), cameo::providers::tmdb::TmdbError> {
+/// use cameo::providers::tmdb::builders::MovieSortBy;
 /// let results = client
 ///     .discover_movies()
-///     .sort_by(cameo::providers::tmdb::builders::MovieSortBy::PopularityDesc)
-///     .with_genres("28")
+///     .sort_by(MovieSortBy::PopularityDesc)
+///     .with_genres(&[28]) // Action
 ///     .primary_release_year(2024)
 ///     .execute()
 ///     .await?;
@@ -110,28 +117,12 @@ impl<'a> DiscoverMoviesBuilder<'a> {
         }
     }
 
+    // The ~15 filters common to both discover builders, defined once.
+    params::common_discover_setters!();
+
     /// Set the sort order.
     pub fn sort_by(mut self, sort_by: MovieSortBy) -> Self {
         self.sort_by = Some(sort_by);
-        self
-    }
-
-    /// Filter by genre IDs.
-    ///
-    /// Accepts a comma-separated list of TMDB genre IDs (e.g. `"28,12"` for
-    /// Action + Adventure). AND semantics: only items matching **all** listed
-    /// genres are returned.
-    pub fn with_genres(mut self, genres: impl Into<String>) -> Self {
-        self.with_genres = Some(genres.into());
-        self
-    }
-
-    /// Exclude genre IDs.
-    ///
-    /// Accepts a comma-separated list of TMDB genre IDs. Items matching any
-    /// of the listed genres are excluded from results.
-    pub fn without_genres(mut self, genres: impl Into<String>) -> Self {
-        self.without_genres = Some(genres.into());
         self
     }
 
@@ -147,24 +138,6 @@ impl<'a> DiscoverMoviesBuilder<'a> {
         self
     }
 
-    /// Minimum vote average.
-    pub fn vote_average_gte(mut self, min: f32) -> Self {
-        self.vote_average_gte = Some(min);
-        self
-    }
-
-    /// Maximum vote average.
-    pub fn vote_average_lte(mut self, max: f32) -> Self {
-        self.vote_average_lte = Some(max);
-        self
-    }
-
-    /// Minimum vote count.
-    pub fn vote_count_gte(mut self, min: f32) -> Self {
-        self.vote_count_gte = Some(min);
-        self
-    }
-
     /// Primary release date on or after.
     pub fn primary_release_date_gte(mut self, date: NaiveDate) -> Self {
         self.primary_release_date_gte = Some(date);
@@ -177,95 +150,57 @@ impl<'a> DiscoverMoviesBuilder<'a> {
         self
     }
 
-    /// Filter by cast member IDs (comma-separated).
-    pub fn with_cast(mut self, cast: impl Into<String>) -> Self {
-        self.with_cast = Some(cast.into());
+    /// Filter by cast member IDs.
+    pub fn with_cast(mut self, person_ids: &[u64]) -> Self {
+        self.with_cast = Some(params::join_ids(person_ids));
         self
     }
 
-    /// Filter by crew member IDs (comma-separated).
-    pub fn with_crew(mut self, crew: impl Into<String>) -> Self {
-        self.with_crew = Some(crew.into());
+    /// Filter by crew member IDs.
+    pub fn with_crew(mut self, person_ids: &[u64]) -> Self {
+        self.with_crew = Some(params::join_ids(person_ids));
         self
     }
 
-    /// Filter by keyword IDs (comma-separated).
-    pub fn with_keywords(mut self, keywords: impl Into<String>) -> Self {
-        self.with_keywords = Some(keywords.into());
+    /// Filter by person IDs (cast or crew).
+    pub fn with_people(mut self, person_ids: &[u64]) -> Self {
+        self.with_people = Some(params::join_ids(person_ids));
         self
     }
 
-    /// Filter by company IDs (comma-separated).
-    pub fn with_companies(mut self, companies: impl Into<String>) -> Self {
-        self.with_companies = Some(companies.into());
-        self
-    }
-
-    /// Filter by original language.
-    ///
-    /// Accepts an ISO 639-1 language code (e.g. `"en"`, `"ja"`, `"fr"`).
-    pub fn with_original_language(mut self, lang: impl Into<String>) -> Self {
-        self.with_original_language = Some(lang.into());
-        self
-    }
-
-    /// Filter by origin country.
-    ///
-    /// Accepts an ISO 3166-1 alpha-2 country code (e.g. `"US"`, `"JP"`, `"GB"`).
+    /// Filter by origin country (ISO 3166-1 alpha-2, e.g. `"US"`).
     pub fn with_origin_country(mut self, country: impl Into<String>) -> Self {
         self.with_origin_country = Some(country.into());
         self
     }
 
-    /// Minimum runtime in minutes.
-    pub fn with_runtime_gte(mut self, min: i32) -> Self {
-        self.with_runtime_gte = Some(min);
+    /// Filter by release type.
+    pub fn with_release_type(mut self, release_type: MovieReleaseType) -> Self {
+        self.with_release_type = Some(release_type.code());
         self
     }
 
-    /// Maximum runtime in minutes.
-    pub fn with_runtime_lte(mut self, max: i32) -> Self {
-        self.with_runtime_lte = Some(max);
-        self
-    }
-
-    /// Set the page number.
-    pub fn page(mut self, page: u32) -> Self {
-        self.page = Some(page.clamp(1, 500) as i32);
-        self
-    }
-
-    /// Include adult content.
-    pub fn include_adult(mut self, include: bool) -> Self {
-        self.include_adult = Some(include);
-        self
-    }
-
-    /// Certification country.
-    ///
-    /// Accepts an ISO 3166-1 alpha-2 country code. Required when filtering by
-    /// certification. Example: `"US"`.
+    /// Certification country (ISO 3166-1 alpha-2). Required when filtering by
+    /// certification.
     pub fn certification_country(mut self, country: impl Into<String>) -> Self {
         self.certification_country = Some(country.into());
         self
     }
 
-    /// Filter by exact certification rating.
-    ///
-    /// Example values: `"G"`, `"PG"`, `"PG-13"`, `"R"`. Requires
-    /// [`certification_country`](Self::certification_country) to also be set.
+    /// Filter by exact certification rating (e.g. `"PG-13"`). Requires
+    /// [`certification_country`](Self::certification_country).
     pub fn certification(mut self, cert: impl Into<String>) -> Self {
         self.certification = Some(cert.into());
         self
     }
 
-    /// Minimum certification (e.g. `"PG-13"`). Requires [`certification_country`](Self::certification_country).
+    /// Minimum certification. Requires [`certification_country`](Self::certification_country).
     pub fn certification_gte(mut self, cert: impl Into<String>) -> Self {
         self.certification_gte = Some(cert.into());
         self
     }
 
-    /// Maximum certification (e.g. `"R"`). Requires [`certification_country`](Self::certification_country).
+    /// Maximum certification. Requires [`certification_country`](Self::certification_country).
     pub fn certification_lte(mut self, cert: impl Into<String>) -> Self {
         self.certification_lte = Some(cert.into());
         self
@@ -289,77 +224,11 @@ impl<'a> DiscoverMoviesBuilder<'a> {
         self
     }
 
-    /// Maximum vote count.
-    pub fn vote_count_lte(mut self, max: f32) -> Self {
-        self.vote_count_lte = Some(max);
-        self
-    }
-
-    /// Watch region for streaming filters.
-    ///
-    /// Accepts an ISO 3166-1 alpha-2 country code (e.g. `"US"`).
-    /// Required when using [`with_watch_providers`](Self::with_watch_providers).
-    pub fn watch_region(mut self, region: impl Into<String>) -> Self {
-        self.watch_region = Some(region.into());
-        self
-    }
-
-    /// Filter by person IDs (cast or crew, comma-separated).
-    pub fn with_people(mut self, people: impl Into<String>) -> Self {
-        self.with_people = Some(people.into());
-        self
-    }
-
-    /// Filter by release type (1–6).
-    ///
-    /// Values: 1=Premiere, 2=Theatrical (limited), 3=Theatrical,
-    /// 4=Digital, 5=Physical, 6=TV.
-    pub fn with_release_type(mut self, release_type: i32) -> Self {
-        self.with_release_type = Some(release_type);
-        self
-    }
-
-    /// Filter by watch monetization types (comma-separated).
-    ///
-    /// Values: `"flatrate"`, `"free"`, `"ads"`, `"rent"`, `"buy"`.
-    pub fn with_watch_monetization_types(mut self, types: impl Into<String>) -> Self {
-        self.with_watch_monetization_types = Some(types.into());
-        self
-    }
-
-    /// Filter by watch provider IDs (comma-separated).
-    ///
-    /// Requires [`watch_region`](Self::watch_region) to also be set.
-    pub fn with_watch_providers(mut self, providers: impl Into<String>) -> Self {
-        self.with_watch_providers = Some(providers.into());
-        self
-    }
-
-    /// Exclude company IDs (comma-separated).
-    pub fn without_companies(mut self, companies: impl Into<String>) -> Self {
-        self.without_companies = Some(companies.into());
-        self
-    }
-
-    /// Exclude keyword IDs (comma-separated).
-    pub fn without_keywords(mut self, keywords: impl Into<String>) -> Self {
-        self.without_keywords = Some(keywords.into());
-        self
-    }
-
-    /// Exclude watch provider IDs (comma-separated).
-    pub fn without_watch_providers(mut self, providers: impl Into<String>) -> Self {
-        self.without_watch_providers = Some(providers.into());
-        self
-    }
-
-    /// Execute the discover query and return a single page of results.
+    /// Execute the discover query and return a single page of unified movies.
     ///
     /// # Errors
     ///
-    /// Returns [`TmdbError::RateLimitExceeded`] if all concurrency permits are
-    /// occupied and a `rate_limit_timeout` is configured. Returns
-    /// [`TmdbError::Api`] on non-2xx HTTP responses. Returns
+    /// Returns [`TmdbError::Api`] on non-2xx HTTP responses and
     /// [`TmdbError::Http`] on network failures.
     pub async fn execute(self) -> Result<Page<UnifiedMovie>, TmdbError> {
         self.client.acquire_rate_limit().await;

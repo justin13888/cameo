@@ -21,8 +21,8 @@ fn discover_movies_builder_chains() {
     let _builder = client
         .discover_movies()
         .sort_by(MovieSortBy::PopularityDesc)
-        .with_genres("28,12")
-        .without_genres("99")
+        .with_genres(&[28, 12])
+        .without_genres(&[99])
         .primary_release_year(2024)
         .vote_average_gte(7.0)
         .vote_count_gte(100.0)
@@ -48,8 +48,8 @@ fn discover_tv_builder_chains() {
     let _builder = client
         .discover_tv()
         .sort_by(TvSortBy::VoteAverageDesc)
-        .with_genres("10765")
-        .without_genres("99")
+        .with_genres(&[10765])
+        .without_genres(&[99])
         .first_air_date_year(2024)
         .vote_average_gte(8.0)
         .vote_count_gte(500.0)
@@ -57,6 +57,31 @@ fn discover_tv_builder_chains() {
         .with_runtime_gte(20)
         .with_runtime_lte(60)
         .page(1);
+}
+
+#[test]
+fn discover_builders_accept_typed_params() {
+    use cameo::providers::tmdb::builders::{
+        MonetizationType, MovieReleaseType, TvShowType, TvStatus,
+    };
+    let client = make_client();
+    // Movie: ID slices, typed release type + monetization, page clamp.
+    let _m = client
+        .discover_movies()
+        .with_genres(&[28, 12])
+        .with_cast(&[287])
+        .with_people(&[1, 2, 3])
+        .with_release_type(MovieReleaseType::Theatrical)
+        .with_watch_monetization_types(&[MonetizationType::Flatrate, MonetizationType::Rent])
+        .with_runtime_gte(90)
+        .page(9999);
+    // TV: typed status + type + network.
+    let _t = client
+        .discover_tv()
+        .with_status(TvStatus::ReturningSeries)
+        .with_type(TvShowType::Scripted)
+        .with_networks(213)
+        .with_watch_monetization_types(&[MonetizationType::Free]);
 }
 
 #[test]

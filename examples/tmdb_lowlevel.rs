@@ -86,7 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let discover_resp = client
         .discover_movies()
         .sort_by(MovieSortBy::VoteAverageDesc)
-        .with_genres("18") // Drama
+        .with_genres(&[18]) // Drama
         .vote_count_gte(1000.0)
         .vote_average_gte(8.0)
         .with_original_language("en")
