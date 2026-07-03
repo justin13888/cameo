@@ -1,6 +1,6 @@
 //! TMDB person and multi-search type → unified model conversions.
 
-use super::{resolve_backdrop, resolve_poster, resolve_profile};
+use super::{resolve_backdrop, resolve_date, resolve_poster, resolve_profile};
 use crate::{
     generated::tmdb::types,
     unified::{media_id::MediaId, models::*},
@@ -33,8 +33,12 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
                 adult: p.adult,
             },
             biography: p.biography,
-            birthday: p.birthday,
-            deathday: p.deathday.and_then(|v| v.as_str().map(String::from)),
+            birthday: resolve_date(&p.birthday),
+            deathday: resolve_date(
+                &p.deathday
+                    .as_ref()
+                    .and_then(|v| v.as_str().map(String::from)),
+            ),
             place_of_birth: p.place_of_birth,
             imdb_id: p.imdb_id,
             homepage: p.homepage.and_then(|v| v.as_str().map(String::from)),
@@ -51,7 +55,7 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                 title: item.title.or(item.name).unwrap_or_default(),
                 original_title: item.original_title,
                 overview: item.overview,
-                release_date: item.release_date,
+                release_date: resolve_date(&item.release_date),
                 poster_url: resolve_poster(&item.poster_path),
                 backdrop_url: resolve_backdrop(&item.backdrop_path),
                 genres: item
@@ -70,7 +74,8 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                 name: item.name.or(item.title).unwrap_or_default(),
                 original_name: item.original_name,
                 overview: item.overview,
-                first_air_date: item.release_date, // multi-search uses release_date for both
+                // TMDB multi-search reports a single `release_date` for both movies and shows.
+                first_air_date: resolve_date(&item.release_date),
                 poster_url: resolve_poster(&item.poster_path),
                 backdrop_url: resolve_backdrop(&item.backdrop_path),
                 genres: item

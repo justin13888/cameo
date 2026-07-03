@@ -272,7 +272,12 @@ async fn live_search_smoke() {
     let movies = c.search_movies("Your Name", None).await.unwrap();
     assert!(movies.total_results > 0);
     assert!(!movies.results[0].title.is_empty());
-    assert!(movies.results[0].provider_id.starts_with("anilist:"));
+    assert!(
+        movies.results[0]
+            .provider_id
+            .to_string()
+            .starts_with("anilist:")
+    );
 
     tokio::time::sleep(delay).await;
 
@@ -286,7 +291,12 @@ async fn live_search_smoke() {
     // search_people
     let people = c.search_people("Yuki Kaji", None).await.unwrap();
     assert!(people.total_results > 0);
-    assert!(people.results[0].provider_id.starts_with("anilist:staff:"));
+    assert!(
+        people.results[0]
+            .provider_id
+            .to_string()
+            .starts_with("anilist:staff:")
+    );
 
     tokio::time::sleep(delay).await;
 

@@ -1,5 +1,6 @@
 //! AniList media → unified model conversions.
 
+use super::resolve_date;
 use crate::{
     providers::anilist::response::{AniListMedia, AniListMediaDetail},
     unified::{
@@ -84,7 +85,7 @@ pub fn anilist_media_to_movie(m: AniListMedia) -> UnifiedMovie {
         title: resolve_title(&m),
         original_title: m.title.as_ref().and_then(|t| t.native.clone()),
         overview: m.description.clone(),
-        release_date: m.start_date.as_ref().and_then(|d| d.to_date_string()),
+        release_date: m.start_date.as_ref().and_then(resolve_date),
         poster_url: resolve_cover(&m),
         backdrop_url: m.banner_image.clone(),
         genres: map_genres(&m.genres),
@@ -112,7 +113,7 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
         name: resolve_title(&m),
         original_name: m.title.as_ref().and_then(|t| t.native.clone()),
         overview: m.description.clone(),
-        first_air_date: m.start_date.as_ref().and_then(|d| d.to_date_string()),
+        first_air_date: m.start_date.as_ref().and_then(resolve_date),
         poster_url: resolve_cover(&m),
         backdrop_url: m.banner_image.clone(),
         genres: map_genres(&m.genres),
@@ -167,7 +168,7 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
             title: resolve_detail_title(&m),
             original_title: m.title.as_ref().and_then(|t| t.native.clone()),
             overview: m.description.clone(),
-            release_date: m.start_date.as_ref().and_then(|d| d.to_date_string()),
+            release_date: m.start_date.as_ref().and_then(resolve_date),
             poster_url: resolve_cover_detail(&m),
             backdrop_url: m.banner_image.clone(),
             genres,
@@ -232,7 +233,7 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
             name: resolve_detail_title(&m),
             original_name: m.title.as_ref().and_then(|t| t.native.clone()),
             overview: m.description.clone(),
-            first_air_date: m.start_date.as_ref().and_then(|d| d.to_date_string()),
+            first_air_date: m.start_date.as_ref().and_then(resolve_date),
             poster_url: resolve_cover_detail(&m),
             backdrop_url: m.banner_image.clone(),
             genres,
@@ -252,7 +253,7 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         homepage: None,
         networks: Vec::new(),
         production_companies,
-        last_air_date: m.end_date.as_ref().and_then(|d| d.to_date_string()),
+        last_air_date: m.end_date.as_ref().and_then(resolve_date),
         type_: m.format,
         created_by: Vec::new(),
         episode_run_time,

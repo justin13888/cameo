@@ -1,6 +1,6 @@
 //! TMDB TV type → unified model conversions.
 
-use super::{resolve_backdrop, resolve_poster};
+use super::{resolve_backdrop, resolve_date, resolve_poster};
 use crate::{
     generated::tmdb::types,
     providers::tmdb::image_url::{ImageUrl, StillSize},
@@ -16,7 +16,7 @@ macro_rules! impl_tv_from {
                     name: t.name.unwrap_or_default(),
                     original_name: t.original_name,
                     overview: t.overview,
-                    first_air_date: t.first_air_date,
+                    first_air_date: resolve_date(&t.first_air_date),
                     poster_url: resolve_poster(&t.poster_path),
                     backdrop_url: resolve_backdrop(&t.backdrop_path),
                     genres: t
@@ -48,7 +48,7 @@ impl From<types::DiscoverTvResponseResultsItem> for UnifiedTvShow {
             name: t.name.unwrap_or_default(),
             original_name: t.original_name,
             overview: t.overview,
-            first_air_date: t.first_air_date,
+            first_air_date: resolve_date(&t.first_air_date),
             poster_url: resolve_poster(&t.poster_path),
             backdrop_url: resolve_backdrop(&t.backdrop_path),
             genres: t
@@ -74,7 +74,7 @@ impl From<types::TvSeriesPopularListResponseResultsItem> for UnifiedTvShow {
             name: t.name.unwrap_or_default(),
             original_name: t.original_name,
             overview: t.overview,
-            first_air_date: t.first_air_date,
+            first_air_date: resolve_date(&t.first_air_date),
             poster_url: resolve_poster(&t.poster_path),
             backdrop_url: resolve_backdrop(&t.backdrop_path),
             genres: t
@@ -100,7 +100,7 @@ impl From<types::TvSeriesTopRatedListResponseResultsItem> for UnifiedTvShow {
             name: t.name.unwrap_or_default(),
             original_name: t.original_name,
             overview: t.overview,
-            first_air_date: t.first_air_date,
+            first_air_date: resolve_date(&t.first_air_date),
             poster_url: resolve_poster(&t.poster_path),
             backdrop_url: resolve_backdrop(&t.backdrop_path),
             genres: t
@@ -125,7 +125,7 @@ impl From<types::TvSeriesSimilarResponseResultsItem> for UnifiedTvShow {
             name: t.name.unwrap_or_default(),
             original_name: t.original_name,
             overview: t.overview,
-            first_air_date: t.first_air_date,
+            first_air_date: resolve_date(&t.first_air_date),
             poster_url: resolve_poster(&t.poster_path),
             backdrop_url: resolve_backdrop(&t.backdrop_path),
             genres: t
@@ -150,7 +150,7 @@ impl From<types::TvSeasonDetailsResponse> for UnifiedSeasonDetails {
             season_number: t.season_number.max(0) as u32,
             name: t.name,
             overview: t.overview,
-            air_date: t.air_date,
+            air_date: resolve_date(&t.air_date),
             poster_url: resolve_poster(&t.poster_path),
             episodes: t.episodes.into_iter().map(Into::into).collect(),
         }
@@ -163,7 +163,7 @@ impl From<types::TvSeasonDetailsResponseEpisodesItem> for UnifiedEpisode {
             episode_number: e.episode_number.max(0) as u32,
             name: e.name,
             overview: e.overview,
-            air_date: e.air_date,
+            air_date: resolve_date(&e.air_date),
             runtime: if e.runtime > 0 {
                 Some(e.runtime.max(0) as u32)
             } else {
@@ -184,7 +184,7 @@ impl From<types::TvEpisodeDetailsResponse> for UnifiedEpisode {
             episode_number: e.episode_number.max(0) as u32,
             name: e.name,
             overview: e.overview,
-            air_date: e.air_date,
+            air_date: resolve_date(&e.air_date),
             runtime: if e.runtime > 0 {
                 Some(e.runtime.max(0) as u32)
             } else {
@@ -207,7 +207,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 name: t.name.unwrap_or_default(),
                 original_name: t.original_name,
                 overview: t.overview,
-                first_air_date: t.first_air_date.clone(),
+                first_air_date: resolve_date(&t.first_air_date),
                 poster_url: resolve_poster(&t.poster_path),
                 backdrop_url: resolve_backdrop(&t.backdrop_path),
                 genres: t
@@ -235,7 +235,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 .iter()
                 .filter_map(|c| c.name.clone())
                 .collect(),
-            last_air_date: t.last_air_date,
+            last_air_date: resolve_date(&t.last_air_date),
             type_: t.type_,
             created_by: t.created_by.iter().filter_map(|c| c.name.clone()).collect(),
             episode_run_time: t

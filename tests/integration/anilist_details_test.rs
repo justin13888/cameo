@@ -49,7 +49,10 @@ async fn movie_details_returns_correct_fields() {
             .contains("strangers")
     );
     // Release date
-    assert_eq!(result.movie.release_date.as_deref(), Some("2016-08-26"));
+    assert_eq!(
+        result.movie.release_date.map(|d| d.to_string()).as_deref(),
+        Some("2016-08-26")
+    );
     // Poster URL from coverImage.extraLarge
     assert!(result.movie.poster_url.is_some());
     // vote_average (86 / 10)
@@ -173,7 +176,10 @@ async fn person_details_returns_correct_fields() {
 
     assert_eq!(result.person.provider_id, "anilist:staff:95061");
     assert_eq!(result.person.name, "Yuki Kaji");
-    assert_eq!(result.birthday.as_deref(), Some("1986-09-03"));
+    assert_eq!(
+        result.birthday.map(|d| d.to_string()).as_deref(),
+        Some("1986-09-03")
+    );
 }
 
 #[tokio::test]

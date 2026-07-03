@@ -30,7 +30,10 @@ fn search_movie_to_unified() {
     assert_eq!(unified.provider_id, "tmdb:550");
     assert_eq!(unified.title, "Fight Club");
     assert_eq!(unified.original_title.as_deref(), Some("Fight Club"));
-    assert_eq!(unified.release_date.as_deref(), Some("1999-10-15"));
+    assert_eq!(
+        unified.release_date.map(|d| d.to_string()).as_deref(),
+        Some("1999-10-15")
+    );
     assert_eq!(unified.vote_count, 26280);
     assert!((unified.vote_average.unwrap() - 8.4).abs() < 0.01);
     assert_eq!(unified.original_language.as_deref(), Some("en"));
@@ -107,7 +110,10 @@ fn search_tv_to_unified() {
 
     assert_eq!(unified.provider_id, "tmdb:1396");
     assert_eq!(unified.name, "Breaking Bad");
-    assert_eq!(unified.first_air_date.as_deref(), Some("2008-01-20"));
+    assert_eq!(
+        unified.first_air_date.map(|d| d.to_string()).as_deref(),
+        Some("2008-01-20")
+    );
     assert_eq!(unified.origin_country, vec!["US"]);
     assert_eq!(unified.vote_count, 14000);
     assert!(unified.poster_url.is_some());

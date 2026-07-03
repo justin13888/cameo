@@ -76,7 +76,10 @@ async fn person_details_deserializes_response() {
     assert_eq!(body.id, 287);
     assert_eq!(body.name.as_deref(), Some("Brad Pitt"));
     assert_eq!(body.biography.as_deref().map(|b| !b.is_empty()), Some(true));
-    assert_eq!(body.birthday.as_deref(), Some("1963-12-18"));
+    assert_eq!(
+        body.birthday.map(|d| d.to_string()).as_deref(),
+        Some("1963-12-18")
+    );
     assert_eq!(body.imdb_id.as_deref(), Some("nm0000093"));
 }
 

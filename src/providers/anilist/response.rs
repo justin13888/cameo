@@ -59,18 +59,6 @@ pub struct AniListDate {
     pub day: Option<i32>,
 }
 
-impl AniListDate {
-    /// Format as `YYYY-MM-DD`, `YYYY-MM`, or `YYYY` depending on available fields.
-    pub fn to_date_string(&self) -> Option<String> {
-        match (self.year, self.month, self.day) {
-            (Some(y), Some(m), Some(d)) => Some(format!("{y:04}-{m:02}-{d:02}")),
-            (Some(y), Some(m), None) => Some(format!("{y:04}-{m:02}")),
-            (Some(y), None, _) => Some(format!("{y:04}")),
-            _ => None,
-        }
-    }
-}
-
 /// Cover image URLs for a media entry.
 #[derive(Debug, Deserialize)]
 pub struct AniListCoverImage {

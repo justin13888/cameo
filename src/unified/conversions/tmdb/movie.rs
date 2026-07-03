@@ -1,6 +1,6 @@
 //! TMDB movie type → unified model conversions.
 
-use super::{resolve_backdrop, resolve_poster};
+use super::{resolve_backdrop, resolve_date, resolve_poster};
 use crate::{
     generated::tmdb::types,
     unified::{genre::Genre, media_id::MediaId, models::*},
@@ -15,7 +15,7 @@ macro_rules! impl_movie_from {
                     title: m.title.unwrap_or_default(),
                     original_title: m.original_title,
                     overview: m.overview,
-                    release_date: m.release_date,
+                    release_date: resolve_date(&m.release_date),
                     poster_url: resolve_poster(&m.poster_path),
                     backdrop_url: resolve_backdrop(&m.backdrop_path),
                     genres: m
@@ -56,7 +56,7 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
                 title: m.title.unwrap_or_default(),
                 original_title: m.original_title,
                 overview: m.overview,
-                release_date: m.release_date,
+                release_date: resolve_date(&m.release_date),
                 poster_url: resolve_poster(&m.poster_path),
                 backdrop_url: resolve_backdrop(&m.backdrop_path),
                 genres: m

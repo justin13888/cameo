@@ -88,9 +88,9 @@ pub use providers::retry::RetryPolicy;
 pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
 pub use unified::{
     CameoClient, CameoClientBuilder, CameoClientError, Capability, DetailProvider,
-    DiscoveryProvider, Genre, MediaId, MediaProvider, NativeId, Provider, RecommendationProvider,
-    SearchProvider, SeasonProvider, UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails,
-    UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeasonDetails,
-    UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails, UnifiedWatchProviderEntry,
-    UnifiedWatchProviders, UnknownGenre, WatchAvailabilityProvider,
+    DiscoveryProvider, Genre, MediaId, MediaProvider, NativeId, ParseDateError, PartialDate,
+    Provider, RecommendationProvider, SearchProvider, SeasonProvider, UnifiedEpisode, UnifiedMovie,
+    UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult,
+    UnifiedSeasonDetails, UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails,
+    UnifiedWatchProviderEntry, UnifiedWatchProviders, UnknownGenre, WatchAvailabilityProvider,
 };

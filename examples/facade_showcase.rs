@@ -33,9 +33,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     for m in movies.results.iter().take(3) {
         let year = m
             .release_date
-            .as_deref()
-            .and_then(|d| d.get(..4))
-            .unwrap_or("????");
+            .map(|d| d.year().to_string())
+            .unwrap_or_else(|| "????".to_string());
         println!("  [{year}] {}  ({})", m.title, m.provider_id);
     }
 

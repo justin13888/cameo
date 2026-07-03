@@ -192,7 +192,10 @@ async fn test_person_details_returns_staff_details() {
     let result = client.person_details(95061).await.unwrap();
     assert_eq!(result.person.name, "Yuki Kaji");
     assert_eq!(result.person.provider_id, "anilist:staff:95061");
-    assert_eq!(result.birthday.as_deref(), Some("1986-09-03"));
+    assert_eq!(
+        result.birthday.map(|d| d.to_string()).as_deref(),
+        Some("1986-09-03")
+    );
 }
 
 #[tokio::test]

@@ -728,7 +728,10 @@ fn parse_movie_recs_from_map(
             let title = v["title"].as_str().unwrap_or_default().to_string();
             let original_title = v["original_title"].as_str().map(String::from);
             let overview = v["overview"].as_str().map(String::from);
-            let release_date = v["release_date"].as_str().map(String::from);
+            let release_date = v["release_date"]
+                .as_str()
+                .filter(|s| !s.is_empty())
+                .and_then(|s| s.parse().ok());
             let poster_url = v["poster_path"]
                 .as_str()
                 .map(|p| ImageUrl::poster(p, PosterSize::W500));

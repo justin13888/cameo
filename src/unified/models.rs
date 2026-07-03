@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{genre::Genre, media_id::MediaId};
+use super::{date::PartialDate, genre::Genre, media_id::MediaId};
 
 /// A movie in the unified model.
 #[non_exhaustive]
@@ -14,8 +14,8 @@ pub struct UnifiedMovie {
     pub original_title: Option<String>,
     /// Plot overview / synopsis.
     pub overview: Option<String>,
-    /// Release date as a string (YYYY-MM-DD).
-    pub release_date: Option<String>,
+    /// Release date (may be partial, e.g. year-only from some providers).
+    pub release_date: Option<PartialDate>,
     /// Full poster image URL (resolved from provider).
     pub poster_url: Option<String>,
     /// Full backdrop image URL (resolved from provider).
@@ -78,8 +78,8 @@ pub struct UnifiedTvShow {
     pub original_name: Option<String>,
     /// Plot overview / synopsis.
     pub overview: Option<String>,
-    /// First air date as a string (YYYY-MM-DD).
-    pub first_air_date: Option<String>,
+    /// First air date (may be partial, e.g. year-only from some providers).
+    pub first_air_date: Option<PartialDate>,
     /// Full poster image URL.
     pub poster_url: Option<String>,
     /// Full backdrop image URL.
@@ -122,8 +122,8 @@ pub struct UnifiedTvShowDetails {
     pub networks: Vec<String>,
     /// Production companies.
     pub production_companies: Vec<String>,
-    /// Last air date as a string (YYYY-MM-DD).
-    pub last_air_date: Option<String>,
+    /// Last air date (may be partial, e.g. year-only from some providers).
+    pub last_air_date: Option<PartialDate>,
     /// Type of show (e.g. "Scripted", "Reality").
     pub type_: Option<String>,
     /// Creators of the show.
@@ -164,10 +164,10 @@ pub struct UnifiedPersonDetails {
     pub person: UnifiedPerson,
     /// Biography.
     pub biography: Option<String>,
-    /// Birthday (YYYY-MM-DD).
-    pub birthday: Option<String>,
-    /// Death day (YYYY-MM-DD), if applicable.
-    pub deathday: Option<String>,
+    /// Birthday (may be partial, e.g. year-only from some providers).
+    pub birthday: Option<PartialDate>,
+    /// Death day (may be partial), if applicable.
+    pub deathday: Option<PartialDate>,
     /// Place of birth.
     pub place_of_birth: Option<String>,
     /// IMDB ID.
@@ -202,8 +202,8 @@ pub struct UnifiedSeasonDetails {
     pub name: Option<String>,
     /// Overview / synopsis.
     pub overview: Option<String>,
-    /// Air date as a string (YYYY-MM-DD).
-    pub air_date: Option<String>,
+    /// Air date (may be partial, e.g. year-only from some providers).
+    pub air_date: Option<PartialDate>,
     /// Full poster image URL.
     pub poster_url: Option<String>,
     /// Episodes in this season.
@@ -220,8 +220,8 @@ pub struct UnifiedEpisode {
     pub name: Option<String>,
     /// Episode overview.
     pub overview: Option<String>,
-    /// Air date as a string (YYYY-MM-DD).
-    pub air_date: Option<String>,
+    /// Air date (may be partial, e.g. year-only from some providers).
+    pub air_date: Option<PartialDate>,
     /// Runtime in minutes.
     pub runtime: Option<u32>,
     /// Full still image URL.

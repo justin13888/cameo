@@ -42,9 +42,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     for m in movies.results.iter().take(5) {
         let year = m
             .release_date
-            .as_deref()
-            .and_then(|d| d.get(..4))
-            .unwrap_or("????");
+            .map(|d| d.year().to_string())
+            .unwrap_or_else(|| "????".to_string());
         let score = m
             .vote_average
             .map(|s| format!("{s:.1}"))
@@ -68,9 +67,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     for t in series.results.iter().take(5) {
         let year = t
             .first_air_date
-            .as_deref()
-            .and_then(|d| d.get(..4))
-            .unwrap_or("????");
+            .map(|d| d.year().to_string())
+            .unwrap_or_else(|| "????".to_string());
         let score = t
             .vote_average
             .map(|s| format!("{s:.1}"))

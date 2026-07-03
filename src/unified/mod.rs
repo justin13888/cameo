@@ -1,5 +1,7 @@
 /// Conversion implementations from provider types to unified types.
 pub(crate) mod conversions;
+/// Partial calendar dates for release/air dates.
+pub mod date;
 /// Multi-provider facade client.
 pub mod facade;
 /// Genre enum covering all known media genres.
@@ -11,6 +13,7 @@ pub mod models;
 /// Provider traits.
 pub mod traits;
 
+pub use date::{ParseDateError, PartialDate};
 pub use facade::{CameoClient, CameoClientBuilder, CameoClientError};
 pub use genre::{Genre, UnknownGenre};
 pub use media_id::{MediaId, MediaIdParseError, NativeId};
