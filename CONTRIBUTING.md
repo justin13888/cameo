@@ -16,6 +16,15 @@ formatting, clippy, and the tests across the feature-flag combinations; install
 it with `lefthook install`. Use [conventional commits](https://www.conventionalcommits.org/)
 (`type: description`).
 
+## Toolchain and MSRV
+
+The crate's **support target is stable Rust `1.88`** (the MSRV — see
+`Cargo.toml` `rust-version` and [docs/STABILITY.md](docs/STABILITY.md)); the
+`msrv` CI job builds and tests on it. `rust-toolchain.toml` pins a specific
+**nightly only** because `rustfmt.toml` uses nightly-only formatting options
+(import grouping) — that pinned nightly makes `cargo fmt` reproducible. Nothing
+else requires nightly; don't introduce nightly language features.
+
 ## Regenerating the TMDB client
 
 The TMDB low-level client under `src/generated/` is **vendored** — generated

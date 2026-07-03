@@ -1,3 +1,8 @@
+# A specific nightly is pinned only because rustfmt.toml uses nightly-only
+# formatting options (import grouping); clippy is bundled for convenience. This
+# is NOT the support target: the crate builds and is tested against the stable
+# MSRV (1.88, see Cargo.toml `rust-version` and the `msrv` CI job). Pinning a
+# fixed date keeps `cargo fmt` reproducible across contributors and CI.
 [toolchain]
 channel = "nightly-2026-02-26"
 components = [ "rustfmt", "clippy" ]

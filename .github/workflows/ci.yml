@@ -15,7 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
+      # Pinned to match rust-toolchain.toml so formatting is reproducible:
+      # rustfmt.toml uses nightly-only options (see its header).
+      - uses: dtolnay/rust-toolchain@nightly-2026-02-26
         with:
           components: rustfmt
       - name: Format check
