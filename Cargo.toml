@@ -73,7 +73,7 @@ dotenvy = "0.15"
 
 [[example]]
 name = "facade_showcase"
-required-features = ["tmdb"]
+required-features = ["tmdb", "anilist"]
 
 [[example]]
 name = "tmdb_lowlevel"

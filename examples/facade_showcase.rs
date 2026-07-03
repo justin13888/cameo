@@ -8,21 +8,28 @@
 //!   (reads TMDB_API_TOKEN from .env or the environment)
 
 use cameo::{
-    CameoClient, MediaId, core::config::TimeWindow, providers::tmdb::TmdbConfig,
-    unified::models::UnifiedSearchResult,
+    CameoClient, MediaId,
+    core::config::TimeWindow,
+    providers::{anilist::AniListConfig, tmdb::TmdbConfig},
+    unified::{CameoClientError, models::UnifiedSearchResult},
 };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = dotenvy::dotenv();
-    let token =
-        std::env::var("TMDB_API_TOKEN").expect("TMDB_API_TOKEN environment variable must be set");
+    let Ok(token) = std::env::var("TMDB_API_TOKEN") else {
+        eprintln!("Set TMDB_API_TOKEN (or add it to a local .env) to run this example.");
+        return Ok(());
+    };
 
     let args: Vec<String> = std::env::args().collect();
     let query = args.get(1).map(String::as_str).unwrap_or("Dune");
 
+    // TMDB is the default provider; AniList (no auth) is also registered so we
+    // can demonstrate per-call provider selection below.
     let client = CameoClient::builder()
         .with_tmdb(TmdbConfig::new(token).with_language("en-US"))
+        .with_anilist(AniListConfig::new())
         .build()?;
 
     // ── Search ────────────────────────────────────────────────────────────────
@@ -156,6 +163,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     } else {
         println!("  No US providers.");
+    }
+
+    // ── Per-call selection & capability handling ────────────────────────────────
+
+    // Route a call to a specific provider by id, overriding the default order.
+    println!("\n=== search_tv_shows_with(\"anilist\"): \"{query}\" ===");
+    match client.search_tv_shows_with("anilist", query, None).await {
+        Ok(page) => {
+            for t in page.results.iter().take(3) {
+                println!("  {} ({})", t.name, t.provider_id);
+            }
+        }
+        Err(e) => println!("  anilist unavailable: {e}"),
+    }
+
+    // Capability miss: the facade routes watch-availability by the id's origin,
+    // and AniList doesn't offer it — so this reports Unsupported rather than
+    // guessing or panicking.
+    println!("\n=== capability miss: watch providers for an AniList id ===");
+    match client.movie_watch_providers(&MediaId::anilist(1)).await {
+        Ok(_) => println!("  (unexpected: got providers)"),
+        Err(CameoClientError::Unsupported) => {
+            println!("  Unsupported — no provider offers watch availability for this id.")
+        }
+        Err(e) => println!("  error: {e}"),
     }
 
     Ok(())

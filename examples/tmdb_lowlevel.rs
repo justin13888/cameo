@@ -13,8 +13,10 @@ use cameo::providers::tmdb::{TmdbClient, TmdbConfig, builders::MovieSortBy};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = dotenvy::dotenv();
-    let token =
-        std::env::var("TMDB_API_TOKEN").expect("TMDB_API_TOKEN environment variable must be set");
+    let Ok(token) = std::env::var("TMDB_API_TOKEN") else {
+        eprintln!("Set TMDB_API_TOKEN (or add it to a local .env) to run this example.");
+        return Ok(());
+    };
 
     let args: Vec<String> = std::env::args().collect();
     let query = args.get(1).map(String::as_str).unwrap_or("Inception");
