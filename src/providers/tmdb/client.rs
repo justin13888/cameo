@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use super::{
-    config::TmdbConfig,
+    config::{TmdbAuth, TmdbConfig},
     error::TmdbError,
     models::{TmdbCredits, TmdbImages},
 };
@@ -41,23 +41,19 @@ pub struct TmdbClient {
 impl TmdbClient {
     /// Create a new TMDB client from the given configuration.
     pub fn new(config: TmdbConfig) -> Result<Self, TmdbError> {
-        if config.api_token.is_empty() {
-            return Err(TmdbError::InvalidConfig(
-                "API token must not be empty".into(),
-            ));
-        }
-        config
-            .rate_limit
-            .validate()
-            .map_err(TmdbError::InvalidConfig)?;
+        config.validate().map_err(TmdbError::InvalidConfig)?;
 
         let mut headers = reqwest::header::HeaderMap::new();
-        let auth_value = format!("Bearer {}", config.api_token);
-        headers.insert(
-            reqwest::header::AUTHORIZATION,
-            reqwest::header::HeaderValue::from_str(&auth_value)
-                .map_err(|e| TmdbError::InvalidConfig(format!("invalid API token: {e}")))?,
-        );
+        // v4 bearer tokens travel in the Authorization header; v3 API keys
+        // travel as a query parameter (wired below via the generated client).
+        if let TmdbAuth::V4Bearer(token) = &config.auth {
+            let auth_value = format!("Bearer {token}");
+            headers.insert(
+                reqwest::header::AUTHORIZATION,
+                reqwest::header::HeaderValue::from_str(&auth_value)
+                    .map_err(|e| TmdbError::InvalidConfig(format!("invalid API token: {e}")))?,
+            );
+        }
 
         let http_client = crate::providers::http::build_client(
             config.connect_timeout,
@@ -67,7 +63,10 @@ impl TmdbClient {
         .map_err(TmdbError::Http)?;
 
         let base_url = config.base_url.as_deref().unwrap_or(TMDB_BASE_URL);
-        let inner = tmdb::Client::new_with_client(base_url, http_client);
+        let mut inner = tmdb::Client::new_with_client(base_url, http_client);
+        if let TmdbAuth::V3ApiKey(key) = &config.auth {
+            inner.auth_query = Some(("api_key".to_string(), key.clone()));
+        }
         let rate_limiter = RateLimiter::new(config.rate_limit);
 
         Ok(Self {

@@ -106,7 +106,7 @@ fn tmdb_config_builder() {
         .with_include_adult(false)
         .with_rate_limit(rate);
 
-    assert_eq!(config.api_token, "my-token");
+    assert_eq!(config.auth.credential(), "my-token");
     assert_eq!(config.language.as_deref(), Some("en-US"));
     assert_eq!(config.region.as_deref(), Some("US"));
     assert_eq!(config.include_adult, Some(false));

@@ -90,7 +90,7 @@ pub use providers::rate_limit::RateLimit;
 #[cfg(any(feature = "tmdb", feature = "anilist"))]
 pub use providers::retry::RetryPolicy;
 #[cfg(feature = "tmdb")]
-pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
+pub use providers::tmdb::{TmdbAuth, TmdbClient, TmdbConfig, TmdbError};
 pub use unified::{
     CameoClient, CameoClientBuilder, CameoClientError, Capability, Collection, Company, Creator,
     DetailProvider, DiscoveryProvider, Gender, Genre, MediaId, MediaProvider, NativeId, Network,

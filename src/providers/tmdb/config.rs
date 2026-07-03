@@ -8,17 +8,45 @@ const DEFAULT_RATE_LIMIT: RateLimit = RateLimit::Limited {
     per: Duration::from_secs(10),
 };
 
+/// How the TMDB client authenticates.
+///
+/// TMDB has two credential systems. The v4 "API Read Access Token" (a bearer
+/// JWT) is the modern default; the v3 "API Key" is an older credential many
+/// existing accounts still have, sent as an `api_key` query parameter.
+#[non_exhaustive]
+#[derive(Debug, Clone)]
+pub enum TmdbAuth {
+    /// TMDB v4 API Read Access Token, sent as `Authorization: Bearer <token>`.
+    V4Bearer(String),
+    /// TMDB v3 API Key, sent as an `?api_key=<key>` query parameter.
+    V3ApiKey(String),
+}
+
+impl TmdbAuth {
+    /// The credential string, regardless of scheme.
+    pub fn credential(&self) -> &str {
+        match self {
+            TmdbAuth::V4Bearer(t) | TmdbAuth::V3ApiKey(t) => t,
+        }
+    }
+}
+
 /// Configuration for the TMDB client.
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct TmdbConfig {
-    /// TMDB API read access token (v4 auth / bearer token).
-    pub api_token: String,
+    /// Authentication credential (v4 bearer token or v3 API key).
+    pub auth: TmdbAuth,
     /// Base URL override (defaults to `https://api.themoviedb.org`).
     pub base_url: Option<String>,
-    /// Default language for requests (e.g. `"en-US"`).
+    /// Image CDN base URL override (defaults to `https://image.tmdb.org/t/p/`).
+    /// Useful for pointing image URLs at a mock or proxy.
+    pub image_base_url: Option<String>,
+    /// Default language for requests (e.g. `"en-US"`). Validated as a BCP-47
+    /// language tag at client construction.
     pub language: Option<String>,
-    /// Default region for requests (e.g. `"US"`).
+    /// Default region for requests (e.g. `"US"`). Validated as an ISO 3166-1
+    /// alpha-2 code at client construction.
     pub region: Option<String>,
     /// Whether to include adult content in results.
     pub include_adult: Option<bool>,
@@ -42,11 +70,22 @@ pub struct TmdbConfig {
 }
 
 impl TmdbConfig {
-    /// Create a new config with the given API token.
+    /// Create a new config authenticating with a TMDB v4 bearer token.
     pub fn new(api_token: impl Into<String>) -> Self {
+        Self::with_auth(TmdbAuth::V4Bearer(api_token.into()))
+    }
+
+    /// Create a new config authenticating with a TMDB v3 API key.
+    pub fn new_v3(api_key: impl Into<String>) -> Self {
+        Self::with_auth(TmdbAuth::V3ApiKey(api_key.into()))
+    }
+
+    /// Create a new config with an explicit [`TmdbAuth`].
+    pub fn with_auth(auth: TmdbAuth) -> Self {
         Self {
-            api_token: api_token.into(),
+            auth,
             base_url: None,
+            image_base_url: None,
             language: None,
             region: None,
             include_adult: None,
@@ -57,12 +96,24 @@ impl TmdbConfig {
         }
     }
 
-    /// Create a new config with a custom base URL (useful for testing).
+    /// Create a new config (v4 bearer) with a custom base URL (useful for testing).
     pub fn new_with_base_url(api_token: impl Into<String>, base_url: impl Into<String>) -> Self {
         Self {
             base_url: Some(base_url.into()),
             ..Self::new(api_token)
         }
+    }
+
+    /// Override the API base URL (useful for testing against a mock server).
+    pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.base_url = Some(base_url.into());
+        self
+    }
+
+    /// Override the image CDN base URL (e.g. to point at a mock or proxy).
+    pub fn with_image_base_url(mut self, url: impl Into<String>) -> Self {
+        self.image_base_url = Some(url.into());
+        self
     }
 
     /// Set the default language.
@@ -111,5 +162,101 @@ impl TmdbConfig {
     pub fn with_request_timeout(mut self, timeout: Duration) -> Self {
         self.request_timeout = Some(timeout);
         self
+    }
+
+    /// Validate the configuration, returning a clear message on the first
+    /// problem found. Called by [`TmdbClient::new`](super::TmdbClient::new).
+    pub(crate) fn validate(&self) -> Result<(), String> {
+        if self.auth.credential().is_empty() {
+            return Err("API credential must not be empty".to_string());
+        }
+        self.rate_limit.validate()?;
+        if let Some(lang) = &self.language {
+            validate_language(lang)?;
+        }
+        if let Some(region) = &self.region {
+            validate_region(region)?;
+        }
+        if let Some(base) = &self.image_base_url
+            && !(base.starts_with("http://") || base.starts_with("https://"))
+        {
+            return Err(format!(
+                "image_base_url must be an http(s) URL, got {base:?}"
+            ));
+        }
+        Ok(())
+    }
+}
+
+/// Validate a BCP-47 language tag such as `"en"` or `"en-US"` (the common
+/// `language` or `language-REGION` shapes TMDB accepts).
+fn validate_language(lang: &str) -> Result<(), String> {
+    let err = || format!("invalid language tag {lang:?} (expected e.g. \"en\" or \"en-US\")");
+    let (primary, region) = match lang.split_once('-') {
+        Some((p, r)) => (p, Some(r)),
+        None => (lang, None),
+    };
+    if !(2..=3).contains(&primary.len()) || !primary.chars().all(|c| c.is_ascii_lowercase()) {
+        return Err(err());
+    }
+    if let Some(region) = region
+        && (region.len() != 2 || !region.chars().all(|c| c.is_ascii_uppercase()))
+    {
+        return Err(err());
+    }
+    Ok(())
+}
+
+/// Validate an ISO 3166-1 alpha-2 region code such as `"US"`.
+fn validate_region(region: &str) -> Result<(), String> {
+    if region.len() == 2 && region.chars().all(|c| c.is_ascii_uppercase()) {
+        Ok(())
+    } else {
+        Err(format!(
+            "invalid region {region:?} (expected an ISO 3166-1 alpha-2 code like \"US\")"
+        ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn language_validation() {
+        assert!(validate_language("en").is_ok());
+        assert!(validate_language("en-US").is_ok());
+        assert!(validate_language("ja").is_ok());
+        assert!(validate_language("EN").is_err());
+        assert!(validate_language("english").is_err());
+        assert!(validate_language("en-us").is_err());
+        assert!(validate_language("en-USA").is_err());
+    }
+
+    #[test]
+    fn region_validation() {
+        assert!(validate_region("US").is_ok());
+        assert!(validate_region("JP").is_ok());
+        assert!(validate_region("us").is_err());
+        assert!(validate_region("USA").is_err());
+    }
+
+    #[test]
+    fn validate_rejects_bad_config() {
+        assert!(TmdbConfig::new("").validate().is_err());
+        assert!(
+            TmdbConfig::new("t")
+                .with_language("bogus")
+                .validate()
+                .is_err()
+        );
+        assert!(TmdbConfig::new("t").with_region("usa").validate().is_err());
+        assert!(
+            TmdbConfig::new("t")
+                .with_language("en-US")
+                .with_region("US")
+                .validate()
+                .is_ok()
+        );
     }
 }

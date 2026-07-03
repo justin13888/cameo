@@ -102012,6 +102012,7 @@ Version: 3*/
 pub struct Client {
     pub(crate) baseurl: String,
     pub(crate) client: reqwest::Client,
+    pub(crate) auth_query: ::std::option::Option<(String, String)>,
 }
 impl Client {
     /// Create a new client.
@@ -102039,6 +102040,7 @@ impl Client {
         Self {
             baseurl: baseurl.to_string(),
             client,
+            auth_query: None,
         }
     }
 }
@@ -102056,7 +102058,18 @@ impl ClientInfo<()> for Client {
         &()
     }
 }
-impl ClientHooks<()> for &Client {}
+impl ClientHooks<()> for &Client {
+    async fn pre<E>(
+        &self,
+        request: &mut reqwest::Request,
+        _info: &OperationInfo,
+    ) -> ::std::result::Result<(), Error<E>> {
+        if let Some((key, value)) = &self.auth_query {
+            request.url_mut().query_pairs_mut().append_pair(key, value);
+        }
+        Ok(())
+    }
+}
 #[allow(clippy::all)]
 impl Client {
     /**Validate Key

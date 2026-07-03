@@ -36,10 +36,54 @@ fn codegen() -> Result<(), Box<dyn std::error::Error>> {
     let tokens = generator.generate_tokens(&spec)?;
     let ast = syn::parse2(tokens)?;
     let content = prettyplease::unparse(&ast);
+    let content = patch_v3_auth(&content)?;
 
     std::fs::write(&out_path, &content)?;
     eprintln!("wrote {} ({} bytes)", out_path.display(), content.len());
     Ok(())
+}
+
+/// Deterministic post-generation patch enabling TMDB v3 `?api_key=` auth.
+///
+/// Progenitor's generated `Client` has no place to carry a global query param,
+/// and reqwest has no default-query support, so v3 API-key auth cannot be added
+/// from outside the generated code. This patch gives the client an optional
+/// `auth_query` and an implemented `pre` request hook that appends it to every
+/// request. It is applied here (rather than hand-editing the vendored file) so
+/// that a fresh `cargo xtask codegen` reproduces the exact committed output and
+/// the codegen-freshness CI stays green.
+fn patch_v3_auth(content: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let content = content.replacen(
+        "    pub(crate) client: reqwest::Client,\n}",
+        "    pub(crate) client: reqwest::Client,\n    pub(crate) auth_query: \
+         ::std::option::Option<(String, String)>,\n}",
+        1,
+    );
+    let content = content.replacen(
+        "            baseurl: baseurl.to_string(),\n            client,\n        }",
+        "            baseurl: baseurl.to_string(),\n            client,\n            \
+         auth_query: None,\n        }",
+        1,
+    );
+    let hook = "impl ClientHooks<()> for &Client {\n    \
+                async fn pre<E>(\n        &self,\n        \
+                request: &mut reqwest::Request,\n        \
+                _info: &OperationInfo,\n    ) -> ::std::result::Result<(), Error<E>> {\n        \
+                if let Some((key, value)) = &self.auth_query {\n            \
+                request.url_mut().query_pairs_mut().append_pair(key, value);\n        }\n        \
+                Ok(())\n    }\n}";
+    let content = content.replacen("impl ClientHooks<()> for &Client {}", hook, 1);
+
+    if !content.contains("auth_query: ::std::option::Option<(String, String)>")
+        || !content.contains("query_pairs_mut().append_pair")
+    {
+        return Err(
+            "v3 auth patch did not apply — the generated Client layout changed; \
+             update patch_v3_auth in xtask"
+                .into(),
+        );
+    }
+    Ok(content)
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

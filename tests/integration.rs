@@ -18,6 +18,8 @@ mod integration {
     #[cfg(any(feature = "tmdb", feature = "anilist"))]
     mod retry_test;
     #[cfg(feature = "tmdb")]
+    mod tmdb_auth_test;
+    #[cfg(feature = "tmdb")]
     mod tmdb_credits_test;
     #[cfg(feature = "tmdb")]
     mod tmdb_discovery_movies_test;

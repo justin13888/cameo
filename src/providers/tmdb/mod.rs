@@ -14,7 +14,7 @@ pub mod models;
 mod provider;
 
 pub use client::TmdbClient;
-pub use config::TmdbConfig;
+pub use config::{TmdbAuth, TmdbConfig};
 pub use error::TmdbError;
 pub use image_url::{BackdropSize, ImageUrl, LogoSize, PosterSize, ProfileSize, StillSize};
 pub use models::{CastMember, CrewMember, TmdbCredits, TmdbImage, TmdbImages};
