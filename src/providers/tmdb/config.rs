@@ -34,6 +34,7 @@ impl TmdbAuth {
 /// Configuration for the TMDB client.
 #[non_exhaustive]
 #[derive(Debug, Clone)]
+#[must_use = "a TmdbConfig does nothing unless passed to TmdbClient::new or CameoClient::builder"]
 pub struct TmdbConfig {
     /// Authentication credential (v4 bearer token or v3 API key).
     pub auth: TmdbAuth,

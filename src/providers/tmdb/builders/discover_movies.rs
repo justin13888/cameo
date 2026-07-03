@@ -30,6 +30,7 @@ use crate::{
 /// # }
 /// ```
 #[derive(Debug, Clone)]
+#[must_use = "a discover query does nothing until .execute() is awaited"]
 pub struct DiscoverMoviesBuilder<'a> {
     client: &'a TmdbClient,
     certification: Option<String>,

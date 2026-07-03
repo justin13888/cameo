@@ -31,6 +31,7 @@ use crate::{
 /// # }
 /// ```
 #[derive(Debug, Clone)]
+#[must_use = "a discover query does nothing until .execute() is awaited"]
 pub struct DiscoverTvBuilder<'a> {
     client: &'a TmdbClient,
     air_date_gte: Option<NaiveDate>,

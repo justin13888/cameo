@@ -124,3 +124,15 @@ jobs:
       # Compile-only (no secrets): keeps the live-tests gate from bit-rotting.
       - name: cargo check (live-tests)
         run: cargo check --all-targets --features tmdb,anilist,cache,live-tests
+
+  semver:
+    name: SemVer compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Compares the public API against the last published release and fails on
+      # SemVer violations not permitted by the version bump. Breaking changes are
+      # allowed only alongside a major (pre-1.0: minor) version bump.
+      - uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          feature-group: all-features
