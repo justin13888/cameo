@@ -87,6 +87,11 @@ See [TESTING.md](TESTING.md) for the full test guide, run commands, and coverage
 
 ## Contributing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the codegen-regeneration workflow and
+the cache-version rule, and [SECURITY.md](SECURITY.md) for reporting
+vulnerabilities and handling API tokens. Copy [`.env.example`](.env.example) to
+`.env` to run the examples.
+
 Prerequisites: `rustup`, `lefthook`, [`just`](https://github.com/casey/just) (command runner)
 
 1. Clone the repo and run `just setup` to install hooks and build, then `just test` to verify your environment
