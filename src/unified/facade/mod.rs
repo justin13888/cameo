@@ -688,11 +688,4 @@ impl CameoClient {
             let _ = cache.backend.clear().await;
         }
     }
-
-    /// No-op retained for source compatibility.
-    ///
-    /// Cache writes are now write-through (awaited on the request path), so a
-    /// read after a write always sees it and no flush is needed.
-    #[cfg(feature = "cache")]
-    pub async fn flush_cache_writes(&self) {}
 }

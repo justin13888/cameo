@@ -45,8 +45,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         fb_movies.total_results, elapsed0a
     );
 
-    file_client.flush_cache_writes().await;
-
     let t0b = Instant::now();
     let _ = file_client.search_movies(query, None).await?;
     let elapsed0b = t0b.elapsed();
@@ -101,9 +99,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("    [{year}] {}  ({})", m.title, m.provider_id);
     }
 
-    // Flush background cache writes before reading back
-    client.flush_cache_writes().await;
-
     let t2 = Instant::now();
     let movies2 = client.search_movies(query, None).await?;
     let elapsed2 = t2.elapsed();
@@ -151,8 +146,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "    Runtime: {:?} min, Status: {:?}",
         details.runtime, details.status
     );
-
-    client.flush_cache_writes().await;
 
     let t4 = Instant::now();
     let details2 = client
@@ -219,8 +212,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or_else(|| "N/A".into());
         println!("    {} ★ {rating}", m.title);
     }
-
-    client.flush_cache_writes().await;
 
     let t6 = Instant::now();
     let trending2 = client.trending_movies(TimeWindow::Day, None).await?;
