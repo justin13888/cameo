@@ -1,3 +1,5 @@
+/// Constructors and builder-style setters for the unified models.
+mod builders;
 /// Conversion implementations from provider types to unified types.
 pub(crate) mod conversions;
 /// Partial calendar dates for release/air dates.
