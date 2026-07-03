@@ -1,4 +1,3 @@
-#[cfg(feature = "cache")]
 use std::sync::Arc;
 
 #[cfg(feature = "cache")]
@@ -9,9 +8,19 @@ use serde::de::DeserializeOwned;
 #[cfg(feature = "cache")]
 use crate::cache::{CacheBackend, CacheKey, CacheTtlConfig, MediaType, SqliteCache};
 #[cfg(feature = "anilist")]
-use crate::providers::anilist::{AniListClient, AniListConfig};
+use crate::providers::anilist::AniListConfig;
 #[cfg(feature = "tmdb")]
-use crate::providers::tmdb::{TmdbClient, TmdbConfig};
+use crate::providers::tmdb::TmdbConfig;
+use crate::{
+    core::error::ProviderError,
+    unified::{
+        media_id::{MediaId, NativeId},
+        traits::{
+            DetailProvider, DiscoveryProvider, Provider, RecommendationProvider, SearchProvider,
+            SeasonProvider, WatchAvailabilityProvider,
+        },
+    },
+};
 
 mod detail;
 mod discovery;
@@ -22,10 +31,10 @@ mod watch_providers;
 
 /// Error type returned by [`CameoClient`] methods and [`CameoClientBuilder::build`].
 ///
-/// Distinguishes three situations a caller may want to handle differently:
-/// [`NotConfigured`](CameoClientError::NotConfigured) (no provider is configured
-/// at all), [`Unsupported`](CameoClientError::Unsupported) (a provider is
-/// configured but none supports the requested capability), and a provider error.
+/// Distinguishes three situations: [`NotConfigured`](CameoClientError::NotConfigured)
+/// (no provider is configured), [`Unsupported`](CameoClientError::Unsupported)
+/// (a provider is configured but none supports the requested capability), and a
+/// provider-level [`Provider`](CameoClientError::Provider) error.
 ///
 /// # Matching on variants
 ///
@@ -34,8 +43,8 @@ mod watch_providers;
 /// # #[cfg(feature = "tmdb")]
 /// # {
 /// use cameo::providers::tmdb::TmdbConfig;
-/// use cameo::unified::{CameoClient, CameoClientError, SearchProvider};
-/// use cameo::TmdbError;
+/// use cameo::unified::{CameoClient, CameoClientError};
+/// use cameo::ProviderError;
 ///
 /// let client = CameoClient::builder()
 ///     .with_tmdb(TmdbConfig::new("your-token"))
@@ -43,18 +52,14 @@ mod watch_providers;
 ///
 /// match client.search_movies("Inception", None).await {
 ///     Ok(results) => println!("{} results", results.total_results),
-///     Err(CameoClientError::Tmdb(TmdbError::Api { status: 401, .. })) => {
-///         eprintln!("authentication failed");
+///     Err(CameoClientError::Provider(ProviderError::Auth(msg))) => {
+///         eprintln!("authentication failed: {msg}");
 ///     }
-///     Err(CameoClientError::Tmdb(TmdbError::Api { status: 404, .. })) => {
+///     Err(CameoClientError::Provider(ProviderError::NotFound)) => {
 ///         eprintln!("not found");
 ///     }
-///     Err(CameoClientError::NotConfigured) => {
-///         eprintln!("no providers configured");
-///     }
-///     Err(CameoClientError::Unsupported) => {
-///         eprintln!("no configured provider supports this");
-///     }
+///     Err(CameoClientError::NotConfigured) => eprintln!("no providers configured"),
+///     Err(CameoClientError::Unsupported) => eprintln!("no provider supports this"),
 ///     Err(e) => eprintln!("error: {e}"),
 /// }
 /// # }
@@ -72,15 +77,9 @@ pub enum CameoClientError {
     #[error("no configured provider supports this operation")]
     Unsupported,
 
-    /// Error from the TMDB provider.
-    #[cfg(feature = "tmdb")]
+    /// An error returned by a provider.
     #[error(transparent)]
-    Tmdb(#[from] crate::providers::tmdb::TmdbError),
-
-    /// Error from the AniList provider.
-    #[cfg(feature = "anilist")]
-    #[error(transparent)]
-    AniList(#[from] crate::providers::anilist::AniListError),
+    Provider(#[from] ProviderError),
 }
 
 // ── Cache helper ─────────────────────────────────────────────────────────────
@@ -89,96 +88,70 @@ pub enum CameoClientError {
 struct Cache {
     backend: Arc<dyn CacheBackend>,
     ttl: CacheTtlConfig,
-    /// Tracks the number of background write tasks currently in flight.
-    /// Used by [`Cache::wait_for_writes`] to provide a deterministic flush
-    /// point (e.g. in tests) without artificial sleeps.
-    inflight_tx: Arc<tokio::sync::watch::Sender<usize>>,
-    inflight_rx: tokio::sync::watch::Receiver<usize>,
 }
 
 #[cfg(feature = "cache")]
 impl Cache {
     fn new(backend: Arc<dyn CacheBackend>, ttl: CacheTtlConfig) -> Self {
-        let (inflight_tx, inflight_rx) = tokio::sync::watch::channel(0_usize);
-        Self {
-            backend,
-            ttl,
-            inflight_tx: Arc::new(inflight_tx),
-            inflight_rx,
-        }
+        Self { backend, ttl }
     }
 
     async fn get<T: DeserializeOwned>(&self, key: &CacheKey) -> Option<T> {
         match self.backend.get(key).await {
             Ok(Some(v)) => serde_json::from_value(v).ok(),
-            _ => None,
+            Ok(None) => None,
+            Err(e) => {
+                tracing::warn!(error = %e, "cache read failed");
+                None
+            }
         }
     }
 
-    /// Serialize `value` and enqueue a background write. Returns immediately;
-    /// the actual I/O happens in a spawned task. The inflight counter is
-    /// incremented before spawning and decremented once the write finishes,
-    /// so [`Cache::wait_for_writes`] can detect quiescence precisely.
-    fn set<T: Serialize>(&self, key: CacheKey, value: &T, ttl: std::time::Duration) {
+    /// Write-through: serialize and await the write so a subsequent read sees it
+    /// (read-your-writes). Errors are logged, not surfaced.
+    async fn set<T: Serialize>(&self, key: CacheKey, value: &T, ttl: std::time::Duration) {
         match serde_json::to_value(value) {
             Ok(v) => {
-                self.inflight_tx.send_modify(|n| *n += 1);
-                let backend = Arc::clone(&self.backend);
-                let tx = Arc::clone(&self.inflight_tx);
-                tokio::spawn(async move {
-                    if let Err(e) = backend.set(key, v, ttl).await {
-                        tracing::warn!(error = %e, "cache write failed");
-                    }
-                    tx.send_modify(|n| *n -= 1);
-                });
+                if let Err(e) = self.backend.set(key, v, ttl).await {
+                    tracing::warn!(error = %e, "cache write failed");
+                }
             }
-            Err(e) => {
-                tracing::warn!(error = %e, "cache serialization failed");
-            }
+            Err(e) => tracing::warn!(error = %e, "cache serialization failed"),
         }
-    }
-
-    /// Wait until all in-flight background writes have completed.
-    ///
-    /// [`tokio::sync::watch::Receiver::wait_for`] atomically checks the
-    /// current value and subscribes before returning, so there is no race
-    /// between "check zero" and "start waiting".
-    async fn wait_for_writes(&self) {
-        // Clone creates a new subscriber that sees the current value.
-        let _ = self.inflight_rx.clone().wait_for(|&n| n == 0).await;
     }
 }
 
 // ── Builder ───────────────────────────────────────────────────────────────────
 
 /// Builder for constructing a [`CameoClient`].
+///
+/// Built-in providers are configured with [`with_tmdb`](Self::with_tmdb) /
+/// [`with_anilist`](Self::with_anilist). Out-of-crate providers register
+/// themselves with the `register_*_provider` methods (one per capability trait
+/// they implement) — adding a provider requires no facade changes.
 #[derive(Default)]
 pub struct CameoClientBuilder {
     #[cfg(feature = "tmdb")]
     tmdb_config: Option<TmdbConfig>,
-
     #[cfg(feature = "anilist")]
     anilist_config: Option<AniListConfig>,
 
+    ext_search: Vec<Arc<dyn SearchProvider>>,
+    ext_detail: Vec<Arc<dyn DetailProvider>>,
+    ext_discovery: Vec<Arc<dyn DiscoveryProvider>>,
+    ext_recommendation: Vec<Arc<dyn RecommendationProvider>>,
+    ext_season: Vec<Arc<dyn SeasonProvider>>,
+    ext_watch: Vec<Arc<dyn WatchAvailabilityProvider>>,
+
     #[cfg(feature = "cache")]
     cache_backend: Option<Arc<dyn CacheBackend>>,
-
     #[cfg(feature = "cache")]
     cache_ttl: Option<CacheTtlConfig>,
 }
 
 impl std::fmt::Debug for CameoClientBuilder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut d = f.debug_struct("CameoClientBuilder");
-        #[cfg(feature = "tmdb")]
-        d.field("tmdb_config", &self.tmdb_config);
-        #[cfg(feature = "anilist")]
-        d.field("anilist_config", &self.anilist_config);
-        #[cfg(feature = "cache")]
-        d.field("cache_backend", &self.cache_backend.as_ref().map(|_| ".."));
-        #[cfg(feature = "cache")]
-        d.field("cache_ttl", &self.cache_ttl);
-        d.finish()
+        f.debug_struct("CameoClientBuilder").finish_non_exhaustive()
     }
 }
 
@@ -197,29 +170,57 @@ impl CameoClientBuilder {
         self
     }
 
+    /// Register an out-of-crate search provider.
+    pub fn register_search_provider(mut self, provider: Arc<dyn SearchProvider>) -> Self {
+        self.ext_search.push(provider);
+        self
+    }
+
+    /// Register an out-of-crate detail provider.
+    pub fn register_detail_provider(mut self, provider: Arc<dyn DetailProvider>) -> Self {
+        self.ext_detail.push(provider);
+        self
+    }
+
+    /// Register an out-of-crate discovery provider.
+    pub fn register_discovery_provider(mut self, provider: Arc<dyn DiscoveryProvider>) -> Self {
+        self.ext_discovery.push(provider);
+        self
+    }
+
+    /// Register an out-of-crate recommendation provider.
+    pub fn register_recommendation_provider(
+        mut self,
+        provider: Arc<dyn RecommendationProvider>,
+    ) -> Self {
+        self.ext_recommendation.push(provider);
+        self
+    }
+
+    /// Register an out-of-crate season provider.
+    pub fn register_season_provider(mut self, provider: Arc<dyn SeasonProvider>) -> Self {
+        self.ext_season.push(provider);
+        self
+    }
+
+    /// Register an out-of-crate watch-availability provider.
+    pub fn register_watch_provider(mut self, provider: Arc<dyn WatchAvailabilityProvider>) -> Self {
+        self.ext_watch.push(provider);
+        self
+    }
+
     /// Enable caching with the default SQLite backend.
-    ///
-    /// The database is stored in the OS cache directory under
-    /// `cameo/cache.db`, falling back to a temporary file.
     #[cfg(feature = "cache")]
     pub fn with_cache(self) -> Self {
         let path = dirs::cache_dir()
             .map(|d| d.join("cameo").join("cache.db"))
             .unwrap_or_else(|| std::env::temp_dir().join("cameo_cache.db"));
-
         if let Some(parent) = path.parent() {
             let _ = std::fs::create_dir_all(parent);
         }
-
-        match SqliteCache::new(&path) {
+        match SqliteCache::new(&path).or_else(|_| SqliteCache::in_memory()) {
             Ok(backend) => self.with_cache_backend(Arc::new(backend)),
-            Err(_) => {
-                // Fall back to in-memory if file-based creation fails.
-                match SqliteCache::in_memory() {
-                    Ok(backend) => self.with_cache_backend(Arc::new(backend)),
-                    Err(_) => self,
-                }
-            }
+            Err(_) => self,
         }
     }
 
@@ -239,96 +240,89 @@ impl CameoClientBuilder {
 
     /// Build the `CameoClient`.
     pub fn build(self) -> Result<CameoClient, CameoClientError> {
+        let mut client = CameoClient {
+            search: Vec::new(),
+            detail: Vec::new(),
+            discovery: Vec::new(),
+            recommendation: Vec::new(),
+            season: Vec::new(),
+            watch: Vec::new(),
+            #[cfg(feature = "cache")]
+            cache: None,
+        };
+
+        // Built-in providers register first (TMDB, then AniList) so the default
+        // priority is preserved.
         #[cfg(feature = "tmdb")]
-        let tmdb = self
-            .tmdb_config
-            .map(TmdbClient::new)
-            .transpose()
-            .map_err(CameoClientError::Tmdb)?;
-
-        #[cfg(not(feature = "tmdb"))]
-        let tmdb: Option<()> = None;
-
+        if let Some(config) = self.tmdb_config {
+            let tmdb = Arc::new(
+                crate::providers::tmdb::TmdbClient::new(config).map_err(ProviderError::from)?,
+            );
+            client.search.push(tmdb.clone());
+            client.detail.push(tmdb.clone());
+            client.discovery.push(tmdb.clone());
+            client.recommendation.push(tmdb.clone());
+            client.season.push(tmdb.clone());
+            client.watch.push(tmdb);
+        }
         #[cfg(feature = "anilist")]
-        let anilist = self
-            .anilist_config
-            .map(AniListClient::new)
-            .transpose()
-            .map_err(CameoClientError::AniList)?;
+        if let Some(config) = self.anilist_config {
+            let anilist = Arc::new(
+                crate::providers::anilist::AniListClient::new(config)
+                    .map_err(ProviderError::from)?,
+            );
+            client.search.push(anilist.clone());
+            client.detail.push(anilist.clone());
+            client.discovery.push(anilist);
+        }
 
-        #[cfg(not(feature = "anilist"))]
-        let anilist: Option<()> = None;
+        // Out-of-crate providers register last.
+        client.search.extend(self.ext_search);
+        client.detail.extend(self.ext_detail);
+        client.discovery.extend(self.ext_discovery);
+        client.recommendation.extend(self.ext_recommendation);
+        client.season.extend(self.ext_season);
+        client.watch.extend(self.ext_watch);
 
-        if tmdb.is_none() && anilist.is_none() {
+        if !client.any_provider() {
             return Err(CameoClientError::NotConfigured);
         }
 
         #[cfg(feature = "cache")]
-        let cache = self
-            .cache_backend
-            .map(|backend| Cache::new(backend, self.cache_ttl.unwrap_or_default()));
+        {
+            client.cache = self
+                .cache_backend
+                .map(|backend| Cache::new(backend, self.cache_ttl.unwrap_or_default()));
+        }
 
-        Ok(CameoClient {
-            #[cfg(feature = "tmdb")]
-            tmdb,
-            #[cfg(feature = "anilist")]
-            anilist,
-            #[cfg(feature = "cache")]
-            cache,
-        })
+        Ok(client)
     }
 }
 
 // ── Client ────────────────────────────────────────────────────────────────────
 
-/// Multi-provider facade client.
+/// Multi-provider facade client backed by a capability registry.
 ///
-/// Use [`CameoClientBuilder`] to construct one.
-///
-/// # Provider Priority
-///
-/// When multiple providers are configured, TMDB is used first (if configured).
-/// AniList is used as a fallback when TMDB is not configured.
-///
-/// # Example
-///
-/// ```no_run
-/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// # #[cfg(feature = "tmdb")]
-/// # {
-/// use cameo::providers::tmdb::TmdbConfig;
-/// use cameo::unified::{CameoClient, SearchProvider};
-///
-/// let client = CameoClient::builder()
-///     .with_tmdb(TmdbConfig::new("your-token"))
-///     .build()?;
-///
-/// let results = client.search_movies("Inception", None).await?;
-/// # }
-/// # Ok(())
-/// # }
-/// ```
+/// Each capability is dispatched to the first provider that supports it (built-in
+/// providers first, then registered ones). A call with no provider configured
+/// returns [`CameoClientError::NotConfigured`]; a call no configured provider
+/// supports returns [`CameoClientError::Unsupported`].
 pub struct CameoClient {
-    #[cfg(feature = "tmdb")]
-    tmdb: Option<TmdbClient>,
-
-    #[cfg(feature = "anilist")]
-    anilist: Option<AniListClient>,
-
+    search: Vec<Arc<dyn SearchProvider>>,
+    detail: Vec<Arc<dyn DetailProvider>>,
+    discovery: Vec<Arc<dyn DiscoveryProvider>>,
+    recommendation: Vec<Arc<dyn RecommendationProvider>>,
+    season: Vec<Arc<dyn SeasonProvider>>,
+    watch: Vec<Arc<dyn WatchAvailabilityProvider>>,
     #[cfg(feature = "cache")]
     cache: Option<Cache>,
 }
 
 impl std::fmt::Debug for CameoClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut d = f.debug_struct("CameoClient");
-        #[cfg(feature = "tmdb")]
-        d.field("tmdb", &self.tmdb);
-        #[cfg(feature = "anilist")]
-        d.field("anilist", &self.anilist);
-        #[cfg(feature = "cache")]
-        d.field("cache", &self.cache.as_ref().map(|_| ".."));
-        d.finish()
+        f.debug_struct("CameoClient")
+            .field("providers", &self.provider_ids())
+            .finish_non_exhaustive()
     }
 }
 
@@ -338,175 +332,280 @@ impl CameoClient {
         CameoClientBuilder::default()
     }
 
-    /// Access the underlying TMDB client, if configured.
-    #[cfg(feature = "tmdb")]
-    pub fn tmdb(&self) -> Option<&TmdbClient> {
-        self.tmdb.as_ref()
+    /// The distinct provider ids registered, in priority order.
+    pub fn provider_ids(&self) -> Vec<&str> {
+        let mut ids: Vec<&str> = Vec::new();
+        for p in &self.search {
+            if !ids.contains(&p.id()) {
+                ids.push(p.id());
+            }
+        }
+        for id in [
+            self.detail.iter().map(|p| p.id()).collect::<Vec<_>>(),
+            self.discovery.iter().map(|p| p.id()).collect(),
+            self.recommendation.iter().map(|p| p.id()).collect(),
+            self.season.iter().map(|p| p.id()).collect(),
+            self.watch.iter().map(|p| p.id()).collect(),
+        ]
+        .concat()
+        {
+            if !ids.contains(&id) {
+                ids.push(id);
+            }
+        }
+        ids
     }
 
-    /// Access the underlying AniList client, if configured.
-    #[cfg(feature = "anilist")]
-    pub fn anilist(&self) -> Option<&AniListClient> {
-        self.anilist.as_ref()
+    /// Whether any provider is registered for any capability.
+    fn any_provider(&self) -> bool {
+        !self.search.is_empty()
+            || !self.detail.is_empty()
+            || !self.discovery.is_empty()
+            || !self.recommendation.is_empty()
+            || !self.season.is_empty()
+            || !self.watch.is_empty()
+    }
+
+    /// Resolve the first provider in `list`, or the right "no provider" error.
+    fn require<'a, T: ?Sized>(&self, list: &'a [Arc<T>]) -> Result<&'a Arc<T>, CameoClientError> {
+        match list.first() {
+            Some(provider) => Ok(provider),
+            None if self.any_provider() => Err(CameoClientError::Unsupported),
+            None => Err(CameoClientError::NotConfigured),
+        }
+    }
+
+    /// Build a [`MediaId`] for a raw `i32` id, tagged with the first provider in
+    /// `list` so it routes to that provider. (Per-call routing by id origin is
+    /// added in a later step.)
+    fn media_id_for<T: Provider + ?Sized>(
+        &self,
+        list: &[Arc<T>],
+        id: i32,
+    ) -> Result<MediaId, CameoClientError> {
+        let provider = self.require(list)?;
+        Ok(MediaId::new(
+            provider.id().to_string(),
+            NativeId::Num(id.max(0) as u64),
+        ))
+    }
+
+    // ── Cache helpers ─────────────────────────────────────────────────────────
+
+    #[cfg(feature = "cache")]
+    async fn cache_get<T: DeserializeOwned>(&self, key: &CacheKey) -> Option<T> {
+        match &self.cache {
+            Some(cache) => cache.get(key).await,
+            None => None,
+        }
+    }
+
+    #[cfg(feature = "cache")]
+    async fn cache_put<T: Serialize>(&self, key: CacheKey, value: &T, ttl: std::time::Duration) {
+        if let Some(cache) = &self.cache {
+            cache.set(key, value, ttl).await;
+        }
+    }
+
+    #[cfg(feature = "cache")]
+    fn cache_search_ttl(&self) -> std::time::Duration {
+        self.cache
+            .as_ref()
+            .map(|c| c.ttl.search)
+            .unwrap_or_default()
+    }
+
+    #[cfg(feature = "cache")]
+    fn cache_items_ttl(&self) -> std::time::Duration {
+        self.cache.as_ref().map(|c| c.ttl.items).unwrap_or_default()
+    }
+
+    #[cfg(feature = "cache")]
+    fn cache_details_ttl(&self) -> std::time::Duration {
+        self.cache
+            .as_ref()
+            .map(|c| c.ttl.details)
+            .unwrap_or_default()
+    }
+
+    #[cfg(feature = "cache")]
+    fn cache_discovery_ttl(&self) -> std::time::Duration {
+        self.cache
+            .as_ref()
+            .map(|c| c.ttl.discovery)
+            .unwrap_or_default()
+    }
+
+    /// Index each movie in a page by its provider id (item cache).
+    #[cfg(feature = "cache")]
+    async fn cache_movie_items(
+        &self,
+        page: &crate::core::pagination::Page<crate::unified::models::UnifiedMovie>,
+    ) {
+        for item in &page.results {
+            self.cache_put(
+                CacheKey::Item {
+                    media_type: MediaType::Movie,
+                    provider_id: item.provider_id.to_string(),
+                },
+                item,
+                self.cache_items_ttl(),
+            )
+            .await;
+        }
+    }
+
+    /// Index each TV show in a page by its provider id (item cache).
+    #[cfg(feature = "cache")]
+    async fn cache_tv_items(
+        &self,
+        page: &crate::core::pagination::Page<crate::unified::models::UnifiedTvShow>,
+    ) {
+        for item in &page.results {
+            self.cache_put(
+                CacheKey::Item {
+                    media_type: MediaType::TvShow,
+                    provider_id: item.provider_id.to_string(),
+                },
+                item,
+                self.cache_items_ttl(),
+            )
+            .await;
+        }
     }
 
     // ── Explicit cache lookup API ─────────────────────────────────────────────
 
-    /// Look up a movie from the cache by provider_id (e.g. `"tmdb:550"` or `"anilist:1"`).
-    ///
-    /// Checks the Item cache first (populated by search/discovery results),
-    /// then falls back to extracting the base movie from the Detail cache.
+    /// Look up a movie from the cache by provider id (e.g. `"tmdb:550"`).
     #[cfg(feature = "cache")]
     pub async fn cached_movie(
         &self,
         provider_id: &str,
     ) -> Option<crate::unified::models::UnifiedMovie> {
-        use crate::unified::models::UnifiedMovieDetails;
-        let cache = self.cache.as_ref()?;
-        let item_key = CacheKey::Item {
-            media_type: MediaType::Movie,
-            provider_id: provider_id.to_string(),
-        };
-        if let Some(m) = cache
-            .get::<crate::unified::models::UnifiedMovie>(&item_key)
+        use crate::unified::models::{UnifiedMovie, UnifiedMovieDetails};
+        if let Some(m) = self
+            .cache_get::<UnifiedMovie>(&CacheKey::Item {
+                media_type: MediaType::Movie,
+                provider_id: provider_id.to_string(),
+            })
             .await
         {
             return Some(m);
         }
-        let detail_key = CacheKey::Detail {
+        self.cache_get::<UnifiedMovieDetails>(&CacheKey::Detail {
             media_type: MediaType::Movie,
             provider_id: provider_id.to_string(),
-        };
-        cache
-            .get::<UnifiedMovieDetails>(&detail_key)
-            .await
-            .map(|d| d.movie)
+        })
+        .await
+        .map(|d| d.movie)
     }
 
-    /// Look up full movie details from the cache by provider_id.
-    ///
-    /// Only available if `CameoClient::movie_details` was previously called
-    /// for this provider_id.
+    /// Look up full movie details from the cache by provider id.
     #[cfg(feature = "cache")]
     pub async fn cached_movie_details(
         &self,
         provider_id: &str,
     ) -> Option<crate::unified::models::UnifiedMovieDetails> {
-        let cache = self.cache.as_ref()?;
-        cache
-            .get(&CacheKey::Detail {
-                media_type: MediaType::Movie,
-                provider_id: provider_id.to_string(),
-            })
-            .await
+        self.cache_get(&CacheKey::Detail {
+            media_type: MediaType::Movie,
+            provider_id: provider_id.to_string(),
+        })
+        .await
     }
 
-    /// Look up a TV show from the cache by provider_id.
+    /// Look up a TV show from the cache by provider id.
     #[cfg(feature = "cache")]
     pub async fn cached_tv_show(
         &self,
         provider_id: &str,
     ) -> Option<crate::unified::models::UnifiedTvShow> {
-        use crate::unified::models::UnifiedTvShowDetails;
-        let cache = self.cache.as_ref()?;
-        let item_key = CacheKey::Item {
-            media_type: MediaType::TvShow,
-            provider_id: provider_id.to_string(),
-        };
-        if let Some(t) = cache
-            .get::<crate::unified::models::UnifiedTvShow>(&item_key)
+        use crate::unified::models::{UnifiedTvShow, UnifiedTvShowDetails};
+        if let Some(t) = self
+            .cache_get::<UnifiedTvShow>(&CacheKey::Item {
+                media_type: MediaType::TvShow,
+                provider_id: provider_id.to_string(),
+            })
             .await
         {
             return Some(t);
         }
-        let detail_key = CacheKey::Detail {
+        self.cache_get::<UnifiedTvShowDetails>(&CacheKey::Detail {
             media_type: MediaType::TvShow,
             provider_id: provider_id.to_string(),
-        };
-        cache
-            .get::<UnifiedTvShowDetails>(&detail_key)
-            .await
-            .map(|d| d.show)
+        })
+        .await
+        .map(|d| d.show)
     }
 
-    /// Look up full TV show details from the cache by provider_id.
+    /// Look up full TV show details from the cache by provider id.
     #[cfg(feature = "cache")]
     pub async fn cached_tv_show_details(
         &self,
         provider_id: &str,
     ) -> Option<crate::unified::models::UnifiedTvShowDetails> {
-        let cache = self.cache.as_ref()?;
-        cache
-            .get(&CacheKey::Detail {
-                media_type: MediaType::TvShow,
-                provider_id: provider_id.to_string(),
-            })
-            .await
+        self.cache_get(&CacheKey::Detail {
+            media_type: MediaType::TvShow,
+            provider_id: provider_id.to_string(),
+        })
+        .await
     }
 
-    /// Look up a person from the cache by provider_id.
+    /// Look up a person from the cache by provider id.
     #[cfg(feature = "cache")]
     pub async fn cached_person(
         &self,
         provider_id: &str,
     ) -> Option<crate::unified::models::UnifiedPerson> {
-        use crate::unified::models::UnifiedPersonDetails;
-        let cache = self.cache.as_ref()?;
-        let item_key = CacheKey::Item {
-            media_type: MediaType::Person,
-            provider_id: provider_id.to_string(),
-        };
-        if let Some(p) = cache
-            .get::<crate::unified::models::UnifiedPerson>(&item_key)
+        use crate::unified::models::{UnifiedPerson, UnifiedPersonDetails};
+        if let Some(p) = self
+            .cache_get::<UnifiedPerson>(&CacheKey::Item {
+                media_type: MediaType::Person,
+                provider_id: provider_id.to_string(),
+            })
             .await
         {
             return Some(p);
         }
-        let detail_key = CacheKey::Detail {
+        self.cache_get::<UnifiedPersonDetails>(&CacheKey::Detail {
             media_type: MediaType::Person,
             provider_id: provider_id.to_string(),
-        };
-        cache
-            .get::<UnifiedPersonDetails>(&detail_key)
-            .await
-            .map(|d| d.person)
+        })
+        .await
+        .map(|d| d.person)
     }
 
-    /// Look up full person details from the cache by provider_id.
+    /// Look up full person details from the cache by provider id.
     #[cfg(feature = "cache")]
     pub async fn cached_person_details(
         &self,
         provider_id: &str,
     ) -> Option<crate::unified::models::UnifiedPersonDetails> {
-        let cache = self.cache.as_ref()?;
-        cache
-            .get(&CacheKey::Detail {
-                media_type: MediaType::Person,
-                provider_id: provider_id.to_string(),
-            })
-            .await
+        self.cache_get(&CacheKey::Detail {
+            media_type: MediaType::Person,
+            provider_id: provider_id.to_string(),
+        })
+        .await
     }
 
-    /// Invalidate all cache entries for the given provider_id.
+    /// Invalidate all cache entries for the given provider id.
     #[cfg(feature = "cache")]
     pub async fn invalidate_cached(&self, provider_id: &str) {
         let Some(cache) = self.cache.as_ref() else {
             return;
         };
         for mt in [MediaType::Movie, MediaType::TvShow, MediaType::Person] {
-            let pid = provider_id.to_string();
             let _ = cache
                 .backend
                 .invalidate(&CacheKey::Detail {
                     media_type: mt,
-                    provider_id: pid.clone(),
+                    provider_id: provider_id.to_string(),
                 })
                 .await;
             let _ = cache
                 .backend
                 .invalidate(&CacheKey::Item {
                     media_type: mt,
-                    provider_id: pid,
+                    provider_id: provider_id.to_string(),
                 })
                 .await;
         }
@@ -520,38 +619,10 @@ impl CameoClient {
         }
     }
 
-    /// Wait until all pending background cache writes have completed.
+    /// No-op retained for source compatibility.
     ///
-    /// Cache writes are enqueued as fire-and-forget background tasks to
-    /// avoid adding I/O latency to the hot path. Call this method when you
-    /// need a synchronisation point — most commonly in tests to avoid
-    /// artificial sleeps:
-    ///
-    /// ```no_run
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// # #[cfg(all(feature = "tmdb", feature = "cache"))]
-    /// # {
-    /// use cameo::providers::tmdb::TmdbConfig;
-    /// use cameo::unified::{CameoClient, DetailProvider};
-    ///
-    /// let client = CameoClient::builder()
-    ///     .with_tmdb(TmdbConfig::new("token"))
-    ///     .with_cache()
-    ///     .build()?;
-    ///
-    /// client.movie_details(550).await?;
-    /// client.flush_cache_writes().await; // ensure the write landed
-    /// assert!(client.cached_movie_details("tmdb:550").await.is_some());
-    /// # }
-    /// # Ok(())
-    /// # }
-    /// ```
-    ///
-    /// In production code this is a no-op when no writes are in flight.
+    /// Cache writes are now write-through (awaited on the request path), so a
+    /// read after a write always sees it and no flush is needed.
     #[cfg(feature = "cache")]
-    pub async fn flush_cache_writes(&self) {
-        if let Some(cache) = self.cache.as_ref() {
-            cache.wait_for_writes().await;
-        }
-    }
+    pub async fn flush_cache_writes(&self) {}
 }

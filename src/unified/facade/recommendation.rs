@@ -1,8 +1,6 @@
 use super::{CameoClient, CameoClientError};
 #[cfg(feature = "cache")]
 use crate::cache::CacheKey;
-#[cfg(all(feature = "cache", feature = "tmdb"))]
-use crate::cache::MediaType;
 use crate::{
     core::pagination::Page,
     unified::models::{UnifiedMovie, UnifiedTvShow},
@@ -15,55 +13,27 @@ impl CameoClient {
         id: i32,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
-        let _ = (id, page);
+        let media_id = self.media_id_for(&self.recommendation, id)?;
         #[cfg(feature = "cache")]
-        let endpoint = format!("recommendations:movie:{id}");
-
+        let key = CacheKey::Discovery {
+            endpoint: format!("movie_recommendations_{media_id}"),
+            page: page.unwrap_or(1),
+        };
         #[cfg(feature = "cache")]
-        let page_num = page.unwrap_or(1);
-
+        if let Some(hit) = self.cache_get::<Page<UnifiedMovie>>(&key).await {
+            return Ok(hit);
+        }
+        let result = self
+            .require(&self.recommendation)?
+            .movie_recommendations(&media_id, page)
+            .await?;
         #[cfg(feature = "cache")]
         {
-            let discovery_key = CacheKey::Discovery {
-                endpoint: endpoint.clone(),
-                page: page_num,
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<Page<UnifiedMovie>>(&discovery_key).await
-            {
-                tracing::debug!(id, page = page_num, "cache hit: movie_recommendations");
-                return Ok(cached);
-            }
-            if self.cache.is_some() {
-                tracing::debug!(id, page = page_num, "cache miss: movie_recommendations");
-            }
+            self.cache_put(key, &result, self.cache_discovery_ttl())
+                .await;
+            self.cache_movie_items(&result).await;
         }
-
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(id, page = ?page, "dispatching movie_recommendations to tmdb");
-            let unified = client.movie_recommendations(id, page).await?;
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let discovery_key = CacheKey::Discovery {
-                    endpoint,
-                    page: page_num,
-                };
-                cache.set(discovery_key, &unified, cache.ttl.discovery);
-                for item in &unified.results {
-                    let k = CacheKey::Item {
-                        media_type: MediaType::Movie,
-                        provider_id: item.provider_id.to_string(),
-                    };
-                    cache.set(k, item, cache.ttl.items);
-                }
-            }
-
-            return Ok(unified);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        Ok(result)
     }
 
     /// Get TV show recommendations based on a TV show.
@@ -72,56 +42,27 @@ impl CameoClient {
         id: i32,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
-        let _ = (id, page);
+        let media_id = self.media_id_for(&self.recommendation, id)?;
         #[cfg(feature = "cache")]
-        let endpoint = format!("recommendations:tv:{id}");
-
+        let key = CacheKey::Discovery {
+            endpoint: format!("tv_recommendations_{media_id}"),
+            page: page.unwrap_or(1),
+        };
         #[cfg(feature = "cache")]
-        let page_num = page.unwrap_or(1);
-
+        if let Some(hit) = self.cache_get::<Page<UnifiedTvShow>>(&key).await {
+            return Ok(hit);
+        }
+        let result = self
+            .require(&self.recommendation)?
+            .tv_recommendations(&media_id, page)
+            .await?;
         #[cfg(feature = "cache")]
         {
-            let discovery_key = CacheKey::Discovery {
-                endpoint: endpoint.clone(),
-                page: page_num,
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<Page<UnifiedTvShow>>(&discovery_key).await
-            {
-                tracing::debug!(id, page = page_num, "cache hit: tv_recommendations");
-                return Ok(cached);
-            }
-            if self.cache.is_some() {
-                tracing::debug!(id, page = page_num, "cache miss: tv_recommendations");
-            }
+            self.cache_put(key, &result, self.cache_discovery_ttl())
+                .await;
+            self.cache_tv_items(&result).await;
         }
-
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(id, page = ?page, "dispatching tv_recommendations to tmdb");
-            let page_resp = client.tv_recommendations(id, page).await?;
-            let unified: Page<UnifiedTvShow> = page_resp.map(Into::into);
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let discovery_key = CacheKey::Discovery {
-                    endpoint,
-                    page: page_num,
-                };
-                cache.set(discovery_key, &unified, cache.ttl.discovery);
-                for item in &unified.results {
-                    let k = CacheKey::Item {
-                        media_type: MediaType::TvShow,
-                        provider_id: item.provider_id.to_string(),
-                    };
-                    cache.set(k, item, cache.ttl.items);
-                }
-            }
-
-            return Ok(unified);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        Ok(result)
     }
 
     /// Get movies similar to a given movie.
@@ -130,56 +71,27 @@ impl CameoClient {
         id: i32,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
-        let _ = (id, page);
+        let media_id = self.media_id_for(&self.recommendation, id)?;
         #[cfg(feature = "cache")]
-        let endpoint = format!("similar:movie:{id}");
-
+        let key = CacheKey::Discovery {
+            endpoint: format!("similar_movies_{media_id}"),
+            page: page.unwrap_or(1),
+        };
         #[cfg(feature = "cache")]
-        let page_num = page.unwrap_or(1);
-
+        if let Some(hit) = self.cache_get::<Page<UnifiedMovie>>(&key).await {
+            return Ok(hit);
+        }
+        let result = self
+            .require(&self.recommendation)?
+            .similar_movies(&media_id, page)
+            .await?;
         #[cfg(feature = "cache")]
         {
-            let discovery_key = CacheKey::Discovery {
-                endpoint: endpoint.clone(),
-                page: page_num,
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<Page<UnifiedMovie>>(&discovery_key).await
-            {
-                tracing::debug!(id, page = page_num, "cache hit: similar_movies");
-                return Ok(cached);
-            }
-            if self.cache.is_some() {
-                tracing::debug!(id, page = page_num, "cache miss: similar_movies");
-            }
+            self.cache_put(key, &result, self.cache_discovery_ttl())
+                .await;
+            self.cache_movie_items(&result).await;
         }
-
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(id, page = ?page, "dispatching similar_movies to tmdb");
-            let page_resp = client.similar_movies(id, page).await?;
-            let unified: Page<UnifiedMovie> = page_resp.map(Into::into);
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let discovery_key = CacheKey::Discovery {
-                    endpoint,
-                    page: page_num,
-                };
-                cache.set(discovery_key, &unified, cache.ttl.discovery);
-                for item in &unified.results {
-                    let k = CacheKey::Item {
-                        media_type: MediaType::Movie,
-                        provider_id: item.provider_id.to_string(),
-                    };
-                    cache.set(k, item, cache.ttl.items);
-                }
-            }
-
-            return Ok(unified);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        Ok(result)
     }
 
     /// Get TV shows similar to a given TV show.
@@ -188,55 +100,26 @@ impl CameoClient {
         id: i32,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
-        let _ = (id, page);
+        let media_id = self.media_id_for(&self.recommendation, id)?;
         #[cfg(feature = "cache")]
-        let endpoint = format!("similar:tv:{id}");
-
+        let key = CacheKey::Discovery {
+            endpoint: format!("similar_tv_{media_id}"),
+            page: page.unwrap_or(1),
+        };
         #[cfg(feature = "cache")]
-        let page_num = page.unwrap_or(1);
-
+        if let Some(hit) = self.cache_get::<Page<UnifiedTvShow>>(&key).await {
+            return Ok(hit);
+        }
+        let result = self
+            .require(&self.recommendation)?
+            .similar_tv_shows(&media_id, page)
+            .await?;
         #[cfg(feature = "cache")]
         {
-            let discovery_key = CacheKey::Discovery {
-                endpoint: endpoint.clone(),
-                page: page_num,
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<Page<UnifiedTvShow>>(&discovery_key).await
-            {
-                tracing::debug!(id, page = page_num, "cache hit: similar_tv_shows");
-                return Ok(cached);
-            }
-            if self.cache.is_some() {
-                tracing::debug!(id, page = page_num, "cache miss: similar_tv_shows");
-            }
+            self.cache_put(key, &result, self.cache_discovery_ttl())
+                .await;
+            self.cache_tv_items(&result).await;
         }
-
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(id, page = ?page, "dispatching similar_tv_shows to tmdb");
-            let page_resp = client.similar_tv_shows(id, page).await?;
-            let unified: Page<UnifiedTvShow> = page_resp.map(Into::into);
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let discovery_key = CacheKey::Discovery {
-                    endpoint,
-                    page: page_num,
-                };
-                cache.set(discovery_key, &unified, cache.ttl.discovery);
-                for item in &unified.results {
-                    let k = CacheKey::Item {
-                        media_type: MediaType::TvShow,
-                        provider_id: item.provider_id.to_string(),
-                    };
-                    cache.set(k, item, cache.ttl.items);
-                }
-            }
-
-            return Ok(unified);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        Ok(result)
     }
 }

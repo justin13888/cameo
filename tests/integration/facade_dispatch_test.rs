@@ -223,20 +223,20 @@ mod anilist_tests {
     }
 
     #[tokio::test]
-    async fn facade_anilist_only_recommendations_returns_no_providers() {
+    async fn facade_anilist_only_recommendations_returns_unsupported() {
         let body = page_response(vec![], 0);
         let (_server, client) = setup_anilist_only(body).await;
 
         let result = client.movie_recommendations(1, None).await;
 
         assert!(
-            matches!(result, Err(CameoClientError::NotConfigured)),
-            "expected NotConfigured, got: {result:?}"
+            matches!(result, Err(CameoClientError::Unsupported)),
+            "expected Unsupported, got: {result:?}"
         );
     }
 
     #[tokio::test]
-    async fn facade_anilist_only_season_details_returns_no_providers() {
+    async fn facade_anilist_only_season_details_returns_unsupported() {
         let body = page_response(vec![], 0);
         let (_server, client) = setup_anilist_only(body).await;
 
@@ -244,20 +244,20 @@ mod anilist_tests {
         let result = client.season_details(1, 1).await;
 
         assert!(
-            matches!(result, Err(CameoClientError::NotConfigured)),
-            "expected NotConfigured, got: {result:?}"
+            matches!(result, Err(CameoClientError::Unsupported)),
+            "expected Unsupported, got: {result:?}"
         );
     }
 
     #[tokio::test]
-    async fn facade_anilist_only_watch_providers_returns_no_providers() {
+    async fn facade_anilist_only_watch_providers_returns_unsupported() {
         let body = page_response(vec![], 0);
         let (_server, client) = setup_anilist_only(body).await;
         let result = client.movie_watch_providers(1).await;
 
         assert!(
-            matches!(result, Err(CameoClientError::NotConfigured)),
-            "expected NotConfigured, got: {result:?}"
+            matches!(result, Err(CameoClientError::Unsupported)),
+            "expected Unsupported, got: {result:?}"
         );
     }
 }

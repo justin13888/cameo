@@ -8,14 +8,11 @@ impl CameoClient {
         show_id: i32,
         season_number: u32,
     ) -> Result<UnifiedSeasonDetails, CameoClientError> {
-        let _ = (show_id, season_number);
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(show_id, season_number, "dispatching season_details to tmdb");
-            return Ok(client.tv_season_details(show_id, season_number).await?);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        let media_id = self.media_id_for(&self.season, show_id)?;
+        Ok(self
+            .require(&self.season)?
+            .season_details(&media_id, season_number)
+            .await?)
     }
 
     /// Get details for a specific episode of a TV show.
@@ -25,20 +22,10 @@ impl CameoClient {
         season_number: u32,
         episode_number: u32,
     ) -> Result<UnifiedEpisode, CameoClientError> {
-        let _ = (show_id, season_number, episode_number);
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(
-                show_id,
-                season_number,
-                episode_number,
-                "dispatching episode_details to tmdb"
-            );
-            return Ok(client
-                .tv_episode_details(show_id, season_number, episode_number)
-                .await?);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        let media_id = self.media_id_for(&self.season, show_id)?;
+        Ok(self
+            .require(&self.season)?
+            .episode_details(&media_id, season_number, episode_number)
+            .await?)
     }
 }

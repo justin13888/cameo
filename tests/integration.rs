@@ -14,6 +14,7 @@ mod integration {
     mod http_config_test;
     #[cfg(any(feature = "tmdb", feature = "anilist"))]
     mod provider_seam_test;
+    mod registry_test;
     #[cfg(any(feature = "tmdb", feature = "anilist"))]
     mod retry_test;
     #[cfg(feature = "tmdb")]

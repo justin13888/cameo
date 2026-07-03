@@ -7,14 +7,11 @@ impl CameoClient {
         &self,
         id: i32,
     ) -> Result<UnifiedWatchProviders, CameoClientError> {
-        let _ = id;
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(id, "dispatching movie_watch_providers to tmdb");
-            return Ok(client.movie_watch_providers(id).await?);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        let media_id = self.media_id_for(&self.watch, id)?;
+        Ok(self
+            .require(&self.watch)?
+            .movie_watch_providers(&media_id)
+            .await?)
     }
 
     /// Get streaming availability for a TV show.
@@ -22,13 +19,10 @@ impl CameoClient {
         &self,
         id: i32,
     ) -> Result<UnifiedWatchProviders, CameoClientError> {
-        let _ = id;
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(id, "dispatching tv_watch_providers to tmdb");
-            return Ok(client.tv_watch_providers(id).await?);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        let media_id = self.media_id_for(&self.watch, id)?;
+        Ok(self
+            .require(&self.watch)?
+            .tv_watch_providers(&media_id)
+            .await?)
     }
 }

@@ -13,80 +13,36 @@ impl CameoClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
-        let _ = (query, page);
         #[cfg(feature = "cache")]
-        let page_num = page.unwrap_or(1);
-
+        let key = CacheKey::Search {
+            media_type: Some(MediaType::Movie),
+            query: query.to_string(),
+            page: page.unwrap_or(1),
+        };
+        #[cfg(feature = "cache")]
+        if let Some(hit) = self.cache_get::<Page<UnifiedMovie>>(&key).await {
+            return Ok(hit);
+        }
+        let result = self
+            .require(&self.search)?
+            .search_movies(query, page)
+            .await?;
         #[cfg(feature = "cache")]
         {
-            let search_key = CacheKey::Search {
-                media_type: Some(MediaType::Movie),
-                query: query.to_string(),
-                page: page_num,
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<Page<UnifiedMovie>>(&search_key).await
-            {
-                tracing::debug!(query, page = page_num, "cache hit: search_movies");
-                return Ok(cached);
-            }
-            if self.cache.is_some() {
-                tracing::debug!(query, page = page_num, "cache miss: search_movies");
-            }
-        }
-
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(query, page = ?page, "dispatching search_movies to tmdb");
-            let page_resp = client.search_movies(query, page).await?;
-            let unified: Page<UnifiedMovie> = page_resp.map(Into::into);
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let search_key = CacheKey::Search {
-                    media_type: Some(MediaType::Movie),
-                    query: query.to_string(),
-                    page: page_num,
-                };
-                cache.set(search_key, &unified, cache.ttl.search);
-                for item in &unified.results {
-                    let item_key = CacheKey::Item {
+            self.cache_put(key, &result, self.cache_search_ttl()).await;
+            for item in &result.results {
+                self.cache_put(
+                    CacheKey::Item {
                         media_type: MediaType::Movie,
                         provider_id: item.provider_id.to_string(),
-                    };
-                    cache.set(item_key, item, cache.ttl.items);
-                }
+                    },
+                    item,
+                    self.cache_items_ttl(),
+                )
+                .await;
             }
-
-            return Ok(unified);
         }
-
-        #[cfg(feature = "anilist")]
-        if let Some(client) = &self.anilist {
-            tracing::debug!(query, page = ?page, "dispatching search_movies to anilist");
-            let unified = client.search_movies(query, page).await?;
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let search_key = CacheKey::Search {
-                    media_type: Some(MediaType::Movie),
-                    query: query.to_string(),
-                    page: page_num,
-                };
-                cache.set(search_key, &unified, cache.ttl.search);
-                for item in &unified.results {
-                    let item_key = CacheKey::Item {
-                        media_type: MediaType::Movie,
-                        provider_id: item.provider_id.to_string(),
-                    };
-                    cache.set(item_key, item, cache.ttl.items);
-                }
-            }
-
-            return Ok(unified);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        Ok(result)
     }
 
     /// Search for TV shows via the configured provider(s).
@@ -95,80 +51,36 @@ impl CameoClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
-        let _ = (query, page);
         #[cfg(feature = "cache")]
-        let page_num = page.unwrap_or(1);
-
+        let key = CacheKey::Search {
+            media_type: Some(MediaType::TvShow),
+            query: query.to_string(),
+            page: page.unwrap_or(1),
+        };
+        #[cfg(feature = "cache")]
+        if let Some(hit) = self.cache_get::<Page<UnifiedTvShow>>(&key).await {
+            return Ok(hit);
+        }
+        let result = self
+            .require(&self.search)?
+            .search_tv_shows(query, page)
+            .await?;
         #[cfg(feature = "cache")]
         {
-            let search_key = CacheKey::Search {
-                media_type: Some(MediaType::TvShow),
-                query: query.to_string(),
-                page: page_num,
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<Page<UnifiedTvShow>>(&search_key).await
-            {
-                tracing::debug!(query, page = page_num, "cache hit: search_tv_shows");
-                return Ok(cached);
-            }
-            if self.cache.is_some() {
-                tracing::debug!(query, page = page_num, "cache miss: search_tv_shows");
-            }
-        }
-
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(query, page = ?page, "dispatching search_tv_shows to tmdb");
-            let page_resp = client.search_tv_shows(query, page).await?;
-            let unified: Page<UnifiedTvShow> = page_resp.map(Into::into);
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let search_key = CacheKey::Search {
-                    media_type: Some(MediaType::TvShow),
-                    query: query.to_string(),
-                    page: page_num,
-                };
-                cache.set(search_key, &unified, cache.ttl.search);
-                for item in &unified.results {
-                    let item_key = CacheKey::Item {
+            self.cache_put(key, &result, self.cache_search_ttl()).await;
+            for item in &result.results {
+                self.cache_put(
+                    CacheKey::Item {
                         media_type: MediaType::TvShow,
                         provider_id: item.provider_id.to_string(),
-                    };
-                    cache.set(item_key, item, cache.ttl.items);
-                }
+                    },
+                    item,
+                    self.cache_items_ttl(),
+                )
+                .await;
             }
-
-            return Ok(unified);
         }
-
-        #[cfg(feature = "anilist")]
-        if let Some(client) = &self.anilist {
-            tracing::debug!(query, page = ?page, "dispatching search_tv_shows to anilist");
-            let unified = client.search_tv_shows(query, page).await?;
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let search_key = CacheKey::Search {
-                    media_type: Some(MediaType::TvShow),
-                    query: query.to_string(),
-                    page: page_num,
-                };
-                cache.set(search_key, &unified, cache.ttl.search);
-                for item in &unified.results {
-                    let item_key = CacheKey::Item {
-                        media_type: MediaType::TvShow,
-                        provider_id: item.provider_id.to_string(),
-                    };
-                    cache.set(item_key, item, cache.ttl.items);
-                }
-            }
-
-            return Ok(unified);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        Ok(result)
     }
 
     /// Search for people via the configured provider(s).
@@ -177,80 +89,36 @@ impl CameoClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedPerson>, CameoClientError> {
-        let _ = (query, page);
         #[cfg(feature = "cache")]
-        let page_num = page.unwrap_or(1);
-
+        let key = CacheKey::Search {
+            media_type: Some(MediaType::Person),
+            query: query.to_string(),
+            page: page.unwrap_or(1),
+        };
+        #[cfg(feature = "cache")]
+        if let Some(hit) = self.cache_get::<Page<UnifiedPerson>>(&key).await {
+            return Ok(hit);
+        }
+        let result = self
+            .require(&self.search)?
+            .search_people(query, page)
+            .await?;
         #[cfg(feature = "cache")]
         {
-            let search_key = CacheKey::Search {
-                media_type: Some(MediaType::Person),
-                query: query.to_string(),
-                page: page_num,
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<Page<UnifiedPerson>>(&search_key).await
-            {
-                tracing::debug!(query, page = page_num, "cache hit: search_people");
-                return Ok(cached);
-            }
-            if self.cache.is_some() {
-                tracing::debug!(query, page = page_num, "cache miss: search_people");
-            }
-        }
-
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(query, page = ?page, "dispatching search_people to tmdb");
-            let page_resp = client.search_people(query, page).await?;
-            let unified: Page<UnifiedPerson> = page_resp.map(Into::into);
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let search_key = CacheKey::Search {
-                    media_type: Some(MediaType::Person),
-                    query: query.to_string(),
-                    page: page_num,
-                };
-                cache.set(search_key, &unified, cache.ttl.search);
-                for item in &unified.results {
-                    let item_key = CacheKey::Item {
+            self.cache_put(key, &result, self.cache_search_ttl()).await;
+            for item in &result.results {
+                self.cache_put(
+                    CacheKey::Item {
                         media_type: MediaType::Person,
                         provider_id: item.provider_id.to_string(),
-                    };
-                    cache.set(item_key, item, cache.ttl.items);
-                }
+                    },
+                    item,
+                    self.cache_items_ttl(),
+                )
+                .await;
             }
-
-            return Ok(unified);
         }
-
-        #[cfg(feature = "anilist")]
-        if let Some(client) = &self.anilist {
-            tracing::debug!(query, page = ?page, "dispatching search_people to anilist");
-            let unified = client.search_people(query, page).await?;
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let search_key = CacheKey::Search {
-                    media_type: Some(MediaType::Person),
-                    query: query.to_string(),
-                    page: page_num,
-                };
-                cache.set(search_key, &unified, cache.ttl.search);
-                for item in &unified.results {
-                    let item_key = CacheKey::Item {
-                        media_type: MediaType::Person,
-                        provider_id: item.provider_id.to_string(),
-                    };
-                    cache.set(item_key, item, cache.ttl.items);
-                }
-            }
-
-            return Ok(unified);
-        }
-
-        Err(CameoClientError::NotConfigured)
+        Ok(result)
     }
 
     /// Multi-search across movies, TV shows, and people.
@@ -259,116 +127,44 @@ impl CameoClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedSearchResult>, CameoClientError> {
-        let _ = (query, page);
         #[cfg(feature = "cache")]
-        let page_num = page.unwrap_or(1);
-
+        let key = CacheKey::Search {
+            media_type: None,
+            query: query.to_string(),
+            page: page.unwrap_or(1),
+        };
+        #[cfg(feature = "cache")]
+        if let Some(hit) = self.cache_get::<Page<UnifiedSearchResult>>(&key).await {
+            return Ok(hit);
+        }
+        let result = self
+            .require(&self.search)?
+            .search_multi(query, page)
+            .await?;
         #[cfg(feature = "cache")]
         {
-            let search_key = CacheKey::Search {
-                media_type: None,
-                query: query.to_string(),
-                page: page_num,
-            };
-            if let Some(cache) = self.cache.as_ref()
-                && let Some(cached) = cache.get::<Page<UnifiedSearchResult>>(&search_key).await
-            {
-                tracing::debug!(query, page = page_num, "cache hit: search_multi");
-                return Ok(cached);
-            }
-            if self.cache.is_some() {
-                tracing::debug!(query, page = page_num, "cache miss: search_multi");
-            }
-        }
-
-        #[cfg(feature = "tmdb")]
-        if let Some(client) = &self.tmdb {
-            tracing::debug!(query, page = ?page, "dispatching search_multi to tmdb");
-            let page_resp = client.search_multi(query, page).await?;
-            let unified = page_resp.map(Into::into);
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let search_key = CacheKey::Search {
-                    media_type: None,
-                    query: query.to_string(),
-                    page: page_num,
-                };
-                cache.set(search_key, &unified, cache.ttl.search);
-                // Index individual items by provider_id.
-                for item in &unified.results {
-                    match item {
-                        UnifiedSearchResult::Movie(m) => {
-                            let k = CacheKey::Item {
-                                media_type: MediaType::Movie,
-                                provider_id: m.provider_id.to_string(),
-                            };
-                            cache.set(k, m, cache.ttl.items);
-                        }
-                        UnifiedSearchResult::TvShow(t) => {
-                            let k = CacheKey::Item {
-                                media_type: MediaType::TvShow,
-                                provider_id: t.provider_id.to_string(),
-                            };
-                            cache.set(k, t, cache.ttl.items);
-                        }
-                        UnifiedSearchResult::Person(p) => {
-                            let k = CacheKey::Item {
-                                media_type: MediaType::Person,
-                                provider_id: p.provider_id.to_string(),
-                            };
-                            cache.set(k, p, cache.ttl.items);
-                        }
+            self.cache_put(key, &result, self.cache_search_ttl()).await;
+            for item in &result.results {
+                let (media_type, provider_id) = match item {
+                    UnifiedSearchResult::Movie(m) => (MediaType::Movie, m.provider_id.to_string()),
+                    UnifiedSearchResult::TvShow(t) => {
+                        (MediaType::TvShow, t.provider_id.to_string())
                     }
-                }
-            }
-
-            return Ok(unified);
-        }
-
-        #[cfg(feature = "anilist")]
-        if let Some(client) = &self.anilist {
-            tracing::debug!(query, page = ?page, "dispatching search_multi to anilist");
-            let unified = client.search_multi(query, page).await?;
-
-            #[cfg(feature = "cache")]
-            if let Some(cache) = self.cache.as_ref() {
-                let search_key = CacheKey::Search {
-                    media_type: None,
-                    query: query.to_string(),
-                    page: page_num,
-                };
-                cache.set(search_key, &unified, cache.ttl.search);
-                for item in &unified.results {
-                    match item {
-                        UnifiedSearchResult::Movie(m) => {
-                            let k = CacheKey::Item {
-                                media_type: MediaType::Movie,
-                                provider_id: m.provider_id.to_string(),
-                            };
-                            cache.set(k, m, cache.ttl.items);
-                        }
-                        UnifiedSearchResult::TvShow(t) => {
-                            let k = CacheKey::Item {
-                                media_type: MediaType::TvShow,
-                                provider_id: t.provider_id.to_string(),
-                            };
-                            cache.set(k, t, cache.ttl.items);
-                        }
-                        UnifiedSearchResult::Person(p) => {
-                            let k = CacheKey::Item {
-                                media_type: MediaType::Person,
-                                provider_id: p.provider_id.to_string(),
-                            };
-                            cache.set(k, p, cache.ttl.items);
-                        }
+                    UnifiedSearchResult::Person(p) => {
+                        (MediaType::Person, p.provider_id.to_string())
                     }
-                }
+                };
+                self.cache_put(
+                    CacheKey::Item {
+                        media_type,
+                        provider_id,
+                    },
+                    item,
+                    self.cache_items_ttl(),
+                )
+                .await;
             }
-
-            return Ok(unified);
         }
-
-        Err(CameoClientError::NotConfigured)
+        Ok(result)
     }
 }
