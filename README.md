@@ -101,6 +101,12 @@ Prerequisites: `rustup`, `lefthook`, [`just`](https://github.com/casey/just) (co
 5. No `unwrap()` in library code — use `?` and proper error types
 6. Add tests for all public API surface (unit tests preferred; wiremock for network calls)
 
+## Stability
+
+See [docs/STABILITY.md](docs/STABILITY.md) for the API stability policy: what
+the stable surface is, how `#[non_exhaustive]` is used, what counts as a
+breaking change, and the deprecation cadence.
+
 ## MSRV
 
 The minimum supported Rust version is **1.88**. This crate uses [let-chains](https://blog.rust-lang.org/2025/06/26/Rust-1.88.0.html) (`if let A = x && let B = y`) which were stabilized in Rust 1.88. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
