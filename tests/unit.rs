@@ -11,4 +11,5 @@ mod unit {
     mod image_url_test;
     mod model_builders_test;
     mod pagination_test;
+    mod property_test;
 }
