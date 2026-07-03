@@ -34,9 +34,18 @@ live-tests = [] # Gate for tests that hit real TMDB API
 [dependencies]
 # Generated client runtime
 progenitor-client = { version = "0.13", optional = true }
-reqwest = { version = "0.13", features = ["json"] }
-# Async
-tokio = { version = "1", features = ["time", "sync"] }
+# TLS backend pinned to rustls so the dependency tree is deterministic and has
+# no system OpenSSL/native-tls requirement.
+reqwest = { version = "0.13", default-features = false, features = [
+    "json",
+    "rustls",
+    "http2",
+    "charset",
+    "system-proxy",
+] }
+# Async — `rt` is required for tokio::task::spawn_blocking (used by the SQLite
+# cache) and `time`/`sync` for rate limiting and the cache mutex.
+tokio = { version = "1", features = ["time", "sync", "rt"] }
 futures = "0.3"
 async-stream = "0.3"
 async-trait = "0.1"

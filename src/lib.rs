@@ -54,6 +54,14 @@
 // stable). docs.rs passes `--cfg docsrs` via the metadata below.
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+// cameo is useless without a provider to talk to, so require at least one. The
+// default `full` feature enables both `tmdb` and `anilist`.
+#[cfg(not(any(feature = "tmdb", feature = "anilist")))]
+compile_error!(
+    "cameo needs at least one provider feature: enable `tmdb` and/or `anilist` \
+     (the default `full` feature enables both)."
+);
+
 /// Auto-generated low-level API client code (from progenitor).
 ///
 /// Crate-internal: these progenitor/typify-generated types are an
