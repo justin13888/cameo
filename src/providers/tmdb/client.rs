@@ -494,7 +494,15 @@ impl TmdbClient {
                     .movie_recommendations(movie_id, self.language(), Self::tmdb_page(page))
             })
             .await?;
-        parse_movie_recs_from_map(map)
+        let body: MovieRecommendationsResponse =
+            serde_json::from_value(serde_json::Value::Object(map))?;
+        let results = body.results.into_iter().map(UnifiedMovie::from).collect();
+        Ok(Page::offset(
+            body.page.unwrap_or(1) as u32,
+            results,
+            body.total_pages.unwrap_or(1) as u32,
+            body.total_results.unwrap_or(0) as u32,
+        ))
     }
 
     /// Get TV show recommendations based on a TV show.
@@ -587,9 +595,9 @@ impl TmdbClient {
             })
             .await?;
         let show_id = MediaId::tmdb(series_id as u64);
-        let mut details: UnifiedSeasonDetails = body.into();
-        details.show_id = show_id;
-        Ok(details)
+        Ok(crate::unified::conversions::tmdb::tv::season_details_from(
+            body, show_id,
+        ))
     }
 
     /// Get episode details for a TV show.
@@ -627,7 +635,7 @@ impl TmdbClient {
             .await?;
         let provider_id = MediaId::tmdb(movie_id as u64);
         let results = match body.results {
-            Some(r) => parse_watch_provider_results(serde_json::to_value(r)?),
+            Some(r) => parse_watch_provider_results(serde_json::to_value(r)?)?,
             None => HashMap::new(),
         };
         Ok(UnifiedWatchProviders {
@@ -647,7 +655,7 @@ impl TmdbClient {
             .await?;
         let provider_id = MediaId::tmdb(series_id as u64);
         let results = match body.results {
-            Some(r) => parse_watch_provider_results(serde_json::to_value(r)?),
+            Some(r) => parse_watch_provider_results(serde_json::to_value(r)?)?,
             None => HashMap::new(),
         };
         Ok(UnifiedWatchProviders {
@@ -703,120 +711,75 @@ impl TmdbClient {
     }
 }
 
-// ── Private helpers ───────────────────────────────────────────────────────────
+// ── Typed recommendation / watch-provider response models ───────────────────────
 
-/// Parse movie recommendations from the raw JSON map returned by the generated client.
-fn parse_movie_recs_from_map(
-    map: serde_json::Map<String, serde_json::Value>,
-) -> Result<Page<UnifiedMovie>, TmdbError> {
-    use crate::{
-        providers::tmdb::image_url::{BackdropSize, ImageUrl, PosterSize},
-        unified::genre::Genre,
-    };
-
-    let value = serde_json::Value::Object(map);
-    let page = value["page"].as_i64().unwrap_or(1) as u32;
-    let total_pages = value["total_pages"].as_i64().unwrap_or(1) as u32;
-    let total_results = value["total_results"].as_i64().unwrap_or(0) as u32;
-    let empty = vec![];
-    let arr = value["results"].as_array().unwrap_or(&empty);
-
-    let results = arr
-        .iter()
-        .filter_map(|v| {
-            let id = v["id"].as_i64()?;
-            let title = v["title"].as_str().unwrap_or_default().to_string();
-            let original_title = v["original_title"].as_str().map(String::from);
-            let overview = v["overview"].as_str().map(String::from);
-            let release_date = v["release_date"]
-                .as_str()
-                .filter(|s| !s.is_empty())
-                .and_then(|s| s.parse().ok());
-            let poster_url = v["poster_path"]
-                .as_str()
-                .map(|p| ImageUrl::poster(p, PosterSize::W500));
-            let backdrop_url = v["backdrop_path"]
-                .as_str()
-                .map(|p| ImageUrl::backdrop(p, BackdropSize::W780));
-            let genre_ids: Vec<i64> = v["genre_ids"]
-                .as_array()
-                .map(|a| a.iter().filter_map(|g| g.as_i64()).collect())
-                .unwrap_or_default();
-            let genres = genre_ids
-                .iter()
-                .map(|&gid| Genre::from_tmdb_id(gid))
-                .collect();
-            let popularity = v["popularity"].as_f64();
-            let vote_average = v["vote_average"].as_f64();
-            let vote_count = v["vote_count"].as_i64().unwrap_or(0) as u64;
-            let original_language = v["original_language"].as_str().map(String::from);
-            let adult = v["adult"].as_bool().unwrap_or(false);
-            Some(UnifiedMovie {
-                provider_id: MediaId::tmdb(id as u64),
-                title,
-                original_title,
-                overview,
-                release_date,
-                poster_url,
-                backdrop_url,
-                genres,
-                popularity,
-                vote_average,
-                vote_count: Some(vote_count),
-                original_language,
-                adult: Some(adult),
-            })
-        })
-        .collect();
-
-    Ok(Page::offset(page, results, total_pages, total_results))
+/// Typed view of the movie-recommendations response.
+///
+/// The generated client returns this endpoint as an untyped JSON map, so it is
+/// re-parsed into typed structs (shape-identical to the "similar movies"
+/// endpoint) instead of hand-indexed.
+#[derive(serde::Deserialize)]
+struct MovieRecommendationsResponse {
+    page: Option<i64>,
+    #[serde(default)]
+    results: Vec<types::MovieSimilarResponseResultsItem>,
+    total_pages: Option<i64>,
+    total_results: Option<i64>,
 }
 
-/// Parse watch provider results from a serde_json::Value (serialized country map).
-fn parse_watch_provider_results(
-    value: serde_json::Value,
-) -> HashMap<String, UnifiedWatchProviderEntry> {
+/// One streaming service under a watch-provider country entry.
+#[derive(serde::Deserialize)]
+struct WatchProviderService {
+    provider_name: Option<String>,
+    logo_path: Option<String>,
+}
+
+/// One country's watch-provider lists.
+#[derive(serde::Deserialize, Default)]
+struct WatchProviderCountry {
+    #[serde(default)]
+    flatrate: Vec<WatchProviderService>,
+    #[serde(default)]
+    rent: Vec<WatchProviderService>,
+    #[serde(default)]
+    buy: Vec<WatchProviderService>,
+}
+
+impl From<WatchProviderCountry> for UnifiedWatchProviderEntry {
+    fn from(c: WatchProviderCountry) -> Self {
+        UnifiedWatchProviderEntry {
+            flatrate: unified_services(c.flatrate),
+            rent: unified_services(c.rent),
+            buy: unified_services(c.buy),
+        }
+    }
+}
+
+/// Map watch-provider services to unified services, dropping any without a name.
+fn unified_services(list: Vec<WatchProviderService>) -> Vec<UnifiedStreamingService> {
     use crate::providers::tmdb::image_url::{ImageUrl, LogoSize};
-
-    let Some(obj) = value.as_object() else {
-        return HashMap::new();
-    };
-
-    obj.iter()
-        .map(|(country_code, entry_val)| {
-            let flatrate =
-                parse_provider_list(&entry_val["flatrate"], &ImageUrl::logo, LogoSize::W92);
-            let rent = parse_provider_list(&entry_val["rent"], &ImageUrl::logo, LogoSize::W92);
-            let buy = parse_provider_list(&entry_val["buy"], &ImageUrl::logo, LogoSize::W92);
-            (
-                country_code.clone(),
-                UnifiedWatchProviderEntry {
-                    flatrate,
-                    rent,
-                    buy,
-                },
-            )
+    list.into_iter()
+        .filter_map(|s| {
+            let name = s.provider_name?;
+            Some(UnifiedStreamingService {
+                name,
+                logo_url: s
+                    .logo_path
+                    .as_deref()
+                    .map(|p| ImageUrl::logo(p, LogoSize::W92)),
+            })
         })
         .collect()
 }
 
-fn parse_provider_list<F>(
-    val: &serde_json::Value,
-    logo_fn: &F,
-    size: crate::providers::tmdb::image_url::LogoSize,
-) -> Vec<UnifiedStreamingService>
-where
-    F: Fn(&str, crate::providers::tmdb::image_url::LogoSize) -> String,
-{
-    val.as_array()
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| {
-                    let name = v["provider_name"].as_str()?.to_string();
-                    let logo_url = v["logo_path"].as_str().map(|p| logo_fn(p, size));
-                    Some(UnifiedStreamingService { name, logo_url })
-                })
-                .collect()
-        })
-        .unwrap_or_default()
+/// Parse TMDB watch-provider results (a per-country object) into unified entries
+/// via typed serde structs rather than hand-indexed JSON.
+fn parse_watch_provider_results(
+    value: serde_json::Value,
+) -> Result<HashMap<String, UnifiedWatchProviderEntry>, TmdbError> {
+    let by_country: HashMap<String, WatchProviderCountry> = serde_json::from_value(value)?;
+    Ok(by_country
+        .into_iter()
+        .map(|(country, entry)| (country, entry.into()))
+        .collect())
 }

@@ -109,13 +109,13 @@ mod tests {
     fn test_search_result_dispatch_by_format() {
         use crate::unified::models::UnifiedSearchResult;
         let movie_result = anilist_media_to_search_result(make_media(1, "MOVIE"));
-        assert!(matches!(movie_result, UnifiedSearchResult::Movie(_)));
+        assert!(matches!(movie_result, Some(UnifiedSearchResult::Movie(_))));
 
         let tv_result = anilist_media_to_search_result(make_media(2, "TV"));
-        assert!(matches!(tv_result, UnifiedSearchResult::TvShow(_)));
+        assert!(matches!(tv_result, Some(UnifiedSearchResult::TvShow(_))));
 
         let ova_result = anilist_media_to_search_result(make_media(3, "OVA"));
-        assert!(matches!(ova_result, UnifiedSearchResult::TvShow(_)));
+        assert!(matches!(ova_result, Some(UnifiedSearchResult::TvShow(_))));
     }
 
     #[test]

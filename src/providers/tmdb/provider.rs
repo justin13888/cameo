@@ -95,7 +95,7 @@ impl SearchProvider for TmdbClient {
     ) -> Result<Page<UnifiedSearchResult>, ProviderError> {
         Ok(TmdbClient::search_multi(self, query, page)
             .await?
-            .map(Into::into))
+            .filter_map(crate::unified::conversions::tmdb::person::multi_search_result))
     }
 }
 

@@ -130,12 +130,18 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
 
 // ── AniListMedia → UnifiedSearchResult ───────────────────────────────────────
 
-/// Dispatch an AniList media entry to [`UnifiedSearchResult::Movie`] or
-/// [`UnifiedSearchResult::TvShow`] based on its `format` field.
-pub fn anilist_media_to_search_result(m: AniListMedia) -> UnifiedSearchResult {
+/// Dispatch an AniList media entry to a [`UnifiedSearchResult`] based on its
+/// `format`.
+///
+/// Shared unknown-media policy: an entry whose `format` is absent is **omitted**
+/// (`None`) rather than coerced to an arbitrary type — the same rule TMDB
+/// applies to an unrecognized `media_type`. Any present non-`MOVIE` AniList
+/// format is a show.
+pub fn anilist_media_to_search_result(m: AniListMedia) -> Option<UnifiedSearchResult> {
     match m.format.as_deref() {
-        Some("MOVIE") => UnifiedSearchResult::Movie(anilist_media_to_movie(m)),
-        _ => UnifiedSearchResult::TvShow(anilist_media_to_tv(m)),
+        Some("MOVIE") => Some(UnifiedSearchResult::Movie(anilist_media_to_movie(m))),
+        Some(_) => Some(UnifiedSearchResult::TvShow(anilist_media_to_tv(m))),
+        None => None,
     }
 }
 
@@ -326,24 +332,26 @@ mod tests {
     #[test]
     fn search_result_movie_format() {
         let result = anilist_media_to_search_result(make_media(1, Some("MOVIE")));
-        assert!(matches!(result, UnifiedSearchResult::Movie(_)));
+        assert!(matches!(result, Some(UnifiedSearchResult::Movie(_))));
     }
 
     #[test]
     fn search_result_tv_format() {
         let result = anilist_media_to_search_result(make_media(2, Some("TV")));
-        assert!(matches!(result, UnifiedSearchResult::TvShow(_)));
+        assert!(matches!(result, Some(UnifiedSearchResult::TvShow(_))));
     }
 
     #[test]
-    fn search_result_unknown_format_defaults_to_tv() {
+    fn search_result_other_present_format_is_a_show() {
+        // Any present non-MOVIE format classifies as a show.
         let result = anilist_media_to_search_result(make_media(3, Some("OVA")));
-        assert!(matches!(result, UnifiedSearchResult::TvShow(_)));
+        assert!(matches!(result, Some(UnifiedSearchResult::TvShow(_))));
     }
 
     #[test]
-    fn search_result_none_format_defaults_to_tv() {
+    fn search_result_absent_format_is_dropped() {
+        // Shared unknown-media policy: no format -> omitted, not coerced.
         let result = anilist_media_to_search_result(make_media(4, None));
-        assert!(matches!(result, UnifiedSearchResult::TvShow(_)));
+        assert!(result.is_none());
     }
 }

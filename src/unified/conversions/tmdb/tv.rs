@@ -219,16 +219,22 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
     }
 }
 
-impl From<types::TvSeasonDetailsResponse> for UnifiedSeasonDetails {
-    fn from(t: types::TvSeasonDetailsResponse) -> Self {
-        UnifiedSeasonDetails {
-            show_id: MediaId::tmdb(0), // filled in by the caller
-            season_number: t.season_number.max(0) as u32,
-            name: t.name,
-            overview: t.overview,
-            air_date: resolve_date(&t.air_date),
-            poster_url: resolve_poster(&t.poster_path),
-            episodes: t.episodes.into_iter().map(Into::into).collect(),
-        }
+/// Build a [`UnifiedSeasonDetails`] from a TMDB season response.
+///
+/// The TMDB season endpoint response does not carry its parent show id, so it
+/// is supplied by the caller and the value is valid by construction — there is
+/// no placeholder to patch after the fact.
+pub(crate) fn season_details_from(
+    t: types::TvSeasonDetailsResponse,
+    show_id: MediaId,
+) -> UnifiedSeasonDetails {
+    UnifiedSeasonDetails {
+        show_id,
+        season_number: t.season_number.max(0) as u32,
+        name: t.name,
+        overview: t.overview,
+        air_date: resolve_date(&t.air_date),
+        poster_url: resolve_poster(&t.poster_path),
+        episodes: t.episodes.into_iter().map(Into::into).collect(),
     }
 }

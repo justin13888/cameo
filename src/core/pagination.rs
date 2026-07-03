@@ -95,6 +95,22 @@ impl<T> Page<T> {
             total_results: self.total_results,
         }
     }
+
+    /// Transform each item, dropping items the closure maps to `None`.
+    ///
+    /// Pagination metadata (page numbers and totals) is preserved from the
+    /// provider — the server's totals still describe the full result set even
+    /// when some items on this page are filtered out locally.
+    pub fn filter_map<U, F: FnMut(T) -> Option<U>>(self, f: F) -> Page<U> {
+        Page {
+            page: self.page,
+            results: self.results.into_iter().filter_map(f).collect(),
+            has_next: self.has_next,
+            next: self.next,
+            total_pages: self.total_pages,
+            total_results: self.total_results,
+        }
+    }
 }
 
 /// Converts a page-fetching closure into an async [`Stream`] that yields

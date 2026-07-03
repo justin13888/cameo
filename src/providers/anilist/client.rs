@@ -327,7 +327,7 @@ impl AniListClient {
         let results = page_data
             .media
             .into_iter()
-            .map(crate::unified::conversions::anilist::anilist_media_to_search_result)
+            .filter_map(crate::unified::conversions::anilist::anilist_media_to_search_result)
             .collect();
         Ok(Page::with_has_next(
             pi.current_page.unwrap_or(1) as u32,
