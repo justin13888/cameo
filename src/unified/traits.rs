@@ -1,8 +1,9 @@
 //! Provider extension traits.
 //!
 //! Per ADR 0001 these are the v1 extension seam: object-safe and `Send` (via
-//! `#[async_trait]`), returning the unified [`ProviderError`], taking [`MediaId`]
-//! parameters, and yielding the provider-agnostic [`Page`]. Concrete providers
+//! `#[async_trait]`), returning the unified [`ProviderError`](crate::ProviderError),
+//! taking [`MediaId`](crate::MediaId) parameters, and yielding the
+//! provider-agnostic [`Page`](crate::Page). Concrete providers
 //! (`TmdbClient`, `AniListClient`, and out-of-crate providers) implement them,
 //! so `Arc<dyn SearchProvider>` and friends are constructible.
 

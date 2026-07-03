@@ -14,6 +14,12 @@ keywords = ["tmdb", "anilist", "movies", "tv", "metadata"]
 categories = ["api-bindings", "asynchronous", "web-programming::http-client"]
 exclude = ["scripts/", "openapi/", "xtask/", ".cargo/", ".sidecar*", "AGENTS.md", "CLAUDE.md", ".github/", "lefthook.yaml", "rust-toolchain.toml", "DEVELOPMENT.md", "TESTING.md", ".claude/", "CHANGELOG.md", "justfile", "rustfmt.toml", "release-plz.toml"]
 
+# docs.rs builds with all features and `--cfg docsrs` so feature-gated items
+# render with `#[doc(cfg(...))]` badges.
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [lints.rust]
 missing_docs = "warn"
 

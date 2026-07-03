@@ -10,7 +10,7 @@ use crate::{
 /// Builder for discovering movies with flexible filters.
 ///
 /// The ~15 filters shared with [`DiscoverTvBuilder`](super::DiscoverTvBuilder)
-/// come from the shared [`common_discover_setters`](super::params) core; the
+/// come from the shared setter core in [`super::params`]; the
 /// setters below are movie-specific. Provider ID filters take `&[u64]` slices
 /// and coded filters take typed enums.
 ///

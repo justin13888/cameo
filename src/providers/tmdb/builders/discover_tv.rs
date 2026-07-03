@@ -11,7 +11,7 @@ use crate::{
 ///
 /// The ~15 filters shared with
 /// [`DiscoverMoviesBuilder`](super::DiscoverMoviesBuilder) come from the shared
-/// [`common_discover_setters`](super::params) core; the setters below are
+/// setter core in [`super::params`]; the setters below are
 /// TV-specific. Provider ID filters take `&[u64]` slices and coded filters take
 /// typed enums.
 ///

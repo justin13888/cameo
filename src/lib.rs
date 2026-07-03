@@ -50,6 +50,10 @@
 //! # }
 //! ```
 
+// Enable `#[doc(cfg(...))]` feature badges on docs.rs (nightly-only; inert on
+// stable). docs.rs passes `--cfg docsrs` via the metadata below.
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 /// Auto-generated low-level API client code (from progenitor).
 ///
 /// Crate-internal: these progenitor/typify-generated types are an
@@ -80,7 +84,7 @@ pub use core::{
 };
 
 /// Re-exported so out-of-crate implementers of the `#[async_trait]` provider
-/// and [`CacheBackend`](cache::CacheBackend) traits don't need their own
+/// and `CacheBackend` traits don't need their own
 /// `async-trait` dependency: use `#[cameo::async_trait::async_trait]`.
 pub use async_trait;
 #[cfg(feature = "cache")]

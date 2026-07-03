@@ -3,7 +3,7 @@
 //! The two-layer pattern (ADR 0001): the inherent methods on [`TmdbClient`]
 //! expose the native surface; these impls adapt them to the unified traits,
 //! converting to unified models and mapping [`TmdbError`](super::error::TmdbError)
-//! into [`ProviderError`].
+//! into [`ProviderError`](crate::core::error::ProviderError).
 
 use async_trait::async_trait;
 

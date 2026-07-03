@@ -65,6 +65,21 @@ jobs:
       - name: Doc tests
         run: cargo test --doc --features tmdb,anilist,cache
 
+  docs:
+    name: Docs (docs.rs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Nightly + --cfg docsrs mirrors the docs.rs build and exercises doc_cfg.
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      - name: cargo doc
+        env:
+          RUSTDOCFLAGS: "--cfg docsrs -D warnings"
+        run: cargo doc --all-features --no-deps
+
   msrv:
     name: MSRV (1.88)
     runs-on: ubuntu-latest
