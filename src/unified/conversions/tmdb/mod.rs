@@ -5,9 +5,13 @@ pub mod person;
 pub mod tv;
 
 use crate::{
-    providers::tmdb::image_url::{BackdropSize, ImageUrl, PosterSize, ProfileSize},
+    providers::tmdb::image_url::{BackdropSize, ImageUrl, LogoSize, PosterSize, ProfileSize},
     unified::date::PartialDate,
 };
+
+pub(super) fn resolve_logo(path: &Option<String>) -> Option<String> {
+    path.as_deref().map(|p| ImageUrl::logo(p, LogoSize::W92))
+}
 
 /// Parse a TMDB date string (`YYYY-MM-DD`, occasionally empty or malformed)
 /// into a [`PartialDate`], dropping empty/invalid values to `None`.

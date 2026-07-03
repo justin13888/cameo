@@ -7,7 +7,7 @@ use crate::{
         genre::Genre,
         media_id::MediaId,
         models::{
-            UnifiedMovie, UnifiedMovieDetails, UnifiedSearchResult, UnifiedTvShow,
+            Company, UnifiedMovie, UnifiedMovieDetails, UnifiedSearchResult, UnifiedTvShow,
             UnifiedTvShowDetails,
         },
     },
@@ -91,9 +91,10 @@ pub fn anilist_media_to_movie(m: AniListMedia) -> UnifiedMovie {
         genres: map_genres(&m.genres),
         popularity: m.popularity.map(|p| p as f64),
         vote_average: score_to_vote_average(m.average_score),
-        vote_count: 0,
+        // AniList exposes an average score but no vote count.
+        vote_count: None,
         original_language: m.country_of_origin.as_deref().map(country_to_language),
-        adult: m.is_adult.unwrap_or(false),
+        adult: m.is_adult,
     }
 }
 
@@ -119,10 +120,11 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
         genres: map_genres(&m.genres),
         popularity: m.popularity.map(|p| p as f64),
         vote_average: score_to_vote_average(m.average_score),
-        vote_count: 0,
+        // AniList exposes an average score but no vote count.
+        vote_count: None,
         original_language: lang,
         origin_country,
-        adult: m.is_adult.unwrap_or(false),
+        adult: m.is_adult,
     }
 }
 
@@ -141,10 +143,21 @@ pub fn anilist_media_to_search_result(m: AniListMedia) -> UnifiedSearchResult {
 
 /// Convert an AniList media detail entry to [`UnifiedMovieDetails`].
 pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMovieDetails {
-    let production_companies: Vec<String> = m
+    let production_companies: Vec<Company> = m
         .studios
         .as_ref()
-        .map(|s| s.nodes.iter().filter_map(|n| n.name.clone()).collect())
+        .map(|s| {
+            s.nodes
+                .iter()
+                .filter_map(|n| n.name.clone())
+                .map(|name| Company {
+                    id: None,
+                    name,
+                    logo_url: None,
+                    origin_country: None,
+                })
+                .collect()
+        })
         .unwrap_or_default();
 
     let origin_lang = m.country_of_origin.as_deref().map(country_to_language);
@@ -174,9 +187,9 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
             genres,
             popularity: m.popularity.map(|p| p as f64),
             vote_average: score_to_vote_average(m.average_score),
-            vote_count: 0,
+            vote_count: None,
             original_language: origin_lang,
-            adult: m.is_adult.unwrap_or(false),
+            adult: m.is_adult,
         },
         tagline: None,
         runtime: m.duration.map(|d| d.max(0) as u32),
@@ -197,10 +210,21 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
 
 /// Convert an AniList media detail entry to [`UnifiedTvShowDetails`].
 pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvShowDetails {
-    let production_companies: Vec<String> = m
+    let production_companies: Vec<Company> = m
         .studios
         .as_ref()
-        .map(|s| s.nodes.iter().filter_map(|n| n.name.clone()).collect())
+        .map(|s| {
+            s.nodes
+                .iter()
+                .filter_map(|n| n.name.clone())
+                .map(|name| Company {
+                    id: None,
+                    name,
+                    logo_url: None,
+                    origin_country: None,
+                })
+                .collect()
+        })
         .unwrap_or_default();
 
     let origin_lang = m.country_of_origin.as_deref().map(country_to_language);
@@ -239,26 +263,29 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
             genres,
             popularity: m.popularity.map(|p| p as f64),
             vote_average: score_to_vote_average(m.average_score),
-            vote_count: 0,
+            vote_count: None,
             original_language: origin_lang,
             origin_country: origin_country.clone(),
-            adult: m.is_adult.unwrap_or(false),
+            adult: m.is_adult,
         },
         tagline: None,
-        // AniList does not expose a season count for anime.
-        number_of_seasons: 1,
-        number_of_episodes: m.episodes.unwrap_or(0) as u32,
+        // AniList models anime as a single continuous run, not TMDB-style seasons.
+        number_of_seasons: None,
+        number_of_episodes: m.episodes.map(|e| e.max(0) as u32),
         in_production,
         status: m.status,
         homepage: None,
         networks: Vec::new(),
         production_companies,
         last_air_date: m.end_date.as_ref().and_then(resolve_date),
-        type_: m.format,
+        // AniList has no TMDB-style show classification; its format lives in `media_format`.
+        type_: None,
+        media_format: m.format,
         created_by: Vec::new(),
         episode_run_time,
         spoken_languages: Vec::new(),
         production_countries: origin_country,
+        seasons: Vec::new(),
     }
 }
 

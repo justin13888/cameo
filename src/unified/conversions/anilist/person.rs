@@ -4,7 +4,7 @@ use crate::{
     providers::anilist::response::{AniListStaff, AniListStaffDetail},
     unified::{
         media_id::MediaId,
-        models::{UnifiedPerson, UnifiedPersonDetails},
+        models::{Gender, UnifiedPerson, UnifiedPersonDetails},
     },
 };
 
@@ -29,7 +29,7 @@ pub fn staff_to_person(s: AniListStaff) -> UnifiedPerson {
         profile_url: s.image.and_then(|i| i.large),
         popularity: None,
         gender: None,
-        adult: false,
+        adult: None,
     }
 }
 
@@ -64,13 +64,8 @@ pub fn staff_detail_to_person_details(s: AniListStaffDetail) -> UnifiedPersonDet
             known_for_department: department,
             profile_url: s.image.and_then(|i| i.large),
             popularity: None,
-            gender: s.gender.as_deref().map(|g| match g {
-                "Female" => 1,
-                "Male" => 2,
-                "Non-binary" => 3,
-                _ => 0,
-            }),
-            adult: false,
+            gender: s.gender.as_deref().map(Gender::from_anilist),
+            adult: None,
         },
         biography: s.description,
         birthday: s.date_of_birth.as_ref().and_then(super::resolve_date),
@@ -98,21 +93,13 @@ pub(crate) fn normalize_occupation(occupation: &str) -> String {
 mod tests {
     use super::normalize_occupation;
 
-    fn map_gender(g: &str) -> u8 {
-        match g {
-            "Female" => 1,
-            "Male" => 2,
-            "Non-binary" => 3,
-            _ => 0,
-        }
-    }
-
     #[test]
     fn gender_mapping() {
-        assert_eq!(map_gender("Female"), 1);
-        assert_eq!(map_gender("Male"), 2);
-        assert_eq!(map_gender("Non-binary"), 3);
-        assert_eq!(map_gender("Unknown"), 0);
+        use crate::unified::models::Gender;
+        assert_eq!(Gender::from_anilist("Female"), Gender::Female);
+        assert_eq!(Gender::from_anilist("Male"), Gender::Male);
+        assert_eq!(Gender::from_anilist("Non-binary"), Gender::NonBinary);
+        assert_eq!(Gender::from_anilist("Unknown"), Gender::NotSpecified);
     }
 
     #[test]

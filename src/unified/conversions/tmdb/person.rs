@@ -3,7 +3,7 @@
 use super::{resolve_backdrop, resolve_date, resolve_poster, resolve_profile};
 use crate::{
     generated::tmdb::types,
-    unified::{media_id::MediaId, models::*},
+    unified::{genre::Genre, media_id::MediaId, models::*},
 };
 
 impl From<types::SearchPersonResponseResultsItem> for UnifiedPerson {
@@ -14,8 +14,8 @@ impl From<types::SearchPersonResponseResultsItem> for UnifiedPerson {
             known_for_department: p.known_for_department,
             profile_url: resolve_profile(&p.profile_path),
             popularity: Some(p.popularity),
-            gender: Some(p.gender as i32),
-            adult: p.adult,
+            gender: Gender::from_tmdb(p.gender),
+            adult: Some(p.adult),
         }
     }
 }
@@ -29,8 +29,8 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
                 known_for_department: p.known_for_department,
                 profile_url: resolve_profile(&p.profile_path),
                 popularity: Some(p.popularity),
-                gender: Some(p.gender as i32),
-                adult: p.adult,
+                gender: Gender::from_tmdb(p.gender),
+                adult: Some(p.adult),
             },
             biography: p.biography,
             birthday: resolve_date(&p.birthday),
@@ -61,13 +61,13 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                 genres: item
                     .genre_ids
                     .iter()
-                    .map(|&id| crate::unified::genre::Genre::from_tmdb_id(id))
+                    .map(|&id| Genre::from_tmdb_id(id))
                     .collect(),
                 popularity: Some(item.popularity),
                 vote_average: Some(item.vote_average),
-                vote_count: item.vote_count.max(0) as u64,
+                vote_count: Some(item.vote_count.max(0) as u64),
                 original_language: item.original_language,
-                adult: item.adult,
+                adult: Some(item.adult),
             }),
             Some("tv") => UnifiedSearchResult::TvShow(UnifiedTvShow {
                 provider_id: MediaId::tmdb(item.id as u64),
@@ -81,29 +81,24 @@ impl From<types::SearchMultiResponseResultsItem> for UnifiedSearchResult {
                 genres: item
                     .genre_ids
                     .iter()
-                    .map(|&id| crate::unified::genre::Genre::from_tmdb_id(id))
+                    .map(|&id| Genre::from_tmdb_id(id))
                     .collect(),
                 popularity: Some(item.popularity),
                 vote_average: Some(item.vote_average),
-                vote_count: item.vote_count.max(0) as u64,
+                vote_count: Some(item.vote_count.max(0) as u64),
                 original_language: item.original_language,
                 origin_country: Vec::new(),
-                adult: item.adult,
+                adult: Some(item.adult),
             }),
-            other => {
-                if other != Some("person") {
-                    tracing::warn!(media_type = ?other, "unknown media_type in multi-search result, defaulting to Person");
-                }
-                UnifiedSearchResult::Person(UnifiedPerson {
-                    provider_id: MediaId::tmdb(item.id as u64),
-                    name: item.name.or(item.title).unwrap_or_default(),
-                    known_for_department: None,
-                    profile_url: resolve_poster(&item.poster_path), // multi uses poster_path
-                    popularity: Some(item.popularity),
-                    gender: None,
-                    adult: item.adult,
-                })
-            }
+            _ => UnifiedSearchResult::Person(UnifiedPerson {
+                provider_id: MediaId::tmdb(item.id as u64),
+                name: item.name.or(item.title).unwrap_or_default(),
+                known_for_department: None,
+                profile_url: resolve_poster(&item.poster_path), // multi uses poster_path
+                popularity: Some(item.popularity),
+                gender: None,
+                adult: Some(item.adult),
+            }),
         }
     }
 }

@@ -34,10 +34,10 @@ fn search_movie_to_unified() {
         unified.release_date.map(|d| d.to_string()).as_deref(),
         Some("1999-10-15")
     );
-    assert_eq!(unified.vote_count, 26280);
+    assert_eq!(unified.vote_count, Some(26280));
     assert!((unified.vote_average.unwrap() - 8.4).abs() < 0.01);
     assert_eq!(unified.original_language.as_deref(), Some("en"));
-    assert!(!unified.adult);
+    assert_eq!(unified.adult, Some(false));
     // Genres now resolved from IDs (18=Drama, 53=Thriller)
     assert_eq!(unified.genres, vec![Genre::Drama, Genre::Thriller]);
     // Image URLs should be resolved
@@ -115,10 +115,10 @@ fn search_tv_to_unified() {
         Some("2008-01-20")
     );
     assert_eq!(unified.origin_country, vec!["US"]);
-    assert_eq!(unified.vote_count, 14000);
+    assert_eq!(unified.vote_count, Some(14000));
     assert!(unified.poster_url.is_some());
     // adult field
-    assert!(!unified.adult);
+    assert_eq!(unified.adult, Some(false));
     // Genres from IDs (18=Drama, 80=Crime)
     assert_eq!(unified.genres, vec![Genre::Drama, Genre::Crime]);
 }
@@ -153,8 +153,8 @@ fn search_person_to_unified() {
             .starts_with("https://image.tmdb.org/t/p/")
     );
     // New fields
-    assert_eq!(unified.gender, Some(2));
-    assert!(!unified.adult);
+    assert_eq!(unified.gender, Some(cameo::Gender::Male));
+    assert_eq!(unified.adult, Some(false));
 }
 
 #[test]
@@ -217,7 +217,7 @@ fn search_multi_tv_type() {
         UnifiedSearchResult::TvShow(t) => {
             assert_eq!(t.provider_id, "tmdb:1396");
             assert_eq!(t.name, "Breaking Bad");
-            assert!(!t.adult);
+            assert_eq!(t.adult, Some(false));
         }
         other => panic!("expected TvShow, got {:?}", other),
     }

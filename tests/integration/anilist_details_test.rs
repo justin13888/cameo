@@ -60,9 +60,16 @@ async fn movie_details_returns_correct_fields() {
     // Runtime
     assert_eq!(result.runtime, Some(106));
     // Production companies
-    assert_eq!(result.production_companies, vec!["CoMix Wave Films"]);
+    assert_eq!(
+        result
+            .production_companies
+            .iter()
+            .map(|c| c.name.as_str())
+            .collect::<Vec<_>>(),
+        vec!["CoMix Wave Films"]
+    );
     // Adult flag
-    assert!(!result.movie.adult);
+    assert_eq!(result.movie.adult, Some(false));
     // Original language from countryOfOrigin "JP"
     assert_eq!(result.movie.original_language.as_deref(), Some("ja"));
     // Genres: Drama, Romance, Supernatural

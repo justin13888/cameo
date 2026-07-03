@@ -87,10 +87,11 @@ pub use providers::retry::RetryPolicy;
 #[cfg(feature = "tmdb")]
 pub use providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
 pub use unified::{
-    CameoClient, CameoClientBuilder, CameoClientError, Capability, DetailProvider,
-    DiscoveryProvider, Genre, MediaId, MediaProvider, NativeId, ParseDateError, PartialDate,
-    Provider, RecommendationProvider, SearchProvider, SeasonProvider, UnifiedEpisode, UnifiedMovie,
-    UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult,
-    UnifiedSeasonDetails, UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails,
-    UnifiedWatchProviderEntry, UnifiedWatchProviders, UnknownGenre, WatchAvailabilityProvider,
+    CameoClient, CameoClientBuilder, CameoClientError, Capability, Collection, Company, Creator,
+    DetailProvider, DiscoveryProvider, Gender, Genre, MediaId, MediaProvider, NativeId, Network,
+    ParseDateError, PartialDate, Provider, RecommendationProvider, SearchProvider, SeasonProvider,
+    UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
+    UnifiedSearchResult, UnifiedSeason, UnifiedSeasonDetails, UnifiedStreamingService,
+    UnifiedTvShow, UnifiedTvShowDetails, UnifiedWatchProviderEntry, UnifiedWatchProviders,
+    UnknownGenre, WatchAvailabilityProvider,
 };

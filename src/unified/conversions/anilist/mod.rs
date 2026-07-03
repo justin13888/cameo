@@ -82,7 +82,7 @@ mod tests {
         assert_eq!(movie.vote_average, Some(7.8));
         assert_eq!(movie.popularity, Some(100000.0));
         assert_eq!(movie.original_language.as_deref(), Some("ja"));
-        assert!(!movie.adult);
+        assert_eq!(movie.adult, Some(false));
     }
 
     #[test]

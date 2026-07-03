@@ -76,7 +76,7 @@ async fn test_search_movies_returns_unified_movies() {
     assert_eq!(result.results[0].title, "Your Name");
     assert_eq!(result.results[0].provider_id, "anilist:1535");
     assert_eq!(result.results[0].vote_average, Some(8.5));
-    assert!(!result.results[0].adult);
+    assert_eq!(result.results[0].adult, Some(false));
     assert_eq!(result.page, 1);
 }
 
@@ -164,7 +164,14 @@ async fn test_movie_details_returns_details() {
     let result = client.movie_details(1575).await.unwrap();
     assert_eq!(result.movie.title, "Spirited Away");
     assert_eq!(result.movie.provider_id, "anilist:1575");
-    assert_eq!(result.production_companies, vec!["Studio Ghibli"]);
+    assert_eq!(
+        result
+            .production_companies
+            .iter()
+            .map(|c| c.name.as_str())
+            .collect::<Vec<_>>(),
+        vec!["Studio Ghibli"]
+    );
     assert_eq!(result.runtime, Some(125));
 }
 

@@ -762,9 +762,9 @@ fn parse_movie_recs_from_map(
                 genres,
                 popularity,
                 vote_average,
-                vote_count,
+                vote_count: Some(vote_count),
                 original_language,
-                adult,
+                adult: Some(adult),
             })
         })
         .collect();
