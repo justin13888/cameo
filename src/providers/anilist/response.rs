@@ -17,7 +17,6 @@ pub(crate) struct GraphQlResponse<T> {
 
 /// AniList pagination info returned by `Page.pageInfo`.
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)] // Mirrors AniList API schema; not all fields are read
 pub struct PageInfo {
     /// Total items across all pages.
     pub total: Option<i32>,
@@ -33,9 +32,6 @@ pub struct PageInfo {
     /// (defaulting to `false`) rather than failing the whole page.
     #[serde(rename = "hasNextPage", default)]
     pub has_next_page: bool,
-    /// Results per page.
-    #[serde(rename = "perPage")]
-    pub per_page: Option<i32>,
 }
 
 // ── Media types ───────────────────────────────────────────────────────────────
@@ -83,7 +79,6 @@ pub struct AniListStudios {
 
 /// Core AniList media entry (anime) — used in list/search results.
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)] // Mirrors AniList API schema; not all fields are read
 pub struct AniListMedia {
     pub id: i32,
     pub title: Option<AniListTitle>,
@@ -100,12 +95,6 @@ pub struct AniListMedia {
     /// Score from 0–100.
     #[serde(rename = "averageScore")]
     pub average_score: Option<i32>,
-    /// Number of episodes (TV) or null (movies).
-    pub episodes: Option<i32>,
-    /// Episode duration in minutes.
-    pub duration: Option<i32>,
-    /// Release status: `FINISHED`, `RELEASING`, `NOT_YET_RELEASED`, `CANCELLED`.
-    pub status: Option<String>,
     /// Media format: `TV`, `TV_SHORT`, `MOVIE`, `OVA`, `ONA`, `SPECIAL`, etc.
     pub format: Option<String>,
     /// ISO 3166-1 alpha-2 country of origin.
@@ -117,7 +106,6 @@ pub struct AniListMedia {
 
 /// Extended AniList media entry — used in detail queries (includes studios, etc.).
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)] // Mirrors AniList API schema; not all fields are read
 pub struct AniListMediaDetail {
     pub id: i32,
     pub title: Option<AniListTitle>,
@@ -144,10 +132,6 @@ pub struct AniListMediaDetail {
     pub is_adult: Option<bool>,
     /// Main production studios.
     pub studios: Option<AniListStudios>,
-    /// Broadcast season (WINTER, SPRING, SUMMER, FALL).
-    pub season: Option<String>,
-    #[serde(rename = "seasonYear")]
-    pub season_year: Option<i32>,
 }
 
 // ── Page response wrappers ────────────────────────────────────────────────────
@@ -194,23 +178,17 @@ pub struct AniListStaffImage {
 
 /// AniList staff member (real person — voice actor, director, etc.).
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)] // Mirrors AniList API schema; not all fields are read
 pub struct AniListStaff {
     pub id: i32,
     pub name: Option<AniListStaffName>,
     pub image: Option<AniListStaffImage>,
-    pub description: Option<String>,
     /// Primary occupations (e.g. `["Voice Actor", "Director"]`).
     #[serde(rename = "primaryOccupations")]
     pub primary_occupations: Option<Vec<String>>,
-    /// Native language of the staff member (e.g. `"Japanese"`).
-    #[serde(rename = "languageV2")]
-    pub language: Option<String>,
 }
 
 /// Extended staff info returned by detail queries.
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)] // Mirrors AniList API schema; not all fields are read
 pub struct AniListStaffDetail {
     pub id: i32,
     pub name: Option<AniListStaffName>,
@@ -227,8 +205,6 @@ pub struct AniListStaffDetail {
     pub home_town: Option<String>,
     #[serde(rename = "siteUrl")]
     pub site_url: Option<String>,
-    #[serde(rename = "languageV2")]
-    pub language: Option<String>,
 }
 
 /// `data` object for staff list queries.

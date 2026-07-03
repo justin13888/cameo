@@ -56,9 +56,6 @@ mod tests {
             genres: Some(vec!["Action".to_string(), "Mecha".to_string()]),
             popularity: Some(100000),
             average_score: Some(78),
-            episodes: Some(24),
-            duration: Some(23),
-            status: Some("FINISHED".to_string()),
             format: Some(format.to_string()),
             country_of_origin: Some("JP".to_string()),
             is_adult: Some(false),
@@ -131,9 +128,7 @@ mod tests {
             image: Some(AniListStaffImage {
                 large: Some("https://example.com/p.jpg".to_string()),
             }),
-            description: None,
             primary_occupations: Some(vec!["Voice Actor".to_string()]),
-            language: Some("Japanese".to_string()),
         };
         let person = staff_to_person(staff);
         assert_eq!(person.provider_id, "anilist:staff:123");
