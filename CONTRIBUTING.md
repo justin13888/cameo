@@ -50,6 +50,8 @@ current.
 
 ## Adding a provider
 
-Providers implement the object-safe capability traits in `src/unified/traits.rs`
-and register through `CameoClient::builder().register_*_provider(...)` — no
-facade edits required. See `docs/adr/0001-provider-abstraction.md`.
+Providers implement the object-safe capability traits and register through
+`CameoClient::builder().register_*_provider(...)` — no facade edits required.
+See the end-to-end guide in [docs/providers.md](docs/providers.md) (with a
+compiling public-API-only example in `tests/integration/registry_test.rs`) and
+the design rationale in `docs/adr/0001-provider-abstraction.md`.
