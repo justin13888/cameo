@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/justin13888/cameo/releases/tag/v0.2.0) - 2026-07-03
+
+### Added
+
+- Schema versioning + provider-namespaced keys
+- V3 api-key auth, config validation, image base URL
+- Add constructors and builders to unified models
+- Correct and complete unified model fields
+- Introduce PartialDate for release/air dates
+- Per-call provider selection, configurable priority, id-origin routing
+- Rebuild the facade as a capability registry with dyn dispatch
+- Rework provider traits and implement them on both providers
+- Consolidate error surface — ProviderError, split NotConfigured/Unsupported
+- Redesign pagination — Page<T> with authoritative has-next and Send streams
+- Introduce typed MediaId replacing stringly-typed provider ids
+- Retry transient failures with backoff honoring Retry-After
+- Real per-provider token-bucket rate limiting
+- Shared HTTP client construction with timeouts and User-Agent
+- Body-before-status handling, structured errors, partial-data policy
+- Decode structured error bodies with status, code, and Retry-After
+
+### Fixed
+
+- Harden the SQLite backend
+- Remove conversion-layer hacks (show_id, fallbacks, hand parsing)
+- Fix genre mapping defects
+
+### Changed
+
+- Remove flush_cache_writes; writes are read-your-writes
+- Consolidate GraphQL queries, drop dead fields
+- Deduplicate and type the discover builders
+- Stop leaking generated types from the public API
+
+### Documentation
+
+- Add the provider implementation guide
+- Graceful env handling + selection/capability demos
+- Reconcile MSRV policy with the nightly-fmt exception
+- Configure docs.rs, doc_cfg, and a cargo doc CI gate
+- Add API stability policy
+- Add community and security files
+- Finalize and document the v1 CacheBackend contract
+- Fix intra-doc link to TmdbClient in models module
+- Add provider abstraction ADR (traits, IDs, pagination, errors, capabilities)
+
+
 ## [0.1.1](https://github.com/justin13888/cameo/releases/tag/v0.1.1) - 2026-05-22
 
 ### Fixed
