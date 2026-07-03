@@ -11,6 +11,7 @@ macro_rules! discover_movies {
     ($self:ident, $endpoint:expr, $page:expr, $provider:ident => $call:expr) => {{
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
+            provider: $self.discovery_ns(),
             endpoint: $endpoint,
             page: $page.unwrap_or(1),
         };
@@ -36,6 +37,7 @@ macro_rules! discover_tv {
     ($self:ident, $endpoint:expr, $page:expr, $provider:ident => $call:expr) => {{
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
+            provider: $self.discovery_ns(),
             endpoint: $endpoint,
             page: $page.unwrap_or(1),
         };

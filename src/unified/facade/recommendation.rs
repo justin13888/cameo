@@ -18,6 +18,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
+            provider: id.provider().to_string(),
             endpoint: format!("movie_recommendations_{id}"),
             page: page.unwrap_or(1),
         };
@@ -46,6 +47,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
+            provider: id.provider().to_string(),
             endpoint: format!("tv_recommendations_{id}"),
             page: page.unwrap_or(1),
         };
@@ -74,6 +76,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
+            provider: id.provider().to_string(),
             endpoint: format!("similar_movies_{id}"),
             page: page.unwrap_or(1),
         };
@@ -102,6 +105,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
+            provider: id.provider().to_string(),
             endpoint: format!("similar_tv_{id}"),
             page: page.unwrap_or(1),
         };

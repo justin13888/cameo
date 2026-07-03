@@ -15,6 +15,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
+            provider: self.search_ns(),
             media_type: Some(MediaType::Movie),
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -53,6 +54,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
+            provider: self.search_ns(),
             media_type: Some(MediaType::TvShow),
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -91,6 +93,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedPerson>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
+            provider: self.search_ns(),
             media_type: Some(MediaType::Person),
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -129,6 +132,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedSearchResult>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
+            provider: self.search_ns(),
             media_type: None,
             query: query.to_string(),
             page: page.unwrap_or(1),

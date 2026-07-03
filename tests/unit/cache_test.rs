@@ -67,6 +67,7 @@ async fn set_overwrites_existing_value() {
 async fn invalidate_removes_entry() {
     let cache = make_cache();
     let key = CacheKey::Search {
+        provider: "tmdb".to_string(),
         media_type: Some(MediaType::Movie),
         query: "dune".to_string(),
         page: 1,
@@ -114,6 +115,7 @@ async fn clear_removes_all_entries() {
 async fn expired_entry_returns_none() {
     let cache = make_cache();
     let key = CacheKey::Discovery {
+        provider: "tmdb".to_string(),
         endpoint: "trending_movies".to_string(),
         page: 1,
     };
@@ -190,6 +192,7 @@ fn cache_key_type_discriminants() {
     );
     assert_eq!(
         CacheKey::Search {
+            provider: "tmdb".to_string(),
             media_type: None,
             query: "q".to_string(),
             page: 1
@@ -199,6 +202,7 @@ fn cache_key_type_discriminants() {
     );
     assert_eq!(
         CacheKey::Discovery {
+            provider: "tmdb".to_string(),
             endpoint: "e".to_string(),
             page: 1
         }
@@ -210,11 +214,13 @@ fn cache_key_type_discriminants() {
 #[test]
 fn search_key_normalizes_whitespace_and_case() {
     let k1 = CacheKey::Search {
+        provider: "tmdb".to_string(),
         media_type: Some(MediaType::Movie),
         query: "  Dune  ".to_string(),
         page: 1,
     };
     let k2 = CacheKey::Search {
+        provider: "tmdb".to_string(),
         media_type: Some(MediaType::Movie),
         query: "dune".to_string(),
         page: 1,

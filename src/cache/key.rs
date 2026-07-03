@@ -40,8 +40,11 @@ pub enum CacheKey {
         /// Provider-qualified ID (e.g. `"tmdb:550"`).
         provider_id: String,
     },
-    /// Search results page: (optional media_type, normalized query, page).
+    /// Search results page, namespaced by the serving provider so that
+    /// identical queries to different providers never collide.
     Search {
+        /// Id of the provider that produced the result (e.g. `"tmdb"`).
+        provider: String,
         /// Optional media type filter (`None` means multi-search).
         media_type: Option<MediaType>,
         /// Search query string (will be normalized for the key).
@@ -49,8 +52,10 @@ pub enum CacheKey {
         /// Page number (1-based).
         page: u32,
     },
-    /// Discovery/list results page: (endpoint name, page).
+    /// Discovery/list results page, namespaced by the serving provider.
     Discovery {
+        /// Id of the provider that produced the result (e.g. `"tmdb"`).
+        provider: String,
         /// Endpoint or list name (e.g. `"trending_movies"`).
         endpoint: String,
         /// Page number (1-based).
@@ -86,15 +91,20 @@ impl CacheKey {
                 format!("{}:{}", media_type.as_str(), provider_id)
             }
             CacheKey::Search {
+                provider,
                 media_type,
                 query,
                 page,
             } => {
                 let mt = media_type.map_or("multi", |m| m.as_str());
-                format!("{}:{}:{}", mt, normalize_query(query), page)
+                format!("{}:{}:{}:{}", provider, mt, normalize_query(query), page)
             }
-            CacheKey::Discovery { endpoint, page } => {
-                format!("{}:{}", endpoint, page)
+            CacheKey::Discovery {
+                provider,
+                endpoint,
+                page,
+            } => {
+                format!("{}:{}:{}", provider, endpoint, page)
             }
         }
     }
@@ -132,29 +142,43 @@ mod tests {
     #[test]
     fn search_key_normalizes_query() {
         let key = CacheKey::Search {
+            provider: "tmdb".to_string(),
             media_type: Some(MediaType::Movie),
             query: "  Dune  ".to_string(),
             page: 1,
         };
-        assert_eq!(key.key_id(), "movie:dune:1");
+        assert_eq!(key.key_id(), "tmdb:movie:dune:1");
     }
 
     #[test]
     fn search_key_multi() {
         let key = CacheKey::Search {
+            provider: "anilist".to_string(),
             media_type: None,
             query: "brad pitt".to_string(),
             page: 2,
         };
-        assert_eq!(key.key_id(), "multi:brad pitt:2");
+        assert_eq!(key.key_id(), "anilist:multi:brad pitt:2");
     }
 
     #[test]
     fn discovery_key_id() {
         let key = CacheKey::Discovery {
+            provider: "tmdb".to_string(),
             endpoint: "trending_movies".to_string(),
             page: 1,
         };
-        assert_eq!(key.key_id(), "trending_movies:1");
+        assert_eq!(key.key_id(), "tmdb:trending_movies:1");
+    }
+
+    #[test]
+    fn identical_queries_to_different_providers_do_not_collide() {
+        let mk = |provider: &str| CacheKey::Search {
+            provider: provider.to_string(),
+            media_type: Some(MediaType::Movie),
+            query: "dune".to_string(),
+            page: 1,
+        };
+        assert_ne!(mk("tmdb").key_id(), mk("anilist").key_id());
     }
 }

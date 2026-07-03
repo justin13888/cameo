@@ -462,6 +462,22 @@ impl CameoClient {
 
     // ── Cache helpers ─────────────────────────────────────────────────────────
 
+    /// Id of the provider that serves search requests (for cache namespacing).
+    #[cfg(feature = "cache")]
+    fn search_ns(&self) -> String {
+        self.require(&self.search)
+            .map(|p| p.id().to_string())
+            .unwrap_or_default()
+    }
+
+    /// Id of the provider that serves discovery requests (for cache namespacing).
+    #[cfg(feature = "cache")]
+    fn discovery_ns(&self) -> String {
+        self.require(&self.discovery)
+            .map(|p| p.id().to_string())
+            .unwrap_or_default()
+    }
+
     #[cfg(feature = "cache")]
     async fn cache_get<T: DeserializeOwned>(&self, key: &CacheKey) -> Option<T> {
         match &self.cache {

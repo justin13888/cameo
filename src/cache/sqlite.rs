@@ -25,6 +25,31 @@ CREATE TABLE IF NOT EXISTS cache_entries (
 CREATE INDEX IF NOT EXISTS idx_expires ON cache_entries(expires_at);
 ";
 
+/// On-disk cache schema/serialization version, stored in SQLite's
+/// `PRAGMA user_version`. Bump this whenever the stored value shape changes
+/// (e.g. a unified-model field change) so persisted entries from an older
+/// cameo are flushed instead of deserialized as stale, wrong-shaped data.
+const CACHE_SCHEMA_VERSION: i64 = 1;
+
+/// Create the table and enforce the schema version: if the database's
+/// `user_version` differs from [`CACHE_SCHEMA_VERSION`], every entry is flushed
+/// (they may be an incompatible shape) and the version is stamped. A fresh
+/// database starts at `user_version = 0`, so this also stamps new files.
+fn init_schema(conn: &Connection) -> Result<(), CacheError> {
+    conn.execute_batch(CREATE_TABLE)
+        .map_err(CacheError::backend)?;
+    let version: i64 = conn
+        .query_row("PRAGMA user_version", [], |row| row.get(0))
+        .map_err(CacheError::backend)?;
+    if version != CACHE_SCHEMA_VERSION {
+        conn.execute_batch("DELETE FROM cache_entries;")
+            .map_err(CacheError::backend)?;
+        conn.pragma_update(None, "user_version", CACHE_SCHEMA_VERSION)
+            .map_err(CacheError::backend)?;
+    }
+    Ok(())
+}
+
 /// SQLite-backed cache backend.
 ///
 /// Uses a single `cache_entries` table with separate read and write
@@ -74,9 +99,7 @@ impl SqliteCache {
         write_conn
             .execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")
             .map_err(|e| CacheError::Backend(Box::new(e)))?;
-        write_conn
-            .execute_batch(CREATE_TABLE)
-            .map_err(|e| CacheError::Backend(Box::new(e)))?;
+        init_schema(&write_conn)?;
 
         // Separate reader: in WAL mode this connection can read without
         // blocking the writer connection.
@@ -96,8 +119,7 @@ impl SqliteCache {
     /// SQLite in-memory databases are not shared across connections.
     pub fn in_memory() -> Result<Self, CacheError> {
         let conn = Connection::open_in_memory().map_err(|e| CacheError::Backend(Box::new(e)))?;
-        conn.execute_batch(CREATE_TABLE)
-            .map_err(|e| CacheError::Backend(Box::new(e)))?;
+        init_schema(&conn)?;
         let conn = Arc::new(Mutex::new(conn));
         Ok(Self {
             // Both arcs point at the same mutex so reads and writes
@@ -278,5 +300,53 @@ impl CacheBackend for SqliteCache {
         })
         .await
         .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use super::*;
+    use crate::cache::{
+        CacheBackend,
+        key::{CacheKey, MediaType},
+    };
+
+    /// A schema-version mismatch flushes stale entries when the DB is reopened.
+    #[tokio::test]
+    async fn schema_version_bump_invalidates_old_entries() {
+        let path = std::env::temp_dir().join(format!("cameo_schema_ver_{}.db", std::process::id()));
+        let _ = std::fs::remove_file(&path);
+        let key = CacheKey::Detail {
+            media_type: MediaType::Movie,
+            provider_id: "tmdb:1".to_string(),
+        };
+
+        // Write an entry and confirm it is present.
+        {
+            let cache = SqliteCache::new(&path).unwrap();
+            cache
+                .set(
+                    key.clone(),
+                    serde_json::json!({ "v": 1 }),
+                    Duration::from_secs(3600),
+                )
+                .await
+                .unwrap();
+            assert!(cache.get(&key).await.unwrap().is_some());
+        }
+
+        // Simulate a database written by an older/newer schema version.
+        {
+            let conn = Connection::open(&path).unwrap();
+            conn.pragma_update(None, "user_version", 999i64).unwrap();
+        }
+
+        // Reopening detects the mismatch and flushes every entry.
+        let cache = SqliteCache::new(&path).unwrap();
+        assert!(cache.get(&key).await.unwrap().is_none());
+
+        let _ = std::fs::remove_file(&path);
     }
 }
