@@ -16,9 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Pinned to match rust-toolchain.toml so formatting is reproducible:
-      # rustfmt.toml uses nightly-only options (see its header).
-      - uses: dtolnay/rust-toolchain@nightly-2026-02-26
+      # rustfmt.toml uses nightly-only options (see its header). A dated nightly
+      # is not a resolvable action ref, so select it via the `toolchain` input on
+      # the generic `@master` action.
+      - uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: nightly-2026-02-26
           components: rustfmt
       - name: Format check
         run: cargo fmt --all -- --check
