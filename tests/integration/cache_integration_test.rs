@@ -2,11 +2,7 @@
 
 use std::sync::Arc;
 
-use cameo::{
-    cache::SqliteCache,
-    providers::tmdb::TmdbConfig,
-    unified::{CameoClient, DetailProvider, SearchProvider},
-};
+use cameo::{cache::SqliteCache, providers::tmdb::TmdbConfig, unified::CameoClient};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path, query_param},

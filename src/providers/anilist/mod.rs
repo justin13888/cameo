@@ -4,6 +4,8 @@ pub mod client;
 pub mod config;
 /// AniList-specific error types.
 pub mod error;
+/// Unified provider-trait implementations.
+mod provider;
 /// GraphQL query string constants.
 pub(crate) mod query;
 /// GraphQL response types (serde-deserializable).

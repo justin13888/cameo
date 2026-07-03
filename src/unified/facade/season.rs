@@ -1,13 +1,9 @@
 use super::{CameoClient, CameoClientError};
-use crate::unified::{
-    models::{UnifiedEpisode, UnifiedSeasonDetails},
-    traits::SeasonProvider,
-};
+use crate::unified::models::{UnifiedEpisode, UnifiedSeasonDetails};
 
-impl SeasonProvider for CameoClient {
-    type Error = CameoClientError;
-
-    async fn season_details(
+impl CameoClient {
+    /// Get details for a specific season of a TV show.
+    pub async fn season_details(
         &self,
         show_id: i32,
         season_number: u32,
@@ -22,7 +18,8 @@ impl SeasonProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn episode_details(
+    /// Get details for a specific episode of a TV show.
+    pub async fn episode_details(
         &self,
         show_id: i32,
         season_number: u32,

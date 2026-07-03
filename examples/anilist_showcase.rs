@@ -10,7 +10,7 @@
 use cameo::{
     AniListClient, AniListConfig,
     core::config::TimeWindow,
-    unified::{CameoClient, SearchProvider, models::UnifiedSearchResult},
+    unified::{CameoClient, models::UnifiedSearchResult},
 };
 
 #[tokio::main]

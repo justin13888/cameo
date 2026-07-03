@@ -8,6 +8,8 @@ pub mod config;
 pub mod error;
 /// Image URL construction helpers.
 pub mod image_url;
+/// Unified provider-trait implementations.
+mod provider;
 
 pub use client::TmdbClient;
 pub use config::TmdbConfig;

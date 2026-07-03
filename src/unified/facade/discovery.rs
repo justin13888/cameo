@@ -3,16 +3,12 @@ use super::{CameoClient, CameoClientError};
 use crate::cache::{CacheKey, MediaType};
 use crate::{
     core::{config::TimeWindow, pagination::Page},
-    unified::{
-        models::{UnifiedMovie, UnifiedTvShow},
-        traits::DiscoveryProvider,
-    },
+    unified::models::{UnifiedMovie, UnifiedTvShow},
 };
 
-impl DiscoveryProvider for CameoClient {
-    type Error = CameoClientError;
-
-    async fn trending_movies(
+impl CameoClient {
+    /// Get trending movies.
+    pub async fn trending_movies(
         &self,
         time_window: TimeWindow,
         page: Option<u32>,
@@ -93,7 +89,8 @@ impl DiscoveryProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn trending_tv_shows(
+    /// Get trending TV shows.
+    pub async fn trending_tv_shows(
         &self,
         time_window: TimeWindow,
         page: Option<u32>,
@@ -174,7 +171,8 @@ impl DiscoveryProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn popular_movies(
+    /// Get popular movies.
+    pub async fn popular_movies(
         &self,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
@@ -254,7 +252,8 @@ impl DiscoveryProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn popular_tv_shows(
+    /// Get popular TV shows.
+    pub async fn popular_tv_shows(
         &self,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
@@ -334,7 +333,8 @@ impl DiscoveryProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn top_rated_tv_shows(
+    /// Get top-rated TV shows.
+    pub async fn top_rated_tv_shows(
         &self,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
@@ -414,7 +414,8 @@ impl DiscoveryProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn top_rated_movies(
+    /// Get top-rated movies.
+    pub async fn top_rated_movies(
         &self,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {

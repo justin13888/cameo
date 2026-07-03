@@ -1,10 +1,9 @@
 use super::{CameoClient, CameoClientError};
-use crate::unified::{models::UnifiedWatchProviders, traits::WatchProviderTrait};
+use crate::unified::models::UnifiedWatchProviders;
 
-impl WatchProviderTrait for CameoClient {
-    type Error = CameoClientError;
-
-    async fn movie_watch_providers(
+impl CameoClient {
+    /// Get streaming availability for a movie.
+    pub async fn movie_watch_providers(
         &self,
         id: i32,
     ) -> Result<UnifiedWatchProviders, CameoClientError> {
@@ -18,7 +17,11 @@ impl WatchProviderTrait for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn tv_watch_providers(&self, id: i32) -> Result<UnifiedWatchProviders, CameoClientError> {
+    /// Get streaming availability for a TV show.
+    pub async fn tv_watch_providers(
+        &self,
+        id: i32,
+    ) -> Result<UnifiedWatchProviders, CameoClientError> {
         let _ = id;
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {

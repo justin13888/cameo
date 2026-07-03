@@ -1,15 +1,11 @@
 use super::{CameoClient, CameoClientError};
 #[cfg(feature = "cache")]
 use crate::cache::{CacheKey, MediaType};
-use crate::unified::{
-    models::{UnifiedMovieDetails, UnifiedPersonDetails, UnifiedTvShowDetails},
-    traits::DetailProvider,
-};
+use crate::unified::models::{UnifiedMovieDetails, UnifiedPersonDetails, UnifiedTvShowDetails};
 
-impl DetailProvider for CameoClient {
-    type Error = CameoClientError;
-
-    async fn movie_details(&self, id: i32) -> Result<UnifiedMovieDetails, CameoClientError> {
+impl CameoClient {
+    /// Get detailed information about a movie.
+    pub async fn movie_details(&self, id: i32) -> Result<UnifiedMovieDetails, CameoClientError> {
         let _ = id;
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
@@ -106,7 +102,8 @@ impl DetailProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn tv_show_details(&self, id: i32) -> Result<UnifiedTvShowDetails, CameoClientError> {
+    /// Get detailed information about a TV show.
+    pub async fn tv_show_details(&self, id: i32) -> Result<UnifiedTvShowDetails, CameoClientError> {
         let _ = id;
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {
@@ -207,7 +204,8 @@ impl DetailProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn person_details(&self, id: i32) -> Result<UnifiedPersonDetails, CameoClientError> {
+    /// Get detailed information about a person.
+    pub async fn person_details(&self, id: i32) -> Result<UnifiedPersonDetails, CameoClientError> {
         let _ = id;
         #[cfg(feature = "tmdb")]
         if let Some(client) = &self.tmdb {

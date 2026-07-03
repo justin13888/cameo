@@ -14,10 +14,7 @@
 //!   cargo run --example error_handling           # build-time only
 //!   cargo run --example error_handling           # all demos (reads TMDB_API_TOKEN from .env)
 
-use cameo::{
-    CameoClient, TmdbConfig, TmdbError,
-    unified::{CameoClientError, DetailProvider, SearchProvider},
-};
+use cameo::{CameoClient, TmdbConfig, TmdbError, unified::CameoClientError};
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 

@@ -16,6 +16,6 @@ pub use genre::{Genre, UnknownGenre};
 pub use media_id::{MediaId, MediaIdParseError, NativeId};
 pub use models::*;
 pub use traits::{
-    DetailProvider, DiscoveryProvider, MediaProvider, RecommendationProvider, SearchProvider,
-    SeasonProvider, WatchProviderTrait,
+    Capability, DetailProvider, DiscoveryProvider, MediaProvider, Provider, RecommendationProvider,
+    SearchProvider, SeasonProvider, WatchAvailabilityProvider,
 };

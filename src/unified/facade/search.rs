@@ -3,16 +3,12 @@ use super::{CameoClient, CameoClientError};
 use crate::cache::{CacheKey, MediaType};
 use crate::{
     core::pagination::Page,
-    unified::{
-        models::{UnifiedMovie, UnifiedPerson, UnifiedSearchResult, UnifiedTvShow},
-        traits::SearchProvider,
-    },
+    unified::models::{UnifiedMovie, UnifiedPerson, UnifiedSearchResult, UnifiedTvShow},
 };
 
-impl SearchProvider for CameoClient {
-    type Error = CameoClientError;
-
-    async fn search_movies(
+impl CameoClient {
+    /// Search for movies via the configured provider(s).
+    pub async fn search_movies(
         &self,
         query: &str,
         page: Option<u32>,
@@ -93,7 +89,8 @@ impl SearchProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn search_tv_shows(
+    /// Search for TV shows via the configured provider(s).
+    pub async fn search_tv_shows(
         &self,
         query: &str,
         page: Option<u32>,
@@ -174,7 +171,8 @@ impl SearchProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn search_people(
+    /// Search for people via the configured provider(s).
+    pub async fn search_people(
         &self,
         query: &str,
         page: Option<u32>,
@@ -255,7 +253,8 @@ impl SearchProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn search_multi(
+    /// Multi-search across movies, TV shows, and people.
+    pub async fn search_multi(
         &self,
         query: &str,
         page: Option<u32>,

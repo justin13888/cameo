@@ -8,13 +8,8 @@
 //!   (reads TMDB_API_TOKEN from .env or the environment)
 
 use cameo::{
-    CameoClient,
-    core::config::TimeWindow,
-    providers::tmdb::TmdbConfig,
-    unified::{
-        DetailProvider, DiscoveryProvider, RecommendationProvider, SearchProvider, SeasonProvider,
-        WatchProviderTrait, models::UnifiedSearchResult,
-    },
+    CameoClient, core::config::TimeWindow, providers::tmdb::TmdbConfig,
+    unified::models::UnifiedSearchResult,
 };
 
 #[tokio::main]

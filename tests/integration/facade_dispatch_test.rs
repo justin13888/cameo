@@ -3,10 +3,7 @@
 use cameo::{
     core::config::TimeWindow,
     providers::tmdb::TmdbConfig,
-    unified::{
-        CameoClient, DiscoveryProvider, SearchProvider, SeasonProvider, WatchProviderTrait,
-        models::UnifiedSearchResult,
-    },
+    unified::{CameoClient, models::UnifiedSearchResult},
 };
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
@@ -157,7 +154,7 @@ async fn facade_movie_watch_providers_dispatches_to_tmdb() {
 mod anilist_tests {
     use cameo::{
         providers::anilist::AniListConfig,
-        unified::{CameoClient, CameoClientError, RecommendationProvider, SearchProvider},
+        unified::{CameoClient, CameoClientError},
     };
     use serde_json::{Value, json};
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
@@ -243,8 +240,7 @@ mod anilist_tests {
         let body = page_response(vec![], 0);
         let (_server, client) = setup_anilist_only(body).await;
 
-        // SeasonProvider is only implemented for TMDB
-        use cameo::unified::SeasonProvider;
+        //  is only implemented for TMDB
         let result = client.season_details(1, 1).await;
 
         assert!(
@@ -257,8 +253,6 @@ mod anilist_tests {
     async fn facade_anilist_only_watch_providers_returns_no_providers() {
         let body = page_response(vec![], 0);
         let (_server, client) = setup_anilist_only(body).await;
-
-        use cameo::unified::WatchProviderTrait;
         let result = client.movie_watch_providers(1).await;
 
         assert!(

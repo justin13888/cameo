@@ -11,10 +11,7 @@ use std::{
 };
 
 use cameo::{
-    CacheTtlConfig, CameoClient, SqliteCache,
-    core::config::TimeWindow,
-    providers::tmdb::TmdbConfig,
-    unified::{DetailProvider, DiscoveryProvider, SearchProvider},
+    CacheTtlConfig, CameoClient, SqliteCache, core::config::TimeWindow, providers::tmdb::TmdbConfig,
 };
 
 #[tokio::main]

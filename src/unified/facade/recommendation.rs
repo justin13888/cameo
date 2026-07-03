@@ -5,16 +5,12 @@ use crate::cache::CacheKey;
 use crate::cache::MediaType;
 use crate::{
     core::pagination::Page,
-    unified::{
-        models::{UnifiedMovie, UnifiedTvShow},
-        traits::RecommendationProvider,
-    },
+    unified::models::{UnifiedMovie, UnifiedTvShow},
 };
 
-impl RecommendationProvider for CameoClient {
-    type Error = CameoClientError;
-
-    async fn movie_recommendations(
+impl CameoClient {
+    /// Get movie recommendations based on a movie.
+    pub async fn movie_recommendations(
         &self,
         id: i32,
         page: Option<u32>,
@@ -70,7 +66,8 @@ impl RecommendationProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn tv_recommendations(
+    /// Get TV show recommendations based on a TV show.
+    pub async fn tv_recommendations(
         &self,
         id: i32,
         page: Option<u32>,
@@ -127,7 +124,8 @@ impl RecommendationProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn similar_movies(
+    /// Get movies similar to a given movie.
+    pub async fn similar_movies(
         &self,
         id: i32,
         page: Option<u32>,
@@ -184,7 +182,8 @@ impl RecommendationProvider for CameoClient {
         Err(CameoClientError::NotConfigured)
     }
 
-    async fn similar_tv_shows(
+    /// Get TV shows similar to a given TV show.
+    pub async fn similar_tv_shows(
         &self,
         id: i32,
         page: Option<u32>,
