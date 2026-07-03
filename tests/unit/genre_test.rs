@@ -121,10 +121,61 @@ fn unknown_named_genre_display() {
 }
 
 #[test]
-fn unknown_tmdb_id_genre_display() {
+fn unknown_tmdb_id_genre_display_preserves_id() {
     let g = Genre::Other(UnknownGenre::TmdbId(99999));
-    assert_eq!(g.name(), "Unknown");
-    assert_eq!(g.to_string(), "Unknown");
+    assert_eq!(g.name(), "TMDB genre 99999");
+    assert_eq!(g.to_string(), "TMDB genre 99999");
+}
+
+#[test]
+fn negative_tmdb_ids_do_not_collide() {
+    // Every negative id is preserved distinctly instead of collapsing to 0.
+    assert_eq!(
+        Genre::from_tmdb_id(-1),
+        Genre::Other(UnknownGenre::TmdbId(-1))
+    );
+    assert_ne!(Genre::from_tmdb_id(-1), Genre::from_tmdb_id(-2));
+    assert_ne!(Genre::from_tmdb_id(-1), Genre::from_tmdb_id(0));
+}
+
+/// Property: every entry in the id mapping table round-trips and every known
+/// genre has a real (non-"Unknown") display name.
+#[test]
+fn mapping_table_is_consistent() {
+    let table: &[(i64, Genre)] = &[
+        (28, Genre::Action),
+        (12, Genre::Adventure),
+        (16, Genre::Animation),
+        (35, Genre::Comedy),
+        (80, Genre::Crime),
+        (99, Genre::Documentary),
+        (18, Genre::Drama),
+        (10751, Genre::Family),
+        (14, Genre::Fantasy),
+        (36, Genre::History),
+        (27, Genre::Horror),
+        (10402, Genre::Music),
+        (9648, Genre::Mystery),
+        (10749, Genre::Romance),
+        (878, Genre::ScienceFiction),
+        (53, Genre::Thriller),
+        (10770, Genre::TvMovie),
+        (10752, Genre::War),
+        (37, Genre::Western),
+        (10759, Genre::ActionAdventure),
+        (10762, Genre::Kids),
+        (10763, Genre::News),
+        (10764, Genre::Reality),
+        (10765, Genre::SciFiFantasy),
+        (10766, Genre::Soap),
+        (10767, Genre::Talk),
+        (10768, Genre::WarPolitics),
+    ];
+    for (id, expected) in table {
+        assert_eq!(Genre::from_tmdb_id(*id), *expected, "id={id}");
+        assert_ne!(expected.name(), "Unknown", "id={id} has no display name");
+        assert!(!expected.name().starts_with("TMDB genre "), "id={id}");
+    }
 }
 
 #[test]

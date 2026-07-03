@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{borrow::Cow, fmt};
 
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +9,10 @@ pub enum UnknownGenre {
     /// A genre identified by name (e.g. from a provider's genre list).
     Named(String),
     /// A genre identified by a TMDB genre ID that is not in this enum.
-    TmdbId(u32),
+    ///
+    /// The raw provider id is preserved verbatim (including invalid/negative
+    /// ids) so distinct unknown ids never collide.
+    TmdbId(i64),
 }
 
 /// A canonical genre covering all known TMDB movie and TV genres, plus anime-specific genres.
@@ -96,7 +99,9 @@ pub enum Genre {
 impl Genre {
     /// Convert a TMDB genre ID to a [`Genre`].
     ///
-    /// Returns `Genre::Other(UnknownGenre::TmdbId(id))` for unknown IDs.
+    /// Returns `Genre::Other(UnknownGenre::TmdbId(id))` for unknown IDs,
+    /// preserving the raw id (invalid or negative ids are kept as-is rather
+    /// than collapsed to zero).
     pub fn from_tmdb_id(id: i64) -> Genre {
         match id {
             // Movie-only
@@ -129,8 +134,8 @@ impl Genre {
             10751 => Genre::Family,
             9648 => Genre::Mystery,
             37 => Genre::Western,
-            // Fallback
-            other => Genre::Other(UnknownGenre::TmdbId(other.max(0) as u32)),
+            // Fallback — preserve the raw id verbatim.
+            other => Genre::Other(UnknownGenre::TmdbId(other)),
         }
     }
 
@@ -205,8 +210,22 @@ impl Genre {
     }
 
     /// Returns a human-readable display name for this genre.
-    pub fn name(&self) -> &str {
+    ///
+    /// Unknown genres keep their identifying information: a named unknown
+    /// returns its name, and an unknown TMDB id returns `"TMDB genre {id}"`
+    /// (the id is never discarded).
+    pub fn name(&self) -> Cow<'_, str> {
         match self {
+            Genre::Other(UnknownGenre::Named(s)) => Cow::Borrowed(s.as_str()),
+            Genre::Other(UnknownGenre::TmdbId(id)) => Cow::Owned(format!("TMDB genre {id}")),
+            known => Cow::Borrowed(known.known_name().unwrap_or("Unknown")),
+        }
+    }
+
+    /// The static display name for a known genre variant; `None` for
+    /// [`Genre::Other`].
+    fn known_name(&self) -> Option<&'static str> {
+        Some(match self {
             Genre::Action => "Action",
             Genre::Adventure => "Adventure",
             Genre::Fantasy => "Fantasy",
@@ -240,15 +259,14 @@ impl Genre {
             Genre::Sports => "Sports",
             Genre::Supernatural => "Supernatural",
             Genre::Ecchi => "Ecchi",
-            Genre::Other(UnknownGenre::Named(s)) => s.as_str(),
-            Genre::Other(UnknownGenre::TmdbId(_)) => "Unknown",
-        }
+            Genre::Other(_) => return None,
+        })
     }
 }
 
 impl fmt::Display for Genre {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.name())
+        write!(f, "{}", self.name())
     }
 }
 
@@ -303,7 +321,7 @@ mod tests {
     }
 
     #[test]
-    fn from_tmdb_id_unknown() {
+    fn from_tmdb_id_unknown_preserves_id() {
         assert_eq!(
             Genre::from_tmdb_id(99999),
             Genre::Other(UnknownGenre::TmdbId(99999))
@@ -312,6 +330,14 @@ mod tests {
             Genre::from_tmdb_id(0),
             Genre::Other(UnknownGenre::TmdbId(0))
         );
+        // Negative ids are preserved verbatim, not collapsed to 0.
+        assert_eq!(
+            Genre::from_tmdb_id(-5),
+            Genre::Other(UnknownGenre::TmdbId(-5))
+        );
+        assert_ne!(Genre::from_tmdb_id(-5), Genre::from_tmdb_id(0));
+        // The id survives in the display name rather than becoming "Unknown".
+        assert_eq!(Genre::from_tmdb_id(4242).name(), "TMDB genre 4242");
     }
 
     #[test]
