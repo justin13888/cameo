@@ -50,6 +50,24 @@ fn init_schema(conn: &Connection) -> Result<(), CacheError> {
     Ok(())
 }
 
+/// Source of the current unix time in seconds. Injectable so TTL behavior can
+/// be tested deterministically without wall-clock sleeps.
+type Clock = Arc<dyn Fn() -> u64 + Send + Sync>;
+
+/// The largest number of entries kept on disk. Enforced on every write so the
+/// database stays bounded even under quiet, long-running workloads where the
+/// count-based expiry purge rarely fires.
+const MAX_ENTRIES: i64 = 50_000;
+
+fn system_clock() -> Clock {
+    Arc::new(|| {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+    })
+}
+
 /// SQLite-backed cache backend.
 ///
 /// Uses a single `cache_entries` table with separate read and write
@@ -72,9 +90,10 @@ pub struct SqliteCache {
     read_conn: Arc<Mutex<Connection>>,
     /// Connection used exclusively for write (`INSERT/DELETE`) queries.
     write_conn: Arc<Mutex<Connection>>,
-    write_count: Arc<std::sync::atomic::AtomicU64>,
     /// Tracks total reads; used to trigger periodic expiry purges.
     read_count: Arc<std::sync::atomic::AtomicU64>,
+    /// Current-time source (injectable for deterministic tests).
+    clock: Clock,
 }
 
 impl std::fmt::Debug for SqliteCache {
@@ -108,8 +127,8 @@ impl SqliteCache {
         Ok(Self {
             read_conn: Arc::new(Mutex::new(read_conn)),
             write_conn: Arc::new(Mutex::new(write_conn)),
-            write_count: Arc::new(std::sync::atomic::AtomicU64::new(0)),
             read_count: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+            clock: system_clock(),
         })
     }
 
@@ -126,8 +145,8 @@ impl SqliteCache {
             // serialise correctly with a single in-memory connection.
             read_conn: Arc::clone(&conn),
             write_conn: conn,
-            write_count: Arc::new(std::sync::atomic::AtomicU64::new(0)),
             read_count: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+            clock: system_clock(),
         })
     }
 
@@ -137,11 +156,11 @@ impl SqliteCache {
     /// Call this to force immediate eviction of stale rows.
     pub async fn purge_expired(&self) -> Result<(), CacheError> {
         let conn = Arc::clone(&self.write_conn);
-        let now = Self::now_secs();
+        let now = self.now();
         tokio::task::spawn_blocking(move || {
-            let conn = conn
-                .lock()
-                .map_err(|e| CacheError::Backend(Box::from(format!("mutex poisoned: {e}"))))?;
+            // Recover from a poisoned mutex rather than failing forever: cache
+            // data is best-effort and a prior panic left it structurally intact.
+            let conn = conn.lock().unwrap_or_else(|poison| poison.into_inner());
             conn.execute(
                 "DELETE FROM cache_entries WHERE expires_at < ?1",
                 rusqlite::params![now as i64],
@@ -153,22 +172,29 @@ impl SqliteCache {
         .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?
     }
 
-    fn now_secs() -> u64 {
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs()
+    /// Override the time source. Intended for deterministic TTL tests.
+    #[cfg(test)]
+    pub(crate) fn with_clock(mut self, clock: Clock) -> Self {
+        self.clock = clock;
+        self
     }
 
-    /// Periodically purge expired rows (every ~100 writes).
-    fn maybe_purge(conn: &Connection, count: u64) {
-        if count != 0 && count.is_multiple_of(100) {
-            let now = Self::now_secs();
-            let _ = conn.execute(
-                "DELETE FROM cache_entries WHERE expires_at < ?1",
-                params![now as i64],
-            );
-        }
+    fn now(&self) -> u64 {
+        (self.clock)()
+    }
+
+    /// Reclaim expired rows and enforce the [`MAX_ENTRIES`] size cap. Called on
+    /// every write so the file stays bounded regardless of workload.
+    fn enforce_limits(conn: &Connection, now: u64) {
+        let _ = conn.execute(
+            "DELETE FROM cache_entries WHERE expires_at < ?1",
+            params![now as i64],
+        );
+        let _ = conn.execute(
+            "DELETE FROM cache_entries WHERE rowid NOT IN \
+             (SELECT rowid FROM cache_entries ORDER BY expires_at DESC LIMIT ?1)",
+            params![MAX_ENTRIES],
+        );
     }
 
     /// Trigger a best-effort expiry purge on the write connection every ~1000 reads.
@@ -179,16 +205,17 @@ impl SqliteCache {
     fn maybe_purge_on_read(write_conn: Arc<Mutex<Connection>>, count: u64) {
         if count != 0 && count.is_multiple_of(1000) {
             let _purge_task = tokio::task::spawn_blocking(move || {
-                if let Ok(conn) = write_conn.lock() {
-                    let now = SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_secs();
-                    let _ = conn.execute(
-                        "DELETE FROM cache_entries WHERE expires_at < ?1",
-                        params![now as i64],
-                    );
-                }
+                let conn = write_conn
+                    .lock()
+                    .unwrap_or_else(|poison| poison.into_inner());
+                let now = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs();
+                let _ = conn.execute(
+                    "DELETE FROM cache_entries WHERE expires_at < ?1",
+                    params![now as i64],
+                );
             });
         }
     }
@@ -203,12 +230,10 @@ impl CacheBackend for SqliteCache {
         let read_count = Arc::clone(&self.read_count);
         let key_type = key.key_type().to_string();
         let key_id = key.key_id();
-        let now = Self::now_secs();
+        let now = self.now();
 
         let result = tokio::task::spawn_blocking(move || {
-            let conn = conn.lock().map_err(|e| {
-                CacheError::Backend(Box::from(format!("mutex poisoned: {e}")))
-            })?;
+            let conn = conn.lock().unwrap_or_else(|poison| poison.into_inner());
             let result = conn.query_row(
                 "SELECT value FROM cache_entries WHERE key_type = ?1 AND key_id = ?2 AND expires_at > ?3",
                 params![key_type, key_id, now as i64],
@@ -241,24 +266,22 @@ impl CacheBackend for SqliteCache {
         ttl: Duration,
     ) -> Result<(), CacheError> {
         let conn = Arc::clone(&self.write_conn);
-        let write_count = Arc::clone(&self.write_count);
         let key_type = key.key_type().to_string();
         let key_id = key.key_id();
         let json_str = serde_json::to_string(&value)?;
-        let expires_at = Self::now_secs() + ttl.as_secs();
+        let now = self.now();
+        let expires_at = now + ttl.as_secs();
 
         tokio::task::spawn_blocking(move || {
-            let conn = conn.lock().map_err(|e| {
-                CacheError::Backend(Box::from(format!("mutex poisoned: {e}")))
-            })?;
+            let conn = conn.lock().unwrap_or_else(|poison| poison.into_inner());
             conn.execute(
                 "INSERT OR REPLACE INTO cache_entries (key_type, key_id, value, expires_at) VALUES (?1, ?2, ?3, ?4)",
                 params![key_type, key_id, json_str, expires_at as i64],
             )
             .map_err(|e| CacheError::Backend(Box::new(e)))?;
 
-            let count = write_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            Self::maybe_purge(&conn, count);
+            // Bound the file: reclaim expired rows and trim to MAX_ENTRIES.
+            Self::enforce_limits(&conn, now);
 
             Ok(())
         })
@@ -273,9 +296,7 @@ impl CacheBackend for SqliteCache {
         let key_id = key.key_id();
 
         tokio::task::spawn_blocking(move || {
-            let conn = conn
-                .lock()
-                .map_err(|e| CacheError::Backend(Box::from(format!("mutex poisoned: {e}"))))?;
+            let conn = conn.lock().unwrap_or_else(|poison| poison.into_inner());
             conn.execute(
                 "DELETE FROM cache_entries WHERE key_type = ?1 AND key_id = ?2",
                 params![key_type, key_id],
@@ -291,9 +312,7 @@ impl CacheBackend for SqliteCache {
         let conn = Arc::clone(&self.write_conn);
 
         tokio::task::spawn_blocking(move || {
-            let conn = conn
-                .lock()
-                .map_err(|e| CacheError::Backend(Box::from(format!("mutex poisoned: {e}"))))?;
+            let conn = conn.lock().unwrap_or_else(|poison| poison.into_inner());
             conn.execute("DELETE FROM cache_entries", [])
                 .map_err(|e| CacheError::Backend(Box::new(e)))?;
             Ok(())
@@ -348,5 +367,70 @@ mod tests {
         assert!(cache.get(&key).await.unwrap().is_none());
 
         let _ = std::fs::remove_file(&path);
+    }
+
+    fn mock(now: &Arc<std::sync::atomic::AtomicU64>) -> Clock {
+        let now = Arc::clone(now);
+        Arc::new(move || now.load(std::sync::atomic::Ordering::Relaxed))
+    }
+
+    /// TTL expiry is exercised against an injected clock — no wall-clock sleep.
+    #[tokio::test]
+    async fn ttl_expiry_is_deterministic_with_mock_clock() {
+        let now = Arc::new(std::sync::atomic::AtomicU64::new(1_000));
+        let cache = SqliteCache::in_memory().unwrap().with_clock(mock(&now));
+        let key = CacheKey::Detail {
+            media_type: MediaType::Movie,
+            provider_id: "tmdb:1".to_string(),
+        };
+        cache
+            .set(
+                key.clone(),
+                serde_json::json!({ "v": 1 }),
+                Duration::from_secs(60),
+            )
+            .await
+            .unwrap();
+
+        now.store(1_030, std::sync::atomic::Ordering::Relaxed); // within TTL
+        assert!(cache.get(&key).await.unwrap().is_some());
+
+        now.store(1_070, std::sync::atomic::Ordering::Relaxed); // past TTL
+        assert!(cache.get(&key).await.unwrap().is_none());
+    }
+
+    /// Expired rows are reclaimed on write, so the file stays bounded even when
+    /// nothing re-reads the stale entries.
+    #[tokio::test]
+    async fn expired_rows_are_reclaimed_on_write() {
+        let now = Arc::new(std::sync::atomic::AtomicU64::new(1_000));
+        let cache = SqliteCache::in_memory().unwrap().with_clock(mock(&now));
+        let stale = CacheKey::Detail {
+            media_type: MediaType::Movie,
+            provider_id: "tmdb:1".to_string(),
+        };
+        cache
+            .set(
+                stale.clone(),
+                serde_json::json!({}),
+                Duration::from_secs(10),
+            )
+            .await
+            .unwrap();
+
+        now.store(2_000, std::sync::atomic::Ordering::Relaxed); // stale is now expired
+        let fresh = CacheKey::Detail {
+            media_type: MediaType::Movie,
+            provider_id: "tmdb:2".to_string(),
+        };
+        cache
+            .set(fresh, serde_json::json!({}), Duration::from_secs(3_600))
+            .await
+            .unwrap();
+
+        // Rewind the clock: `stale` is only absent because the write reclaimed
+        // it, not because a read-time filter hid it.
+        now.store(1_000, std::sync::atomic::Ordering::Relaxed);
+        assert!(cache.get(&stale).await.unwrap().is_none());
     }
 }

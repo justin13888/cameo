@@ -90,7 +90,9 @@ impl CacheTtlConfig {
             .and_then(Self::parse_date)
             .map(Self::days_since);
 
-        let is_released = status.map(|s| s == "Released").unwrap_or(false);
+        // Recognize both TMDB ("Released") and AniList ("FINISHED") statuses so
+        // the age-aware policy applies to both providers, not just TMDB.
+        let is_released = matches!(status, Some("Released") | Some("FINISHED"));
         let is_old = release_days
             .map(|d| d > self.old_content_threshold_days as i64)
             .unwrap_or(false);
@@ -101,7 +103,12 @@ impl CacheTtlConfig {
 
         let is_in_production = matches!(
             status,
-            Some("In Production") | Some("Post Production") | Some("Planned") | Some("Rumored")
+            Some("In Production")
+                | Some("Post Production")
+                | Some("Planned")
+                | Some("Rumored")
+                | Some("RELEASING")
+                | Some("NOT_YET_RELEASED")
         );
         let is_recent = release_days
             .map(|d| d <= self.recent_content_threshold_days as i64)
@@ -145,7 +152,10 @@ impl CacheTtlConfig {
         let first_air_days = first_air_date
             .and_then(Self::parse_date)
             .map(Self::days_since);
-        let is_ended = matches!(status, Some("Ended") | Some("Canceled"));
+        let is_ended = matches!(
+            status,
+            Some("Ended") | Some("Canceled") | Some("FINISHED") | Some("CANCELLED")
+        );
         let is_old = first_air_days
             .map(|d| d > self.old_content_threshold_days as i64)
             .unwrap_or(false);
@@ -156,7 +166,11 @@ impl CacheTtlConfig {
 
         let is_returning = matches!(
             status,
-            Some("Returning Series") | Some("In Production") | Some("Planned")
+            Some("Returning Series")
+                | Some("In Production")
+                | Some("Planned")
+                | Some("RELEASING")
+                | Some("NOT_YET_RELEASED")
         );
         let is_recent = first_air_days
             .map(|d| d <= self.recent_content_threshold_days as i64)
