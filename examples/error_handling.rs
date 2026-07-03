@@ -9,7 +9,7 @@
 //!   cargo run --example error_handling           # build-time only
 //!   TMDB_API_TOKEN=... cargo run --example error_handling   # all demos
 
-use cameo::{CameoClient, ProviderError, TmdbConfig, unified::CameoClientError};
+use cameo::{CameoClient, MediaId, ProviderError, TmdbConfig, unified::CameoClientError};
 
 #[tokio::main]
 async fn main() {
@@ -112,7 +112,7 @@ async fn demo_not_found() {
     };
 
     // TMDB ID 999_999_999 does not exist → NotFound
-    match client.movie_details(999_999_999).await {
+    match client.movie_details(&MediaId::tmdb(999_999_999)).await {
         Ok(details) => println!("  [unexpected] found: {}", details.movie.title),
         Err(CameoClientError::Provider(ProviderError::NotFound)) => {
             println!("  [ok] movie not found — returning default placeholder");

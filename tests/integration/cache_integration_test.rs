@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use cameo::{cache::SqliteCache, providers::tmdb::TmdbConfig, unified::CameoClient};
+use cameo::{MediaId, cache::SqliteCache, providers::tmdb::TmdbConfig, unified::CameoClient};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path, query_param},
@@ -93,9 +93,9 @@ async fn detail_result_is_cached_second_call_skips_server() {
         .mount(&server)
         .await;
 
-    let d1 = client.movie_details(550).await.unwrap();
+    let d1 = client.movie_details(&MediaId::tmdb(550)).await.unwrap();
     client.flush_cache_writes().await;
-    let d2 = client.movie_details(550).await.unwrap();
+    let d2 = client.movie_details(&MediaId::tmdb(550)).await.unwrap();
 
     assert_eq!(d1.movie.provider_id, d2.movie.provider_id);
 }
@@ -113,7 +113,7 @@ async fn detail_fetch_populates_both_detail_and_item_caches() {
         .mount(&server)
         .await;
 
-    client.movie_details(550).await.unwrap();
+    client.movie_details(&MediaId::tmdb(550)).await.unwrap();
     client.flush_cache_writes().await;
 
     // Detail cache should be populated.
@@ -170,7 +170,7 @@ async fn invalidate_cached_removes_all_entries_for_provider_id() {
         .mount(&server)
         .await;
 
-    client.movie_details(550).await.unwrap();
+    client.movie_details(&MediaId::tmdb(550)).await.unwrap();
     client.flush_cache_writes().await;
 
     // Verify entries exist.
@@ -196,7 +196,7 @@ async fn clear_cache_empties_everything() {
         .mount(&server)
         .await;
 
-    client.movie_details(550).await.unwrap();
+    client.movie_details(&MediaId::tmdb(550)).await.unwrap();
     client.flush_cache_writes().await;
     assert!(client.cached_movie("tmdb:550").await.is_some());
 

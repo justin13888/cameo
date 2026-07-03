@@ -11,7 +11,8 @@ use std::{
 };
 
 use cameo::{
-    CacheTtlConfig, CameoClient, SqliteCache, core::config::TimeWindow, providers::tmdb::TmdbConfig,
+    CacheTtlConfig, CameoClient, MediaId, SqliteCache, core::config::TimeWindow,
+    providers::tmdb::TmdbConfig,
 };
 
 #[tokio::main]
@@ -139,7 +140,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let provider_id = format!("tmdb:{detail_id}");
 
     let t3 = Instant::now();
-    let details = client.movie_details(detail_id).await?;
+    let details = client
+        .movie_details(&MediaId::tmdb(detail_id as u64))
+        .await?;
     let elapsed3 = t3.elapsed();
     println!(
         "  movie_details({detail_id}): \"{}\" ({:.0?})",
@@ -153,7 +156,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     client.flush_cache_writes().await;
 
     let t4 = Instant::now();
-    let details2 = client.movie_details(detail_id).await?;
+    let details2 = client
+        .movie_details(&MediaId::tmdb(detail_id as u64))
+        .await?;
     let elapsed4 = t4.elapsed();
     println!(
         "\n  Second call (cache hit): \"{}\" ({:.0?})",

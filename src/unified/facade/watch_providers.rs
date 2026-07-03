@@ -1,28 +1,23 @@
 use super::{CameoClient, CameoClientError};
-use crate::unified::models::UnifiedWatchProviders;
+use crate::unified::{media_id::MediaId, models::UnifiedWatchProviders};
 
 impl CameoClient {
     /// Get streaming availability for a movie.
     pub async fn movie_watch_providers(
         &self,
-        id: i32,
+        id: &MediaId,
     ) -> Result<UnifiedWatchProviders, CameoClientError> {
-        let media_id = self.media_id_for(&self.watch, id)?;
         Ok(self
-            .require(&self.watch)?
-            .movie_watch_providers(&media_id)
+            .route(&self.watch, id)?
+            .movie_watch_providers(id)
             .await?)
     }
 
     /// Get streaming availability for a TV show.
     pub async fn tv_watch_providers(
         &self,
-        id: i32,
+        id: &MediaId,
     ) -> Result<UnifiedWatchProviders, CameoClientError> {
-        let media_id = self.media_id_for(&self.watch, id)?;
-        Ok(self
-            .require(&self.watch)?
-            .tv_watch_providers(&media_id)
-            .await?)
+        Ok(self.route(&self.watch, id)?.tv_watch_providers(id).await?)
     }
 }

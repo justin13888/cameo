@@ -3,20 +3,22 @@ use super::{CameoClient, CameoClientError};
 use crate::cache::CacheKey;
 use crate::{
     core::pagination::Page,
-    unified::models::{UnifiedMovie, UnifiedTvShow},
+    unified::{
+        media_id::MediaId,
+        models::{UnifiedMovie, UnifiedTvShow},
+    },
 };
 
 impl CameoClient {
     /// Get movie recommendations based on a movie.
     pub async fn movie_recommendations(
         &self,
-        id: i32,
+        id: &MediaId,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
-        let media_id = self.media_id_for(&self.recommendation, id)?;
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
-            endpoint: format!("movie_recommendations_{media_id}"),
+            endpoint: format!("movie_recommendations_{id}"),
             page: page.unwrap_or(1),
         };
         #[cfg(feature = "cache")]
@@ -24,8 +26,8 @@ impl CameoClient {
             return Ok(hit);
         }
         let result = self
-            .require(&self.recommendation)?
-            .movie_recommendations(&media_id, page)
+            .route(&self.recommendation, id)?
+            .movie_recommendations(id, page)
             .await?;
         #[cfg(feature = "cache")]
         {
@@ -39,13 +41,12 @@ impl CameoClient {
     /// Get TV show recommendations based on a TV show.
     pub async fn tv_recommendations(
         &self,
-        id: i32,
+        id: &MediaId,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
-        let media_id = self.media_id_for(&self.recommendation, id)?;
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
-            endpoint: format!("tv_recommendations_{media_id}"),
+            endpoint: format!("tv_recommendations_{id}"),
             page: page.unwrap_or(1),
         };
         #[cfg(feature = "cache")]
@@ -53,8 +54,8 @@ impl CameoClient {
             return Ok(hit);
         }
         let result = self
-            .require(&self.recommendation)?
-            .tv_recommendations(&media_id, page)
+            .route(&self.recommendation, id)?
+            .tv_recommendations(id, page)
             .await?;
         #[cfg(feature = "cache")]
         {
@@ -68,13 +69,12 @@ impl CameoClient {
     /// Get movies similar to a given movie.
     pub async fn similar_movies(
         &self,
-        id: i32,
+        id: &MediaId,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
-        let media_id = self.media_id_for(&self.recommendation, id)?;
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
-            endpoint: format!("similar_movies_{media_id}"),
+            endpoint: format!("similar_movies_{id}"),
             page: page.unwrap_or(1),
         };
         #[cfg(feature = "cache")]
@@ -82,8 +82,8 @@ impl CameoClient {
             return Ok(hit);
         }
         let result = self
-            .require(&self.recommendation)?
-            .similar_movies(&media_id, page)
+            .route(&self.recommendation, id)?
+            .similar_movies(id, page)
             .await?;
         #[cfg(feature = "cache")]
         {
@@ -97,13 +97,12 @@ impl CameoClient {
     /// Get TV shows similar to a given TV show.
     pub async fn similar_tv_shows(
         &self,
-        id: i32,
+        id: &MediaId,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
-        let media_id = self.media_id_for(&self.recommendation, id)?;
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
-            endpoint: format!("similar_tv_{media_id}"),
+            endpoint: format!("similar_tv_{id}"),
             page: page.unwrap_or(1),
         };
         #[cfg(feature = "cache")]
@@ -111,8 +110,8 @@ impl CameoClient {
             return Ok(hit);
         }
         let result = self
-            .require(&self.recommendation)?
-            .similar_tv_shows(&media_id, page)
+            .route(&self.recommendation, id)?
+            .similar_tv_shows(id, page)
             .await?;
         #[cfg(feature = "cache")]
         {

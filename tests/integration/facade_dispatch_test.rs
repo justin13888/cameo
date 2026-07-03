@@ -1,6 +1,7 @@
 #![cfg(feature = "tmdb")]
 
 use cameo::{
+    MediaId,
     core::config::TimeWindow,
     providers::tmdb::TmdbConfig,
     unified::{CameoClient, models::UnifiedSearchResult},
@@ -117,7 +118,10 @@ async fn facade_season_details_dispatches_to_tmdb() {
         .mount(&server)
         .await;
 
-    let season = client.season_details(1399, 1).await.unwrap();
+    let season = client
+        .season_details(&MediaId::tmdb(1399), 1)
+        .await
+        .unwrap();
 
     assert_eq!(season.season_number, 1);
     assert_eq!(season.name.as_deref(), Some("Season 1"));
@@ -139,7 +143,10 @@ async fn facade_movie_watch_providers_dispatches_to_tmdb() {
         .mount(&server)
         .await;
 
-    let providers = client.movie_watch_providers(550).await.unwrap();
+    let providers = client
+        .movie_watch_providers(&MediaId::tmdb(550))
+        .await
+        .unwrap();
 
     assert_eq!(providers.provider_id, "tmdb:550");
     assert!(providers.results.contains_key("US"));
@@ -227,7 +234,9 @@ mod anilist_tests {
         let body = page_response(vec![], 0);
         let (_server, client) = setup_anilist_only(body).await;
 
-        let result = client.movie_recommendations(1, None).await;
+        let result = client
+            .movie_recommendations(&cameo::MediaId::tmdb(1), None)
+            .await;
 
         assert!(
             matches!(result, Err(CameoClientError::Unsupported)),
@@ -241,7 +250,7 @@ mod anilist_tests {
         let (_server, client) = setup_anilist_only(body).await;
 
         //  is only implemented for TMDB
-        let result = client.season_details(1, 1).await;
+        let result = client.season_details(&cameo::MediaId::tmdb(1), 1).await;
 
         assert!(
             matches!(result, Err(CameoClientError::Unsupported)),
@@ -253,7 +262,7 @@ mod anilist_tests {
     async fn facade_anilist_only_watch_providers_returns_unsupported() {
         let body = page_response(vec![], 0);
         let (_server, client) = setup_anilist_only(body).await;
-        let result = client.movie_watch_providers(1).await;
+        let result = client.movie_watch_providers(&cameo::MediaId::tmdb(1)).await;
 
         assert!(
             matches!(result, Err(CameoClientError::Unsupported)),

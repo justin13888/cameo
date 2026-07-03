@@ -14,7 +14,7 @@ use crate::providers::tmdb::TmdbConfig;
 use crate::{
     core::error::ProviderError,
     unified::{
-        media_id::{MediaId, NativeId},
+        media_id::MediaId,
         traits::{
             DetailProvider, DiscoveryProvider, Provider, RecommendationProvider, SearchProvider,
             SeasonProvider, WatchAvailabilityProvider,
@@ -143,6 +143,10 @@ pub struct CameoClientBuilder {
     ext_season: Vec<Arc<dyn SeasonProvider>>,
     ext_watch: Vec<Arc<dyn WatchAvailabilityProvider>>,
 
+    /// Provider priority order (by id); providers not listed keep their default
+    /// (registration) order after the prioritized ones.
+    priority: Vec<String>,
+
     #[cfg(feature = "cache")]
     cache_backend: Option<Arc<dyn CacheBackend>>,
     #[cfg(feature = "cache")]
@@ -167,6 +171,19 @@ impl CameoClientBuilder {
     #[cfg(feature = "anilist")]
     pub fn with_anilist(mut self, config: AniListConfig) -> Self {
         self.anilist_config = Some(config);
+        self
+    }
+
+    /// Set the default provider priority by id (e.g. `["anilist", "tmdb"]`).
+    ///
+    /// Providers whose id is not listed keep their registration order after the
+    /// prioritized ones. Per-call `*_with` methods override this.
+    pub fn with_priority<I, S>(mut self, order: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.priority = order.into_iter().map(Into::into).collect();
         self
     }
 
@@ -284,6 +301,8 @@ impl CameoClientBuilder {
         client.season.extend(self.ext_season);
         client.watch.extend(self.ext_watch);
 
+        client.apply_priority(&self.priority);
+
         if !client.any_provider() {
             return Err(CameoClientError::NotConfigured);
         }
@@ -307,6 +326,16 @@ impl CameoClientBuilder {
 /// providers first, then registered ones). A call with no provider configured
 /// returns [`CameoClientError::NotConfigured`]; a call no configured provider
 /// supports returns [`CameoClientError::Unsupported`].
+///
+/// # Multi-provider semantics (v1)
+///
+/// Results are **not merged** across providers. A search/discovery call is
+/// answered by a single provider — the highest-priority one supporting the
+/// capability (configurable via [`CameoClientBuilder::with_priority`], overridable
+/// per-call via the `*_with` methods). Detail/recommendation/season/watch
+/// lookups are **routed by [`MediaId`] origin**: an `anilist:*` id is always
+/// answered by AniList and never sent to TMDB. Cross-provider result merging or
+/// de-duplication is out of scope for v1.
 pub struct CameoClient {
     search: Vec<Arc<dyn SearchProvider>>,
     detail: Vec<Arc<dyn DetailProvider>>,
@@ -356,6 +385,21 @@ impl CameoClient {
         ids
     }
 
+    /// Reorder every capability registry by the configured provider priority.
+    /// Stable so providers of equal rank keep their registration order.
+    fn apply_priority(&mut self, priority: &[String]) {
+        if priority.is_empty() {
+            return;
+        }
+        let rank = |id: &str| priority.iter().position(|p| p == id).unwrap_or(usize::MAX);
+        self.search.sort_by_key(|p| rank(p.id()));
+        self.detail.sort_by_key(|p| rank(p.id()));
+        self.discovery.sort_by_key(|p| rank(p.id()));
+        self.recommendation.sort_by_key(|p| rank(p.id()));
+        self.season.sort_by_key(|p| rank(p.id()));
+        self.watch.sort_by_key(|p| rank(p.id()));
+    }
+
     /// Whether any provider is registered for any capability.
     fn any_provider(&self) -> bool {
         !self.search.is_empty()
@@ -375,19 +419,45 @@ impl CameoClient {
         }
     }
 
-    /// Build a [`MediaId`] for a raw `i32` id, tagged with the first provider in
-    /// `list` so it routes to that provider. (Per-call routing by id origin is
-    /// added in a later step.)
-    fn media_id_for<T: Provider + ?Sized>(
+    /// Route to the provider in `list` matching a [`MediaId`]'s origin.
+    ///
+    /// A lookup is answered by the provider that minted the id (e.g. an
+    /// `anilist:*` id is never sent to TMDB). Returns [`Unsupported`] when no
+    /// registered provider for this capability matches the id's origin, or
+    /// [`NotConfigured`] when nothing is registered at all.
+    ///
+    /// [`Unsupported`]: CameoClientError::Unsupported
+    /// [`NotConfigured`]: CameoClientError::NotConfigured
+    fn route<'a, T: Provider + ?Sized>(
         &self,
-        list: &[Arc<T>],
-        id: i32,
-    ) -> Result<MediaId, CameoClientError> {
-        let provider = self.require(list)?;
-        Ok(MediaId::new(
-            provider.id().to_string(),
-            NativeId::Num(id.max(0) as u64),
-        ))
+        list: &'a [Arc<T>],
+        id: &MediaId,
+    ) -> Result<&'a Arc<T>, CameoClientError> {
+        if let Some(provider) = list.iter().find(|p| p.id() == id.provider()) {
+            return Ok(provider);
+        }
+        if !self.any_provider() {
+            Err(CameoClientError::NotConfigured)
+        } else {
+            Err(CameoClientError::Unsupported)
+        }
+    }
+
+    /// Select a provider in `list` by its id (per-call provider override), or
+    /// the right "no provider" error.
+    fn select<'a, T: Provider + ?Sized>(
+        &self,
+        list: &'a [Arc<T>],
+        provider_id: &str,
+    ) -> Result<&'a Arc<T>, CameoClientError> {
+        if let Some(provider) = list.iter().find(|p| p.id() == provider_id) {
+            return Ok(provider);
+        }
+        if !self.any_provider() {
+            Err(CameoClientError::NotConfigured)
+        } else {
+            Err(CameoClientError::Unsupported)
+        }
     }
 
     // ── Cache helpers ─────────────────────────────────────────────────────────

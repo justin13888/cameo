@@ -8,7 +8,7 @@
 //!   (reads TMDB_API_TOKEN from .env or the environment)
 
 use cameo::{
-    CameoClient, core::config::TimeWindow, providers::tmdb::TmdbConfig,
+    CameoClient, MediaId, core::config::TimeWindow, providers::tmdb::TmdbConfig,
     unified::models::UnifiedSearchResult,
 };
 
@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ── Details ───────────────────────────────────────────────────────────────
 
     println!("\n=== movie_details: Fight Club (550) ===");
-    let md = client.movie_details(550).await?;
+    let md = client.movie_details(&MediaId::tmdb(550)).await?;
     println!("  Title:    {}", md.movie.title);
     println!("  Runtime:  {:?} min", md.runtime);
     println!(
@@ -68,13 +68,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     println!("\n=== tv_show_details: Breaking Bad (1396) ===");
-    let tv = client.tv_show_details(1396).await?;
+    let tv = client.tv_show_details(&MediaId::tmdb(1396)).await?;
     println!("  Name:     {}", tv.show.name);
     println!("  Seasons:  {:?}", tv.number_of_seasons);
     println!("  Status:   {:?}", tv.status);
 
     println!("\n=== person_details: Brad Pitt (287) ===");
-    let person = client.person_details(287).await?;
+    let person = client.person_details(&MediaId::tmdb(287)).await?;
     println!("  Name:     {}", person.person.name);
     println!("  Dept:     {:?}", person.person.known_for_department);
 
@@ -109,14 +109,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ── Recommendations ───────────────────────────────────────────────────────
 
     println!("\n=== movie_recommendations: Fight Club (550) ===");
-    let recs = client.movie_recommendations(550, None).await?;
+    let recs = client
+        .movie_recommendations(&MediaId::tmdb(550), None)
+        .await?;
     println!("  {} recommendations", recs.total_results);
     for m in recs.results.iter().take(3) {
         println!("  {}", m.title);
     }
 
     println!("\n=== similar_movies: Fight Club (550) ===");
-    let sim = client.similar_movies(550, None).await?;
+    let sim = client.similar_movies(&MediaId::tmdb(550), None).await?;
     for m in sim.results.iter().take(3) {
         println!("  {}", m.title);
     }
@@ -124,7 +126,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ── Seasons ───────────────────────────────────────────────────────────────
 
     println!("\n=== season_details: Game of Thrones s1 (1399) ===");
-    let season = client.season_details(1399, 1).await?;
+    let season = client.season_details(&MediaId::tmdb(1399), 1).await?;
     println!(
         "  {} — {} episodes",
         season.name.as_deref().unwrap_or("?"),
@@ -139,13 +141,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\n=== episode_details: GoT s1e1 ===");
-    let ep = client.episode_details(1399, 1, 1).await?;
+    let ep = client.episode_details(&MediaId::tmdb(1399), 1, 1).await?;
     println!("  {}", ep.name.as_deref().unwrap_or("Unknown"));
 
     // ── Watch Providers ───────────────────────────────────────────────────────
 
     println!("\n=== movie_watch_providers: Fight Club (550) ===");
-    let wp = client.movie_watch_providers(550).await?;
+    let wp = client.movie_watch_providers(&MediaId::tmdb(550)).await?;
     if let Some(us) = wp.results.get("US") {
         for svc in us.flatrate.iter().take(3) {
             println!("  Stream: {}", svc.name);

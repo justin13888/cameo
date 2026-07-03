@@ -2,35 +2,26 @@ use super::{CameoClient, CameoClientError};
 #[cfg(feature = "cache")]
 use crate::cache::{CacheKey, MediaType};
 use crate::unified::{
-    media_id::{MediaId, NativeId},
+    media_id::MediaId,
     models::{UnifiedMovieDetails, UnifiedPersonDetails, UnifiedTvShowDetails},
 };
 
 impl CameoClient {
-    /// Build a [`MediaId`] tagged with the first detail provider's id, so the
-    /// raw `i32` id is routed to that provider. (Per-call routing by id origin
-    /// is added in a later step.)
-    fn detail_media_id(&self, id: i32) -> Result<MediaId, CameoClientError> {
-        let provider = self.require(&self.detail)?;
-        Ok(MediaId::new(
-            provider.id().to_string(),
-            NativeId::Num(id.max(0) as u64),
-        ))
-    }
-
-    /// Get detailed information about a movie.
-    pub async fn movie_details(&self, id: i32) -> Result<UnifiedMovieDetails, CameoClientError> {
-        let media_id = self.detail_media_id(id)?;
+    /// Get detailed information about a movie, routed to the provider that minted `id`.
+    pub async fn movie_details(
+        &self,
+        id: &MediaId,
+    ) -> Result<UnifiedMovieDetails, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Detail {
             media_type: MediaType::Movie,
-            provider_id: media_id.to_string(),
+            provider_id: id.to_string(),
         };
         #[cfg(feature = "cache")]
         if let Some(hit) = self.cache_get::<UnifiedMovieDetails>(&key).await {
             return Ok(hit);
         }
-        let result = self.require(&self.detail)?.movie_details(&media_id).await?;
+        let result = self.route(&self.detail, id)?.movie_details(id).await?;
         #[cfg(feature = "cache")]
         {
             self.cache_put(key, &result, self.cache_details_ttl()).await;
@@ -47,22 +38,21 @@ impl CameoClient {
         Ok(result)
     }
 
-    /// Get detailed information about a TV show.
-    pub async fn tv_show_details(&self, id: i32) -> Result<UnifiedTvShowDetails, CameoClientError> {
-        let media_id = self.detail_media_id(id)?;
+    /// Get detailed information about a TV show, routed by `id` origin.
+    pub async fn tv_show_details(
+        &self,
+        id: &MediaId,
+    ) -> Result<UnifiedTvShowDetails, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Detail {
             media_type: MediaType::TvShow,
-            provider_id: media_id.to_string(),
+            provider_id: id.to_string(),
         };
         #[cfg(feature = "cache")]
         if let Some(hit) = self.cache_get::<UnifiedTvShowDetails>(&key).await {
             return Ok(hit);
         }
-        let result = self
-            .require(&self.detail)?
-            .tv_show_details(&media_id)
-            .await?;
+        let result = self.route(&self.detail, id)?.tv_show_details(id).await?;
         #[cfg(feature = "cache")]
         {
             self.cache_put(key, &result, self.cache_details_ttl()).await;
@@ -79,22 +69,21 @@ impl CameoClient {
         Ok(result)
     }
 
-    /// Get detailed information about a person.
-    pub async fn person_details(&self, id: i32) -> Result<UnifiedPersonDetails, CameoClientError> {
-        let media_id = self.detail_media_id(id)?;
+    /// Get detailed information about a person, routed by `id` origin.
+    pub async fn person_details(
+        &self,
+        id: &MediaId,
+    ) -> Result<UnifiedPersonDetails, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Detail {
             media_type: MediaType::Person,
-            provider_id: media_id.to_string(),
+            provider_id: id.to_string(),
         };
         #[cfg(feature = "cache")]
         if let Some(hit) = self.cache_get::<UnifiedPersonDetails>(&key).await {
             return Ok(hit);
         }
-        let result = self
-            .require(&self.detail)?
-            .person_details(&media_id)
-            .await?;
+        let result = self.route(&self.detail, id)?.person_details(id).await?;
         #[cfg(feature = "cache")]
         {
             self.cache_put(key, &result, self.cache_details_ttl()).await;
