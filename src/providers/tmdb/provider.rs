@@ -63,9 +63,7 @@ impl SearchProvider for TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, ProviderError> {
-        Ok(TmdbClient::search_movies(self, query, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::search_movies(self, query, page).await?)
     }
 
     async fn search_tv_shows(
@@ -73,9 +71,7 @@ impl SearchProvider for TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(TmdbClient::search_tv_shows(self, query, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::search_tv_shows(self, query, page).await?)
     }
 
     async fn search_people(
@@ -83,9 +79,7 @@ impl SearchProvider for TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedPerson>, ProviderError> {
-        Ok(TmdbClient::search_people(self, query, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::search_people(self, query, page).await?)
     }
 
     async fn search_multi(
@@ -93,26 +87,22 @@ impl SearchProvider for TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedSearchResult>, ProviderError> {
-        Ok(TmdbClient::search_multi(self, query, page)
-            .await?
-            .filter_map(crate::unified::conversions::tmdb::person::multi_search_result))
+        Ok(TmdbClient::search_multi(self, query, page).await?)
     }
 }
 
 #[async_trait]
 impl DetailProvider for TmdbClient {
     async fn movie_details(&self, id: &MediaId) -> Result<UnifiedMovieDetails, ProviderError> {
-        Ok(TmdbClient::movie_details(self, tmdb_id(id)?).await?.into())
+        Ok(TmdbClient::movie_details(self, tmdb_id(id)?).await?)
     }
 
     async fn tv_show_details(&self, id: &MediaId) -> Result<UnifiedTvShowDetails, ProviderError> {
-        Ok(TmdbClient::tv_series_details(self, tmdb_id(id)?)
-            .await?
-            .into())
+        Ok(TmdbClient::tv_series_details(self, tmdb_id(id)?).await?)
     }
 
     async fn person_details(&self, id: &MediaId) -> Result<UnifiedPersonDetails, ProviderError> {
-        Ok(TmdbClient::person_details(self, tmdb_id(id)?).await?.into())
+        Ok(TmdbClient::person_details(self, tmdb_id(id)?).await?)
     }
 }
 
@@ -123,9 +113,7 @@ impl DiscoveryProvider for TmdbClient {
         time_window: TimeWindow,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, ProviderError> {
-        Ok(TmdbClient::trending_movies(self, time_window, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::trending_movies(self, time_window, page).await?)
     }
 
     async fn trending_tv_shows(
@@ -133,42 +121,32 @@ impl DiscoveryProvider for TmdbClient {
         time_window: TimeWindow,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(TmdbClient::trending_tv(self, time_window, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::trending_tv(self, time_window, page).await?)
     }
 
     async fn popular_movies(&self, page: Option<u32>) -> Result<Page<UnifiedMovie>, ProviderError> {
-        Ok(TmdbClient::popular_movies(self, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::popular_movies(self, page).await?)
     }
 
     async fn top_rated_movies(
         &self,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, ProviderError> {
-        Ok(TmdbClient::top_rated_movies(self, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::top_rated_movies(self, page).await?)
     }
 
     async fn popular_tv_shows(
         &self,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(TmdbClient::popular_tv_shows(self, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::popular_tv_shows(self, page).await?)
     }
 
     async fn top_rated_tv_shows(
         &self,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(TmdbClient::top_rated_tv_shows(self, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::top_rated_tv_shows(self, page).await?)
     }
 }
 
@@ -179,7 +157,6 @@ impl RecommendationProvider for TmdbClient {
         id: &MediaId,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, ProviderError> {
-        // Already returns unified movies.
         Ok(TmdbClient::movie_recommendations(self, tmdb_id(id)?, page).await?)
     }
 
@@ -188,9 +165,7 @@ impl RecommendationProvider for TmdbClient {
         id: &MediaId,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(TmdbClient::tv_recommendations(self, tmdb_id(id)?, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::tv_recommendations(self, tmdb_id(id)?, page).await?)
     }
 
     async fn similar_movies(
@@ -198,9 +173,7 @@ impl RecommendationProvider for TmdbClient {
         id: &MediaId,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, ProviderError> {
-        Ok(TmdbClient::similar_movies(self, tmdb_id(id)?, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::similar_movies(self, tmdb_id(id)?, page).await?)
     }
 
     async fn similar_tv_shows(
@@ -208,9 +181,7 @@ impl RecommendationProvider for TmdbClient {
         id: &MediaId,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(TmdbClient::similar_tv_shows(self, tmdb_id(id)?, page)
-            .await?
-            .map(Into::into))
+        Ok(TmdbClient::similar_tv_shows(self, tmdb_id(id)?, page).await?)
     }
 }
 

@@ -1,18 +1,14 @@
-//! Low-level TmdbClient usage — for when you need direct access to the raw TMDB API.
+//! Low-level TmdbClient usage.
 //!
-//! Shows construction, search, details+credits, image URL building, the
-//! discover builder API, trending, and genre lists.
+//! The low-level [`TmdbClient`] returns the same unified models as the facade,
+//! so you get a stable, provider-neutral surface without going through
+//! `CameoClient`. Shows construction, search, details + credits, the discover
+//! builder API, trending, and genre lists.
 //!
 //! Usage: cargo run --example tmdb_lowlevel [query]
 //!   (reads TMDB_API_TOKEN from .env or the environment)
 
-use cameo::{
-    generated::tmdb::types::DiscoverMovieSortBy,
-    providers::tmdb::{
-        TmdbClient, TmdbConfig,
-        image_url::{BackdropSize, ImageUrl, PosterSize},
-    },
-};
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig, builders::MovieSortBy};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -38,16 +34,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         resp.total_results
     );
     for movie in resp.results.iter().take(5) {
-        let title = movie.title.as_deref().unwrap_or("Unknown");
         let year = movie
             .release_date
-            .as_deref()
-            .and_then(|d| d.get(..4))
-            .unwrap_or("????");
-        let rating = format!("{:.1}", movie.vote_average);
-        println!("  [{year}] {title}  ★ {rating}  (id: {})", movie.id);
+            .map(|d| d.year().to_string())
+            .unwrap_or_else(|| "????".to_string());
+        let rating = movie
+            .vote_average
+            .map(|v| format!("{v:.1}"))
+            .unwrap_or_else(|| "?".to_string());
+        println!(
+            "  [{year}] {}  ★ {rating}  ({})",
+            movie.title, movie.provider_id
+        );
     }
-    if resp.has_next_page() {
+    if resp.has_next {
         println!("  {} more pages available.", resp.total_pages - resp.page);
     }
 
@@ -55,36 +55,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n=== movie_details + movie_credits: Fight Club (550) ===");
     let details = client.movie_details(550).await?;
-    println!(
-        "  Title:   {}",
-        details.title.as_deref().unwrap_or("Unknown")
-    );
-    println!("  Runtime: {} min", details.runtime);
-    println!("  Budget:  ${}", details.budget);
-
-    // Image URL construction
-    if let Some(poster_path) = &details.poster_path {
-        let url = ImageUrl::poster(poster_path, PosterSize::W500);
-        println!("  Poster:  {url}");
+    println!("  Title:   {}", details.movie.title);
+    if let Some(runtime) = details.runtime {
+        println!("  Runtime: {runtime} min");
     }
-    if let Some(backdrop_path) = &details.backdrop_path {
-        let url = ImageUrl::backdrop(backdrop_path, BackdropSize::W780);
-        println!("  Backdrop:{url}");
+    if let Some(budget) = details.budget {
+        println!("  Budget:  ${budget}");
+    }
+    if let Some(poster) = &details.movie.poster_url {
+        println!("  Poster:  {poster}");
     }
 
     let credits = client.movie_credits(550).await?;
     println!("  Cast ({}):", credits.cast.len());
     for actor in credits.cast.iter().take(3) {
-        let name = actor.name.as_deref().unwrap_or("Unknown");
         let character = actor.character.as_deref().unwrap_or("?");
-        println!("    {name} as {character}");
+        println!("    {} as {character}", actor.name);
     }
-    let director = credits
+    if let Some(dir) = credits
         .crew
         .iter()
-        .find(|c| c.job.as_deref() == Some("Director"));
-    if let Some(dir) = director {
-        println!("  Director: {}", dir.name.as_deref().unwrap_or("Unknown"));
+        .find(|c| c.job.as_deref() == Some("Director"))
+    {
+        println!("  Director: {}", dir.name);
     }
 
     // ── Discover builder ──────────────────────────────────────────────────────
@@ -92,7 +85,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== discover_movies: drama + vote_count ≥ 1000 ===");
     let discover_resp = client
         .discover_movies()
-        .sort_by(DiscoverMovieSortBy::VoteAverageDesc)
+        .sort_by(MovieSortBy::VoteAverageDesc)
         .with_genres("18") // Drama
         .vote_count_gte(1000.0)
         .vote_average_gte(8.0)
@@ -102,9 +95,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     println!("  {} total matches", discover_resp.total_results);
     for movie in discover_resp.results.iter().take(5) {
-        let title = movie.title.as_deref().unwrap_or("Unknown");
-        let rating = format!("{:.1}", movie.vote_average);
-        println!("  {title}  ★ {rating}");
+        let rating = movie
+            .vote_average
+            .map(|v| format!("{v:.1}"))
+            .unwrap_or_else(|| "?".to_string());
+        println!("  {}  ★ {rating}", movie.title);
     }
 
     // ── Trending ──────────────────────────────────────────────────────────────
@@ -114,18 +109,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let trending = client.trending_movies(TimeWindow::Week, None).await?;
     println!("  {} trending movies", trending.total_results);
     for m in trending.results.iter().take(5) {
-        let title = m.title.as_deref().unwrap_or("Unknown");
-        let pop = format!("{:.0}", m.popularity);
-        println!("  {title}  ↑ {pop}");
+        let pop = m
+            .popularity
+            .map(|p| format!("{p:.0}"))
+            .unwrap_or_else(|| "?".to_string());
+        println!("  {}  ↑ {pop}", m.title);
     }
 
     // ── Genre list ────────────────────────────────────────────────────────────
 
     println!("\n=== movie_genres ===");
     let genres = client.movie_genres().await?;
-    for g in genres.genres.iter().take(8) {
-        let name = g.name.as_deref().unwrap_or("Unknown");
-        println!("  {:5}  {name}", g.id);
+    for g in genres.iter().take(8) {
+        println!("  {g}");
     }
 
     Ok(())

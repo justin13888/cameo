@@ -51,8 +51,13 @@
 //! ```
 
 /// Auto-generated low-level API client code (from progenitor).
+///
+/// Crate-internal: these progenitor/typify-generated types are an
+/// implementation detail and are **not** part of cameo's public API. The
+/// stable boundary is [`TmdbClient`](providers::tmdb::TmdbClient), which returns
+/// unified models and hand-owned TMDB types.
 #[cfg(feature = "tmdb")]
-pub mod generated;
+pub(crate) mod generated;
 
 /// Caching layer for transparent API response caching.
 #[cfg(feature = "cache")]

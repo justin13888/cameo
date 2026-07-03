@@ -238,3 +238,43 @@ pub(crate) fn season_details_from(
         episodes: t.episodes.into_iter().map(Into::into).collect(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        generated::tmdb::types,
+        unified::{genre::Genre, models::UnifiedTvShow},
+    };
+
+    #[test]
+    fn search_tv_to_unified() {
+        let raw = types::SearchTvResponseResultsItem {
+            id: 1396,
+            name: Some("Breaking Bad".to_string()),
+            original_name: Some("Breaking Bad".to_string()),
+            overview: Some("A high school chemistry teacher...".to_string()),
+            first_air_date: Some("2008-01-20".to_string()),
+            poster_path: Some("/ggFHVNu6YYI5L9pCfOacjizRGt.jpg".to_string()),
+            backdrop_path: Some("/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg".to_string()),
+            genre_ids: vec![18, 80],
+            origin_country: vec!["US".to_string()],
+            popularity: 282.9,
+            vote_average: 9.5,
+            vote_count: 14000,
+            original_language: Some("en".to_string()),
+            adult: false,
+        };
+        let unified: UnifiedTvShow = raw.into();
+        assert_eq!(unified.provider_id, "tmdb:1396");
+        assert_eq!(unified.name, "Breaking Bad");
+        assert_eq!(
+            unified.first_air_date.map(|d| d.to_string()).as_deref(),
+            Some("2008-01-20")
+        );
+        assert_eq!(unified.origin_country, vec!["US"]);
+        assert_eq!(unified.vote_count, Some(14000));
+        assert_eq!(unified.adult, Some(false));
+        // Genres from IDs (18=Drama, 80=Crime).
+        assert_eq!(unified.genres, vec![Genre::Drama, Genre::Crime]);
+    }
+}

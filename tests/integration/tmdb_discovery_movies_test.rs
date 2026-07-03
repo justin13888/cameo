@@ -1,24 +1,8 @@
-use cameo::{
-    generated::tmdb::{Client as GeneratedClient, types::TrendingMoviesTimeWindow},
-    providers::tmdb::{TmdbClient, TmdbConfig},
-};
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
 };
-
-async fn setup_generated_client(server: &MockServer) -> GeneratedClient {
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        reqwest::header::AUTHORIZATION,
-        reqwest::header::HeaderValue::from_static("Bearer test-token"),
-    );
-    let http = reqwest::ClientBuilder::new()
-        .default_headers(headers)
-        .build()
-        .unwrap();
-    GeneratedClient::new_with_client(&server.uri(), http)
-}
 
 fn setup_tmdb_client(server: &MockServer) -> TmdbClient {
     TmdbClient::new(TmdbConfig::new_with_base_url("test-token", server.uri())).unwrap()
@@ -29,7 +13,7 @@ fn setup_tmdb_client(server: &MockServer) -> TmdbClient {
 #[tokio::test]
 async fn trending_movies_deserializes_response() {
     let server = MockServer::start().await;
-    let client = setup_generated_client(&server).await;
+    let client = setup_tmdb_client(&server);
 
     Mock::given(method("GET"))
         .and(path("/3/trending/movie/week"))
@@ -40,17 +24,16 @@ async fn trending_movies_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client
-        .trending_movies(TrendingMoviesTimeWindow::Week, None)
+    let page = client
+        .trending_movies(cameo::TimeWindow::Week, None)
         .await
         .unwrap();
-    let body = resp.into_inner();
 
-    assert_eq!(body.page, 1);
-    assert_eq!(body.total_results, 1);
-    assert_eq!(body.results.len(), 1);
-    assert_eq!(body.results[0].id, 550);
-    assert_eq!(body.results[0].title.as_deref(), Some("Fight Club"));
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 1);
+    assert_eq!(page.results.len(), 1);
+    assert_eq!(page.results[0].provider_id, "tmdb:550");
+    assert_eq!(page.results[0].title, "Fight Club");
 }
 
 // ── Popular ───────────────────────────────────────────────────────────────────
@@ -58,7 +41,7 @@ async fn trending_movies_deserializes_response() {
 #[tokio::test]
 async fn popular_movies_deserializes_response() {
     let server = MockServer::start().await;
-    let client = setup_generated_client(&server).await;
+    let client = setup_tmdb_client(&server);
 
     Mock::given(method("GET"))
         .and(path("/3/movie/popular"))
@@ -69,14 +52,13 @@ async fn popular_movies_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.movie_popular_list(None, None, None).await.unwrap();
-    let body = resp.into_inner();
+    let page = client.popular_movies(None).await.unwrap();
 
-    assert_eq!(body.page, 1);
-    assert_eq!(body.total_results, 200);
-    assert_eq!(body.results.len(), 1);
-    assert_eq!(body.results[0].id, 157336);
-    assert_eq!(body.results[0].title.as_deref(), Some("Interstellar"));
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 200);
+    assert_eq!(page.results.len(), 1);
+    assert_eq!(page.results[0].provider_id, "tmdb:157336");
+    assert_eq!(page.results[0].title, "Interstellar");
 }
 
 // ── Top Rated ─────────────────────────────────────────────────────────────────
@@ -84,7 +66,7 @@ async fn popular_movies_deserializes_response() {
 #[tokio::test]
 async fn top_rated_movies_deserializes_response() {
     let server = MockServer::start().await;
-    let client = setup_generated_client(&server).await;
+    let client = setup_tmdb_client(&server);
 
     Mock::given(method("GET"))
         .and(path("/3/movie/top_rated"))
@@ -95,17 +77,13 @@ async fn top_rated_movies_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.movie_top_rated_list(None, None, None).await.unwrap();
-    let body = resp.into_inner();
+    let page = client.top_rated_movies(None).await.unwrap();
 
-    assert_eq!(body.page, 1);
-    assert_eq!(body.total_results, 100);
-    assert_eq!(body.results.len(), 1);
-    assert_eq!(body.results[0].id, 278);
-    assert_eq!(
-        body.results[0].title.as_deref(),
-        Some("The Shawshank Redemption")
-    );
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 100);
+    assert_eq!(page.results.len(), 1);
+    assert_eq!(page.results[0].provider_id, "tmdb:278");
+    assert_eq!(page.results[0].title, "The Shawshank Redemption");
 }
 
 // ── Discover ─────────────────────────────────────────────────────────────────
@@ -124,13 +102,13 @@ async fn discover_movies_execute_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.discover_movies().execute().await.unwrap();
+    let page = client.discover_movies().execute().await.unwrap();
 
-    assert_eq!(resp.page, 1);
-    assert_eq!(resp.total_results, 1);
-    assert_eq!(resp.results.len(), 1);
-    assert_eq!(resp.results[0].id, 550);
-    assert_eq!(resp.results[0].title.as_deref(), Some("Fight Club"));
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 1);
+    assert_eq!(page.results.len(), 1);
+    assert_eq!(page.results[0].provider_id, "tmdb:550");
+    assert_eq!(page.results[0].title, "Fight Club");
 }
 
 #[tokio::test]
@@ -147,11 +125,11 @@ async fn discover_tv_execute_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.discover_tv().execute().await.unwrap();
+    let page = client.discover_tv().execute().await.unwrap();
 
-    assert_eq!(resp.page, 1);
-    assert_eq!(resp.total_results, 1);
-    assert_eq!(resp.results.len(), 1);
-    assert_eq!(resp.results[0].id, 202250);
-    assert_eq!(resp.results[0].name.as_deref(), Some("Dirty Linen"));
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 1);
+    assert_eq!(page.results.len(), 1);
+    assert_eq!(page.results[0].provider_id, "tmdb:202250");
+    assert_eq!(page.results[0].name, "Dirty Linen");
 }

@@ -1,5 +1,3 @@
-use cameo::generated::tmdb::Client as GeneratedClient;
-#[cfg(feature = "live-tests")]
 use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
@@ -14,18 +12,10 @@ fn person_details_fixture() -> &'static str {
     include_str!("../fixtures/person_details_response.json")
 }
 
-async fn setup_mock_client() -> (MockServer, GeneratedClient) {
+async fn setup_mock_client() -> (MockServer, TmdbClient) {
     let server = MockServer::start().await;
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        reqwest::header::AUTHORIZATION,
-        reqwest::header::HeaderValue::from_static("Bearer test-token"),
-    );
-    let http = reqwest::ClientBuilder::new()
-        .default_headers(headers)
-        .build()
-        .unwrap();
-    let client = GeneratedClient::new_with_client(&server.uri(), http);
+    let client =
+        TmdbClient::new(TmdbConfig::new_with_base_url("test-token", server.uri())).unwrap();
     (server, client)
 }
 
@@ -42,19 +32,15 @@ async fn search_person_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client
-        .search_person(None, None, None, "brad pitt")
-        .await
-        .unwrap();
-    let body = resp.into_inner();
+    let page = client.search_people("brad pitt", None).await.unwrap();
 
-    assert_eq!(body.page, 1);
-    assert_eq!(body.total_results, 1);
-    assert_eq!(body.results.len(), 1);
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 1);
+    assert_eq!(page.results.len(), 1);
 
-    let person = &body.results[0];
-    assert_eq!(person.id, 287);
-    assert_eq!(person.name.as_deref(), Some("Brad Pitt"));
+    let person = &page.results[0];
+    assert!(person.provider_id == "tmdb:287");
+    assert_eq!(person.name, "Brad Pitt");
     assert_eq!(person.known_for_department.as_deref(), Some("Acting"));
 }
 
@@ -70,17 +56,19 @@ async fn person_details_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.person_details(287, None, None).await.unwrap();
-    let body = resp.into_inner();
+    let details = client.person_details(287).await.unwrap();
 
-    assert_eq!(body.id, 287);
-    assert_eq!(body.name.as_deref(), Some("Brad Pitt"));
-    assert_eq!(body.biography.as_deref().map(|b| !b.is_empty()), Some(true));
+    assert!(details.person.provider_id == "tmdb:287");
+    assert_eq!(details.person.name, "Brad Pitt");
     assert_eq!(
-        body.birthday.map(|d| d.to_string()).as_deref(),
+        details.biography.as_deref().map(|b| !b.is_empty()),
+        Some(true)
+    );
+    assert_eq!(
+        details.birthday.map(|d| d.to_string()).as_deref(),
         Some("1963-12-18")
     );
-    assert_eq!(body.imdb_id.as_deref(), Some("nm0000093"));
+    assert_eq!(details.imdb_id.as_deref(), Some("nm0000093"));
 }
 
 #[cfg(feature = "live-tests")]
@@ -93,12 +81,12 @@ fn client() -> TmdbClient {
 #[tokio::test]
 async fn live_person_details_brad_pitt() {
     let c = client();
-    let person = c.person_details(287).await.unwrap(); // Brad Pitt
+    let details = c.person_details(287).await.unwrap(); // Brad Pitt
 
-    assert_eq!(person.id, 287);
-    assert_eq!(person.name.as_deref(), Some("Brad Pitt"));
+    assert!(details.person.provider_id == "tmdb:287");
+    assert_eq!(details.person.name, "Brad Pitt");
     assert!(
-        person
+        details
             .biography
             .as_deref()
             .map(|b| !b.is_empty())

@@ -1,21 +1,13 @@
-use cameo::generated::tmdb::Client as GeneratedClient;
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
 };
 
-async fn setup_mock_client() -> (MockServer, GeneratedClient) {
+async fn setup_mock_client() -> (MockServer, TmdbClient) {
     let server = MockServer::start().await;
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        reqwest::header::AUTHORIZATION,
-        reqwest::header::HeaderValue::from_static("Bearer test-token"),
-    );
-    let http = reqwest::ClientBuilder::new()
-        .default_headers(headers)
-        .build()
-        .unwrap();
-    let client = GeneratedClient::new_with_client(&server.uri(), http);
+    let client =
+        TmdbClient::new(TmdbConfig::new_with_base_url("test-token", server.uri())).unwrap();
     (server, client)
 }
 
@@ -32,16 +24,15 @@ async fn movie_credits_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.movie_credits(550, None).await.unwrap();
-    let body = resp.into_inner();
+    let credits = client.movie_credits(550).await.unwrap();
 
-    assert_eq!(body.id, 550);
-    assert_eq!(body.cast.len(), 1);
-    assert_eq!(body.cast[0].name.as_deref(), Some("Edward Norton"));
-    assert_eq!(body.cast[0].character.as_deref(), Some("The Narrator"));
-    assert_eq!(body.crew.len(), 1);
-    assert_eq!(body.crew[0].name.as_deref(), Some("David Fincher"));
-    assert_eq!(body.crew[0].job.as_deref(), Some("Director"));
+    assert_eq!(credits.cast.len(), 1);
+    assert_eq!(credits.cast[0].id, 819);
+    assert_eq!(credits.cast[0].name, "Edward Norton");
+    assert_eq!(credits.cast[0].character.as_deref(), Some("The Narrator"));
+    assert_eq!(credits.crew.len(), 1);
+    assert_eq!(credits.crew[0].name, "David Fincher");
+    assert_eq!(credits.crew[0].job.as_deref(), Some("Director"));
 }
 
 #[tokio::test]
@@ -57,16 +48,12 @@ async fn tv_series_credits_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client
-        .tv_series_aggregate_credits(1396, None)
-        .await
-        .unwrap();
-    let body = resp.into_inner();
+    let credits = client.tv_series_credits(1396).await.unwrap();
 
-    assert_eq!(body.id, 1396);
-    assert_eq!(body.cast.len(), 1);
-    assert_eq!(body.cast[0].name.as_deref(), Some("Bryan Cranston"));
-    assert_eq!(body.cast[0].total_episode_count, 62);
-    assert_eq!(body.crew.len(), 1);
-    assert_eq!(body.crew[0].name.as_deref(), Some("Vince Gilligan"));
+    assert_eq!(credits.cast.len(), 1);
+    assert_eq!(credits.cast[0].id, 17419);
+    assert_eq!(credits.cast[0].name, "Bryan Cranston");
+    assert_eq!(credits.cast[0].character.as_deref(), Some("Walter White"));
+    assert_eq!(credits.crew.len(), 1);
+    assert_eq!(credits.crew[0].name, "Vince Gilligan");
 }

@@ -1,9 +1,11 @@
 /// Tests for discover builder construction and parameter passing.
 /// These just verify that the builders can be created and chained without panicking.
 /// (Network calls are not made in unit tests.)
-use cameo::generated::tmdb::types::{DiscoverMovieSortBy, DiscoverTvSortBy};
 use cameo::{
-    providers::tmdb::{TmdbClient, TmdbConfig},
+    providers::tmdb::{
+        TmdbClient, TmdbConfig,
+        builders::{MovieSortBy, TvSortBy},
+    },
     unified::{CameoClient, CameoClientError},
 };
 use chrono::NaiveDate;
@@ -18,7 +20,7 @@ fn discover_movies_builder_chains() {
     // Just verify that builder creation and method chaining compiles and works
     let _builder = client
         .discover_movies()
-        .sort_by(DiscoverMovieSortBy::PopularityDesc)
+        .sort_by(MovieSortBy::PopularityDesc)
         .with_genres("28,12")
         .without_genres("99")
         .primary_release_year(2024)
@@ -45,7 +47,7 @@ fn discover_tv_builder_chains() {
     let client = make_client();
     let _builder = client
         .discover_tv()
-        .sort_by(DiscoverTvSortBy::VoteAverageDesc)
+        .sort_by(TvSortBy::VoteAverageDesc)
         .with_genres("10765")
         .without_genres("99")
         .first_air_date_year(2024)

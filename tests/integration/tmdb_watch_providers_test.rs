@@ -1,21 +1,13 @@
-use cameo::generated::tmdb::Client as GeneratedClient;
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
 };
 
-async fn setup_mock_client() -> (MockServer, GeneratedClient) {
+async fn setup_mock_client() -> (MockServer, TmdbClient) {
     let server = MockServer::start().await;
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        reqwest::header::AUTHORIZATION,
-        reqwest::header::HeaderValue::from_static("Bearer test-token"),
-    );
-    let http = reqwest::ClientBuilder::new()
-        .default_headers(headers)
-        .build()
-        .unwrap();
-    let client = GeneratedClient::new_with_client(&server.uri(), http);
+    let client =
+        TmdbClient::new(TmdbConfig::new_with_base_url("test-token", server.uri())).unwrap();
     (server, client)
 }
 
@@ -32,11 +24,16 @@ async fn movie_watch_providers_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.movie_watch_providers(550).await.unwrap();
-    let body = resp.into_inner();
+    let providers = client.movie_watch_providers(550).await.unwrap();
 
-    assert_eq!(body.id, 550);
-    assert!(body.results.is_some());
+    assert!(providers.provider_id == "tmdb:550");
+    let us = providers
+        .results
+        .get("US")
+        .expect("US watch providers present");
+    assert_eq!(us.flatrate[0].name, "fuboTV");
+    assert_eq!(us.rent[0].name, "Amazon Video");
+    assert_eq!(us.buy[0].name, "Apple TV");
 }
 
 #[tokio::test]
@@ -52,9 +49,14 @@ async fn tv_watch_providers_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.tv_series_watch_providers(1396).await.unwrap();
-    let body = resp.into_inner();
+    let providers = client.tv_watch_providers(1396).await.unwrap();
 
-    assert_eq!(body.id, 1396);
-    assert!(body.results.is_some());
+    assert!(providers.provider_id == "tmdb:1396");
+    let us = providers
+        .results
+        .get("US")
+        .expect("US watch providers present");
+    assert_eq!(us.flatrate[0].name, "Netflix");
+    assert!(us.rent.is_empty());
+    assert_eq!(us.buy[0].name, "Apple TV");
 }

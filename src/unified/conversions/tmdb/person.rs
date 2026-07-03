@@ -168,4 +168,31 @@ mod tests {
         assert!(multi_search_result(multi_item(1, Some("collection"))).is_none());
         assert!(multi_search_result(multi_item(2, None)).is_none());
     }
+
+    #[test]
+    fn search_person_to_unified() {
+        let raw = types::SearchPersonResponseResultsItem {
+            id: 287,
+            name: Some("Brad Pitt".to_string()),
+            original_name: None,
+            known_for_department: Some("Acting".to_string()),
+            profile_path: Some("/kU3B75TyRiCgE270EyZnHjfivoq.jpg".to_string()),
+            popularity: 25.3,
+            adult: false,
+            gender: 2,
+            known_for: vec![],
+        };
+        let unified: UnifiedPerson = raw.into();
+        assert_eq!(unified.provider_id, "tmdb:287");
+        assert_eq!(unified.name, "Brad Pitt");
+        assert_eq!(unified.known_for_department.as_deref(), Some("Acting"));
+        assert_eq!(unified.gender, Some(Gender::Male));
+        assert_eq!(unified.adult, Some(false));
+        assert!(
+            unified
+                .profile_url
+                .unwrap()
+                .starts_with("https://image.tmdb.org/t/p/")
+        );
+    }
 }

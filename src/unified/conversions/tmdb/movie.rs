@@ -133,3 +133,83 @@ fn parse_collection(v: &serde_json::Value) -> Collection {
         ),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        generated::tmdb::types,
+        unified::{genre::Genre, models::UnifiedMovie},
+    };
+
+    fn make_search_movie() -> types::SearchMovieResponseResultsItem {
+        types::SearchMovieResponseResultsItem {
+            id: 550,
+            title: Some("Fight Club".to_string()),
+            original_title: Some("Fight Club".to_string()),
+            overview: Some("A ticking-time-bomb insomniac...".to_string()),
+            release_date: Some("1999-10-15".to_string()),
+            poster_path: Some("/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg".to_string()),
+            backdrop_path: Some("/hZkgoQYus5vegHoetLkCJzb17zJ.jpg".to_string()),
+            genre_ids: vec![18, 53],
+            popularity: 73.433,
+            vote_average: 8.4,
+            vote_count: 26280,
+            original_language: Some("en".to_string()),
+            adult: false,
+            video: false,
+        }
+    }
+
+    #[test]
+    fn search_movie_to_unified() {
+        let unified: UnifiedMovie = make_search_movie().into();
+        assert_eq!(unified.provider_id, "tmdb:550");
+        assert_eq!(unified.title, "Fight Club");
+        assert_eq!(
+            unified.release_date.map(|d| d.to_string()).as_deref(),
+            Some("1999-10-15")
+        );
+        assert_eq!(unified.vote_count, Some(26280));
+        assert_eq!(unified.adult, Some(false));
+        // Genres resolved from IDs (18=Drama, 53=Thriller).
+        assert_eq!(unified.genres, vec![Genre::Drama, Genre::Thriller]);
+        assert!(
+            unified
+                .poster_url
+                .as_deref()
+                .unwrap()
+                .starts_with("https://image.tmdb.org/t/p/")
+        );
+    }
+
+    #[test]
+    fn search_movie_no_poster() {
+        let mut raw = make_search_movie();
+        raw.poster_path = None;
+        raw.backdrop_path = None;
+        let unified: UnifiedMovie = raw.into();
+        assert!(unified.poster_url.is_none());
+        assert!(unified.backdrop_url.is_none());
+    }
+
+    #[test]
+    fn search_movie_empty_genre_ids() {
+        let mut raw = make_search_movie();
+        raw.genre_ids = vec![];
+        let unified: UnifiedMovie = raw.into();
+        assert!(unified.genres.is_empty());
+    }
+
+    #[test]
+    fn search_movie_unknown_genre_id() {
+        let mut raw = make_search_movie();
+        raw.genre_ids = vec![99999];
+        let unified: UnifiedMovie = raw.into();
+        assert_eq!(
+            unified.genres,
+            vec![Genre::Other(crate::unified::genre::UnknownGenre::TmdbId(
+                99999
+            ),)]
+        );
+    }
+}

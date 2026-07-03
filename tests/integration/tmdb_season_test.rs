@@ -1,21 +1,13 @@
-use cameo::generated::tmdb::Client as GeneratedClient;
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
 };
 
-async fn setup_mock_client() -> (MockServer, GeneratedClient) {
+async fn setup_mock_client() -> (MockServer, TmdbClient) {
     let server = MockServer::start().await;
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        reqwest::header::AUTHORIZATION,
-        reqwest::header::HeaderValue::from_static("Bearer test-token"),
-    );
-    let http = reqwest::ClientBuilder::new()
-        .default_headers(headers)
-        .build()
-        .unwrap();
-    let client = GeneratedClient::new_with_client(&server.uri(), http);
+    let client =
+        TmdbClient::new(TmdbConfig::new_with_base_url("test-token", server.uri())).unwrap();
     (server, client)
 }
 
@@ -32,15 +24,15 @@ async fn tv_season_details_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.tv_season_details(1399, 1, None, None).await.unwrap();
-    let body = resp.into_inner();
+    let season = client.tv_season_details(1399, 1).await.unwrap();
 
-    assert_eq!(body.season_number, 1);
-    assert_eq!(body.name.as_deref(), Some("Season 1"));
-    assert_eq!(body.episodes.len(), 1);
+    assert_eq!(season.show_id, "tmdb:1399");
+    assert_eq!(season.season_number, 1);
+    assert_eq!(season.name.as_deref(), Some("Season 1"));
+    assert_eq!(season.episodes.len(), 1);
 
-    let ep = &body.episodes[0];
+    let ep = &season.episodes[0];
     assert_eq!(ep.episode_number, 1);
     assert_eq!(ep.name.as_deref(), Some("Winter Is Coming"));
-    assert_eq!(ep.runtime, 62);
+    assert_eq!(ep.runtime, Some(62));
 }

@@ -28,8 +28,8 @@ async fn live_search_movies_returns_results() {
     assert!(!resp.results.is_empty(), "First page should have results");
 
     let first = &resp.results[0];
-    assert!(!first.title.as_deref().unwrap_or("").is_empty());
-    assert!(first.id > 0);
+    assert!(!first.title.is_empty());
+    assert!(first.provider_id.as_u64().is_some());
 }
 
 #[cfg(feature = "live-tests")]
@@ -41,7 +41,7 @@ async fn live_search_tv_returns_results() {
     assert!(!resp.results.is_empty());
 
     let first = &resp.results[0];
-    assert!(!first.name.as_deref().unwrap_or("").is_empty());
+    assert!(!first.name.is_empty());
 }
 
 #[cfg(feature = "live-tests")]
@@ -52,7 +52,7 @@ async fn live_search_people_returns_results() {
     assert!(resp.total_results > 0);
 
     let first = &resp.results[0];
-    assert!(!first.name.as_deref().unwrap_or("").is_empty());
+    assert!(!first.name.is_empty());
 }
 
 #[cfg(feature = "live-tests")]

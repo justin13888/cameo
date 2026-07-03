@@ -1,15 +1,21 @@
 use std::collections::HashMap;
 
-use super::{config::TmdbConfig, error::TmdbError};
+use super::{
+    config::TmdbConfig,
+    error::TmdbError,
+    models::{TmdbCredits, TmdbImages},
+};
 use crate::{
     core::{config::TimeWindow, pagination::Page},
     generated::tmdb::{self, types},
     providers::rate_limit::RateLimiter,
     unified::{
+        genre::Genre,
         media_id::MediaId,
         models::{
-            UnifiedEpisode, UnifiedMovie, UnifiedSeasonDetails, UnifiedStreamingService,
-            UnifiedWatchProviderEntry, UnifiedWatchProviders,
+            UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
+            UnifiedSearchResult, UnifiedSeasonDetails, UnifiedStreamingService, UnifiedTvShow,
+            UnifiedTvShowDetails, UnifiedWatchProviderEntry, UnifiedWatchProviders,
         },
     },
 };
@@ -71,8 +77,9 @@ impl TmdbClient {
         })
     }
 
-    /// Returns a reference to the underlying generated client for direct access.
-    pub fn inner(&self) -> &tmdb::Client {
+    /// Returns a reference to the underlying generated client (crate-internal;
+    /// the generated types are not part of cameo's public API).
+    pub(crate) fn inner(&self) -> &tmdb::Client {
         &self.inner
     }
 
@@ -163,7 +170,7 @@ impl TmdbClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<Page<types::SearchMovieResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedMovie>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.search_movie(
@@ -182,7 +189,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     /// Search for TV shows by name.
@@ -191,7 +199,7 @@ impl TmdbClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<Page<types::SearchTvResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedTvShow>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.search_tv(
@@ -209,7 +217,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     /// Search for people by name.
@@ -218,7 +227,7 @@ impl TmdbClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<Page<types::SearchPersonResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedPerson>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.search_person(
@@ -234,7 +243,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     /// Multi-search across movies, TV shows, and people.
@@ -243,7 +253,7 @@ impl TmdbClient {
         &self,
         query: &str,
         page: Option<u32>,
-    ) -> Result<Page<types::SearchMultiResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedSearchResult>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.search_multi(
@@ -259,19 +269,18 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .filter_map(crate::unified::conversions::tmdb::person::multi_search_result))
     }
 
     // ── Details ──
 
     /// Get detailed information about a movie.
     #[tracing::instrument(skip(self))]
-    pub async fn movie_details(
-        &self,
-        movie_id: i32,
-    ) -> Result<types::MovieDetailsResponse, TmdbError> {
+    pub async fn movie_details(&self, movie_id: i32) -> Result<UnifiedMovieDetails, TmdbError> {
         self.execute(|| self.inner.movie_details(movie_id, None, self.language()))
             .await
+            .map(Into::into)
     }
 
     /// Get detailed information about a movie with appended responses.
@@ -280,12 +289,13 @@ impl TmdbClient {
         &self,
         movie_id: i32,
         append: &str,
-    ) -> Result<types::MovieDetailsResponse, TmdbError> {
+    ) -> Result<UnifiedMovieDetails, TmdbError> {
         self.execute(|| {
             self.inner
                 .movie_details(movie_id, Some(append), self.language())
         })
         .await
+        .map(Into::into)
     }
 
     /// Get detailed information about a TV series.
@@ -293,47 +303,42 @@ impl TmdbClient {
     pub async fn tv_series_details(
         &self,
         series_id: i32,
-    ) -> Result<types::TvSeriesDetailsResponse, TmdbError> {
+    ) -> Result<UnifiedTvShowDetails, TmdbError> {
         self.execute(|| {
             self.inner
                 .tv_series_details(series_id, None, self.language())
         })
         .await
+        .map(Into::into)
     }
 
     /// Get detailed information about a person.
     #[tracing::instrument(skip(self))]
-    pub async fn person_details(
-        &self,
-        person_id: i32,
-    ) -> Result<types::PersonDetailsResponse, TmdbError> {
+    pub async fn person_details(&self, person_id: i32) -> Result<UnifiedPersonDetails, TmdbError> {
         self.execute(|| self.inner.person_details(person_id, None, self.language()))
             .await
+            .map(Into::into)
     }
 
     // ── Credits ──
 
     /// Get the cast and crew for a movie.
     #[tracing::instrument(skip(self))]
-    pub async fn movie_credits(
-        &self,
-        movie_id: i32,
-    ) -> Result<types::MovieCreditsResponse, TmdbError> {
+    pub async fn movie_credits(&self, movie_id: i32) -> Result<TmdbCredits, TmdbError> {
         self.execute(|| self.inner.movie_credits(movie_id, self.language()))
             .await
+            .map(Into::into)
     }
 
     /// Get the cast and crew for a TV series.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_series_credits(
-        &self,
-        series_id: i32,
-    ) -> Result<types::TvSeriesAggregateCreditsResponse, TmdbError> {
+    pub async fn tv_series_credits(&self, series_id: i32) -> Result<TmdbCredits, TmdbError> {
         self.execute(|| {
             self.inner
                 .tv_series_aggregate_credits(series_id, self.language())
         })
         .await
+        .map(Into::into)
     }
 
     // ── Trending ──
@@ -350,7 +355,7 @@ impl TmdbClient {
         &self,
         time_window: TimeWindow,
         _page: Option<u32>,
-    ) -> Result<Page<types::TrendingMoviesResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedMovie>, TmdbError> {
         let tw = match time_window {
             TimeWindow::Day => types::TrendingMoviesTimeWindow::Day,
             TimeWindow::Week => types::TrendingMoviesTimeWindow::Week,
@@ -363,7 +368,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     /// Get trending TV shows.
@@ -378,7 +384,7 @@ impl TmdbClient {
         &self,
         time_window: TimeWindow,
         _page: Option<u32>,
-    ) -> Result<Page<types::TrendingTvResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedTvShow>, TmdbError> {
         let tw = match time_window {
             TimeWindow::Day => types::TrendingTvTimeWindow::Day,
             TimeWindow::Week => types::TrendingTvTimeWindow::Week,
@@ -391,17 +397,15 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     // ── Popular / Top Rated ──
 
     /// Get popular movies.
     #[tracing::instrument(skip(self))]
-    pub async fn popular_movies(
-        &self,
-        page: Option<u32>,
-    ) -> Result<Page<types::MoviePopularListResponseResultsItem>, TmdbError> {
+    pub async fn popular_movies(&self, page: Option<u32>) -> Result<Page<UnifiedMovie>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner
@@ -413,7 +417,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     /// Get top-rated movies.
@@ -421,7 +426,7 @@ impl TmdbClient {
     pub async fn top_rated_movies(
         &self,
         page: Option<u32>,
-    ) -> Result<Page<types::MovieTopRatedListResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedMovie>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.movie_top_rated_list(
@@ -436,7 +441,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     /// Get popular TV shows.
@@ -444,7 +450,7 @@ impl TmdbClient {
     pub async fn popular_tv_shows(
         &self,
         page: Option<u32>,
-    ) -> Result<Page<types::TvSeriesPopularListResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedTvShow>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner
@@ -456,7 +462,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     /// Get top-rated TV shows.
@@ -464,7 +471,7 @@ impl TmdbClient {
     pub async fn top_rated_tv_shows(
         &self,
         page: Option<u32>,
-    ) -> Result<Page<types::TvSeriesTopRatedListResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedTvShow>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner
@@ -476,7 +483,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     // ── Recommendations / Similar ──
@@ -511,7 +519,7 @@ impl TmdbClient {
         &self,
         series_id: i32,
         page: Option<u32>,
-    ) -> Result<Page<types::TvSeriesRecommendationsResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedTvShow>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner.tv_series_recommendations(
@@ -526,7 +534,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     /// Get movies similar to a given movie.
@@ -535,7 +544,7 @@ impl TmdbClient {
         &self,
         movie_id: i32,
         page: Option<u32>,
-    ) -> Result<Page<types::MovieSimilarResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedMovie>, TmdbError> {
         let body = self
             .execute(|| {
                 self.inner
@@ -547,7 +556,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     /// Get TV shows similar to a given TV show.
@@ -563,7 +573,7 @@ impl TmdbClient {
         &self,
         series_id: i32,
         page: Option<u32>,
-    ) -> Result<Page<types::TvSeriesSimilarResponseResultsItem>, TmdbError> {
+    ) -> Result<Page<UnifiedTvShow>, TmdbError> {
         let id_str = series_id.to_string();
         let body = self
             .execute(|| {
@@ -576,7 +586,8 @@ impl TmdbClient {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 
     // ── Season / Episode ──
@@ -668,26 +679,35 @@ impl TmdbClient {
 
     /// Get the list of official movie genres.
     #[tracing::instrument(skip(self))]
-    pub async fn movie_genres(&self) -> Result<types::GenreMovieListResponse, TmdbError> {
-        self.execute(|| self.inner.genre_movie_list(self.language()))
-            .await
+    pub async fn movie_genres(&self) -> Result<Vec<Genre>, TmdbError> {
+        let resp = self
+            .execute(|| self.inner.genre_movie_list(self.language()))
+            .await?;
+        Ok(resp
+            .genres
+            .into_iter()
+            .map(|g| Genre::from_tmdb_id(g.id))
+            .collect())
     }
 
     /// Get the list of official TV show genres.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_genres(&self) -> Result<types::GenreTvListResponse, TmdbError> {
-        self.execute(|| self.inner.genre_tv_list(self.language()))
-            .await
+    pub async fn tv_genres(&self) -> Result<Vec<Genre>, TmdbError> {
+        let resp = self
+            .execute(|| self.inner.genre_tv_list(self.language()))
+            .await?;
+        Ok(resp
+            .genres
+            .into_iter()
+            .map(|g| Genre::from_tmdb_id(g.id))
+            .collect())
     }
 
     // ── Images ──
 
     /// Get images for a movie.
     #[tracing::instrument(skip(self))]
-    pub async fn movie_images(
-        &self,
-        movie_id: i32,
-    ) -> Result<types::MovieImagesResponse, TmdbError> {
+    pub async fn movie_images(&self, movie_id: i32) -> Result<TmdbImages, TmdbError> {
         self.execute(|| {
             self.inner.movie_images(
                 movie_id,
@@ -696,6 +716,7 @@ impl TmdbClient {
             )
         })
         .await
+        .map(Into::into)
     }
 
     // ── Discover Builders ──

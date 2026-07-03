@@ -2,8 +2,8 @@ use chrono::NaiveDate;
 
 use crate::{
     core::pagination::Page,
-    generated::tmdb::types::{DiscoverTvResponseResultsItem, DiscoverTvSortBy},
-    providers::tmdb::{TmdbClient, error::TmdbError},
+    providers::tmdb::{TmdbClient, builders::TvSortBy, error::TmdbError},
+    unified::models::UnifiedTvShow,
 };
 
 /// Builder for discovering TV shows with flexible filters.
@@ -14,7 +14,7 @@ use crate::{
 /// # async fn example(client: &cameo::providers::tmdb::TmdbClient) -> Result<(), cameo::providers::tmdb::TmdbError> {
 /// let results = client
 ///     .discover_tv()
-///     .sort_by(cameo::generated::tmdb::types::DiscoverTvSortBy::PopularityDesc)
+///     .sort_by(cameo::providers::tmdb::builders::TvSortBy::PopularityDesc)
 ///     .with_genres("10765")
 ///     .first_air_date_year(2024)
 ///     .execute()
@@ -35,7 +35,7 @@ pub struct DiscoverTvBuilder<'a> {
     language: Option<String>,
     page: Option<i32>,
     screened_theatrically: Option<bool>,
-    sort_by: Option<DiscoverTvSortBy>,
+    sort_by: Option<TvSortBy>,
     timezone: Option<String>,
     vote_average_gte: Option<f32>,
     vote_average_lte: Option<f32>,
@@ -101,7 +101,7 @@ impl<'a> DiscoverTvBuilder<'a> {
     }
 
     /// Set the sort order.
-    pub fn sort_by(mut self, sort_by: DiscoverTvSortBy) -> Self {
+    pub fn sort_by(mut self, sort_by: TvSortBy) -> Self {
         self.sort_by = Some(sort_by);
         self
     }
@@ -324,7 +324,7 @@ impl<'a> DiscoverTvBuilder<'a> {
     /// occupied and a `rate_limit_timeout` is configured. Returns
     /// [`TmdbError::Api`] on non-2xx HTTP responses. Returns
     /// [`TmdbError::Http`] on network failures.
-    pub async fn execute(self) -> Result<Page<DiscoverTvResponseResultsItem>, TmdbError> {
+    pub async fn execute(self) -> Result<Page<UnifiedTvShow>, TmdbError> {
         self.client.acquire_rate_limit().await;
         let resp = self
             .client
@@ -340,7 +340,7 @@ impl<'a> DiscoverTvBuilder<'a> {
                 self.language.as_deref(),
                 self.page,
                 self.screened_theatrically,
-                self.sort_by,
+                self.sort_by.map(TvSortBy::to_generated),
                 self.timezone.as_deref(),
                 self.vote_average_gte,
                 self.vote_average_lte,
@@ -371,6 +371,7 @@ impl<'a> DiscoverTvBuilder<'a> {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 }

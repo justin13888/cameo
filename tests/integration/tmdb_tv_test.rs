@@ -1,5 +1,3 @@
-use cameo::generated::tmdb::Client as GeneratedClient;
-#[cfg(feature = "live-tests")]
 use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
@@ -14,18 +12,10 @@ fn tv_details_fixture() -> &'static str {
     include_str!("../fixtures/tv_details_response.json")
 }
 
-async fn setup_mock_client() -> (MockServer, GeneratedClient) {
+async fn setup_mock_client() -> (MockServer, TmdbClient) {
     let server = MockServer::start().await;
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        reqwest::header::AUTHORIZATION,
-        reqwest::header::HeaderValue::from_static("Bearer test-token"),
-    );
-    let http = reqwest::ClientBuilder::new()
-        .default_headers(headers)
-        .build()
-        .unwrap();
-    let client = GeneratedClient::new_with_client(&server.uri(), http);
+    let client =
+        TmdbClient::new(TmdbConfig::new_with_base_url("test-token", server.uri())).unwrap();
     (server, client)
 }
 
@@ -42,20 +32,16 @@ async fn search_tv_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client
-        .search_tv(None, None, None, None, "breaking bad", None)
-        .await
-        .unwrap();
-    let body = resp.into_inner();
+    let page = client.search_tv_shows("breaking bad", None).await.unwrap();
 
-    assert_eq!(body.page, 1);
-    assert_eq!(body.total_results, 1);
-    assert_eq!(body.results.len(), 1);
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 1);
+    assert_eq!(page.results.len(), 1);
 
-    let show = &body.results[0];
-    assert_eq!(show.id, 1396);
-    assert_eq!(show.name.as_deref(), Some("Breaking Bad"));
-    assert_eq!(show.vote_count, 13306);
+    let show = &page.results[0];
+    assert!(show.provider_id == "tmdb:1396");
+    assert_eq!(show.name, "Breaking Bad");
+    assert_eq!(show.vote_count, Some(13306));
 }
 
 #[tokio::test]
@@ -70,16 +56,15 @@ async fn tv_series_details_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.tv_series_details(1396, None, None).await.unwrap();
-    let body = resp.into_inner();
+    let details = client.tv_series_details(1396).await.unwrap();
 
-    assert_eq!(body.id, 1396);
-    assert_eq!(body.name.as_deref(), Some("Breaking Bad"));
-    assert_eq!(body.number_of_seasons, 5);
-    assert_eq!(body.number_of_episodes, 62);
-    assert_eq!(body.status.as_deref(), Some("Ended"));
-    assert_eq!(body.genres.len(), 2);
-    assert_eq!(body.genres[0].name.as_deref(), Some("Drama"));
+    assert!(details.show.provider_id == "tmdb:1396");
+    assert_eq!(details.show.name, "Breaking Bad");
+    assert_eq!(details.number_of_seasons, Some(5));
+    assert_eq!(details.number_of_episodes, Some(62));
+    assert_eq!(details.status.as_deref(), Some("Ended"));
+    assert_eq!(details.show.genres.len(), 2);
+    assert!(details.show.genres.contains(&cameo::Genre::Drama));
 }
 
 #[tokio::test]
@@ -95,19 +80,14 @@ async fn tv_genres_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.genre_tv_list(None).await.unwrap();
-    let body = resp.into_inner();
+    let genres = client.tv_genres().await.unwrap();
 
-    assert!(!body.genres.is_empty());
-    let drama = body.genres.iter().find(|g| g.id == 18);
-    assert!(drama.is_some());
-    assert_eq!(drama.unwrap().name.as_deref(), Some("Drama"));
+    assert!(!genres.is_empty());
+    assert!(genres.contains(&cameo::Genre::Drama));
 }
 
 #[tokio::test]
 async fn trending_tv_deserializes_response() {
-    use cameo::generated::tmdb::types::TrendingTvTimeWindow;
-
     let (server, client) = setup_mock_client().await;
 
     Mock::given(method("GET"))
@@ -119,17 +99,16 @@ async fn trending_tv_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client
-        .trending_tv(TrendingTvTimeWindow::Week, None)
+    let page = client
+        .trending_tv(cameo::TimeWindow::Week, None)
         .await
         .unwrap();
-    let body = resp.into_inner();
 
-    assert_eq!(body.page, 1);
-    assert_eq!(body.total_results, 1);
-    assert_eq!(body.results.len(), 1);
-    assert_eq!(body.results[0].id, 202250);
-    assert_eq!(body.results[0].name.as_deref(), Some("Dirty Linen"));
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 1);
+    assert_eq!(page.results.len(), 1);
+    assert!(page.results[0].provider_id == "tmdb:202250");
+    assert_eq!(page.results[0].name, "Dirty Linen");
 }
 
 #[cfg(feature = "live-tests")]
@@ -144,30 +123,29 @@ async fn live_tv_series_details_breaking_bad() {
     let c = client();
     let details = c.tv_series_details(1396).await.unwrap(); // Breaking Bad
 
-    assert_eq!(details.id, 1396);
-    assert_eq!(details.name.as_deref(), Some("Breaking Bad"));
-    assert!(details.number_of_seasons > 0);
-    assert!(!details.genres.is_empty());
+    assert!(details.show.provider_id == "tmdb:1396");
+    assert_eq!(details.show.name, "Breaking Bad");
+    assert!(details.number_of_seasons.unwrap_or(0) > 0);
+    assert!(!details.show.genres.is_empty());
 }
 
 #[cfg(feature = "live-tests")]
 #[tokio::test]
 async fn live_trending_tv_returns_page() {
-    use cameo::core::config::TimeWindow;
     let c = client();
-    let resp = c.trending_tv(TimeWindow::Week, None).await.unwrap();
+    let resp = c.trending_tv(cameo::TimeWindow::Week, None).await.unwrap();
     assert!(!resp.results.is_empty());
 }
 
 #[cfg(feature = "live-tests")]
 #[tokio::test]
 async fn live_discover_tv_with_filters() {
-    use cameo::generated::tmdb::types::DiscoverTvSortBy;
+    use cameo::providers::tmdb::builders::TvSortBy;
 
     let c = client();
     let resp = c
         .discover_tv()
-        .sort_by(DiscoverTvSortBy::PopularityDesc)
+        .sort_by(TvSortBy::PopularityDesc)
         .with_original_language("en")
         .execute()
         .await

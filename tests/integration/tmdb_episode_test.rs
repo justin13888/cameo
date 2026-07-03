@@ -1,21 +1,13 @@
-use cameo::generated::tmdb::Client as GeneratedClient;
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
 };
 
-async fn setup_mock_client() -> (MockServer, GeneratedClient) {
+async fn setup_mock_client() -> (MockServer, TmdbClient) {
     let server = MockServer::start().await;
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        reqwest::header::AUTHORIZATION,
-        reqwest::header::HeaderValue::from_static("Bearer test-token"),
-    );
-    let http = reqwest::ClientBuilder::new()
-        .default_headers(headers)
-        .build()
-        .unwrap();
-    let client = GeneratedClient::new_with_client(&server.uri(), http);
+    let client =
+        TmdbClient::new(TmdbConfig::new_with_base_url("test-token", server.uri())).unwrap();
     (server, client)
 }
 
@@ -32,15 +24,10 @@ async fn tv_episode_details_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client
-        .tv_episode_details(1396, 1, 1, None, None)
-        .await
-        .unwrap();
-    let body = resp.into_inner();
+    let ep = client.tv_episode_details(1396, 1, 1).await.unwrap();
 
-    assert_eq!(body.id, 62085);
-    assert_eq!(body.episode_number, 1);
-    assert_eq!(body.season_number, 1);
-    assert_eq!(body.name.as_deref(), Some("Pilot"));
-    assert_eq!(body.runtime, 58);
+    assert_eq!(ep.episode_number, 1);
+    assert_eq!(ep.name.as_deref(), Some("Pilot"));
+    assert_eq!(ep.runtime, Some(58));
+    assert_eq!(ep.vote_average, Some(7.7));
 }

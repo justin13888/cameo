@@ -1,4 +1,4 @@
-use cameo::generated::tmdb::Client as GeneratedClient;
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{header, method, path, query_param},
@@ -12,19 +12,11 @@ fn movie_details_fixture() -> &'static str {
     include_str!("../fixtures/movie_details_response.json")
 }
 
-/// Helper: set up a mock server and a generated client pointing to it.
-async fn setup_mock_client() -> (MockServer, GeneratedClient) {
+/// Helper: set up a mock server and a `TmdbClient` pointing to it.
+async fn setup_mock_client() -> (MockServer, TmdbClient) {
     let server = MockServer::start().await;
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        reqwest::header::AUTHORIZATION,
-        reqwest::header::HeaderValue::from_static("Bearer test-token"),
-    );
-    let http = reqwest::ClientBuilder::new()
-        .default_headers(headers)
-        .build()
-        .unwrap();
-    let client = GeneratedClient::new_with_client(&server.uri(), http);
+    let client =
+        TmdbClient::new(TmdbConfig::new_with_base_url("test-token", server.uri())).unwrap();
     (server, client)
 }
 
@@ -41,20 +33,16 @@ async fn search_movie_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client
-        .search_movie(None, None, None, None, "fight club", None, None)
-        .await
-        .unwrap();
-    let body = resp.into_inner();
+    let page = client.search_movies("fight club", None).await.unwrap();
 
-    assert_eq!(body.page, 1);
-    assert_eq!(body.total_results, 1);
-    assert_eq!(body.results.len(), 1);
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 1);
+    assert_eq!(page.results.len(), 1);
 
-    let movie = &body.results[0];
-    assert_eq!(movie.id, 550);
-    assert_eq!(movie.title.as_deref(), Some("Fight Club"));
-    assert_eq!(movie.vote_count, 26280);
+    let movie = &page.results[0];
+    assert!(movie.provider_id == "tmdb:550");
+    assert_eq!(movie.title, "Fight Club");
+    assert_eq!(movie.vote_count, Some(26280));
 }
 
 #[tokio::test]
@@ -69,16 +57,15 @@ async fn movie_details_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.movie_details(550, None, None).await.unwrap();
-    let body = resp.into_inner();
+    let details = client.movie_details(550).await.unwrap();
 
-    assert_eq!(body.id, 550);
-    assert_eq!(body.title.as_deref(), Some("Fight Club"));
-    assert_eq!(body.runtime, 139);
-    assert_eq!(body.budget, 63000000);
-    assert_eq!(body.imdb_id.as_deref(), Some("tt0137523"));
-    assert_eq!(body.genres.len(), 2);
-    assert_eq!(body.genres[0].name.as_deref(), Some("Drama"));
+    assert!(details.movie.provider_id == "tmdb:550");
+    assert_eq!(details.movie.title, "Fight Club");
+    assert_eq!(details.runtime, Some(139));
+    assert_eq!(details.budget, Some(63000000));
+    assert_eq!(details.imdb_id.as_deref(), Some("tt0137523"));
+    assert_eq!(details.movie.genres.len(), 2);
+    assert!(details.movie.genres.contains(&cameo::Genre::Drama));
 }
 
 #[tokio::test]
@@ -94,13 +81,10 @@ async fn movie_genres_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.genre_movie_list(None).await.unwrap();
-    let body = resp.into_inner();
+    let genres = client.movie_genres().await.unwrap();
 
-    assert!(!body.genres.is_empty());
-    let action = body.genres.iter().find(|g| g.id == 28);
-    assert!(action.is_some());
-    assert_eq!(action.unwrap().name.as_deref(), Some("Action"));
+    assert!(!genres.is_empty());
+    assert!(genres.contains(&cameo::Genre::Action));
 }
 
 #[tokio::test]
@@ -116,16 +100,17 @@ async fn movie_images_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.movie_images(550, None, None).await.unwrap();
-    let body = resp.into_inner();
+    let images = client.movie_images(550).await.unwrap();
 
-    assert_eq!(body.id, 550);
-    assert_eq!(body.backdrops.len(), 1);
-    assert_eq!(
-        body.backdrops[0].file_path.as_deref(),
-        Some("/hZkgoQYus5vegHoetLkCJzb17zJ.jpg")
+    assert_eq!(images.backdrops.len(), 1);
+    assert!(
+        images.backdrops[0]
+            .url
+            .as_deref()
+            .unwrap()
+            .ends_with("/hZkgoQYus5vegHoetLkCJzb17zJ.jpg")
     );
-    assert_eq!(body.posters.len(), 1);
+    assert_eq!(images.posters.len(), 1);
 }
 
 #[tokio::test]
@@ -142,15 +127,11 @@ async fn search_multi_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client
-        .search_multi(None, None, None, "fight club")
-        .await
-        .unwrap();
-    let body = resp.into_inner();
+    let page = client.search_multi("fight club", None).await.unwrap();
 
-    assert_eq!(body.page, 1);
-    assert_eq!(body.total_results, 3);
-    assert_eq!(body.results.len(), 3);
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 3);
+    assert_eq!(page.results.len(), 3);
 }
 
 #[tokio::test]
@@ -167,9 +148,6 @@ async fn bearer_token_is_sent() {
         .await;
 
     // Succeeds only if the Authorization header is present (wiremock verifies the matcher)
-    let resp = client
-        .search_movie(None, None, None, None, "test", None, None)
-        .await
-        .unwrap();
-    assert_eq!(resp.into_inner().page, 1);
+    let page = client.search_movies("test", None).await.unwrap();
+    assert_eq!(page.page, 1);
 }

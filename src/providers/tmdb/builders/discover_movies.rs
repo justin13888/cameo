@@ -2,8 +2,8 @@ use chrono::NaiveDate;
 
 use crate::{
     core::pagination::Page,
-    generated::tmdb::types::{DiscoverMovieResponseResultsItem, DiscoverMovieSortBy},
-    providers::tmdb::{TmdbClient, error::TmdbError},
+    providers::tmdb::{TmdbClient, builders::MovieSortBy, error::TmdbError},
+    unified::models::UnifiedMovie,
 };
 
 /// Builder for discovering movies with flexible filters.
@@ -14,7 +14,7 @@ use crate::{
 /// # async fn example(client: &cameo::providers::tmdb::TmdbClient) -> Result<(), cameo::providers::tmdb::TmdbError> {
 /// let results = client
 ///     .discover_movies()
-///     .sort_by(cameo::generated::tmdb::types::DiscoverMovieSortBy::PopularityDesc)
+///     .sort_by(cameo::providers::tmdb::builders::MovieSortBy::PopularityDesc)
 ///     .with_genres("28")
 ///     .primary_release_year(2024)
 ///     .execute()
@@ -39,7 +39,7 @@ pub struct DiscoverMoviesBuilder<'a> {
     region: Option<String>,
     release_date_gte: Option<NaiveDate>,
     release_date_lte: Option<NaiveDate>,
-    sort_by: Option<DiscoverMovieSortBy>,
+    sort_by: Option<MovieSortBy>,
     vote_average_gte: Option<f32>,
     vote_average_lte: Option<f32>,
     vote_count_gte: Option<f32>,
@@ -111,7 +111,7 @@ impl<'a> DiscoverMoviesBuilder<'a> {
     }
 
     /// Set the sort order.
-    pub fn sort_by(mut self, sort_by: DiscoverMovieSortBy) -> Self {
+    pub fn sort_by(mut self, sort_by: MovieSortBy) -> Self {
         self.sort_by = Some(sort_by);
         self
     }
@@ -361,7 +361,7 @@ impl<'a> DiscoverMoviesBuilder<'a> {
     /// occupied and a `rate_limit_timeout` is configured. Returns
     /// [`TmdbError::Api`] on non-2xx HTTP responses. Returns
     /// [`TmdbError::Http`] on network failures.
-    pub async fn execute(self) -> Result<Page<DiscoverMovieResponseResultsItem>, TmdbError> {
+    pub async fn execute(self) -> Result<Page<UnifiedMovie>, TmdbError> {
         self.client.acquire_rate_limit().await;
         let resp = self
             .client
@@ -381,7 +381,7 @@ impl<'a> DiscoverMoviesBuilder<'a> {
                 self.region.as_deref(),
                 self.release_date_gte.as_ref(),
                 self.release_date_lte.as_ref(),
-                self.sort_by,
+                self.sort_by.map(MovieSortBy::to_generated),
                 self.vote_average_gte,
                 self.vote_average_lte,
                 self.vote_count_gte,
@@ -413,6 +413,7 @@ impl<'a> DiscoverMoviesBuilder<'a> {
             body.results,
             body.total_pages as u32,
             body.total_results as u32,
-        ))
+        )
+        .map(Into::into))
     }
 }

@@ -1,21 +1,13 @@
-use cameo::generated::tmdb::Client as GeneratedClient;
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
 };
 
-async fn setup_mock_client() -> (MockServer, GeneratedClient) {
+async fn setup_mock_client() -> (MockServer, TmdbClient) {
     let server = MockServer::start().await;
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        reqwest::header::AUTHORIZATION,
-        reqwest::header::HeaderValue::from_static("Bearer test-token"),
-    );
-    let http = reqwest::ClientBuilder::new()
-        .default_headers(headers)
-        .build()
-        .unwrap();
-    let client = GeneratedClient::new_with_client(&server.uri(), http);
+    let client =
+        TmdbClient::new(TmdbConfig::new_with_base_url("test-token", server.uri())).unwrap();
     (server, client)
 }
 
@@ -32,14 +24,13 @@ async fn similar_movies_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.movie_similar(550, None, None).await.unwrap();
-    let body = resp.into_inner();
+    let page = client.similar_movies(550, None).await.unwrap();
 
-    assert_eq!(body.page, 1);
-    assert_eq!(body.total_results, 40);
-    assert_eq!(body.results.len(), 1);
-    assert_eq!(body.results[0].id, 9300);
-    assert_eq!(body.results[0].title.as_deref(), Some("Orlando"));
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 40);
+    assert_eq!(page.results.len(), 1);
+    assert_eq!(page.results[0].provider_id, "tmdb:9300");
+    assert_eq!(page.results[0].title, "Orlando");
 }
 
 #[tokio::test]
@@ -55,12 +46,11 @@ async fn similar_tv_shows_deserializes_response() {
         .mount(&server)
         .await;
 
-    let resp = client.tv_series_similar("1396", None, None).await.unwrap();
-    let body = resp.into_inner();
+    let page = client.similar_tv_shows(1396, None).await.unwrap();
 
-    assert_eq!(body.page, 1);
-    assert_eq!(body.total_results, 1);
-    assert_eq!(body.results.len(), 1);
-    assert_eq!(body.results[0].id, 202250);
-    assert_eq!(body.results[0].name.as_deref(), Some("Dirty Linen"));
+    assert_eq!(page.page, 1);
+    assert_eq!(page.total_results, 1);
+    assert_eq!(page.results.len(), 1);
+    assert_eq!(page.results[0].provider_id, "tmdb:202250");
+    assert_eq!(page.results[0].name, "Dirty Linen");
 }
