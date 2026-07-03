@@ -79,6 +79,10 @@ pub use core::{
     pagination::{Page, PageToken, into_stream},
 };
 
+/// Re-exported so out-of-crate implementers of the `#[async_trait]` provider
+/// and [`CacheBackend`](cache::CacheBackend) traits don't need their own
+/// `async-trait` dependency: use `#[cameo::async_trait::async_trait]`.
+pub use async_trait;
 #[cfg(feature = "cache")]
 pub use cache::{CacheBackend, CacheError, CacheKey, CacheTtlConfig, MediaType, SqliteCache};
 #[cfg(feature = "anilist")]
