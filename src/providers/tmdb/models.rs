@@ -5,7 +5,7 @@
 //! the TMDB-specific endpoints that have no cross-provider unified equivalent
 //! (credits and images); everything else returns a unified model.
 //!
-//! [`TmdbClient`]: super::TmdbClient
+//! [`TmdbClient`]: crate::providers::tmdb::TmdbClient
 
 use serde::{Deserialize, Serialize};
 
