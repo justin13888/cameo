@@ -129,7 +129,7 @@ pub struct UnifiedMovie {
     pub vote_average: Option<f64>,
     /// Total vote count, if the provider reports one.
     pub vote_count: Option<u64>,
-    /// Original language (ISO 639-1).
+    /// Original language (ISO 639-1), or `None` when unknown.
     pub original_language: Option<String>,
     /// Whether this is adult content, if the provider reports it.
     pub adult: Option<bool>,
@@ -193,7 +193,7 @@ pub struct UnifiedTvShow {
     pub vote_average: Option<f64>,
     /// Total vote count, if the provider reports one.
     pub vote_count: Option<u64>,
-    /// Original language (ISO 639-1).
+    /// Original language (ISO 639-1), or `None` when unknown.
     pub original_language: Option<String>,
     /// Origin countries.
     pub origin_country: Vec<String>,
