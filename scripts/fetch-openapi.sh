@@ -10,8 +10,9 @@
 #      the rationale of each fix
 #
 # Given the same upstream spec, re-running this script reproduces
-# openapi/tmdb-api.json byte-for-byte. After regenerating, rebuild the crate to
-# regenerate the client code and commit both the spec and src/generated/.
+# openapi/tmdb-api.json byte-for-byte. After regenerating, run
+# `cargo xtask codegen` to regenerate the client code (a plain `cargo build`
+# does no code generation) and commit both the spec and src/generated/.
 #
 # Prerequisites: curl, jq, npx (Node.js).
 set -euo pipefail
@@ -42,5 +43,5 @@ echo "Done: $SPEC_DIR/tmdb-api.json"
 echo "  version: $(jq -r '.openapi' "$SPEC_DIR/tmdb-api.json"), paths: $(jq '.paths | length' "$SPEC_DIR/tmdb-api.json")"
 echo "  size:    $(wc -c < "$SPEC_DIR/tmdb-api.json") bytes"
 echo
-echo "Next: rebuild the crate ('cargo build --features tmdb') to regenerate the"
-echo "client code, then commit openapi/tmdb-api.json."
+echo "Next: run 'cargo xtask codegen' to regenerate src/generated/tmdb.rs, then"
+echo "commit openapi/tmdb-api.json and src/generated/ together."
