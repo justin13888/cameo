@@ -110,7 +110,10 @@ mod tmdb {
 
 #[cfg(feature = "anilist")]
 mod anilist {
-    use cameo::providers::anilist::{AniListClient, AniListConfig};
+    use cameo::{
+        ProviderError,
+        providers::anilist::{AniListClient, AniListConfig, AniListError},
+    };
 
     use super::*;
 
@@ -153,5 +156,155 @@ mod anilist {
             result.is_ok(),
             "expected recovery after 429, got {result:?}"
         );
+    }
+
+    /// Mount a single response for every POST, asserting it is hit exactly
+    /// `expected` times, and build a client with a 2-retry fast policy.
+    async fn client_expecting(
+        template: ResponseTemplate,
+        expected: u64,
+    ) -> (MockServer, AniListClient) {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .respond_with(template)
+            .expect(expected)
+            .mount(&server)
+            .await;
+        let policy = RetryPolicy::new(2, Duration::from_millis(10), Duration::from_millis(20));
+        let config = AniListConfig::new_with_base_url(server.uri()).with_retry(policy);
+        (server, AniListClient::new(config).unwrap())
+    }
+
+    fn assert_graphql_500(err: AniListError) {
+        match &err {
+            AniListError::GraphQL { errors, .. } => assert_eq!(errors[0].status, Some(500)),
+            other => panic!("expected GraphQL error, got {other:?}"),
+        }
+        assert!(
+            matches!(
+                ProviderError::from(err),
+                ProviderError::Api { status: 500, .. }
+            ),
+            "GraphQL 5xx must map to ProviderError::Api"
+        );
+    }
+
+    #[tokio::test]
+    async fn details_null_root_with_5xx_is_retried_then_surfaced() {
+        let body = serde_json::json!({
+            "data": { "Media": null },
+            "errors": [{ "message": "Internal", "status": 500 }]
+        });
+        // max_retries = 2 → exactly 3 attempts.
+        let (_server, client) =
+            client_expecting(ResponseTemplate::new(200).set_body_json(body), 3).await;
+
+        let err = client.movie_details(1).await.unwrap_err();
+        assert_graphql_500(err);
+    }
+
+    #[tokio::test]
+    async fn details_null_root_with_5xx_recovers_on_retry() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "data": { "Media": null },
+                "errors": [{ "message": "Internal", "status": 500 }]
+            })))
+            .up_to_n_times(1)
+            .with_priority(1)
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                include_str!("../fixtures/anilist_media_details_response.json"),
+                "application/json",
+            ))
+            .with_priority(2)
+            .expect(1)
+            .mount(&server)
+            .await;
+        let config = AniListConfig::new_with_base_url(server.uri()).with_retry(FAST_RETRY);
+        let client = AniListClient::new(config).unwrap();
+
+        let details = client.movie_details(1535).await.unwrap();
+        assert_eq!(details.movie.provider_id, "anilist:1535");
+    }
+
+    #[tokio::test]
+    async fn list_null_page_with_5xx_is_retried_then_surfaced() {
+        let body = serde_json::json!({
+            "data": { "Page": null },
+            "errors": [{ "message": "Internal", "status": 500 }]
+        });
+        let (_server, client) =
+            client_expecting(ResponseTemplate::new(200).set_body_json(body), 3).await;
+
+        let err = client.popular_movies(None).await.unwrap_err();
+        assert_graphql_500(err);
+    }
+
+    #[tokio::test]
+    async fn staff_list_null_page_with_5xx_is_retried_then_surfaced() {
+        let body = serde_json::json!({
+            "data": { "Page": null },
+            "errors": [{ "message": "Internal", "status": 500 }]
+        });
+        let (_server, client) =
+            client_expecting(ResponseTemplate::new(200).set_body_json(body), 3).await;
+
+        let err = client.search_people("x", None).await.unwrap_err();
+        assert_graphql_500(err);
+    }
+
+    #[tokio::test]
+    async fn http_5xx_with_statusless_errors_inherits_http_status() {
+        let body = serde_json::json!({
+            "data": { "Staff": null },
+            "errors": [{ "message": "Internal" }]
+        });
+        let (_server, client) =
+            client_expecting(ResponseTemplate::new(500).set_body_json(body), 3).await;
+
+        let err = client.person_details(1).await.unwrap_err();
+        assert_graphql_500(err);
+    }
+
+    #[tokio::test]
+    async fn null_root_with_404_is_not_found_without_retry() {
+        let body = serde_json::json!({
+            "data": { "Media": null },
+            "errors": [{ "message": "Not Found.", "status": 404 }]
+        });
+        let (_server, client) =
+            client_expecting(ResponseTemplate::new(404).set_body_json(body), 1).await;
+
+        let err = client.tv_show_details(1).await.unwrap_err();
+        assert!(matches!(err, AniListError::NotFound), "got {err:?}");
+    }
+
+    #[tokio::test]
+    async fn null_root_without_errors_keeps_not_found_and_no_data() {
+        let (_server, client) = client_expecting(
+            ResponseTemplate::new(200)
+                .set_body_json(serde_json::json!({ "data": { "Media": null } })),
+            1,
+        )
+        .await;
+        let err = client.movie_details(1).await.unwrap_err();
+        assert!(matches!(err, AniListError::NotFound), "got {err:?}");
+
+        let (_server, client) = client_expecting(
+            ResponseTemplate::new(200)
+                .set_body_json(serde_json::json!({ "data": { "Page": null } })),
+            1,
+        )
+        .await;
+        let err = client
+            .trending_tv(cameo::TimeWindow::Day, None)
+            .await
+            .unwrap_err();
+        assert!(matches!(err, AniListError::NoData), "got {err:?}");
     }
 }
