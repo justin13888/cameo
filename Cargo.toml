@@ -91,3 +91,17 @@ required-features = ["tmdb", "cache"]
 [[example]]
 name = "error_handling"
 required-features = ["tmdb"]
+
+# Full DWARF for every crate is a large share of how fast target/ grows in a
+# quick edit-build loop. This crate keeps line tables, so its backtraces and
+# panics still carry file:line (but a debugger shows no locals); dependency
+# frames keep their symbol names but lose file:line. `cargo test` inherits both
+# settings. For full debug info, override per invocation:
+# CARGO_PROFILE_DEV_DEBUG=2 for this crate, and/or
+# `cargo --config 'profile.dev.package."*".debug=2' ...` for dependencies.
+# xtask/ is its own workspace root, so these settings do not reach it.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
