@@ -184,10 +184,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -212,10 +212,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -238,10 +238,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -264,10 +264,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .filter_map(crate::unified::conversions::tmdb::person::multi_search_result))
     }
@@ -363,10 +363,10 @@ impl TmdbClient {
             .execute(|| self.inner.trending_movies(tw, self.language()))
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -392,10 +392,10 @@ impl TmdbClient {
             .execute(|| self.inner.trending_tv(tw, self.language()))
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -412,10 +412,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -436,10 +436,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -457,10 +457,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -478,10 +478,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -529,10 +529,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -551,10 +551,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -581,10 +581,10 @@ impl TmdbClient {
             })
             .await?;
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }
@@ -685,7 +685,7 @@ impl TmdbClient {
         Ok(resp
             .genres
             .into_iter()
-            .map(|g| Genre::from_tmdb_id(g.id))
+            .map(|g| Genre::from_tmdb_id(g.id.unwrap_or_default()))
             .collect())
     }
 
@@ -698,7 +698,7 @@ impl TmdbClient {
         Ok(resp
             .genres
             .into_iter()
-            .map(|g| Genre::from_tmdb_id(g.id))
+            .map(|g| Genre::from_tmdb_id(g.id.unwrap_or_default()))
             .collect())
     }
 

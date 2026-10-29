@@ -66,6 +66,54 @@ async fn movie_details_deserializes_response() {
     assert_eq!(details.imdb_id.as_deref(), Some("tt0137523"));
     assert_eq!(details.movie.genres.len(), 2);
     assert!(details.movie.genres.contains(&cameo::Genre::Drama));
+    assert_eq!(details.video, Some(false));
+    assert_eq!(details.movie.adult, Some(false));
+}
+
+/// Serve `body` as the `/3/movie/550` response and fetch it through the client.
+async fn movie_details_with_body(body: serde_json::Value) -> cameo::UnifiedMovieDetails {
+    let (server, client) = setup_mock_client().await;
+    Mock::given(method("GET"))
+        .and(path("/3/movie/550"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(body))
+        .mount(&server)
+        .await;
+    client.movie_details(550).await.unwrap()
+}
+
+fn movie_details_json() -> serde_json::Map<String, serde_json::Value> {
+    match serde_json::from_str(movie_details_fixture()).unwrap() {
+        serde_json::Value::Object(map) => map,
+        other => panic!("fixture is not an object: {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn movie_details_accepts_null_video_and_adult() {
+    let mut body = movie_details_json();
+    body.insert("video".to_string(), serde_json::Value::Null);
+    body.insert("adult".to_string(), serde_json::Value::Null);
+    body.insert("vote_count".to_string(), serde_json::Value::Null);
+
+    let details = movie_details_with_body(body.into()).await;
+
+    assert_eq!(details.movie.title, "Fight Club");
+    assert_eq!(details.video, None);
+    assert_eq!(details.movie.adult, None);
+    assert_eq!(details.movie.vote_count, Some(0));
+}
+
+#[tokio::test]
+async fn movie_details_missing_video_and_adult_are_none() {
+    let mut body = movie_details_json();
+    body.remove("video");
+    body.remove("adult");
+
+    let details = movie_details_with_body(body.into()).await;
+
+    // The spec's `default: true` must not turn absent flags into `true`.
+    assert_eq!(details.video, None);
+    assert_eq!(details.movie.adult, None);
 }
 
 #[tokio::test]

@@ -9,13 +9,13 @@ use crate::{
 impl From<types::SearchPersonResponseResultsItem> for UnifiedPerson {
     fn from(p: types::SearchPersonResponseResultsItem) -> Self {
         UnifiedPerson {
-            provider_id: MediaId::tmdb(p.id as u64),
+            provider_id: MediaId::tmdb(p.id.unwrap_or_default() as u64),
             name: p.name.unwrap_or_default(),
             known_for_department: p.known_for_department,
             profile_url: resolve_profile(&p.profile_path),
-            popularity: Some(p.popularity),
-            gender: Gender::from_tmdb(p.gender),
-            adult: Some(p.adult),
+            popularity: Some(p.popularity.unwrap_or_default()),
+            gender: p.gender.and_then(Gender::from_tmdb),
+            adult: p.adult,
         }
     }
 }
@@ -24,13 +24,13 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
     fn from(p: types::PersonDetailsResponse) -> Self {
         UnifiedPersonDetails {
             person: UnifiedPerson {
-                provider_id: MediaId::tmdb(p.id as u64),
+                provider_id: MediaId::tmdb(p.id.unwrap_or_default() as u64),
                 name: p.name.unwrap_or_default(),
                 known_for_department: p.known_for_department,
                 profile_url: resolve_profile(&p.profile_path),
-                popularity: Some(p.popularity),
-                gender: Gender::from_tmdb(p.gender),
-                adult: Some(p.adult),
+                popularity: Some(p.popularity.unwrap_or_default()),
+                gender: p.gender.and_then(Gender::from_tmdb),
+                adult: p.adult,
             },
             biography: p.biography,
             birthday: resolve_date(&p.birthday),
@@ -57,7 +57,7 @@ pub(crate) fn multi_search_result(
 ) -> Option<UnifiedSearchResult> {
     match item.media_type.as_deref() {
         Some("movie") => Some(UnifiedSearchResult::Movie(UnifiedMovie {
-            provider_id: MediaId::tmdb(item.id as u64),
+            provider_id: MediaId::tmdb(item.id.unwrap_or_default() as u64),
             title: item.title.or(item.name).unwrap_or_default(),
             original_title: item.original_title,
             overview: item.overview,
@@ -69,14 +69,14 @@ pub(crate) fn multi_search_result(
                 .iter()
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
-            popularity: Some(item.popularity),
-            vote_average: Some(item.vote_average),
-            vote_count: Some(item.vote_count.max(0) as u64),
+            popularity: Some(item.popularity.unwrap_or_default()),
+            vote_average: Some(item.vote_average.unwrap_or_default()),
+            vote_count: Some(item.vote_count.unwrap_or_default().max(0) as u64),
             original_language: item.original_language,
-            adult: Some(item.adult),
+            adult: item.adult,
         })),
         Some("tv") => Some(UnifiedSearchResult::TvShow(UnifiedTvShow {
-            provider_id: MediaId::tmdb(item.id as u64),
+            provider_id: MediaId::tmdb(item.id.unwrap_or_default() as u64),
             name: item.name.or(item.title).unwrap_or_default(),
             original_name: item.original_name,
             overview: item.overview,
@@ -89,21 +89,21 @@ pub(crate) fn multi_search_result(
                 .iter()
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
-            popularity: Some(item.popularity),
-            vote_average: Some(item.vote_average),
-            vote_count: Some(item.vote_count.max(0) as u64),
+            popularity: Some(item.popularity.unwrap_or_default()),
+            vote_average: Some(item.vote_average.unwrap_or_default()),
+            vote_count: Some(item.vote_count.unwrap_or_default().max(0) as u64),
             original_language: item.original_language,
             origin_country: Vec::new(),
-            adult: Some(item.adult),
+            adult: item.adult,
         })),
         Some("person") => Some(UnifiedSearchResult::Person(UnifiedPerson {
-            provider_id: MediaId::tmdb(item.id as u64),
+            provider_id: MediaId::tmdb(item.id.unwrap_or_default() as u64),
             name: item.name.or(item.title).unwrap_or_default(),
             known_for_department: None,
             profile_url: resolve_poster(&item.poster_path), // multi uses poster_path
-            popularity: Some(item.popularity),
+            popularity: Some(item.popularity.unwrap_or_default()),
             gender: None,
-            adult: Some(item.adult),
+            adult: item.adult,
         })),
         _ => None,
     }
@@ -115,7 +115,7 @@ mod tests {
 
     fn multi_item(id: i64, media_type: Option<&str>) -> types::SearchMultiResponseResultsItem {
         types::SearchMultiResponseResultsItem {
-            id,
+            id: Some(id),
             media_type: media_type.map(String::from),
             title: Some("Title".to_string()),
             name: Some("Name".to_string()),
@@ -126,12 +126,12 @@ mod tests {
             poster_path: None,
             backdrop_path: None,
             genre_ids: vec![18],
-            popularity: 1.0,
-            vote_average: 8.0,
-            vote_count: 100,
+            popularity: Some(1.0),
+            vote_average: Some(8.0),
+            vote_count: Some(100),
             original_language: Some("en".to_string()),
-            adult: false,
-            video: false,
+            adult: Some(false),
+            video: Some(false),
         }
     }
 
@@ -172,14 +172,14 @@ mod tests {
     #[test]
     fn search_person_to_unified() {
         let raw = types::SearchPersonResponseResultsItem {
-            id: 287,
+            id: Some(287),
             name: Some("Brad Pitt".to_string()),
             original_name: None,
             known_for_department: Some("Acting".to_string()),
             profile_path: Some("/kU3B75TyRiCgE270EyZnHjfivoq.jpg".to_string()),
-            popularity: 25.3,
-            adult: false,
-            gender: 2,
+            popularity: Some(25.3),
+            adult: Some(false),
+            gender: Some(2),
             known_for: vec![],
         };
         let unified: UnifiedPerson = raw.into();

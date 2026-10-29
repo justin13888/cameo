@@ -239,10 +239,10 @@ impl<'a> DiscoverTvBuilder<'a> {
             .await?;
         let body = resp.into_inner();
         Ok(Page::offset(
-            body.page as u32,
+            body.page.unwrap_or_default() as u32,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages.unwrap_or_default() as u32,
+            body.total_results.unwrap_or_default() as u32,
         )
         .map(Into::into))
     }

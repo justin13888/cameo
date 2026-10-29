@@ -1,4 +1,10 @@
 //! Conversions from TMDB generated types to unified models.
+//!
+//! Generated TMDB response fields are `Option<T>`, since TMDB may omit them or
+//! send an explicit `null`. Numeric fields fall back to `0` (the spec's
+//! documented default, and the pre-existing behaviour); boolean flags whose
+//! spec default is `true` (`adult`, `video`, `in_production`) are passed
+//! through as `Option<bool>` so an unknown flag never reads as `true`.
 
 pub mod movie;
 pub mod person;

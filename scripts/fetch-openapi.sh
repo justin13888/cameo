@@ -6,7 +6,8 @@
 #   1. download the official 3.1.0 spec
 #   2. down-convert 3.1.0 -> 3.0.3 with a PINNED @apiture/openapi-down-convert
 #   3. apply scripts/tmdb-spec-patch.jq (rename _id, fix vote_average / bool
-#      defaults, strip examples) — see that file for the rationale of each fix
+#      defaults, strip examples, drop property defaults) — see that file for
+#      the rationale of each fix
 #
 # Given the same upstream spec, re-running this script reproduces
 # openapi/tmdb-api.json byte-for-byte. After regenerating, rebuild the crate to
