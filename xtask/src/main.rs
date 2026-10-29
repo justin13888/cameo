@@ -52,6 +52,10 @@ fn codegen() -> Result<(), Box<dyn std::error::Error>> {
 /// request. It is applied here (rather than hand-editing the vendored file) so
 /// that a fresh `cargo xtask codegen` reproduces the exact committed output and
 /// the codegen-freshness CI stays green.
+///
+/// It also replaces the generated `Client`'s derived `Debug` with a manual impl
+/// that prints `auth_query`'s value as `<redacted>`, so the API key cannot leak
+/// through `{:?}` formatting.
 fn patch_v3_auth(content: &str) -> Result<String, Box<dyn std::error::Error>> {
     let content = content.replacen(
         "    pub(crate) client: reqwest::Client,\n}",
@@ -74,8 +78,29 @@ fn patch_v3_auth(content: &str) -> Result<String, Box<dyn std::error::Error>> {
                 Ok(())\n    }\n}";
     let content = content.replacen("impl ClientHooks<()> for &Client {}", hook, 1);
 
+    // The derived `Debug` would print the v3 API key held in `auth_query`;
+    // swap it for a manual impl that keeps the parameter name but redacts the
+    // value.
+    let content = content.replacen(
+        "#[derive(Clone, Debug)]\n/**Client for tmdb-api",
+        "#[derive(Clone)]\n/**Client for tmdb-api",
+        1,
+    );
+    let debug_impl = "impl ::std::fmt::Debug for Client {\n    \
+                      fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {\n        \
+                      f.debug_struct(\"Client\")\n            \
+                      .field(\"baseurl\", &self.baseurl)\n            \
+                      .field(\"client\", &self.client)\n            \
+                      .field(\n                \"auth_query\",\n                \
+                      &self.auth_query.as_ref().map(|(key, _)| (key.as_str(), \"<redacted>\")),\n            \
+                      )\n            \
+                      .finish()\n    }\n}\nimpl ClientInfo<()> for Client {";
+    let content = content.replacen("impl ClientInfo<()> for Client {", debug_impl, 1);
+
     if !content.contains("auth_query: ::std::option::Option<(String, String)>")
         || !content.contains("query_pairs_mut().append_pair")
+        || !content.contains("#[derive(Clone)]\n/**Client for tmdb-api")
+        || !content.contains("impl ::std::fmt::Debug for Client {")
     {
         return Err(
             "v3 auth patch did not apply — the generated Client layout changed; \
