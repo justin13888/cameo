@@ -60,7 +60,7 @@ impl TmdbClient {
             config.request_timeout,
             headers,
         )
-        .map_err(TmdbError::Http)?;
+        .map_err(TmdbError::from)?;
 
         let base_url = config.base_url.as_deref().unwrap_or(TMDB_BASE_URL);
         let mut inner = tmdb::Client::new_with_client(base_url, http_client);
