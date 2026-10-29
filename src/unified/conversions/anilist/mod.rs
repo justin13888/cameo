@@ -83,6 +83,20 @@ mod tests {
     }
 
     #[test]
+    fn test_unmapped_country_yields_no_original_language() {
+        let mut movie_media = make_media(7, "MOVIE");
+        movie_media.country_of_origin = Some("US".to_string());
+        let movie = anilist_media_to_movie(movie_media);
+        assert_eq!(movie.original_language, None);
+
+        let mut tv_media = make_media(8, "TV");
+        tv_media.country_of_origin = Some("US".to_string());
+        let tv = anilist_media_to_tv(tv_media);
+        assert_eq!(tv.original_language, None);
+        assert_eq!(tv.origin_country, vec!["US"]);
+    }
+
+    #[test]
     fn test_media_to_movie_genre_mapping() {
         use crate::unified::genre::Genre;
         let movie = anilist_media_to_movie(make_media(1, "MOVIE"));
