@@ -95,12 +95,12 @@ pub struct TmdbImage {
 impl From<types::MovieCreditsResponseCastItem> for CastMember {
     fn from(c: types::MovieCreditsResponseCastItem) -> Self {
         CastMember {
-            id: u64::try_from(c.id).unwrap_or(0),
+            id: c.id.and_then(|id| u64::try_from(id).ok()).unwrap_or(0),
             name: c.name.unwrap_or_default(),
             character: c.character,
-            order: u32::try_from(c.order).unwrap_or(0),
+            order: c.order.and_then(|o| u32::try_from(o).ok()).unwrap_or(0),
             known_for_department: c.known_for_department,
-            gender: Gender::from_tmdb(c.gender),
+            gender: c.gender.and_then(Gender::from_tmdb),
             profile_url: c
                 .profile_path
                 .as_deref()
@@ -112,11 +112,11 @@ impl From<types::MovieCreditsResponseCastItem> for CastMember {
 impl From<types::MovieCreditsResponseCrewItem> for CrewMember {
     fn from(c: types::MovieCreditsResponseCrewItem) -> Self {
         CrewMember {
-            id: u64::try_from(c.id).unwrap_or(0),
+            id: c.id.and_then(|id| u64::try_from(id).ok()).unwrap_or(0),
             name: c.name.unwrap_or_default(),
             job: c.job,
             department: c.department,
-            gender: Gender::from_tmdb(c.gender),
+            gender: c.gender.and_then(Gender::from_tmdb),
             profile_url: c
                 .profile_path
                 .as_deref()
@@ -142,12 +142,12 @@ impl From<types::TvSeriesAggregateCreditsResponse> for TmdbCredits {
             .cast
             .into_iter()
             .map(|c| CastMember {
-                id: u64::try_from(c.id).unwrap_or(0),
+                id: c.id.and_then(|id| u64::try_from(id).ok()).unwrap_or(0),
                 name: c.name.unwrap_or_default(),
                 character: c.roles.first().and_then(|r| r.character.clone()),
-                order: u32::try_from(c.order).unwrap_or(0),
+                order: c.order.and_then(|o| u32::try_from(o).ok()).unwrap_or(0),
                 known_for_department: c.known_for_department,
-                gender: Gender::from_tmdb(c.gender),
+                gender: c.gender.and_then(Gender::from_tmdb),
                 profile_url: c
                     .profile_path
                     .as_deref()
@@ -158,11 +158,11 @@ impl From<types::TvSeriesAggregateCreditsResponse> for TmdbCredits {
             .crew
             .into_iter()
             .map(|c| CrewMember {
-                id: u64::try_from(c.id).unwrap_or(0),
+                id: c.id.and_then(|id| u64::try_from(id).ok()).unwrap_or(0),
                 name: c.name.unwrap_or_default(),
                 job: c.jobs.first().and_then(|j| j.job.clone()),
                 department: c.department,
-                gender: Gender::from_tmdb(c.gender),
+                gender: c.gender.and_then(Gender::from_tmdb),
                 profile_url: c
                     .profile_path
                     .as_deref()
@@ -231,14 +231,15 @@ enum ImageKind {
     Logo,
 }
 
+/// Build a [`TmdbImage`]; absent/`null` numeric fields fall back to `0`.
 #[allow(clippy::too_many_arguments)]
 fn image_from(
     file_path: Option<String>,
-    width: i64,
-    height: i64,
-    aspect_ratio: f64,
-    vote_average: f64,
-    vote_count: i64,
+    width: Option<i64>,
+    height: Option<i64>,
+    aspect_ratio: Option<f64>,
+    vote_average: Option<f64>,
+    vote_count: Option<i64>,
     kind: ImageKind,
 ) -> TmdbImage {
     let url = file_path.as_deref().map(|p| match kind {
@@ -248,11 +249,11 @@ fn image_from(
     });
     TmdbImage {
         url,
-        width: u32::try_from(width).unwrap_or(0),
-        height: u32::try_from(height).unwrap_or(0),
-        aspect_ratio,
-        vote_average,
-        vote_count: u64::try_from(vote_count).unwrap_or(0),
+        width: width.and_then(|w| u32::try_from(w).ok()).unwrap_or(0),
+        height: height.and_then(|h| u32::try_from(h).ok()).unwrap_or(0),
+        aspect_ratio: aspect_ratio.unwrap_or_default(),
+        vote_average: vote_average.unwrap_or_default(),
+        vote_count: vote_count.and_then(|c| u64::try_from(c).ok()).unwrap_or(0),
         language: None,
     }
 }

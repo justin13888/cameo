@@ -39,6 +39,7 @@ async fn movie_details_returns_correct_fields() {
     // Provider ID and title
     assert_eq!(result.movie.provider_id, "anilist:1535");
     assert_eq!(result.movie.title, "Your Name.");
+    assert_eq!(result.video, None);
     // Overview / description
     assert!(
         result
@@ -158,6 +159,39 @@ async fn tv_show_details_returns_correct_fields() {
     assert_eq!(result.show.provider_id, "anilist:16498");
     assert_eq!(result.show.name, "Attack on Titan");
     assert_eq!(result.show.vote_average, Some(8.4));
+    assert_eq!(result.in_production, Some(false));
+}
+
+/// Minimal AniList TV details body with the given `status`.
+fn tv_details_body_with_status(status: serde_json::Value) -> serde_json::Value {
+    json!({
+        "data": {
+            "Media": {
+                "id": 16498,
+                "title": { "romaji": "Shingeki no Kyojin" },
+                "status": status,
+                "format": "TV"
+            }
+        }
+    })
+}
+
+#[tokio::test]
+async fn tv_show_details_releasing_is_in_production() {
+    let (_server, client) = mock_client(tv_details_body_with_status(json!("RELEASING"))).await;
+
+    let result = client.tv_show_details(16498).await.unwrap();
+
+    assert_eq!(result.in_production, Some(true));
+}
+
+#[tokio::test]
+async fn tv_show_details_unknown_status_leaves_in_production_unknown() {
+    let (_server, client) = mock_client(tv_details_body_with_status(json!(null))).await;
+
+    let result = client.tv_show_details(16498).await.unwrap();
+
+    assert_eq!(result.in_production, None);
 }
 
 #[tokio::test]

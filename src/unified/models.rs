@@ -161,8 +161,11 @@ pub struct UnifiedMovieDetails {
     pub production_countries: Vec<String>,
     /// Spoken languages.
     pub spoken_languages: Vec<String>,
-    /// Whether the movie has a video.
-    pub video: bool,
+    /// Whether the movie has a video entry, if the provider reports it.
+    ///
+    /// `None` means unknown: the provider did not report the flag (the key was
+    /// absent or `null`) or has no such concept.
+    pub video: Option<bool>,
     /// The collection (franchise) this movie belongs to, if any.
     pub belongs_to_collection: Option<Collection>,
 }
@@ -213,8 +216,11 @@ pub struct UnifiedTvShowDetails {
     pub number_of_seasons: Option<u32>,
     /// Number of episodes, if the provider reports one.
     pub number_of_episodes: Option<u32>,
-    /// Whether the show is still in production.
-    pub in_production: bool,
+    /// Whether the show is still in production, if known.
+    ///
+    /// `None` means unknown: the provider did not report the flag (the key was
+    /// absent or `null`) or reported no status to derive it from.
+    pub in_production: Option<bool>,
     /// Release status.
     pub status: Option<String>,
     /// Homepage URL.

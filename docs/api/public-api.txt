@@ -5189,7 +5189,7 @@ pub cameo::unified::models::UnifiedMovieDetails::runtime: core::option::Option<u
 pub cameo::unified::models::UnifiedMovieDetails::spoken_languages: alloc::vec::Vec<alloc::string::String>
 pub cameo::unified::models::UnifiedMovieDetails::status: core::option::Option<alloc::string::String>
 pub cameo::unified::models::UnifiedMovieDetails::tagline: core::option::Option<alloc::string::String>
-pub cameo::unified::models::UnifiedMovieDetails::video: bool
+pub cameo::unified::models::UnifiedMovieDetails::video: core::option::Option<bool>
 impl cameo::unified::UnifiedMovieDetails
 pub fn cameo::unified::UnifiedMovieDetails::new(cameo::unified::UnifiedMovie) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_budget(self, u64) -> Self
@@ -5627,7 +5627,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedTvShow
 pub cameo::unified::models::UnifiedTvShowDetails::created_by: alloc::vec::Vec<cameo::unified::Creator>
 pub cameo::unified::models::UnifiedTvShowDetails::episode_run_time: alloc::vec::Vec<u32>
 pub cameo::unified::models::UnifiedTvShowDetails::homepage: core::option::Option<alloc::string::String>
-pub cameo::unified::models::UnifiedTvShowDetails::in_production: bool
+pub cameo::unified::models::UnifiedTvShowDetails::in_production: core::option::Option<bool>
 pub cameo::unified::models::UnifiedTvShowDetails::last_air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::unified::models::UnifiedTvShowDetails::media_format: core::option::Option<alloc::string::String>
 pub cameo::unified::models::UnifiedTvShowDetails::networks: alloc::vec::Vec<cameo::unified::Network>
@@ -7148,7 +7148,7 @@ pub cameo::unified::UnifiedMovieDetails::runtime: core::option::Option<u32>
 pub cameo::unified::UnifiedMovieDetails::spoken_languages: alloc::vec::Vec<alloc::string::String>
 pub cameo::unified::UnifiedMovieDetails::status: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedMovieDetails::tagline: core::option::Option<alloc::string::String>
-pub cameo::unified::UnifiedMovieDetails::video: bool
+pub cameo::unified::UnifiedMovieDetails::video: core::option::Option<bool>
 impl cameo::unified::UnifiedMovieDetails
 pub fn cameo::unified::UnifiedMovieDetails::new(cameo::unified::UnifiedMovie) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_budget(self, u64) -> Self
@@ -7586,7 +7586,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedTvShow
 pub cameo::unified::UnifiedTvShowDetails::created_by: alloc::vec::Vec<cameo::unified::Creator>
 pub cameo::unified::UnifiedTvShowDetails::episode_run_time: alloc::vec::Vec<u32>
 pub cameo::unified::UnifiedTvShowDetails::homepage: core::option::Option<alloc::string::String>
-pub cameo::unified::UnifiedTvShowDetails::in_production: bool
+pub cameo::unified::UnifiedTvShowDetails::in_production: core::option::Option<bool>
 pub cameo::unified::UnifiedTvShowDetails::last_air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::unified::UnifiedTvShowDetails::media_format: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedTvShowDetails::networks: alloc::vec::Vec<cameo::unified::Network>
@@ -10146,7 +10146,7 @@ pub cameo::UnifiedMovieDetails::runtime: core::option::Option<u32>
 pub cameo::UnifiedMovieDetails::spoken_languages: alloc::vec::Vec<alloc::string::String>
 pub cameo::UnifiedMovieDetails::status: core::option::Option<alloc::string::String>
 pub cameo::UnifiedMovieDetails::tagline: core::option::Option<alloc::string::String>
-pub cameo::UnifiedMovieDetails::video: bool
+pub cameo::UnifiedMovieDetails::video: core::option::Option<bool>
 impl cameo::unified::UnifiedMovieDetails
 pub fn cameo::unified::UnifiedMovieDetails::new(cameo::unified::UnifiedMovie) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_budget(self, u64) -> Self
@@ -10584,7 +10584,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedTvShow
 pub cameo::UnifiedTvShowDetails::created_by: alloc::vec::Vec<cameo::unified::Creator>
 pub cameo::UnifiedTvShowDetails::episode_run_time: alloc::vec::Vec<u32>
 pub cameo::UnifiedTvShowDetails::homepage: core::option::Option<alloc::string::String>
-pub cameo::UnifiedTvShowDetails::in_production: bool
+pub cameo::UnifiedTvShowDetails::in_production: core::option::Option<bool>
 pub cameo::UnifiedTvShowDetails::last_air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::UnifiedTvShowDetails::media_format: core::option::Option<alloc::string::String>
 pub cameo::UnifiedTvShowDetails::networks: alloc::vec::Vec<cameo::unified::Network>
