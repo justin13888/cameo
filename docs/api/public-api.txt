@@ -5114,6 +5114,8 @@ pub cameo::unified::models::UnifiedMovie::popularity: core::option::Option<f64>
 pub cameo::unified::models::UnifiedMovie::poster_url: core::option::Option<alloc::string::String>
 pub cameo::unified::models::UnifiedMovie::provider_id: cameo::unified::media_id::MediaId
 pub cameo::unified::models::UnifiedMovie::release_date: core::option::Option<cameo::unified::date::PartialDate>
+pub cameo::unified::models::UnifiedMovie::runtime: core::option::Option<u32>
+pub cameo::unified::models::UnifiedMovie::status: core::option::Option<alloc::string::String>
 pub cameo::unified::models::UnifiedMovie::title: alloc::string::String
 pub cameo::unified::models::UnifiedMovie::vote_average: core::option::Option<f64>
 pub cameo::unified::models::UnifiedMovie::vote_count: core::option::Option<u64>
@@ -5128,6 +5130,8 @@ pub fn cameo::unified::UnifiedMovie::with_overview(self, impl core::convert::Int
 pub fn cameo::unified::UnifiedMovie::with_popularity(self, f64) -> Self
 pub fn cameo::unified::UnifiedMovie::with_poster_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_release_date(self, cameo::unified::date::PartialDate) -> Self
+pub fn cameo::unified::UnifiedMovie::with_runtime(self, u32) -> Self
+pub fn cameo::unified::UnifiedMovie::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_vote_average(self, f64) -> Self
 pub fn cameo::unified::UnifiedMovie::with_vote_count(self, u64) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedMovie
@@ -5551,9 +5555,11 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedStreaming
 #[non_exhaustive] pub struct cameo::unified::models::UnifiedTvShow
 pub cameo::unified::models::UnifiedTvShow::adult: core::option::Option<bool>
 pub cameo::unified::models::UnifiedTvShow::backdrop_url: core::option::Option<alloc::string::String>
+pub cameo::unified::models::UnifiedTvShow::episode_run_time: core::option::Option<u32>
 pub cameo::unified::models::UnifiedTvShow::first_air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::unified::models::UnifiedTvShow::genres: alloc::vec::Vec<cameo::unified::genre::Genre>
 pub cameo::unified::models::UnifiedTvShow::name: alloc::string::String
+pub cameo::unified::models::UnifiedTvShow::number_of_episodes: core::option::Option<u32>
 pub cameo::unified::models::UnifiedTvShow::origin_country: alloc::vec::Vec<alloc::string::String>
 pub cameo::unified::models::UnifiedTvShow::original_language: core::option::Option<alloc::string::String>
 pub cameo::unified::models::UnifiedTvShow::original_name: core::option::Option<alloc::string::String>
@@ -5561,20 +5567,24 @@ pub cameo::unified::models::UnifiedTvShow::overview: core::option::Option<alloc:
 pub cameo::unified::models::UnifiedTvShow::popularity: core::option::Option<f64>
 pub cameo::unified::models::UnifiedTvShow::poster_url: core::option::Option<alloc::string::String>
 pub cameo::unified::models::UnifiedTvShow::provider_id: cameo::unified::media_id::MediaId
+pub cameo::unified::models::UnifiedTvShow::status: core::option::Option<alloc::string::String>
 pub cameo::unified::models::UnifiedTvShow::vote_average: core::option::Option<f64>
 pub cameo::unified::models::UnifiedTvShow::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedTvShow
 pub fn cameo::unified::UnifiedTvShow::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_adult(self, bool) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_backdrop_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_episode_run_time(self, u32) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_first_air_date(self, cameo::unified::date::PartialDate) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_genres(self, alloc::vec::Vec<cameo::unified::genre::Genre>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_number_of_episodes(self, u32) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_origin_country(self, alloc::vec::Vec<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_original_language(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_original_name(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_overview(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_popularity(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_poster_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_average(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_count(self, u64) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedTvShow
@@ -7073,6 +7083,8 @@ pub cameo::unified::UnifiedMovie::popularity: core::option::Option<f64>
 pub cameo::unified::UnifiedMovie::poster_url: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedMovie::provider_id: cameo::unified::media_id::MediaId
 pub cameo::unified::UnifiedMovie::release_date: core::option::Option<cameo::unified::date::PartialDate>
+pub cameo::unified::UnifiedMovie::runtime: core::option::Option<u32>
+pub cameo::unified::UnifiedMovie::status: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedMovie::title: alloc::string::String
 pub cameo::unified::UnifiedMovie::vote_average: core::option::Option<f64>
 pub cameo::unified::UnifiedMovie::vote_count: core::option::Option<u64>
@@ -7087,6 +7099,8 @@ pub fn cameo::unified::UnifiedMovie::with_overview(self, impl core::convert::Int
 pub fn cameo::unified::UnifiedMovie::with_popularity(self, f64) -> Self
 pub fn cameo::unified::UnifiedMovie::with_poster_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_release_date(self, cameo::unified::date::PartialDate) -> Self
+pub fn cameo::unified::UnifiedMovie::with_runtime(self, u32) -> Self
+pub fn cameo::unified::UnifiedMovie::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_vote_average(self, f64) -> Self
 pub fn cameo::unified::UnifiedMovie::with_vote_count(self, u64) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedMovie
@@ -7510,9 +7524,11 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedStreaming
 #[non_exhaustive] pub struct cameo::unified::UnifiedTvShow
 pub cameo::unified::UnifiedTvShow::adult: core::option::Option<bool>
 pub cameo::unified::UnifiedTvShow::backdrop_url: core::option::Option<alloc::string::String>
+pub cameo::unified::UnifiedTvShow::episode_run_time: core::option::Option<u32>
 pub cameo::unified::UnifiedTvShow::first_air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::unified::UnifiedTvShow::genres: alloc::vec::Vec<cameo::unified::genre::Genre>
 pub cameo::unified::UnifiedTvShow::name: alloc::string::String
+pub cameo::unified::UnifiedTvShow::number_of_episodes: core::option::Option<u32>
 pub cameo::unified::UnifiedTvShow::origin_country: alloc::vec::Vec<alloc::string::String>
 pub cameo::unified::UnifiedTvShow::original_language: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedTvShow::original_name: core::option::Option<alloc::string::String>
@@ -7520,20 +7536,24 @@ pub cameo::unified::UnifiedTvShow::overview: core::option::Option<alloc::string:
 pub cameo::unified::UnifiedTvShow::popularity: core::option::Option<f64>
 pub cameo::unified::UnifiedTvShow::poster_url: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedTvShow::provider_id: cameo::unified::media_id::MediaId
+pub cameo::unified::UnifiedTvShow::status: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedTvShow::vote_average: core::option::Option<f64>
 pub cameo::unified::UnifiedTvShow::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedTvShow
 pub fn cameo::unified::UnifiedTvShow::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_adult(self, bool) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_backdrop_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_episode_run_time(self, u32) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_first_air_date(self, cameo::unified::date::PartialDate) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_genres(self, alloc::vec::Vec<cameo::unified::genre::Genre>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_number_of_episodes(self, u32) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_origin_country(self, alloc::vec::Vec<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_original_language(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_original_name(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_overview(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_popularity(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_poster_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_average(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_count(self, u64) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedTvShow
@@ -10071,6 +10091,8 @@ pub cameo::UnifiedMovie::popularity: core::option::Option<f64>
 pub cameo::UnifiedMovie::poster_url: core::option::Option<alloc::string::String>
 pub cameo::UnifiedMovie::provider_id: cameo::unified::media_id::MediaId
 pub cameo::UnifiedMovie::release_date: core::option::Option<cameo::unified::date::PartialDate>
+pub cameo::UnifiedMovie::runtime: core::option::Option<u32>
+pub cameo::UnifiedMovie::status: core::option::Option<alloc::string::String>
 pub cameo::UnifiedMovie::title: alloc::string::String
 pub cameo::UnifiedMovie::vote_average: core::option::Option<f64>
 pub cameo::UnifiedMovie::vote_count: core::option::Option<u64>
@@ -10085,6 +10107,8 @@ pub fn cameo::unified::UnifiedMovie::with_overview(self, impl core::convert::Int
 pub fn cameo::unified::UnifiedMovie::with_popularity(self, f64) -> Self
 pub fn cameo::unified::UnifiedMovie::with_poster_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_release_date(self, cameo::unified::date::PartialDate) -> Self
+pub fn cameo::unified::UnifiedMovie::with_runtime(self, u32) -> Self
+pub fn cameo::unified::UnifiedMovie::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_vote_average(self, f64) -> Self
 pub fn cameo::unified::UnifiedMovie::with_vote_count(self, u64) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedMovie
@@ -10508,9 +10532,11 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedStreaming
 #[non_exhaustive] pub struct cameo::UnifiedTvShow
 pub cameo::UnifiedTvShow::adult: core::option::Option<bool>
 pub cameo::UnifiedTvShow::backdrop_url: core::option::Option<alloc::string::String>
+pub cameo::UnifiedTvShow::episode_run_time: core::option::Option<u32>
 pub cameo::UnifiedTvShow::first_air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::UnifiedTvShow::genres: alloc::vec::Vec<cameo::unified::genre::Genre>
 pub cameo::UnifiedTvShow::name: alloc::string::String
+pub cameo::UnifiedTvShow::number_of_episodes: core::option::Option<u32>
 pub cameo::UnifiedTvShow::origin_country: alloc::vec::Vec<alloc::string::String>
 pub cameo::UnifiedTvShow::original_language: core::option::Option<alloc::string::String>
 pub cameo::UnifiedTvShow::original_name: core::option::Option<alloc::string::String>
@@ -10518,20 +10544,24 @@ pub cameo::UnifiedTvShow::overview: core::option::Option<alloc::string::String>
 pub cameo::UnifiedTvShow::popularity: core::option::Option<f64>
 pub cameo::UnifiedTvShow::poster_url: core::option::Option<alloc::string::String>
 pub cameo::UnifiedTvShow::provider_id: cameo::unified::media_id::MediaId
+pub cameo::UnifiedTvShow::status: core::option::Option<alloc::string::String>
 pub cameo::UnifiedTvShow::vote_average: core::option::Option<f64>
 pub cameo::UnifiedTvShow::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedTvShow
 pub fn cameo::unified::UnifiedTvShow::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_adult(self, bool) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_backdrop_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_episode_run_time(self, u32) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_first_air_date(self, cameo::unified::date::PartialDate) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_genres(self, alloc::vec::Vec<cameo::unified::genre::Genre>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_number_of_episodes(self, u32) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_origin_country(self, alloc::vec::Vec<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_original_language(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_original_name(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_overview(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_popularity(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_poster_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_average(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_count(self, u64) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedTvShow

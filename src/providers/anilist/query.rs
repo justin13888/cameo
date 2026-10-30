@@ -32,6 +32,9 @@ macro_rules! anime_list_query {
             "      genres\n",
             "      popularity\n",
             "      averageScore\n",
+            "      episodes\n",
+            "      duration\n",
+            "      status\n",
             "      format\n",
             "      countryOfOrigin\n",
             "      isAdult\n",
@@ -187,7 +190,17 @@ mod tests {
             assert_eq!(selection(q), first, "list media selections diverged");
         }
         // The shared selection requests exactly the fields the conversions use.
-        for field in ["id", "title", "startDate", "coverImage", "genres", "format"] {
+        for field in [
+            "id",
+            "title",
+            "startDate",
+            "coverImage",
+            "genres",
+            "episodes",
+            "duration",
+            "status",
+            "format",
+        ] {
             assert!(first.contains(field), "missing {field}");
         }
     }
@@ -195,12 +208,13 @@ mod tests {
     /// No query requests fields the conversions never read.
     #[test]
     fn no_dead_queried_fields() {
+        // The list selection requests exactly the fields `AniListMedia`
+        // deserializes and the list conversions map — `episodes`, `duration`
+        // and `status` are now live (#67), while detail-only fields
+        // (`endDate`, `studios`) stay out of list queries.
         for q in LIST_QUERIES {
-            for dead in ["episodes", "duration", "status"] {
-                assert!(
-                    !q.contains(dead),
-                    "list query still requests dead field {dead}"
-                );
+            for dead in ["endDate", "studios", "season"] {
+                assert!(!q.contains(dead), "list query requests dead field {dead}");
             }
         }
         assert!(

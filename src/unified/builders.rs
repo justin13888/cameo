@@ -36,6 +36,8 @@ impl UnifiedMovie {
             vote_count: None,
             original_language: None,
             adult: None,
+            runtime: None,
+            status: None,
         }
     }
 
@@ -92,6 +94,16 @@ impl UnifiedMovie {
     /// Set whether this is adult content.
     pub fn with_adult(mut self, value: bool) -> Self {
         self.adult = Some(value);
+        self
+    }
+    /// Set the runtime in minutes.
+    pub fn with_runtime(mut self, value: u32) -> Self {
+        self.runtime = Some(value);
+        self
+    }
+    /// Set the release status.
+    pub fn with_status(mut self, value: impl Into<String>) -> Self {
+        self.status = Some(value.into());
         self
     }
 }
@@ -196,6 +208,9 @@ impl UnifiedTvShow {
             original_language: None,
             origin_country: Vec::new(),
             adult: None,
+            number_of_episodes: None,
+            episode_run_time: None,
+            status: None,
         }
     }
 
@@ -257,6 +272,21 @@ impl UnifiedTvShow {
     /// Set whether this is adult content.
     pub fn with_adult(mut self, value: bool) -> Self {
         self.adult = Some(value);
+        self
+    }
+    /// Set the number of episodes.
+    pub fn with_number_of_episodes(mut self, value: u32) -> Self {
+        self.number_of_episodes = Some(value);
+        self
+    }
+    /// Set the typical run time of one episode in minutes.
+    pub fn with_episode_run_time(mut self, value: u32) -> Self {
+        self.episode_run_time = Some(value);
+        self
+    }
+    /// Set the release status.
+    pub fn with_status(mut self, value: impl Into<String>) -> Self {
+        self.status = Some(value.into());
         self
     }
 }

@@ -3,7 +3,10 @@ use cameo::{
     unified::models::UnifiedSearchResult,
 };
 use serde_json::{Value, json};
-use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+use wiremock::{
+    Mock, MockServer, ResponseTemplate,
+    matchers::{body_string_contains, method},
+};
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -121,6 +124,49 @@ async fn search_movies_maps_score_correctly() {
     assert_eq!(result.results[0].vote_average, Some(9.2));
 }
 
+#[tokio::test]
+async fn search_movies_maps_runtime_and_status() {
+    // The request must select the new list fields (#67); the mock only
+    // matches when it does.
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(body_string_contains("episodes"))
+        .and(body_string_contains("duration"))
+        .and(body_string_contains("status"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(page_response(
+            vec![{
+                let mut item = media_item(1535, "Your Name", "MOVIE");
+                item["duration"] = json!(106);
+                item
+            }],
+            1,
+        )))
+        .expect(1)
+        .mount(&server)
+        .await;
+    let client = AniListClient::new(AniListConfig::new_with_base_url(server.uri())).unwrap();
+
+    let result = client.search_movies("Your Name", None).await.unwrap();
+
+    let movie = &result.results[0];
+    assert_eq!(movie.runtime, Some(106));
+    assert_eq!(movie.status.as_deref(), Some("FINISHED"));
+}
+
+#[tokio::test]
+async fn search_movies_absent_list_fields_are_none() {
+    let mut item = media_item(1, "Upcoming", "MOVIE");
+    item["episodes"] = Value::Null;
+    item["duration"] = Value::Null;
+    item.as_object_mut().unwrap().remove("status");
+    let (_server, client) = mock_client(page_response(vec![item], 1)).await;
+
+    let result = client.search_movies("Upcoming", None).await.unwrap();
+
+    assert_eq!(result.results[0].runtime, None);
+    assert_eq!(result.results[0].status, None);
+}
+
 // ── search_tv_shows ───────────────────────────────────────────────────────────
 
 #[tokio::test]
@@ -136,6 +182,25 @@ async fn search_tv_shows_returns_tv_results() {
     assert_eq!(result.results.len(), 1);
     assert_eq!(result.results[0].provider_id, "anilist:11757");
     assert_eq!(result.results[0].name, "Sword Art Online");
+}
+
+#[tokio::test]
+async fn search_tv_shows_maps_episodes_duration_and_status() {
+    let mut item = media_item(11757, "Sword Art Online", "TV");
+    item["episodes"] = json!(25);
+    item["duration"] = json!(23);
+    item["status"] = json!("RELEASING");
+    let (_server, client) = mock_client(page_response(vec![item], 1)).await;
+
+    let result = client
+        .search_tv_shows("Sword Art Online", None)
+        .await
+        .unwrap();
+
+    let show = &result.results[0];
+    assert_eq!(show.number_of_episodes, Some(25));
+    assert_eq!(show.episode_run_time, Some(23));
+    assert_eq!(show.status.as_deref(), Some("RELEASING"));
 }
 
 #[tokio::test]

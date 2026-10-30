@@ -67,6 +67,14 @@ fn country_to_language(country: &str) -> String {
     .to_string()
 }
 
+/// Clamp an AniList count/minutes field (`episodes`, `duration`) to `u32`.
+///
+/// Shared by the list and detail conversions so a summary and its details
+/// always report the same runtime / episode count for the same media.
+fn non_negative(value: Option<i32>) -> Option<u32> {
+    value.map(|v| v.max(0) as u32)
+}
+
 fn map_genres(genres: &Option<Vec<String>>) -> Vec<Genre> {
     genres
         .as_deref()
@@ -95,6 +103,10 @@ pub fn anilist_media_to_movie(m: AniListMedia) -> UnifiedMovie {
         vote_count: None,
         original_language: m.country_of_origin.as_deref().map(country_to_language),
         adult: m.is_adult,
+        // A movie's `duration` is its full runtime.
+        runtime: non_negative(m.duration),
+        // AniList's raw `MediaStatus`, exactly as the detail conversion reports it.
+        status: m.status,
     }
 }
 
@@ -125,6 +137,10 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
         original_language: lang,
         origin_country,
         adult: m.is_adult,
+        number_of_episodes: non_negative(m.episodes),
+        episode_run_time: non_negative(m.duration),
+        // AniList's raw `MediaStatus`, exactly as the detail conversion reports it.
+        status: m.status,
     }
 }
 
@@ -180,6 +196,7 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
         .iter()
         .map(|g| Genre::from_anilist_genre(g))
         .collect();
+    let runtime = non_negative(m.duration);
 
     UnifiedMovieDetails {
         movie: UnifiedMovie {
@@ -196,12 +213,15 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
             vote_count: None,
             original_language: origin_lang,
             adult: m.is_adult,
+            // The embedded summary mirrors the detail-level runtime/status.
+            runtime,
+            status: m.status.clone(),
         },
         tagline: None,
-        runtime: m.duration.map(|d| d.max(0) as u32),
+        runtime,
         budget: None,
         revenue: None,
-        status: m.status.clone(),
+        status: m.status,
         homepage: None,
         imdb_id: None,
         production_companies,
@@ -252,10 +272,8 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         m.status.as_deref(),
         Some("RELEASING") | Some("NOT_YET_RELEASED")
     );
-    let episode_run_time = m
-        .duration
-        .map(|d| vec![d.max(0) as u32])
-        .unwrap_or_default();
+    let run_time = non_negative(m.duration);
+    let number_of_episodes = non_negative(m.episodes);
 
     UnifiedTvShowDetails {
         show: UnifiedTvShow {
@@ -273,11 +291,15 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
             original_language: origin_lang,
             origin_country: origin_country.clone(),
             adult: m.is_adult,
+            // The embedded summary mirrors the detail-level episode data/status.
+            number_of_episodes,
+            episode_run_time: run_time,
+            status: m.status.clone(),
         },
         tagline: None,
         // AniList models anime as a single continuous run, not TMDB-style seasons.
         number_of_seasons: None,
-        number_of_episodes: m.episodes.map(|e| e.max(0) as u32),
+        number_of_episodes,
         in_production,
         status: m.status,
         homepage: None,
@@ -288,7 +310,7 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         type_: None,
         media_format: m.format,
         created_by: Vec::new(),
-        episode_run_time,
+        episode_run_time: run_time.into_iter().collect(),
         spoken_languages: Vec::new(),
         production_countries: origin_country,
         seasons: Vec::new(),
@@ -313,10 +335,64 @@ mod tests {
             genres: None,
             popularity: None,
             average_score: None,
+            episodes: None,
+            duration: None,
+            status: None,
             format: format.map(String::from),
             country_of_origin: None,
             is_adult: None,
         }
+    }
+
+    fn make_detail(format: &str) -> AniListMediaDetail {
+        AniListMediaDetail {
+            id: 7,
+            title: None,
+            description: None,
+            start_date: None,
+            end_date: None,
+            cover_image: None,
+            banner_image: None,
+            genres: None,
+            popularity: None,
+            average_score: None,
+            episodes: Some(26),
+            duration: Some(23),
+            status: Some("RELEASING".to_string()),
+            format: Some(format.to_string()),
+            country_of_origin: None,
+            is_adult: None,
+            studios: None,
+        }
+    }
+
+    /// The summary and the detail conversions agree on the new list fields for
+    /// the same media, and the detail's embedded summary mirrors its own
+    /// top-level values.
+    #[test]
+    fn list_and_detail_agree_on_runtime_episodes_status() {
+        let mut list = make_media(7, Some("TV"));
+        list.episodes = Some(26);
+        list.duration = Some(23);
+        list.status = Some("RELEASING".to_string());
+        let summary = anilist_media_to_tv(list);
+        let details = anilist_media_detail_to_tv_details(make_detail("TV"));
+        assert_eq!(details.show.number_of_episodes, summary.number_of_episodes);
+        assert_eq!(details.show.episode_run_time, summary.episode_run_time);
+        assert_eq!(details.show.status, summary.status);
+        assert_eq!(details.number_of_episodes, Some(26));
+        assert_eq!(details.episode_run_time, vec![23]);
+        assert_eq!(details.status.as_deref(), Some("RELEASING"));
+
+        let mut list = make_media(7, Some("MOVIE"));
+        list.duration = Some(23);
+        list.status = Some("RELEASING".to_string());
+        let summary = anilist_media_to_movie(list);
+        let details = anilist_media_detail_to_movie_details(make_detail("MOVIE"));
+        assert_eq!(details.movie.runtime, summary.runtime);
+        assert_eq!(details.movie.status, summary.status);
+        assert_eq!(details.runtime, Some(23));
+        assert_eq!(details.status.as_deref(), Some("RELEASING"));
     }
 
     #[test]

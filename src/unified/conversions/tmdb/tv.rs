@@ -31,6 +31,10 @@ macro_rules! impl_tv_from {
                     original_language: t.original_language,
                     origin_country: t.origin_country,
                     adult: Some(t.adult),
+                    // TMDB list endpoints return no episode data or status.
+                    number_of_episodes: None,
+                    episode_run_time: None,
+                    status: None,
                 }
             }
         }
@@ -67,6 +71,10 @@ macro_rules! impl_tv_from_no_adult {
                     original_language: t.original_language,
                     origin_country: t.origin_country,
                     adult: None,
+                    // TMDB list endpoints return no episode data or status.
+                    number_of_episodes: None,
+                    episode_run_time: None,
+                    status: None,
                 }
             }
         }
@@ -166,6 +174,12 @@ impl From<types::TvSeriesDetailsResponseSeasonsItem> for UnifiedSeason {
 
 impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
     fn from(t: types::TvSeriesDetailsResponse) -> Self {
+        let number_of_episodes = Some(t.number_of_episodes.max(0) as u32);
+        let episode_run_time: Vec<u32> = t
+            .episode_run_time
+            .iter()
+            .map(|&r| r.max(0) as u32)
+            .collect();
         UnifiedTvShowDetails {
             show: UnifiedTvShow {
                 provider_id: MediaId::tmdb(t.id as u64),
@@ -182,10 +196,15 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 original_language: t.original_language,
                 origin_country: t.origin_country,
                 adult: Some(t.adult),
+                // The embedded summary mirrors the detail-level episode
+                // data/status (first listed run time).
+                number_of_episodes,
+                episode_run_time: episode_run_time.first().copied(),
+                status: t.status.clone(),
             },
             tagline: t.tagline,
             number_of_seasons: Some(t.number_of_seasons.max(0) as u32),
-            number_of_episodes: Some(t.number_of_episodes.max(0) as u32),
+            number_of_episodes,
             in_production: t.in_production,
             status: t.status,
             homepage: t.homepage,
@@ -199,11 +218,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
             type_: t.type_,
             media_format: None,
             created_by: t.created_by.into_iter().map(Creator::from).collect(),
-            episode_run_time: t
-                .episode_run_time
-                .iter()
-                .map(|&r| r.max(0) as u32)
-                .collect(),
+            episode_run_time,
             spoken_languages: t
                 .spoken_languages
                 .iter()
@@ -243,7 +258,10 @@ pub(crate) fn season_details_from(
 mod tests {
     use crate::{
         generated::tmdb::types,
-        unified::{genre::Genre, models::UnifiedTvShow},
+        unified::{
+            genre::Genre,
+            models::{UnifiedTvShow, UnifiedTvShowDetails},
+        },
     };
 
     #[test]
@@ -276,5 +294,26 @@ mod tests {
         assert_eq!(unified.adult, Some(false));
         // Genres from IDs (18=Drama, 80=Crime).
         assert_eq!(unified.genres, vec![Genre::Drama, Genre::Crime]);
+        // TMDB list endpoints return no episode data or status.
+        assert_eq!(unified.number_of_episodes, None);
+        assert_eq!(unified.episode_run_time, None);
+        assert_eq!(unified.status, None);
+    }
+
+    /// TMDB details fill the embedded summary from the detail-level values
+    /// (first listed episode run time).
+    #[test]
+    fn tv_details_embedded_show_mirrors_detail_fields() {
+        let raw: types::TvSeriesDetailsResponse = serde_json::from_str(include_str!(
+            "../../../../tests/fixtures/tv_details_response.json"
+        ))
+        .expect("fixture deserializes");
+        let details: UnifiedTvShowDetails = raw.into();
+        assert_eq!(details.episode_run_time, vec![45, 47]);
+        assert_eq!(details.show.episode_run_time, Some(45));
+        assert_eq!(details.show.number_of_episodes, details.number_of_episodes);
+        assert_eq!(details.show.number_of_episodes, Some(62));
+        assert_eq!(details.show.status.as_deref(), Some("Ended"));
+        assert_eq!(details.show.status, details.status);
     }
 }

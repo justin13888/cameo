@@ -74,6 +74,9 @@ pub(crate) fn multi_search_result(
             vote_count: Some(item.vote_count.max(0) as u64),
             original_language: item.original_language,
             adult: Some(item.adult),
+            // TMDB multi-search returns neither runtime nor status.
+            runtime: None,
+            status: None,
         })),
         Some("tv") => Some(UnifiedSearchResult::TvShow(UnifiedTvShow {
             provider_id: MediaId::tmdb(item.id as u64),
@@ -95,6 +98,10 @@ pub(crate) fn multi_search_result(
             original_language: item.original_language,
             origin_country: Vec::new(),
             adult: Some(item.adult),
+            // TMDB multi-search returns no episode data or status.
+            number_of_episodes: None,
+            episode_run_time: None,
+            status: None,
         })),
         Some("person") => Some(UnifiedSearchResult::Person(UnifiedPerson {
             provider_id: MediaId::tmdb(item.id as u64),

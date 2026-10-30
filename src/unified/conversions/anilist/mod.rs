@@ -56,6 +56,9 @@ mod tests {
             genres: Some(vec!["Action".to_string(), "Mecha".to_string()]),
             popularity: Some(100000),
             average_score: Some(78),
+            episodes: Some(12),
+            duration: Some(24),
+            status: Some("FINISHED".to_string()),
             format: Some(format.to_string()),
             country_of_origin: Some("JP".to_string()),
             is_adult: Some(false),
@@ -100,6 +103,34 @@ mod tests {
             Some("2022-04-01")
         );
         assert_eq!(tv.origin_country, vec!["JP"]);
+    }
+
+    #[test]
+    fn test_media_to_movie_runtime_and_status() {
+        let movie = anilist_media_to_movie(make_media(1, "MOVIE"));
+        assert_eq!(movie.runtime, Some(24));
+        assert_eq!(movie.status.as_deref(), Some("FINISHED"));
+    }
+
+    #[test]
+    fn test_media_to_tv_episodes_duration_and_status() {
+        let tv = anilist_media_to_tv(make_media(2, "TV"));
+        assert_eq!(tv.number_of_episodes, Some(12));
+        assert_eq!(tv.episode_run_time, Some(24));
+        assert_eq!(tv.status.as_deref(), Some("FINISHED"));
+    }
+
+    #[test]
+    fn test_media_list_fields_absent_or_negative() {
+        let mut m = make_media(3, "TV");
+        m.episodes = None;
+        m.duration = Some(-5);
+        m.status = None;
+        let tv = anilist_media_to_tv(m);
+        assert_eq!(tv.number_of_episodes, None);
+        // Negative values clamp to 0, matching the detail conversion.
+        assert_eq!(tv.episode_run_time, Some(0));
+        assert_eq!(tv.status, None);
     }
 
     #[test]
