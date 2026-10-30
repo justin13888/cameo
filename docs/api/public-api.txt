@@ -4456,6 +4456,12 @@ impl core::marker::Unpin for cameo::unified::external_ids::ExternalIds
 impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalIds
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalIds
 impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalIds
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalIds where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalIds where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalIds where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalIds::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::From<T>
 pub fn cameo::unified::external_ids::ExternalIds::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::Into<T>
@@ -4659,6 +4665,10 @@ impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::episode_details(&self, &cameo::unified::media_id::MediaId, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::season_details(&self, &cameo::unified::media_id::MediaId, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::unified::facade::CameoClientError>
@@ -4670,10 +4680,6 @@ pub async fn cameo::unified::facade::CameoClient::tv_recommendations(&self, &cam
 impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
-impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
@@ -7024,6 +7030,10 @@ impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::episode_details(&self, &cameo::unified::media_id::MediaId, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::season_details(&self, &cameo::unified::media_id::MediaId, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::unified::facade::CameoClientError>
@@ -7035,10 +7045,6 @@ pub async fn cameo::unified::facade::CameoClient::tv_recommendations(&self, &cam
 impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
-impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
@@ -7406,6 +7412,12 @@ impl core::marker::Unpin for cameo::unified::external_ids::ExternalIds
 impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalIds
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalIds
 impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalIds
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalIds where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalIds where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalIds where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalIds::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::From<T>
 pub fn cameo::unified::external_ids::ExternalIds::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::Into<T>
@@ -10098,6 +10110,10 @@ impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::episode_details(&self, &cameo::unified::media_id::MediaId, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::season_details(&self, &cameo::unified::media_id::MediaId, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::unified::facade::CameoClientError>
@@ -10109,10 +10125,6 @@ pub async fn cameo::unified::facade::CameoClient::tv_recommendations(&self, &cam
 impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
-impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
@@ -10480,6 +10492,12 @@ impl core::marker::Unpin for cameo::unified::external_ids::ExternalIds
 impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalIds
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalIds
 impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalIds
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalIds where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalIds where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalIds where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalIds::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::From<T>
 pub fn cameo::unified::external_ids::ExternalIds::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::Into<T>
