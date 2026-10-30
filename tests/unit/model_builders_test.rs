@@ -6,16 +6,20 @@
 //! from the unified traits (#36).
 
 use cameo::{
-    Collection, Company, Creator, Gender, Genre, MediaId, Network, PartialDate, UnifiedEpisode,
-    UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult,
-    UnifiedSeason, UnifiedSeasonDetails, UnifiedStreamingService, UnifiedTvShow,
-    UnifiedTvShowDetails, UnifiedWatchProviderEntry, UnifiedWatchProviders,
+    AlternativeTitle, Collection, Company, Creator, Gender, Genre, MediaId, Network, PartialDate,
+    TitleKind, UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson,
+    UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeason, UnifiedSeasonDetails,
+    UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails, UnifiedWatchProviderEntry,
+    UnifiedWatchProviders,
 };
 
 #[test]
 fn build_movie_and_details() {
     let movie = UnifiedMovie::new(MediaId::tmdb(550), "Fight Club")
         .with_original_title("Fight Club")
+        .with_alternative_titles(vec![
+            AlternativeTitle::new("Fight Club", TitleKind::English).with_language("en"),
+        ])
         .with_overview("An insomniac...")
         .with_release_date(PartialDate::from_year(1999))
         .with_poster_url("https://example.com/p.jpg")
@@ -27,6 +31,8 @@ fn build_movie_and_details() {
         .with_original_language("en")
         .with_adult(false);
     assert_eq!(movie.title, "Fight Club");
+    assert_eq!(movie.alternative_titles[0].kind, TitleKind::English);
+    assert_eq!(movie.alternative_titles[0].language.as_deref(), Some("en"));
     assert_eq!(movie.release_date, PartialDate::from_year(1999).into());
 
     let details = UnifiedMovieDetails::new(movie)
@@ -56,6 +62,7 @@ fn build_movie_and_details() {
 fn build_tv_show_and_details() {
     let show = UnifiedTvShow::new(MediaId::tmdb(1396), "Breaking Bad")
         .with_original_name("Breaking Bad")
+        .with_alternative_titles(vec![AlternativeTitle::new("BrBa", TitleKind::Synonym)])
         .with_overview("A chemistry teacher...")
         .with_first_air_date(PartialDate::ymd(2008, 1, 20).unwrap())
         .with_poster_url("x")
@@ -68,6 +75,8 @@ fn build_tv_show_and_details() {
         .with_origin_country(vec!["US".to_string()])
         .with_adult(false);
     assert_eq!(show.name, "Breaking Bad");
+    assert_eq!(show.alternative_titles[0].title, "BrBa");
+    assert_eq!(show.alternative_titles[0].language, None);
 
     let details = UnifiedTvShowDetails::new(show)
         .with_tagline("All Hail the King")

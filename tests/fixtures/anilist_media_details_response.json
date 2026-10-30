@@ -7,6 +7,7 @@
         "english": "Your Name.",
         "native": "君の名は。"
       },
+      "synonyms": ["Kimi no Na wa."],
       "description": "Two strangers find themselves linked in a bizarre way.",
       "startDate": {"year": 2016, "month": 8, "day": 26},
       "endDate": {"year": 2016, "month": 8, "day": 26},

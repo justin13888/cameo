@@ -29,7 +29,7 @@ CREATE INDEX IF NOT EXISTS idx_expires ON cache_entries(expires_at);
 /// `PRAGMA user_version`. Bump this whenever the stored value shape changes
 /// (e.g. a unified-model field change) so persisted entries from an older
 /// cameo are flushed instead of deserialized as stale, wrong-shaped data.
-const CACHE_SCHEMA_VERSION: i64 = 1;
+const CACHE_SCHEMA_VERSION: i64 = 2;
 
 /// Create the table and enforce the schema version: if the database's
 /// `user_version` differs from [`CACHE_SCHEMA_VERSION`], every entry is flushed

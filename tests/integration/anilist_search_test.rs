@@ -1,4 +1,5 @@
 use cameo::{
+    AlternativeTitle, TitleKind,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
     unified::models::UnifiedSearchResult,
 };
@@ -119,6 +120,29 @@ async fn search_movies_maps_score_correctly() {
     let result = client.search_movies("Test", None).await.unwrap();
 
     assert_eq!(result.results[0].vote_average, Some(9.2));
+}
+
+#[tokio::test]
+async fn search_movies_keeps_all_title_variants() {
+    let mut item = media_item(21519, "unused", "MOVIE");
+    item["title"] = json!({ "romaji": "Kimi no Na wa.", "english": null, "native": "君の名は。" });
+    item["synonyms"] = json!(["Your Name"]);
+    let body = page_response(vec![item], 1);
+    let (_server, client) = mock_client(body).await;
+
+    let result = client.search_movies("Kimi no Na wa", None).await.unwrap();
+
+    let movie = &result.results[0];
+    // No English title: the headline title falls back to romaji.
+    assert_eq!(movie.title, "Kimi no Na wa.");
+    assert_eq!(
+        movie.alternative_titles,
+        vec![
+            AlternativeTitle::new("Kimi no Na wa.", TitleKind::Romanized),
+            AlternativeTitle::new("君の名は。", TitleKind::Native).with_language("ja"),
+            AlternativeTitle::new("Your Name", TitleKind::Synonym),
+        ]
+    );
 }
 
 // ── search_tv_shows ───────────────────────────────────────────────────────────

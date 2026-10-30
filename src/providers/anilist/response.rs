@@ -82,6 +82,8 @@ pub struct AniListStudios {
 pub struct AniListMedia {
     pub id: i32,
     pub title: Option<AniListTitle>,
+    /// Alternative titles / aliases (abbreviations, other-language titles).
+    pub synonyms: Option<Vec<String>>,
     /// Synopsis (HTML stripped if `asHtml: false` in query).
     pub description: Option<String>,
     #[serde(rename = "startDate")]
@@ -109,6 +111,8 @@ pub struct AniListMedia {
 pub struct AniListMediaDetail {
     pub id: i32,
     pub title: Option<AniListTitle>,
+    /// Alternative titles / aliases (abbreviations, other-language titles).
+    pub synonyms: Option<Vec<String>>,
     pub description: Option<String>,
     #[serde(rename = "startDate")]
     pub start_date: Option<AniListDate>,

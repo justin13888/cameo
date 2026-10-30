@@ -60,6 +60,7 @@ pub(crate) fn multi_search_result(
             provider_id: MediaId::tmdb(item.id as u64),
             title: item.title.or(item.name).unwrap_or_default(),
             original_title: item.original_title,
+            alternative_titles: Vec::new(),
             overview: item.overview,
             release_date: resolve_date(&item.release_date),
             poster_url: resolve_poster(&item.poster_path),
@@ -79,6 +80,7 @@ pub(crate) fn multi_search_result(
             provider_id: MediaId::tmdb(item.id as u64),
             name: item.name.or(item.title).unwrap_or_default(),
             original_name: item.original_name,
+            alternative_titles: Vec::new(),
             overview: item.overview,
             // TMDB multi-search reports a single `release_date` for both movies and shows.
             first_air_date: resolve_date(&item.release_date),

@@ -4765,6 +4765,68 @@ pub fn cameo::unified::Gender::and<P, B, E>(self, P) -> tower_http::follow_redir
 pub fn cameo::unified::Gender::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::Gender
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::Gender
+#[non_exhaustive] pub enum cameo::unified::models::TitleKind
+pub cameo::unified::models::TitleKind::English
+pub cameo::unified::models::TitleKind::Native
+pub cameo::unified::models::TitleKind::Other
+pub cameo::unified::models::TitleKind::Romanized
+pub cameo::unified::models::TitleKind::Synonym
+impl core::clone::Clone for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::clone(&self) -> cameo::unified::TitleKind
+impl core::cmp::Eq for cameo::unified::TitleKind
+impl core::cmp::PartialEq for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::eq(&self, &cameo::unified::TitleKind) -> bool
+impl core::fmt::Debug for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::unified::TitleKind
+impl core::marker::StructuralPartialEq for cameo::unified::TitleKind
+impl serde_core::ser::Serialize for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::TitleKind
+impl core::marker::Send for cameo::unified::TitleKind
+impl core::marker::Sync for cameo::unified::TitleKind
+impl core::marker::Unpin for cameo::unified::TitleKind
+impl core::marker::UnsafeUnpin for cameo::unified::TitleKind
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::TitleKind
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::TitleKind
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::TitleKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::TitleKind::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::TitleKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::TitleKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::TitleKind::equivalent(&self, &K) -> bool
+pub fn cameo::unified::TitleKind::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::TitleKind where U: core::convert::From<T>
+pub fn cameo::unified::TitleKind::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::TitleKind where U: core::convert::Into<T>
+pub type cameo::unified::TitleKind::Error = core::convert::Infallible
+pub fn cameo::unified::TitleKind::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::TitleKind where U: core::convert::TryFrom<T>
+pub type cameo::unified::TitleKind::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::TitleKind::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::TitleKind where T: core::clone::Clone
+pub type cameo::unified::TitleKind::Owned = T
+pub fn cameo::unified::TitleKind::clone_into(&self, &mut T)
+pub fn cameo::unified::TitleKind::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::TitleKind where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::TitleKind::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::TitleKind where T: ?core::marker::Sized
+pub fn cameo::unified::TitleKind::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::TitleKind where T: ?core::marker::Sized
+pub fn cameo::unified::TitleKind::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::TitleKind where T: core::clone::Clone
+pub unsafe fn cameo::unified::TitleKind::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::TitleKind where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::TitleKind where T: ?core::marker::Sized
+pub fn cameo::unified::TitleKind::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::TitleKind::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::TitleKind
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::TitleKind
 #[non_exhaustive] pub enum cameo::unified::models::UnifiedSearchResult
 pub cameo::unified::models::UnifiedSearchResult::Movie(cameo::unified::UnifiedMovie)
 pub cameo::unified::models::UnifiedSearchResult::Person(cameo::unified::UnifiedPerson)
@@ -4819,6 +4881,68 @@ pub fn cameo::unified::UnifiedSearchResult::and<P, B, E>(self, P) -> tower_http:
 pub fn cameo::unified::UnifiedSearchResult::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedSearchResult
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedSearchResult
+#[non_exhaustive] pub struct cameo::unified::models::AlternativeTitle
+pub cameo::unified::models::AlternativeTitle::kind: cameo::unified::TitleKind
+pub cameo::unified::models::AlternativeTitle::language: core::option::Option<alloc::string::String>
+pub cameo::unified::models::AlternativeTitle::title: alloc::string::String
+impl cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::new(impl core::convert::Into<alloc::string::String>, cameo::unified::TitleKind) -> Self
+pub fn cameo::unified::AlternativeTitle::with_language(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::clone(&self) -> cameo::unified::AlternativeTitle
+impl core::cmp::Eq for cameo::unified::AlternativeTitle
+impl core::cmp::PartialEq for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::eq(&self, &cameo::unified::AlternativeTitle) -> bool
+impl core::fmt::Debug for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::AlternativeTitle
+impl serde_core::ser::Serialize for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::AlternativeTitle
+impl core::marker::Send for cameo::unified::AlternativeTitle
+impl core::marker::Sync for cameo::unified::AlternativeTitle
+impl core::marker::Unpin for cameo::unified::AlternativeTitle
+impl core::marker::UnsafeUnpin for cameo::unified::AlternativeTitle
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::AlternativeTitle
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::AlternativeTitle
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::AlternativeTitle where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::AlternativeTitle where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::AlternativeTitle where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::equivalent(&self, &K) -> bool
+pub fn cameo::unified::AlternativeTitle::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::AlternativeTitle where U: core::convert::From<T>
+pub fn cameo::unified::AlternativeTitle::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::AlternativeTitle where U: core::convert::Into<T>
+pub type cameo::unified::AlternativeTitle::Error = core::convert::Infallible
+pub fn cameo::unified::AlternativeTitle::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::AlternativeTitle where U: core::convert::TryFrom<T>
+pub type cameo::unified::AlternativeTitle::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::AlternativeTitle::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::AlternativeTitle where T: core::clone::Clone
+pub type cameo::unified::AlternativeTitle::Owned = T
+pub fn cameo::unified::AlternativeTitle::clone_into(&self, &mut T)
+pub fn cameo::unified::AlternativeTitle::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::AlternativeTitle where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::AlternativeTitle where T: ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::AlternativeTitle where T: ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::AlternativeTitle where T: core::clone::Clone
+pub unsafe fn cameo::unified::AlternativeTitle::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::AlternativeTitle where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::AlternativeTitle where T: ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::AlternativeTitle::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::AlternativeTitle
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::AlternativeTitle
 #[non_exhaustive] pub struct cameo::unified::models::Collection
 pub cameo::unified::models::Collection::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::unified::models::Collection::id: core::option::Option<u64>
@@ -5105,6 +5229,7 @@ impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedEpisode
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedEpisode
 #[non_exhaustive] pub struct cameo::unified::models::UnifiedMovie
 pub cameo::unified::models::UnifiedMovie::adult: core::option::Option<bool>
+pub cameo::unified::models::UnifiedMovie::alternative_titles: alloc::vec::Vec<cameo::unified::AlternativeTitle>
 pub cameo::unified::models::UnifiedMovie::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::unified::models::UnifiedMovie::genres: alloc::vec::Vec<cameo::unified::genre::Genre>
 pub cameo::unified::models::UnifiedMovie::original_language: core::option::Option<alloc::string::String>
@@ -5120,6 +5245,7 @@ pub cameo::unified::models::UnifiedMovie::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedMovie
 pub fn cameo::unified::UnifiedMovie::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_adult(self, bool) -> Self
+pub fn cameo::unified::UnifiedMovie::with_alternative_titles(self, alloc::vec::Vec<cameo::unified::AlternativeTitle>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_backdrop_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_genres(self, alloc::vec::Vec<cameo::unified::genre::Genre>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_original_language(self, impl core::convert::Into<alloc::string::String>) -> Self
@@ -5550,6 +5676,7 @@ impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedStreamingServ
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedStreamingService
 #[non_exhaustive] pub struct cameo::unified::models::UnifiedTvShow
 pub cameo::unified::models::UnifiedTvShow::adult: core::option::Option<bool>
+pub cameo::unified::models::UnifiedTvShow::alternative_titles: alloc::vec::Vec<cameo::unified::AlternativeTitle>
 pub cameo::unified::models::UnifiedTvShow::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::unified::models::UnifiedTvShow::first_air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::unified::models::UnifiedTvShow::genres: alloc::vec::Vec<cameo::unified::genre::Genre>
@@ -5566,6 +5693,7 @@ pub cameo::unified::models::UnifiedTvShow::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedTvShow
 pub fn cameo::unified::UnifiedTvShow::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_adult(self, bool) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_alternative_titles(self, alloc::vec::Vec<cameo::unified::AlternativeTitle>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_backdrop_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_first_air_date(self, cameo::unified::date::PartialDate) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_genres(self, alloc::vec::Vec<cameo::unified::genre::Genre>) -> Self
@@ -6333,6 +6461,68 @@ pub fn cameo::unified::media_id::NativeId::and<P, B, E>(self, P) -> tower_http::
 pub fn cameo::unified::media_id::NativeId::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::media_id::NativeId
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::media_id::NativeId
+#[non_exhaustive] pub enum cameo::unified::TitleKind
+pub cameo::unified::TitleKind::English
+pub cameo::unified::TitleKind::Native
+pub cameo::unified::TitleKind::Other
+pub cameo::unified::TitleKind::Romanized
+pub cameo::unified::TitleKind::Synonym
+impl core::clone::Clone for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::clone(&self) -> cameo::unified::TitleKind
+impl core::cmp::Eq for cameo::unified::TitleKind
+impl core::cmp::PartialEq for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::eq(&self, &cameo::unified::TitleKind) -> bool
+impl core::fmt::Debug for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::unified::TitleKind
+impl core::marker::StructuralPartialEq for cameo::unified::TitleKind
+impl serde_core::ser::Serialize for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::TitleKind
+impl core::marker::Send for cameo::unified::TitleKind
+impl core::marker::Sync for cameo::unified::TitleKind
+impl core::marker::Unpin for cameo::unified::TitleKind
+impl core::marker::UnsafeUnpin for cameo::unified::TitleKind
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::TitleKind
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::TitleKind
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::TitleKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::TitleKind::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::TitleKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::TitleKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::TitleKind::equivalent(&self, &K) -> bool
+pub fn cameo::unified::TitleKind::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::TitleKind where U: core::convert::From<T>
+pub fn cameo::unified::TitleKind::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::TitleKind where U: core::convert::Into<T>
+pub type cameo::unified::TitleKind::Error = core::convert::Infallible
+pub fn cameo::unified::TitleKind::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::TitleKind where U: core::convert::TryFrom<T>
+pub type cameo::unified::TitleKind::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::TitleKind::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::TitleKind where T: core::clone::Clone
+pub type cameo::unified::TitleKind::Owned = T
+pub fn cameo::unified::TitleKind::clone_into(&self, &mut T)
+pub fn cameo::unified::TitleKind::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::TitleKind where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::TitleKind::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::TitleKind where T: ?core::marker::Sized
+pub fn cameo::unified::TitleKind::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::TitleKind where T: ?core::marker::Sized
+pub fn cameo::unified::TitleKind::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::TitleKind where T: core::clone::Clone
+pub unsafe fn cameo::unified::TitleKind::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::TitleKind where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::TitleKind where T: ?core::marker::Sized
+pub fn cameo::unified::TitleKind::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::TitleKind::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::TitleKind
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::TitleKind
 #[non_exhaustive] pub enum cameo::unified::UnifiedSearchResult
 pub cameo::unified::UnifiedSearchResult::Movie(cameo::unified::UnifiedMovie)
 pub cameo::unified::UnifiedSearchResult::Person(cameo::unified::UnifiedPerson)
@@ -6445,6 +6635,68 @@ pub fn cameo::unified::genre::UnknownGenre::and<P, B, E>(self, P) -> tower_http:
 pub fn cameo::unified::genre::UnknownGenre::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::genre::UnknownGenre
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::genre::UnknownGenre
+#[non_exhaustive] pub struct cameo::unified::AlternativeTitle
+pub cameo::unified::AlternativeTitle::kind: cameo::unified::TitleKind
+pub cameo::unified::AlternativeTitle::language: core::option::Option<alloc::string::String>
+pub cameo::unified::AlternativeTitle::title: alloc::string::String
+impl cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::new(impl core::convert::Into<alloc::string::String>, cameo::unified::TitleKind) -> Self
+pub fn cameo::unified::AlternativeTitle::with_language(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::clone(&self) -> cameo::unified::AlternativeTitle
+impl core::cmp::Eq for cameo::unified::AlternativeTitle
+impl core::cmp::PartialEq for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::eq(&self, &cameo::unified::AlternativeTitle) -> bool
+impl core::fmt::Debug for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::AlternativeTitle
+impl serde_core::ser::Serialize for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::AlternativeTitle
+impl core::marker::Send for cameo::unified::AlternativeTitle
+impl core::marker::Sync for cameo::unified::AlternativeTitle
+impl core::marker::Unpin for cameo::unified::AlternativeTitle
+impl core::marker::UnsafeUnpin for cameo::unified::AlternativeTitle
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::AlternativeTitle
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::AlternativeTitle
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::AlternativeTitle where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::AlternativeTitle where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::AlternativeTitle where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::equivalent(&self, &K) -> bool
+pub fn cameo::unified::AlternativeTitle::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::AlternativeTitle where U: core::convert::From<T>
+pub fn cameo::unified::AlternativeTitle::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::AlternativeTitle where U: core::convert::Into<T>
+pub type cameo::unified::AlternativeTitle::Error = core::convert::Infallible
+pub fn cameo::unified::AlternativeTitle::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::AlternativeTitle where U: core::convert::TryFrom<T>
+pub type cameo::unified::AlternativeTitle::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::AlternativeTitle::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::AlternativeTitle where T: core::clone::Clone
+pub type cameo::unified::AlternativeTitle::Owned = T
+pub fn cameo::unified::AlternativeTitle::clone_into(&self, &mut T)
+pub fn cameo::unified::AlternativeTitle::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::AlternativeTitle where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::AlternativeTitle where T: ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::AlternativeTitle where T: ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::AlternativeTitle where T: core::clone::Clone
+pub unsafe fn cameo::unified::AlternativeTitle::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::AlternativeTitle where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::AlternativeTitle where T: ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::AlternativeTitle::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::AlternativeTitle
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::AlternativeTitle
 pub struct cameo::unified::CameoClient
 impl cameo::unified::facade::CameoClient
 pub fn cameo::unified::facade::CameoClient::builder() -> cameo::unified::facade::CameoClientBuilder
@@ -7064,6 +7316,7 @@ impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedEpisode
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedEpisode
 #[non_exhaustive] pub struct cameo::unified::UnifiedMovie
 pub cameo::unified::UnifiedMovie::adult: core::option::Option<bool>
+pub cameo::unified::UnifiedMovie::alternative_titles: alloc::vec::Vec<cameo::unified::AlternativeTitle>
 pub cameo::unified::UnifiedMovie::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedMovie::genres: alloc::vec::Vec<cameo::unified::genre::Genre>
 pub cameo::unified::UnifiedMovie::original_language: core::option::Option<alloc::string::String>
@@ -7079,6 +7332,7 @@ pub cameo::unified::UnifiedMovie::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedMovie
 pub fn cameo::unified::UnifiedMovie::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_adult(self, bool) -> Self
+pub fn cameo::unified::UnifiedMovie::with_alternative_titles(self, alloc::vec::Vec<cameo::unified::AlternativeTitle>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_backdrop_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_genres(self, alloc::vec::Vec<cameo::unified::genre::Genre>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_original_language(self, impl core::convert::Into<alloc::string::String>) -> Self
@@ -7509,6 +7763,7 @@ impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedStreamingServ
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedStreamingService
 #[non_exhaustive] pub struct cameo::unified::UnifiedTvShow
 pub cameo::unified::UnifiedTvShow::adult: core::option::Option<bool>
+pub cameo::unified::UnifiedTvShow::alternative_titles: alloc::vec::Vec<cameo::unified::AlternativeTitle>
 pub cameo::unified::UnifiedTvShow::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedTvShow::first_air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::unified::UnifiedTvShow::genres: alloc::vec::Vec<cameo::unified::genre::Genre>
@@ -7525,6 +7780,7 @@ pub cameo::unified::UnifiedTvShow::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedTvShow
 pub fn cameo::unified::UnifiedTvShow::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_adult(self, bool) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_alternative_titles(self, alloc::vec::Vec<cameo::unified::AlternativeTitle>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_backdrop_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_first_air_date(self, cameo::unified::date::PartialDate) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_genres(self, alloc::vec::Vec<cameo::unified::genre::Genre>) -> Self
@@ -8628,6 +8884,68 @@ pub fn cameo::core::config::TimeWindow::and<P, B, E>(self, P) -> tower_http::fol
 pub fn cameo::core::config::TimeWindow::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::core::config::TimeWindow
 impl<T> tracing::instrument::WithSubscriber for cameo::core::config::TimeWindow
+#[non_exhaustive] pub enum cameo::TitleKind
+pub cameo::TitleKind::English
+pub cameo::TitleKind::Native
+pub cameo::TitleKind::Other
+pub cameo::TitleKind::Romanized
+pub cameo::TitleKind::Synonym
+impl core::clone::Clone for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::clone(&self) -> cameo::unified::TitleKind
+impl core::cmp::Eq for cameo::unified::TitleKind
+impl core::cmp::PartialEq for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::eq(&self, &cameo::unified::TitleKind) -> bool
+impl core::fmt::Debug for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::unified::TitleKind
+impl core::marker::StructuralPartialEq for cameo::unified::TitleKind
+impl serde_core::ser::Serialize for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::TitleKind
+impl core::marker::Send for cameo::unified::TitleKind
+impl core::marker::Sync for cameo::unified::TitleKind
+impl core::marker::Unpin for cameo::unified::TitleKind
+impl core::marker::UnsafeUnpin for cameo::unified::TitleKind
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::TitleKind
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::TitleKind
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::TitleKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::TitleKind::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::TitleKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::TitleKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::TitleKind::equivalent(&self, &K) -> bool
+pub fn cameo::unified::TitleKind::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::TitleKind where U: core::convert::From<T>
+pub fn cameo::unified::TitleKind::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::TitleKind where U: core::convert::Into<T>
+pub type cameo::unified::TitleKind::Error = core::convert::Infallible
+pub fn cameo::unified::TitleKind::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::TitleKind where U: core::convert::TryFrom<T>
+pub type cameo::unified::TitleKind::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::TitleKind::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::TitleKind where T: core::clone::Clone
+pub type cameo::unified::TitleKind::Owned = T
+pub fn cameo::unified::TitleKind::clone_into(&self, &mut T)
+pub fn cameo::unified::TitleKind::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::TitleKind where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::TitleKind::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::TitleKind where T: ?core::marker::Sized
+pub fn cameo::unified::TitleKind::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::TitleKind where T: ?core::marker::Sized
+pub fn cameo::unified::TitleKind::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::TitleKind where T: core::clone::Clone
+pub unsafe fn cameo::unified::TitleKind::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::TitleKind
+pub fn cameo::unified::TitleKind::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::TitleKind where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::TitleKind where T: ?core::marker::Sized
+pub fn cameo::unified::TitleKind::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::TitleKind::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::TitleKind
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::TitleKind
 #[non_exhaustive] pub enum cameo::TmdbAuth
 pub cameo::TmdbAuth::V3ApiKey(alloc::string::String)
 pub cameo::TmdbAuth::V4Bearer(alloc::string::String)
@@ -8836,6 +9154,68 @@ pub fn cameo::unified::genre::UnknownGenre::and<P, B, E>(self, P) -> tower_http:
 pub fn cameo::unified::genre::UnknownGenre::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::genre::UnknownGenre
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::genre::UnknownGenre
+#[non_exhaustive] pub struct cameo::AlternativeTitle
+pub cameo::AlternativeTitle::kind: cameo::unified::TitleKind
+pub cameo::AlternativeTitle::language: core::option::Option<alloc::string::String>
+pub cameo::AlternativeTitle::title: alloc::string::String
+impl cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::new(impl core::convert::Into<alloc::string::String>, cameo::unified::TitleKind) -> Self
+pub fn cameo::unified::AlternativeTitle::with_language(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::clone(&self) -> cameo::unified::AlternativeTitle
+impl core::cmp::Eq for cameo::unified::AlternativeTitle
+impl core::cmp::PartialEq for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::eq(&self, &cameo::unified::AlternativeTitle) -> bool
+impl core::fmt::Debug for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::AlternativeTitle
+impl serde_core::ser::Serialize for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::AlternativeTitle
+impl core::marker::Send for cameo::unified::AlternativeTitle
+impl core::marker::Sync for cameo::unified::AlternativeTitle
+impl core::marker::Unpin for cameo::unified::AlternativeTitle
+impl core::marker::UnsafeUnpin for cameo::unified::AlternativeTitle
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::AlternativeTitle
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::AlternativeTitle
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::AlternativeTitle where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::AlternativeTitle where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::AlternativeTitle where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::equivalent(&self, &K) -> bool
+pub fn cameo::unified::AlternativeTitle::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::AlternativeTitle where U: core::convert::From<T>
+pub fn cameo::unified::AlternativeTitle::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::AlternativeTitle where U: core::convert::Into<T>
+pub type cameo::unified::AlternativeTitle::Error = core::convert::Infallible
+pub fn cameo::unified::AlternativeTitle::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::AlternativeTitle where U: core::convert::TryFrom<T>
+pub type cameo::unified::AlternativeTitle::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::AlternativeTitle::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::AlternativeTitle where T: core::clone::Clone
+pub type cameo::unified::AlternativeTitle::Owned = T
+pub fn cameo::unified::AlternativeTitle::clone_into(&self, &mut T)
+pub fn cameo::unified::AlternativeTitle::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::AlternativeTitle where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::AlternativeTitle where T: ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::AlternativeTitle where T: ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::AlternativeTitle where T: core::clone::Clone
+pub unsafe fn cameo::unified::AlternativeTitle::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::AlternativeTitle
+pub fn cameo::unified::AlternativeTitle::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::AlternativeTitle where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::AlternativeTitle where T: ?core::marker::Sized
+pub fn cameo::unified::AlternativeTitle::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::AlternativeTitle::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::AlternativeTitle
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::AlternativeTitle
 pub struct cameo::AniListClient
 impl cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::config(&self) -> &cameo::providers::anilist::config::AniListConfig
@@ -10062,6 +10442,7 @@ impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedEpisode
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedEpisode
 #[non_exhaustive] pub struct cameo::UnifiedMovie
 pub cameo::UnifiedMovie::adult: core::option::Option<bool>
+pub cameo::UnifiedMovie::alternative_titles: alloc::vec::Vec<cameo::unified::AlternativeTitle>
 pub cameo::UnifiedMovie::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::UnifiedMovie::genres: alloc::vec::Vec<cameo::unified::genre::Genre>
 pub cameo::UnifiedMovie::original_language: core::option::Option<alloc::string::String>
@@ -10077,6 +10458,7 @@ pub cameo::UnifiedMovie::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedMovie
 pub fn cameo::unified::UnifiedMovie::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_adult(self, bool) -> Self
+pub fn cameo::unified::UnifiedMovie::with_alternative_titles(self, alloc::vec::Vec<cameo::unified::AlternativeTitle>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_backdrop_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_genres(self, alloc::vec::Vec<cameo::unified::genre::Genre>) -> Self
 pub fn cameo::unified::UnifiedMovie::with_original_language(self, impl core::convert::Into<alloc::string::String>) -> Self
@@ -10507,6 +10889,7 @@ impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedStreamingServ
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedStreamingService
 #[non_exhaustive] pub struct cameo::UnifiedTvShow
 pub cameo::UnifiedTvShow::adult: core::option::Option<bool>
+pub cameo::UnifiedTvShow::alternative_titles: alloc::vec::Vec<cameo::unified::AlternativeTitle>
 pub cameo::UnifiedTvShow::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::UnifiedTvShow::first_air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::UnifiedTvShow::genres: alloc::vec::Vec<cameo::unified::genre::Genre>
@@ -10523,6 +10906,7 @@ pub cameo::UnifiedTvShow::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedTvShow
 pub fn cameo::unified::UnifiedTvShow::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_adult(self, bool) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_alternative_titles(self, alloc::vec::Vec<cameo::unified::AlternativeTitle>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_backdrop_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_first_air_date(self, cameo::unified::date::PartialDate) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_genres(self, alloc::vec::Vec<cameo::unified::genre::Genre>) -> Self
