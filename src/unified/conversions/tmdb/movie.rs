@@ -14,6 +14,7 @@ macro_rules! impl_movie_from {
                     provider_id: MediaId::tmdb(m.id as u64),
                     title: m.title.unwrap_or_default(),
                     original_title: m.original_title,
+                    alternative_titles: Vec::new(),
                     overview: m.overview,
                     release_date: resolve_date(&m.release_date),
                     poster_url: resolve_poster(&m.poster_path),
@@ -61,6 +62,7 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
                 provider_id: MediaId::tmdb(m.id as u64),
                 title: m.title.unwrap_or_default(),
                 original_title: m.original_title,
+                alternative_titles: Vec::new(),
                 overview: m.overview,
                 release_date: resolve_date(&m.release_date),
                 poster_url: resolve_poster(&m.poster_path),
@@ -164,6 +166,8 @@ mod tests {
     fn search_movie_to_unified() {
         let unified: UnifiedMovie = make_search_movie().into();
         assert_eq!(unified.provider_id, "tmdb:550");
+        // TMDB exposes no title variants beyond title/original_title.
+        assert!(unified.alternative_titles.is_empty());
         assert_eq!(unified.title, "Fight Club");
         assert_eq!(
             unified.release_date.map(|d| d.to_string()).as_deref(),

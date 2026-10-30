@@ -16,6 +16,7 @@ macro_rules! impl_tv_from {
                     provider_id: MediaId::tmdb(t.id as u64),
                     name: t.name.unwrap_or_default(),
                     original_name: t.original_name,
+                    alternative_titles: Vec::new(),
                     overview: t.overview,
                     first_air_date: resolve_date(&t.first_air_date),
                     poster_url: resolve_poster(&t.poster_path),
@@ -52,6 +53,7 @@ macro_rules! impl_tv_from_no_adult {
                     provider_id: MediaId::tmdb(t.id as u64),
                     name: t.name.unwrap_or_default(),
                     original_name: t.original_name,
+                    alternative_titles: Vec::new(),
                     overview: t.overview,
                     first_air_date: resolve_date(&t.first_air_date),
                     poster_url: resolve_poster(&t.poster_path),
@@ -171,6 +173,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 provider_id: MediaId::tmdb(t.id as u64),
                 name: t.name.unwrap_or_default(),
                 original_name: t.original_name,
+                alternative_titles: Vec::new(),
                 overview: t.overview,
                 first_air_date: resolve_date(&t.first_air_date),
                 poster_url: resolve_poster(&t.poster_path),
@@ -266,6 +269,8 @@ mod tests {
         };
         let unified: UnifiedTvShow = raw.into();
         assert_eq!(unified.provider_id, "tmdb:1396");
+        // TMDB exposes no title variants beyond name/original_name.
+        assert!(unified.alternative_titles.is_empty());
         assert_eq!(unified.name, "Breaking Bad");
         assert_eq!(
             unified.first_air_date.map(|d| d.to_string()).as_deref(),
