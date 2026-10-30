@@ -25,8 +25,12 @@ fn build_movie_and_details() {
         .with_vote_average(8.4)
         .with_vote_count(26_000)
         .with_original_language("en")
-        .with_adult(false);
+        .with_adult(false)
+        .with_runtime(139)
+        .with_status("Released");
     assert_eq!(movie.title, "Fight Club");
+    assert_eq!(movie.runtime, Some(139));
+    assert_eq!(movie.status.as_deref(), Some("Released"));
     assert_eq!(movie.release_date, PartialDate::from_year(1999).into());
 
     let details = UnifiedMovieDetails::new(movie)
@@ -66,8 +70,14 @@ fn build_tv_show_and_details() {
         .with_vote_count(14_000)
         .with_original_language("en")
         .with_origin_country(vec!["US".to_string()])
-        .with_adult(false);
+        .with_adult(false)
+        .with_number_of_episodes(62)
+        .with_episode_run_time(47)
+        .with_status("Ended");
     assert_eq!(show.name, "Breaking Bad");
+    assert_eq!(show.number_of_episodes, Some(62));
+    assert_eq!(show.episode_run_time, Some(47));
+    assert_eq!(show.status.as_deref(), Some("Ended"));
 
     let details = UnifiedTvShowDetails::new(show)
         .with_tagline("All Hail the King")

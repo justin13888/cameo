@@ -95,6 +95,13 @@ pub struct AniListMedia {
     /// Score from 0–100.
     #[serde(rename = "averageScore")]
     pub average_score: Option<i32>,
+    /// Total episode count (absent for ongoing or unannounced runs).
+    pub episodes: Option<i32>,
+    /// Typical episode length in minutes (the full runtime for a movie).
+    pub duration: Option<i32>,
+    /// Release status: `FINISHED`, `RELEASING`, `NOT_YET_RELEASED`,
+    /// `CANCELLED`, `HIATUS`.
+    pub status: Option<String>,
     /// Media format: `TV`, `TV_SHORT`, `MOVIE`, `OVA`, `ONA`, `SPECIAL`, etc.
     pub format: Option<String>,
     /// ISO 3166-1 alpha-2 country of origin.

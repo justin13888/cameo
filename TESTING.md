@@ -6,7 +6,7 @@
 |---|---|---|---|
 | Unit | None | `tests/unit/` | Pure logic: conversions, builders, config, pagination, genre mapping, cache TTL |
 | Wiremock (TMDB) | Mocked | `tests/integration/tmdb_*.rs` | Deserialization of real-shaped TMDB responses, generated-client field coverage |
-| Wiremock (AniList) | Mocked | `tests/integration/anilist_*.rs` | AniList GraphQL response parsing, score conversion, format mapping |
+| Wiremock (AniList) | Mocked | `tests/integration/anilist_*.rs` | AniList GraphQL response parsing, score conversion, format mapping, list-result episodes/duration/status |
 | Facade | Mocked | `tests/integration/facade_dispatch_test.rs`, `tests/integration/cache_integration_test.rs` | CameoClient dispatch, cache read/write, provider fallback, NoProviders errors |
 | Live (gated) | Real API | `tests/integration/tmdb_search_test.rs` etc. | Smoke tests — assert results are non-empty, don't assert specific values |
 
@@ -187,7 +187,7 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 |---|---|
 | Unit | 64 |
 | Wiremock (TMDB) | 33 |
-| Wiremock (AniList) | 25 |
+| Wiremock (AniList) | 31 |
 | Facade / Cache | 16 |
 | Live (TMDB) | 8 |
-| **Total** | **~146** |
+| **Total** | **~152** |

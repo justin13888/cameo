@@ -28,6 +28,9 @@ macro_rules! impl_movie_from {
                     vote_count: Some(m.vote_count.max(0) as u64),
                     original_language: m.original_language,
                     adult: Some(m.adult),
+                    // TMDB list endpoints return neither runtime nor status.
+                    runtime: None,
+                    status: None,
                 }
             }
         }
@@ -55,6 +58,11 @@ impl From<types::MovieDetailsResponseProductionCompaniesItem> for Company {
 impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
     fn from(m: types::MovieDetailsResponse) -> Self {
         let belongs_to_collection = m.belongs_to_collection.as_ref().map(parse_collection);
+        let runtime = if m.runtime > 0 {
+            Some(m.runtime.max(0) as u32)
+        } else {
+            None
+        };
 
         UnifiedMovieDetails {
             movie: UnifiedMovie {
@@ -71,13 +79,12 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
                 vote_count: Some(m.vote_count.max(0) as u64),
                 original_language: m.original_language,
                 adult: Some(m.adult),
+                // The embedded summary mirrors the detail-level runtime/status.
+                runtime,
+                status: m.status.clone(),
             },
             tagline: m.tagline,
-            runtime: if m.runtime > 0 {
-                Some(m.runtime.max(0) as u32)
-            } else {
-                None
-            },
+            runtime,
             budget: if m.budget > 0 {
                 Some(m.budget.max(0) as u64)
             } else {
@@ -138,7 +145,10 @@ fn parse_collection(v: &serde_json::Value) -> Collection {
 mod tests {
     use crate::{
         generated::tmdb::types,
-        unified::{genre::Genre, models::UnifiedMovie},
+        unified::{
+            genre::Genre,
+            models::{UnifiedMovie, UnifiedMovieDetails},
+        },
     };
 
     fn make_search_movie() -> types::SearchMovieResponseResultsItem {
@@ -180,6 +190,28 @@ mod tests {
                 .unwrap()
                 .starts_with("https://image.tmdb.org/t/p/")
         );
+    }
+
+    #[test]
+    fn search_movie_list_has_no_runtime_or_status() {
+        // TMDB list endpoints return neither field.
+        let unified: UnifiedMovie = make_search_movie().into();
+        assert_eq!(unified.runtime, None);
+        assert_eq!(unified.status, None);
+    }
+
+    /// TMDB details fill the embedded summary from the detail-level values.
+    #[test]
+    fn movie_details_embedded_movie_mirrors_detail_fields() {
+        let raw: types::MovieDetailsResponse = serde_json::from_str(include_str!(
+            "../../../../tests/fixtures/movie_details_response.json"
+        ))
+        .expect("fixture deserializes");
+        let details: UnifiedMovieDetails = raw.into();
+        assert_eq!(details.runtime, Some(139));
+        assert_eq!(details.movie.runtime, details.runtime);
+        assert_eq!(details.status.as_deref(), Some("Released"));
+        assert_eq!(details.movie.status, details.status);
     }
 
     #[test]

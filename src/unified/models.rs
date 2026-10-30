@@ -133,6 +133,19 @@ pub struct UnifiedMovie {
     pub original_language: Option<String>,
     /// Whether this is adult content, if the provider reports it.
     pub adult: Option<bool>,
+    /// Runtime in minutes, if the provider reports it in summary results.
+    ///
+    /// Same semantics as [`UnifiedMovieDetails::runtime`]; detail conversions
+    /// fill both with the same value. TMDB list endpoints do not return a
+    /// runtime, so TMDB summaries leave this `None`.
+    pub runtime: Option<u32>,
+    /// Release status as reported by the provider (e.g. TMDB `"Released"`,
+    /// AniList `"FINISHED"`), if present in summary results.
+    ///
+    /// Same semantics as [`UnifiedMovieDetails::status`]; detail conversions
+    /// fill both with the same value. TMDB list endpoints do not return a
+    /// status, so TMDB summaries leave this `None`.
+    pub status: Option<String>,
 }
 
 /// Detailed movie information in the unified model.
@@ -199,6 +212,26 @@ pub struct UnifiedTvShow {
     pub origin_country: Vec<String>,
     /// Whether this is adult content, if the provider reports it.
     pub adult: Option<bool>,
+    /// Number of episodes, if the provider reports it in summary results.
+    ///
+    /// Same semantics as [`UnifiedTvShowDetails::number_of_episodes`]; detail
+    /// conversions fill both with the same value. TMDB list endpoints do not
+    /// return an episode count, so TMDB summaries leave this `None`.
+    pub number_of_episodes: Option<u32>,
+    /// Typical run time of one episode in minutes, if the provider reports it.
+    ///
+    /// A single value, unlike [`UnifiedTvShowDetails::episode_run_time`] which
+    /// lists every run time the provider reports; detail conversions fill this
+    /// with the **first** entry of that list. TMDB list endpoints do not return
+    /// run times, so TMDB summaries leave this `None`.
+    pub episode_run_time: Option<u32>,
+    /// Release status as reported by the provider (e.g. TMDB `"Ended"`,
+    /// AniList `"RELEASING"`), if present in summary results.
+    ///
+    /// Same semantics as [`UnifiedTvShowDetails::status`]; detail conversions
+    /// fill both with the same value. TMDB list endpoints do not return a
+    /// status, so TMDB summaries leave this `None`.
+    pub status: Option<String>,
 }
 
 /// Detailed TV show information in the unified model.
