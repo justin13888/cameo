@@ -185,9 +185,9 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 
 | Layer | Count |
 |---|---|
-| Unit | 64 |
+| Unit | 69 |
 | Wiremock (TMDB) | 33 |
 | Wiremock (AniList) | 25 |
 | Facade / Cache | 16 |
 | Live (TMDB) | 8 |
-| **Total** | **~146** |
+| **Total** | **~151** |

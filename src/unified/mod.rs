@@ -4,6 +4,8 @@ mod builders;
 pub(crate) mod conversions;
 /// Partial calendar dates for release/air dates.
 pub mod date;
+/// Third-party database identifiers (IMDb, TVDB, MyAnimeList, Wikidata).
+pub mod external_ids;
 /// Multi-provider facade client.
 pub mod facade;
 /// Genre enum covering all known media genres.
@@ -16,11 +18,14 @@ pub mod models;
 pub mod traits;
 
 pub use date::{ParseDateError, PartialDate};
+pub use external_ids::{
+    ExternalId, ExternalIds, ExternalMatch, ExternalSource, MatchKind, UnknownExternalSource,
+};
 pub use facade::{CameoClient, CameoClientBuilder, CameoClientError};
 pub use genre::{Genre, UnknownGenre};
 pub use media_id::{MediaId, MediaIdParseError, NativeId};
 pub use models::*;
 pub use traits::{
-    Capability, DetailProvider, DiscoveryProvider, MediaProvider, Provider, RecommendationProvider,
-    SearchProvider, SeasonProvider, WatchAvailabilityProvider,
+    Capability, DetailProvider, DiscoveryProvider, ExternalIdProvider, MediaProvider, Provider,
+    RecommendationProvider, SearchProvider, SeasonProvider, WatchAvailabilityProvider,
 };

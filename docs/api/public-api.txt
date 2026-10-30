@@ -4188,6 +4188,386 @@ pub fn cameo::unified::date::PartialDate::and<P, B, E>(self, P) -> tower_http::f
 pub fn cameo::unified::date::PartialDate::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::date::PartialDate
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::date::PartialDate
+pub mod cameo::unified::external_ids
+#[non_exhaustive] pub enum cameo::unified::external_ids::ExternalSource
+pub cameo::unified::external_ids::ExternalSource::Imdb
+pub cameo::unified::external_ids::ExternalSource::Mal
+pub cameo::unified::external_ids::ExternalSource::Tvdb
+pub cameo::unified::external_ids::ExternalSource::Wikidata
+impl cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::as_str(&self) -> &'static str
+impl core::clone::Clone for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::clone(&self) -> cameo::unified::external_ids::ExternalSource
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalSource
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::eq(&self, &cameo::unified::external_ids::ExternalSource) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::unified::external_ids::ExternalSource
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalSource
+impl core::str::traits::FromStr for cameo::unified::external_ids::ExternalSource
+pub type cameo::unified::external_ids::ExternalSource::Err = cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::from_str(&str) -> core::result::Result<Self, Self::Err>
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalSource
+impl core::marker::Send for cameo::unified::external_ids::ExternalSource
+impl core::marker::Sync for cameo::unified::external_ids::ExternalSource
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalSource
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalSource
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalSource
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalSource
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalSource::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalSource where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalSource::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalSource where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalSource::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalSource::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalSource where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalSource::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalSource::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalSource where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalSource::Owned = T
+pub fn cameo::unified::external_ids::ExternalSource::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalSource::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::unified::external_ids::ExternalSource where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalSource where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalSource where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalSource::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalSource where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalSource::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalSource
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalSource
+#[non_exhaustive] pub enum cameo::unified::external_ids::MatchKind
+pub cameo::unified::external_ids::MatchKind::Movie
+pub cameo::unified::external_ids::MatchKind::TvShow
+impl core::clone::Clone for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::clone(&self) -> cameo::unified::external_ids::MatchKind
+impl core::cmp::Eq for cameo::unified::external_ids::MatchKind
+impl core::cmp::PartialEq for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::eq(&self, &cameo::unified::external_ids::MatchKind) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::unified::external_ids::MatchKind
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::MatchKind
+impl serde_core::ser::Serialize for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::MatchKind
+impl core::marker::Send for cameo::unified::external_ids::MatchKind
+impl core::marker::Sync for cameo::unified::external_ids::MatchKind
+impl core::marker::Unpin for cameo::unified::external_ids::MatchKind
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::MatchKind
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::MatchKind
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::MatchKind
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::MatchKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::MatchKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::MatchKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::MatchKind::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::MatchKind where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::MatchKind::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::MatchKind where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::MatchKind::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::MatchKind::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::MatchKind where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::MatchKind::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::MatchKind::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::MatchKind where T: core::clone::Clone
+pub type cameo::unified::external_ids::MatchKind::Owned = T
+pub fn cameo::unified::external_ids::MatchKind::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::MatchKind::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::external_ids::MatchKind where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::MatchKind where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::MatchKind where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::MatchKind where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::MatchKind::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::MatchKind where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::MatchKind where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::MatchKind::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::MatchKind
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::MatchKind
+#[non_exhaustive] pub struct cameo::unified::external_ids::ExternalId
+pub cameo::unified::external_ids::ExternalId::id: alloc::string::String
+pub cameo::unified::external_ids::ExternalId::source: cameo::unified::external_ids::ExternalSource
+impl cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::as_u64(&self) -> core::option::Option<u64>
+pub fn cameo::unified::external_ids::ExternalId::imdb(impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::external_ids::ExternalId::mal(u64) -> Self
+pub fn cameo::unified::external_ids::ExternalId::new(cameo::unified::external_ids::ExternalSource, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::external_ids::ExternalId::tvdb(u64) -> Self
+pub fn cameo::unified::external_ids::ExternalId::wikidata(impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::clone(&self) -> cameo::unified::external_ids::ExternalId
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalId
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::eq(&self, &cameo::unified::external_ids::ExternalId) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalId
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalId
+impl core::marker::Send for cameo::unified::external_ids::ExternalId
+impl core::marker::Sync for cameo::unified::external_ids::ExternalId
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalId
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalId
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalId
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalId
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalId where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalId where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalId where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalId::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalId where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalId::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalId where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalId::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalId::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalId where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalId::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalId::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalId where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalId::Owned = T
+pub fn cameo::unified::external_ids::ExternalId::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalId::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::unified::external_ids::ExternalId where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalId where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalId where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalId where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalId where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalId::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalId where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalId where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalId::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalId
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalId
+#[non_exhaustive] pub struct cameo::unified::external_ids::ExternalIds
+pub cameo::unified::external_ids::ExternalIds::anilist: core::option::Option<u64>
+pub cameo::unified::external_ids::ExternalIds::imdb: core::option::Option<alloc::string::String>
+pub cameo::unified::external_ids::ExternalIds::mal: core::option::Option<u64>
+pub cameo::unified::external_ids::ExternalIds::tmdb: core::option::Option<u64>
+pub cameo::unified::external_ids::ExternalIds::tvdb: core::option::Option<u64>
+pub cameo::unified::external_ids::ExternalIds::wikidata: core::option::Option<alloc::string::String>
+impl cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::get(&self, cameo::unified::external_ids::ExternalSource) -> core::option::Option<cameo::unified::external_ids::ExternalId>
+pub fn cameo::unified::external_ids::ExternalIds::new() -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_anilist(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_imdb(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_mal(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_tmdb(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_tvdb(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_wikidata(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::clone(&self) -> cameo::unified::external_ids::ExternalIds
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalIds
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::eq(&self, &cameo::unified::external_ids::ExternalIds) -> bool
+impl core::default::Default for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::default() -> cameo::unified::external_ids::ExternalIds
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalIds
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalIds
+impl core::marker::Send for cameo::unified::external_ids::ExternalIds
+impl core::marker::Sync for cameo::unified::external_ids::ExternalIds
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalIds
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalIds
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalIds
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalIds
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalIds::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalIds::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalIds::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalIds::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalIds::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalIds where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalIds::Owned = T
+pub fn cameo::unified::external_ids::ExternalIds::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalIds::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalIds where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalIds where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalIds where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalIds where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalIds::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalIds where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalIds where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalIds::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalIds
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalIds
+#[non_exhaustive] pub struct cameo::unified::external_ids::ExternalMatch
+pub cameo::unified::external_ids::ExternalMatch::id: cameo::unified::media_id::MediaId
+pub cameo::unified::external_ids::ExternalMatch::kind: cameo::unified::external_ids::MatchKind
+impl cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::movie(cameo::unified::media_id::MediaId) -> Self
+pub fn cameo::unified::external_ids::ExternalMatch::new(cameo::unified::media_id::MediaId, cameo::unified::external_ids::MatchKind) -> Self
+pub fn cameo::unified::external_ids::ExternalMatch::tv_show(cameo::unified::media_id::MediaId) -> Self
+impl core::clone::Clone for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::clone(&self) -> cameo::unified::external_ids::ExternalMatch
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalMatch
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::eq(&self, &cameo::unified::external_ids::ExternalMatch) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalMatch
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalMatch
+impl core::marker::Send for cameo::unified::external_ids::ExternalMatch
+impl core::marker::Sync for cameo::unified::external_ids::ExternalMatch
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalMatch
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalMatch
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalMatch
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalMatch
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalMatch where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalMatch where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalMatch where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalMatch::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalMatch where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalMatch::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalMatch where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalMatch::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalMatch::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalMatch where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalMatch::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalMatch::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalMatch where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalMatch::Owned = T
+pub fn cameo::unified::external_ids::ExternalMatch::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalMatch::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalMatch where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalMatch where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalMatch where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalMatch where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalMatch::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalMatch where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalMatch where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalMatch::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalMatch
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalMatch
+pub struct cameo::unified::external_ids::UnknownExternalSource(pub alloc::string::String)
+impl core::clone::Clone for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::clone(&self) -> cameo::unified::external_ids::UnknownExternalSource
+impl core::cmp::Eq for cameo::unified::external_ids::UnknownExternalSource
+impl core::cmp::PartialEq for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::eq(&self, &cameo::unified::external_ids::UnknownExternalSource) -> bool
+impl core::error::Error for cameo::unified::external_ids::UnknownExternalSource
+impl core::fmt::Debug for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Freeze for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Send for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Sync for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Unpin for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::UnknownExternalSource
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::UnknownExternalSource
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::UnknownExternalSource
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::UnknownExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::UnknownExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::UnknownExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::UnknownExternalSource::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::UnknownExternalSource where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::UnknownExternalSource::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::UnknownExternalSource where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::UnknownExternalSource::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::UnknownExternalSource::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::UnknownExternalSource where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::UnknownExternalSource::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::UnknownExternalSource::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::UnknownExternalSource where T: core::clone::Clone
+pub type cameo::unified::external_ids::UnknownExternalSource::Owned = T
+pub fn cameo::unified::external_ids::UnknownExternalSource::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::UnknownExternalSource::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::unified::external_ids::UnknownExternalSource where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::unified::external_ids::UnknownExternalSource where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::UnknownExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::UnknownExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::UnknownExternalSource where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::UnknownExternalSource::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::UnknownExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::UnknownExternalSource::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::UnknownExternalSource
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::UnknownExternalSource
 pub mod cameo::unified::facade
 #[non_exhaustive] pub enum cameo::unified::facade::CameoClientError
 pub cameo::unified::facade::CameoClientError::NotConfigured
@@ -5818,6 +6198,7 @@ pub mod cameo::unified::traits
 #[non_exhaustive] pub enum cameo::unified::traits::Capability
 pub cameo::unified::traits::Capability::Details
 pub cameo::unified::traits::Capability::Discovery
+pub cameo::unified::traits::Capability::ExternalIds
 pub cameo::unified::traits::Capability::Recommendations
 pub cameo::unified::traits::Capability::Search
 pub cameo::unified::traits::Capability::Seasons
@@ -5906,6 +6287,11 @@ pub fn cameo::providers::tmdb::client::TmdbClient::top_rated_movies<'life0, 'asy
 pub fn cameo::providers::tmdb::client::TmdbClient::top_rated_tv_shows<'life0, 'async_trait>(&'life0 self, core::option::Option<u32>) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::trending_movies<'life0, 'async_trait>(&'life0 self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::trending_tv_shows<'life0, 'async_trait>(&'life0 self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
+pub trait cameo::unified::traits::ExternalIdProvider: cameo::unified::traits::Provider
+pub fn cameo::unified::traits::ExternalIdProvider::external_sources(&self) -> &[cameo::unified::external_ids::ExternalSource]
+pub fn cameo::unified::traits::ExternalIdProvider::find_by_external_id<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::external_ids::ExternalId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::unified::traits::ExternalIdProvider::movie_external_ids<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::unified::traits::ExternalIdProvider::tv_external_ids<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub trait cameo::unified::traits::MediaProvider: cameo::unified::traits::SearchProvider + cameo::unified::traits::DetailProvider + cameo::unified::traits::DiscoveryProvider
 impl<T> cameo::unified::traits::MediaProvider for T where T: cameo::unified::traits::SearchProvider + cameo::unified::traits::DetailProvider + cameo::unified::traits::DiscoveryProvider
 pub trait cameo::unified::traits::Provider: core::marker::Send + core::marker::Sync
@@ -6002,6 +6388,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoCli
 #[non_exhaustive] pub enum cameo::unified::Capability
 pub cameo::unified::Capability::Details
 pub cameo::unified::Capability::Discovery
+pub cameo::unified::Capability::ExternalIds
 pub cameo::unified::Capability::Recommendations
 pub cameo::unified::Capability::Search
 pub cameo::unified::Capability::Seasons
@@ -6057,6 +6444,76 @@ pub fn cameo::unified::traits::Capability::and<P, B, E>(self, P) -> tower_http::
 pub fn cameo::unified::traits::Capability::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::traits::Capability
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::traits::Capability
+#[non_exhaustive] pub enum cameo::unified::ExternalSource
+pub cameo::unified::ExternalSource::Imdb
+pub cameo::unified::ExternalSource::Mal
+pub cameo::unified::ExternalSource::Tvdb
+pub cameo::unified::ExternalSource::Wikidata
+impl cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::as_str(&self) -> &'static str
+impl core::clone::Clone for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::clone(&self) -> cameo::unified::external_ids::ExternalSource
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalSource
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::eq(&self, &cameo::unified::external_ids::ExternalSource) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::unified::external_ids::ExternalSource
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalSource
+impl core::str::traits::FromStr for cameo::unified::external_ids::ExternalSource
+pub type cameo::unified::external_ids::ExternalSource::Err = cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::from_str(&str) -> core::result::Result<Self, Self::Err>
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalSource
+impl core::marker::Send for cameo::unified::external_ids::ExternalSource
+impl core::marker::Sync for cameo::unified::external_ids::ExternalSource
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalSource
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalSource
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalSource
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalSource
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalSource::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalSource where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalSource::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalSource where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalSource::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalSource::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalSource where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalSource::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalSource::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalSource where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalSource::Owned = T
+pub fn cameo::unified::external_ids::ExternalSource::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalSource::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::unified::external_ids::ExternalSource where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalSource where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalSource where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalSource::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalSource where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalSource::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalSource
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalSource
 #[non_exhaustive] pub enum cameo::unified::Gender
 pub cameo::unified::Gender::Female
 pub cameo::unified::Gender::Male
@@ -6220,6 +6677,65 @@ pub fn cameo::unified::genre::Genre::and<P, B, E>(self, P) -> tower_http::follow
 pub fn cameo::unified::genre::Genre::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::genre::Genre
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::genre::Genre
+#[non_exhaustive] pub enum cameo::unified::MatchKind
+pub cameo::unified::MatchKind::Movie
+pub cameo::unified::MatchKind::TvShow
+impl core::clone::Clone for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::clone(&self) -> cameo::unified::external_ids::MatchKind
+impl core::cmp::Eq for cameo::unified::external_ids::MatchKind
+impl core::cmp::PartialEq for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::eq(&self, &cameo::unified::external_ids::MatchKind) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::unified::external_ids::MatchKind
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::MatchKind
+impl serde_core::ser::Serialize for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::MatchKind
+impl core::marker::Send for cameo::unified::external_ids::MatchKind
+impl core::marker::Sync for cameo::unified::external_ids::MatchKind
+impl core::marker::Unpin for cameo::unified::external_ids::MatchKind
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::MatchKind
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::MatchKind
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::MatchKind
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::MatchKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::MatchKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::MatchKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::MatchKind::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::MatchKind where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::MatchKind::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::MatchKind where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::MatchKind::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::MatchKind::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::MatchKind where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::MatchKind::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::MatchKind::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::MatchKind where T: core::clone::Clone
+pub type cameo::unified::external_ids::MatchKind::Owned = T
+pub fn cameo::unified::external_ids::MatchKind::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::MatchKind::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::external_ids::MatchKind where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::MatchKind where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::MatchKind where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::MatchKind where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::MatchKind::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::MatchKind where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::MatchKind where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::MatchKind::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::MatchKind
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::MatchKind
 pub enum cameo::unified::MediaIdParseError
 pub cameo::unified::MediaIdParseError::Empty(alloc::string::String)
 pub cameo::unified::MediaIdParseError::MissingSeparator(alloc::string::String)
@@ -6732,6 +7248,202 @@ pub fn cameo::unified::Creator::and<P, B, E>(self, P) -> tower_http::follow_redi
 pub fn cameo::unified::Creator::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::Creator
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::Creator
+#[non_exhaustive] pub struct cameo::unified::ExternalId
+pub cameo::unified::ExternalId::id: alloc::string::String
+pub cameo::unified::ExternalId::source: cameo::unified::external_ids::ExternalSource
+impl cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::as_u64(&self) -> core::option::Option<u64>
+pub fn cameo::unified::external_ids::ExternalId::imdb(impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::external_ids::ExternalId::mal(u64) -> Self
+pub fn cameo::unified::external_ids::ExternalId::new(cameo::unified::external_ids::ExternalSource, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::external_ids::ExternalId::tvdb(u64) -> Self
+pub fn cameo::unified::external_ids::ExternalId::wikidata(impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::clone(&self) -> cameo::unified::external_ids::ExternalId
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalId
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::eq(&self, &cameo::unified::external_ids::ExternalId) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalId
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalId
+impl core::marker::Send for cameo::unified::external_ids::ExternalId
+impl core::marker::Sync for cameo::unified::external_ids::ExternalId
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalId
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalId
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalId
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalId
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalId where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalId where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalId where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalId::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalId where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalId::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalId where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalId::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalId::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalId where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalId::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalId::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalId where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalId::Owned = T
+pub fn cameo::unified::external_ids::ExternalId::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalId::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::unified::external_ids::ExternalId where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalId where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalId where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalId where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalId where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalId::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalId where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalId where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalId::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalId
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalId
+#[non_exhaustive] pub struct cameo::unified::ExternalIds
+pub cameo::unified::ExternalIds::anilist: core::option::Option<u64>
+pub cameo::unified::ExternalIds::imdb: core::option::Option<alloc::string::String>
+pub cameo::unified::ExternalIds::mal: core::option::Option<u64>
+pub cameo::unified::ExternalIds::tmdb: core::option::Option<u64>
+pub cameo::unified::ExternalIds::tvdb: core::option::Option<u64>
+pub cameo::unified::ExternalIds::wikidata: core::option::Option<alloc::string::String>
+impl cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::get(&self, cameo::unified::external_ids::ExternalSource) -> core::option::Option<cameo::unified::external_ids::ExternalId>
+pub fn cameo::unified::external_ids::ExternalIds::new() -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_anilist(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_imdb(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_mal(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_tmdb(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_tvdb(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_wikidata(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::clone(&self) -> cameo::unified::external_ids::ExternalIds
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalIds
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::eq(&self, &cameo::unified::external_ids::ExternalIds) -> bool
+impl core::default::Default for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::default() -> cameo::unified::external_ids::ExternalIds
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalIds
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalIds
+impl core::marker::Send for cameo::unified::external_ids::ExternalIds
+impl core::marker::Sync for cameo::unified::external_ids::ExternalIds
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalIds
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalIds
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalIds
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalIds
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalIds::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalIds::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalIds::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalIds::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalIds::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalIds where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalIds::Owned = T
+pub fn cameo::unified::external_ids::ExternalIds::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalIds::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalIds where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalIds where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalIds where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalIds where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalIds::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalIds where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalIds where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalIds::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalIds
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalIds
+#[non_exhaustive] pub struct cameo::unified::ExternalMatch
+pub cameo::unified::ExternalMatch::id: cameo::unified::media_id::MediaId
+pub cameo::unified::ExternalMatch::kind: cameo::unified::external_ids::MatchKind
+impl cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::movie(cameo::unified::media_id::MediaId) -> Self
+pub fn cameo::unified::external_ids::ExternalMatch::new(cameo::unified::media_id::MediaId, cameo::unified::external_ids::MatchKind) -> Self
+pub fn cameo::unified::external_ids::ExternalMatch::tv_show(cameo::unified::media_id::MediaId) -> Self
+impl core::clone::Clone for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::clone(&self) -> cameo::unified::external_ids::ExternalMatch
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalMatch
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::eq(&self, &cameo::unified::external_ids::ExternalMatch) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalMatch
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalMatch
+impl core::marker::Send for cameo::unified::external_ids::ExternalMatch
+impl core::marker::Sync for cameo::unified::external_ids::ExternalMatch
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalMatch
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalMatch
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalMatch
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalMatch
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalMatch where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalMatch where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalMatch where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalMatch::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalMatch where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalMatch::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalMatch where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalMatch::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalMatch::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalMatch where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalMatch::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalMatch::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalMatch where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalMatch::Owned = T
+pub fn cameo::unified::external_ids::ExternalMatch::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalMatch::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalMatch where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalMatch where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalMatch where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalMatch where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalMatch::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalMatch where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalMatch where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalMatch::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalMatch
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalMatch
 pub struct cameo::unified::MediaId
 impl cameo::unified::media_id::MediaId
 pub fn cameo::unified::media_id::MediaId::anilist(u64) -> Self
@@ -7773,6 +8485,60 @@ pub fn cameo::unified::UnifiedWatchProviders::and<P, B, E>(self, P) -> tower_htt
 pub fn cameo::unified::UnifiedWatchProviders::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedWatchProviders
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedWatchProviders
+pub struct cameo::unified::UnknownExternalSource(pub alloc::string::String)
+impl core::clone::Clone for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::clone(&self) -> cameo::unified::external_ids::UnknownExternalSource
+impl core::cmp::Eq for cameo::unified::external_ids::UnknownExternalSource
+impl core::cmp::PartialEq for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::eq(&self, &cameo::unified::external_ids::UnknownExternalSource) -> bool
+impl core::error::Error for cameo::unified::external_ids::UnknownExternalSource
+impl core::fmt::Debug for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Freeze for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Send for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Sync for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Unpin for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::UnknownExternalSource
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::UnknownExternalSource
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::UnknownExternalSource
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::UnknownExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::UnknownExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::UnknownExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::UnknownExternalSource::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::UnknownExternalSource where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::UnknownExternalSource::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::UnknownExternalSource where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::UnknownExternalSource::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::UnknownExternalSource::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::UnknownExternalSource where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::UnknownExternalSource::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::UnknownExternalSource::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::UnknownExternalSource where T: core::clone::Clone
+pub type cameo::unified::external_ids::UnknownExternalSource::Owned = T
+pub fn cameo::unified::external_ids::UnknownExternalSource::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::UnknownExternalSource::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::unified::external_ids::UnknownExternalSource where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::unified::external_ids::UnknownExternalSource where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::UnknownExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::UnknownExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::UnknownExternalSource where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::UnknownExternalSource::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::UnknownExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::UnknownExternalSource::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::UnknownExternalSource
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::UnknownExternalSource
 pub trait cameo::unified::DetailProvider: cameo::unified::traits::Provider
 pub fn cameo::unified::DetailProvider::movie_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::unified::DetailProvider::person_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -7806,6 +8572,11 @@ pub fn cameo::providers::tmdb::client::TmdbClient::top_rated_movies<'life0, 'asy
 pub fn cameo::providers::tmdb::client::TmdbClient::top_rated_tv_shows<'life0, 'async_trait>(&'life0 self, core::option::Option<u32>) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::trending_movies<'life0, 'async_trait>(&'life0 self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::trending_tv_shows<'life0, 'async_trait>(&'life0 self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
+pub trait cameo::unified::ExternalIdProvider: cameo::unified::traits::Provider
+pub fn cameo::unified::ExternalIdProvider::external_sources(&self) -> &[cameo::unified::external_ids::ExternalSource]
+pub fn cameo::unified::ExternalIdProvider::find_by_external_id<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::external_ids::ExternalId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::unified::ExternalIdProvider::movie_external_ids<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::unified::ExternalIdProvider::tv_external_ids<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub trait cameo::unified::MediaProvider: cameo::unified::traits::SearchProvider + cameo::unified::traits::DetailProvider + cameo::unified::traits::DiscoveryProvider
 impl<T> cameo::unified::traits::MediaProvider for T where T: cameo::unified::traits::SearchProvider + cameo::unified::traits::DetailProvider + cameo::unified::traits::DiscoveryProvider
 pub trait cameo::unified::Provider: core::marker::Send + core::marker::Sync
@@ -8069,6 +8840,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoCli
 #[non_exhaustive] pub enum cameo::Capability
 pub cameo::Capability::Details
 pub cameo::Capability::Discovery
+pub cameo::Capability::ExternalIds
 pub cameo::Capability::Recommendations
 pub cameo::Capability::Search
 pub cameo::Capability::Seasons
@@ -8124,6 +8896,76 @@ pub fn cameo::unified::traits::Capability::and<P, B, E>(self, P) -> tower_http::
 pub fn cameo::unified::traits::Capability::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::traits::Capability
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::traits::Capability
+#[non_exhaustive] pub enum cameo::ExternalSource
+pub cameo::ExternalSource::Imdb
+pub cameo::ExternalSource::Mal
+pub cameo::ExternalSource::Tvdb
+pub cameo::ExternalSource::Wikidata
+impl cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::as_str(&self) -> &'static str
+impl core::clone::Clone for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::clone(&self) -> cameo::unified::external_ids::ExternalSource
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalSource
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::eq(&self, &cameo::unified::external_ids::ExternalSource) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::unified::external_ids::ExternalSource
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalSource
+impl core::str::traits::FromStr for cameo::unified::external_ids::ExternalSource
+pub type cameo::unified::external_ids::ExternalSource::Err = cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::from_str(&str) -> core::result::Result<Self, Self::Err>
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalSource
+impl core::marker::Send for cameo::unified::external_ids::ExternalSource
+impl core::marker::Sync for cameo::unified::external_ids::ExternalSource
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalSource
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalSource
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalSource
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalSource
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalSource::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalSource where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalSource::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalSource where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalSource::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalSource::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalSource where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalSource::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalSource::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalSource where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalSource::Owned = T
+pub fn cameo::unified::external_ids::ExternalSource::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalSource::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::unified::external_ids::ExternalSource where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalSource where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalSource where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalSource::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalSource
+pub fn cameo::unified::external_ids::ExternalSource::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalSource where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalSource::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalSource::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalSource
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalSource
 #[non_exhaustive] pub enum cameo::Gender
 pub cameo::Gender::Female
 pub cameo::Gender::Male
@@ -8287,6 +9129,65 @@ pub fn cameo::unified::genre::Genre::and<P, B, E>(self, P) -> tower_http::follow
 pub fn cameo::unified::genre::Genre::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::genre::Genre
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::genre::Genre
+#[non_exhaustive] pub enum cameo::MatchKind
+pub cameo::MatchKind::Movie
+pub cameo::MatchKind::TvShow
+impl core::clone::Clone for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::clone(&self) -> cameo::unified::external_ids::MatchKind
+impl core::cmp::Eq for cameo::unified::external_ids::MatchKind
+impl core::cmp::PartialEq for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::eq(&self, &cameo::unified::external_ids::MatchKind) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::unified::external_ids::MatchKind
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::MatchKind
+impl serde_core::ser::Serialize for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::MatchKind
+impl core::marker::Send for cameo::unified::external_ids::MatchKind
+impl core::marker::Sync for cameo::unified::external_ids::MatchKind
+impl core::marker::Unpin for cameo::unified::external_ids::MatchKind
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::MatchKind
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::MatchKind
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::MatchKind
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::MatchKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::MatchKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::MatchKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::MatchKind::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::MatchKind where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::MatchKind::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::MatchKind where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::MatchKind::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::MatchKind::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::MatchKind where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::MatchKind::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::MatchKind::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::MatchKind where T: core::clone::Clone
+pub type cameo::unified::external_ids::MatchKind::Owned = T
+pub fn cameo::unified::external_ids::MatchKind::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::MatchKind::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::external_ids::MatchKind where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::MatchKind where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::MatchKind where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::MatchKind where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::MatchKind::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::MatchKind
+pub fn cameo::unified::external_ids::MatchKind::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::MatchKind where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::MatchKind where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::MatchKind::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::MatchKind::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::MatchKind
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::MatchKind
 #[non_exhaustive] pub enum cameo::MediaType
 pub cameo::MediaType::Movie
 pub cameo::MediaType::Person
@@ -9398,6 +10299,202 @@ pub fn cameo::unified::Creator::and<P, B, E>(self, P) -> tower_http::follow_redi
 pub fn cameo::unified::Creator::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::Creator
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::Creator
+#[non_exhaustive] pub struct cameo::ExternalId
+pub cameo::ExternalId::id: alloc::string::String
+pub cameo::ExternalId::source: cameo::unified::external_ids::ExternalSource
+impl cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::as_u64(&self) -> core::option::Option<u64>
+pub fn cameo::unified::external_ids::ExternalId::imdb(impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::external_ids::ExternalId::mal(u64) -> Self
+pub fn cameo::unified::external_ids::ExternalId::new(cameo::unified::external_ids::ExternalSource, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::external_ids::ExternalId::tvdb(u64) -> Self
+pub fn cameo::unified::external_ids::ExternalId::wikidata(impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::clone(&self) -> cameo::unified::external_ids::ExternalId
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalId
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::eq(&self, &cameo::unified::external_ids::ExternalId) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalId
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalId
+impl core::marker::Send for cameo::unified::external_ids::ExternalId
+impl core::marker::Sync for cameo::unified::external_ids::ExternalId
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalId
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalId
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalId
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalId
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalId where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalId where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalId where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalId::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalId where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalId::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalId where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalId::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalId::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalId where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalId::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalId::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalId where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalId::Owned = T
+pub fn cameo::unified::external_ids::ExternalId::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalId::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::unified::external_ids::ExternalId where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalId where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalId where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalId where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalId where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalId::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalId
+pub fn cameo::unified::external_ids::ExternalId::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalId where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalId where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalId::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalId::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalId
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalId
+#[non_exhaustive] pub struct cameo::ExternalIds
+pub cameo::ExternalIds::anilist: core::option::Option<u64>
+pub cameo::ExternalIds::imdb: core::option::Option<alloc::string::String>
+pub cameo::ExternalIds::mal: core::option::Option<u64>
+pub cameo::ExternalIds::tmdb: core::option::Option<u64>
+pub cameo::ExternalIds::tvdb: core::option::Option<u64>
+pub cameo::ExternalIds::wikidata: core::option::Option<alloc::string::String>
+impl cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::get(&self, cameo::unified::external_ids::ExternalSource) -> core::option::Option<cameo::unified::external_ids::ExternalId>
+pub fn cameo::unified::external_ids::ExternalIds::new() -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_anilist(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_imdb(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_mal(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_tmdb(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_tvdb(self, u64) -> Self
+pub fn cameo::unified::external_ids::ExternalIds::with_wikidata(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::clone(&self) -> cameo::unified::external_ids::ExternalIds
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalIds
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::eq(&self, &cameo::unified::external_ids::ExternalIds) -> bool
+impl core::default::Default for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::default() -> cameo::unified::external_ids::ExternalIds
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalIds
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalIds
+impl core::marker::Send for cameo::unified::external_ids::ExternalIds
+impl core::marker::Sync for cameo::unified::external_ids::ExternalIds
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalIds
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalIds
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalIds
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalIds
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalIds::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalIds::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalIds::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalIds where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalIds::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalIds::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalIds where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalIds::Owned = T
+pub fn cameo::unified::external_ids::ExternalIds::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalIds::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalIds where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalIds where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalIds where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalIds where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalIds::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalIds
+pub fn cameo::unified::external_ids::ExternalIds::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalIds where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalIds where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalIds::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalIds::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalIds
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalIds
+#[non_exhaustive] pub struct cameo::ExternalMatch
+pub cameo::ExternalMatch::id: cameo::unified::media_id::MediaId
+pub cameo::ExternalMatch::kind: cameo::unified::external_ids::MatchKind
+impl cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::movie(cameo::unified::media_id::MediaId) -> Self
+pub fn cameo::unified::external_ids::ExternalMatch::new(cameo::unified::media_id::MediaId, cameo::unified::external_ids::MatchKind) -> Self
+pub fn cameo::unified::external_ids::ExternalMatch::tv_show(cameo::unified::media_id::MediaId) -> Self
+impl core::clone::Clone for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::clone(&self) -> cameo::unified::external_ids::ExternalMatch
+impl core::cmp::Eq for cameo::unified::external_ids::ExternalMatch
+impl core::cmp::PartialEq for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::eq(&self, &cameo::unified::external_ids::ExternalMatch) -> bool
+impl core::fmt::Debug for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::ExternalMatch
+impl serde_core::ser::Serialize for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::external_ids::ExternalMatch
+impl core::marker::Send for cameo::unified::external_ids::ExternalMatch
+impl core::marker::Sync for cameo::unified::external_ids::ExternalMatch
+impl core::marker::Unpin for cameo::unified::external_ids::ExternalMatch
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::ExternalMatch
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::ExternalMatch
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::ExternalMatch
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::ExternalMatch where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalMatch where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::ExternalMatch where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::ExternalMatch::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::ExternalMatch where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::ExternalMatch::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::ExternalMatch where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::ExternalMatch::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::ExternalMatch::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::ExternalMatch where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::ExternalMatch::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::ExternalMatch::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::ExternalMatch where T: core::clone::Clone
+pub type cameo::unified::external_ids::ExternalMatch::Owned = T
+pub fn cameo::unified::external_ids::ExternalMatch::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::ExternalMatch::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::external_ids::ExternalMatch where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::ExternalMatch where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::ExternalMatch where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::ExternalMatch where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::ExternalMatch::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::ExternalMatch
+pub fn cameo::unified::external_ids::ExternalMatch::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::external_ids::ExternalMatch where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::ExternalMatch where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::ExternalMatch::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::ExternalMatch::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::ExternalMatch
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::ExternalMatch
 pub struct cameo::MediaId
 impl cameo::unified::media_id::MediaId
 pub fn cameo::unified::media_id::MediaId::anilist(u64) -> Self
@@ -10771,6 +11868,60 @@ pub fn cameo::unified::UnifiedWatchProviders::and<P, B, E>(self, P) -> tower_htt
 pub fn cameo::unified::UnifiedWatchProviders::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedWatchProviders
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedWatchProviders
+pub struct cameo::UnknownExternalSource(pub alloc::string::String)
+impl core::clone::Clone for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::clone(&self) -> cameo::unified::external_ids::UnknownExternalSource
+impl core::cmp::Eq for cameo::unified::external_ids::UnknownExternalSource
+impl core::cmp::PartialEq for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::eq(&self, &cameo::unified::external_ids::UnknownExternalSource) -> bool
+impl core::error::Error for cameo::unified::external_ids::UnknownExternalSource
+impl core::fmt::Debug for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Freeze for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Send for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Sync for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::Unpin for cameo::unified::external_ids::UnknownExternalSource
+impl core::marker::UnsafeUnpin for cameo::unified::external_ids::UnknownExternalSource
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::external_ids::UnknownExternalSource
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::external_ids::UnknownExternalSource
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::external_ids::UnknownExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::UnknownExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::external_ids::UnknownExternalSource where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::equivalent(&self, &K) -> bool
+pub fn cameo::unified::external_ids::UnknownExternalSource::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::external_ids::UnknownExternalSource where U: core::convert::From<T>
+pub fn cameo::unified::external_ids::UnknownExternalSource::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::external_ids::UnknownExternalSource where U: core::convert::Into<T>
+pub type cameo::unified::external_ids::UnknownExternalSource::Error = core::convert::Infallible
+pub fn cameo::unified::external_ids::UnknownExternalSource::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::external_ids::UnknownExternalSource where U: core::convert::TryFrom<T>
+pub type cameo::unified::external_ids::UnknownExternalSource::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::external_ids::UnknownExternalSource::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::external_ids::UnknownExternalSource where T: core::clone::Clone
+pub type cameo::unified::external_ids::UnknownExternalSource::Owned = T
+pub fn cameo::unified::external_ids::UnknownExternalSource::clone_into(&self, &mut T)
+pub fn cameo::unified::external_ids::UnknownExternalSource::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::unified::external_ids::UnknownExternalSource where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::unified::external_ids::UnknownExternalSource where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::external_ids::UnknownExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::external_ids::UnknownExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::external_ids::UnknownExternalSource where T: core::clone::Clone
+pub unsafe fn cameo::unified::external_ids::UnknownExternalSource::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::external_ids::UnknownExternalSource
+pub fn cameo::unified::external_ids::UnknownExternalSource::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::external_ids::UnknownExternalSource where T: ?core::marker::Sized
+pub fn cameo::unified::external_ids::UnknownExternalSource::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::external_ids::UnknownExternalSource::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::UnknownExternalSource
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::UnknownExternalSource
 pub trait cameo::CacheBackend: core::marker::Send + core::marker::Sync + 'static
 pub fn cameo::CacheBackend::clear<'life0, 'async_trait>(&'life0 self) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<(), cameo::cache::backend::CacheError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
 pub fn cameo::CacheBackend::get<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::cache::key::CacheKey) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<core::option::Option<serde_json::value::Value>, cameo::cache::backend::CacheError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -10814,6 +11965,11 @@ pub fn cameo::providers::tmdb::client::TmdbClient::top_rated_movies<'life0, 'asy
 pub fn cameo::providers::tmdb::client::TmdbClient::top_rated_tv_shows<'life0, 'async_trait>(&'life0 self, core::option::Option<u32>) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::trending_movies<'life0, 'async_trait>(&'life0 self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::trending_tv_shows<'life0, 'async_trait>(&'life0 self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
+pub trait cameo::ExternalIdProvider: cameo::unified::traits::Provider
+pub fn cameo::ExternalIdProvider::external_sources(&self) -> &[cameo::unified::external_ids::ExternalSource]
+pub fn cameo::ExternalIdProvider::find_by_external_id<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::external_ids::ExternalId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::ExternalIdProvider::movie_external_ids<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::ExternalIdProvider::tv_external_ids<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub trait cameo::MediaProvider: cameo::unified::traits::SearchProvider + cameo::unified::traits::DetailProvider + cameo::unified::traits::DiscoveryProvider
 impl<T> cameo::unified::traits::MediaProvider for T where T: cameo::unified::traits::SearchProvider + cameo::unified::traits::DetailProvider + cameo::unified::traits::DiscoveryProvider
 pub trait cameo::Provider: core::marker::Send + core::marker::Sync
