@@ -9,7 +9,7 @@
 
 ## Overview
 
-cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the [TMDB API](https://developer.themoviedb.org/) and [AniList GraphQL API](https://anilist.gitbook.io/anilist-apiv2-docs/) behind a unified, ergonomic interface with type-safe models, transparent SQLite caching, and first-class pagination support.
+cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the [TMDB API](https://developer.themoviedb.org/) and [AniList GraphQL API](https://anilist.gitbook.io/anilist-apiv2-docs/) behind a unified, ergonomic interface with type-safe models, cross-database id mapping (IMDb, TVDB, MyAnimeList, Wikidata), transparent SQLite caching, and first-class pagination support.
 
 ## Installation
 
@@ -64,7 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```
 CameoClient (unified facade)
-├── SearchProvider / DetailProvider / DiscoveryProvider traits
+├── SearchProvider / DetailProvider / DiscoveryProvider / ExternalIdProvider / … traits
 ├── Cache layer (optional — SqliteCache or custom CacheBackend)
 ├── TmdbClient
 │   └── Generated progenitor client (152 TMDB API operations)

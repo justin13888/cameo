@@ -4671,6 +4671,10 @@ impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
@@ -4722,6 +4726,7 @@ impl cameo::unified::facade::CameoClientBuilder
 pub fn cameo::unified::facade::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::unified::facade::CameoClientError>
 pub fn cameo::unified::facade::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
+pub fn cameo::unified::facade::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::RecommendationProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SearchProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SeasonProvider>) -> Self
@@ -7031,6 +7036,10 @@ impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
@@ -7082,6 +7091,7 @@ impl cameo::unified::facade::CameoClientBuilder
 pub fn cameo::unified::facade::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::unified::facade::CameoClientError>
 pub fn cameo::unified::facade::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
+pub fn cameo::unified::facade::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::RecommendationProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SearchProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SeasonProvider>) -> Self
@@ -10100,6 +10110,10 @@ impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
@@ -10151,6 +10165,7 @@ impl cameo::unified::facade::CameoClientBuilder
 pub fn cameo::unified::facade::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::unified::facade::CameoClientError>
 pub fn cameo::unified::facade::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
+pub fn cameo::unified::facade::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::RecommendationProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SearchProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SeasonProvider>) -> Self

@@ -67,8 +67,8 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `movie_watch_providers` | — | ✓ | ✓ (facade) | — |
 | `tv_watch_providers` | — | ✓ | — | — |
 | `movie_external_ids` | — | ✓ | — | — |
-| `tv_external_ids` | — | ✓ | — | — |
-| `find_by_external_id` | — | ✓ | — | — |
+| `tv_external_ids` | — | ✓ | ✓ (facade) | — |
+| `find_by_external_id` | — | ✓ | ✓ (facade) | — |
 | `movie_genres` | — | ✓ | — | — |
 | `tv_genres` | — | ✓ | — | — |
 | `movie_images` | — | ✓ | — | — |
@@ -95,7 +95,7 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `external_ids` | — | ✓ |
 | `find_by_mal_id` | — | ✓ |
 
-### CameoClient Facade (22 trait methods)
+### CameoClient Facade (24 trait methods)
 
 | Trait | Method | Wiremock | Cache |
 |---|---|---|---|
@@ -120,6 +120,9 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `SeasonProvider` | `episode_details` | — | — |
 | `WatchProviderTrait` | `movie_watch_providers` | ✓ (facade) | — |
 | `WatchProviderTrait` | `tv_watch_providers` | — | — |
+| `ExternalIdProvider` | `movie_external_ids` | ✓ (registry stub) | — (not cached) |
+| `ExternalIdProvider` | `tv_external_ids` | ✓ (facade) | — (not cached) |
+| `ExternalIdProvider` | `find_by_external_id` | ✓ (facade, fan-out/merge via registry stubs) | — (not cached) |
 
 ### CameoClient Cache API (9 methods)
 
@@ -197,6 +200,6 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 | Unit | 69 |
 | Wiremock (TMDB) | 41 |
 | Wiremock (AniList) | 34 |
-| Facade / Cache | 16 |
+| Facade / Cache | 24 |
 | Live (TMDB) | 8 |
-| **Total** | **~168** |
+| **Total** | **~176** |

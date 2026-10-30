@@ -92,9 +92,13 @@ let results = client.search_movies("Dune", None).await?;      // default priorit
 let tvdb = client.search_movies_with("tvdb", "Dune", None).await?; // explicit
 ```
 
-Detail/season/recommendation/watch calls route by the origin of the `MediaId`
-you pass, so ids your provider minted come back to it automatically. A capability
-no configured provider supports yields `CameoClientError::Unsupported`.
+Detail/season/recommendation/watch/external-id calls route by the origin of
+the `MediaId` you pass, so ids your provider minted come back to it
+automatically. `find_by_external_id` instead fans out to every
+`ExternalIdProvider` whose `external_sources()` lists the id's source
+(register yours with `register_external_id_provider`) and merges the matches in
+priority order. A capability no configured provider supports yields
+`CameoClientError::Unsupported`.
 
 [`Provider`]: https://docs.rs/cameo/latest/cameo/trait.Provider.html
 [`ProviderError`]: https://docs.rs/cameo/latest/cameo/enum.ProviderError.html
