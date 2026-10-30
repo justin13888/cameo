@@ -122,12 +122,37 @@ impl From<crate::providers::anilist::AniListError> for ProviderError {
                     ProviderError::RateLimited { retry_after }
                 } else if errors.iter().any(|e| e.status == Some(404)) {
                     ProviderError::NotFound
+                } else if let Some(status) = most_severe_gql_status(errors) {
+                    let message = errors
+                        .iter()
+                        .map(|e| e.message.as_str())
+                        .collect::<Vec<_>>()
+                        .join("; ");
+                    match status {
+                        401 | 403 => ProviderError::Auth(message),
+                        _ => ProviderError::Api { status, message },
+                    }
                 } else {
                     ProviderError::Other(err.to_string())
                 }
             }
         }
     }
+}
+
+/// The most severe HTTP-error status among AniList GraphQL errors: the
+/// highest `4xx`/`5xx` value (so `5xx` outranks `4xx`). Statuses outside that
+/// range (e.g. the `200` AniList attaches to non-fatal errors) are ignored.
+#[cfg(feature = "anilist")]
+fn most_severe_gql_status(
+    errors: &[crate::providers::anilist::error::AniListGqlError],
+) -> Option<u16> {
+    errors
+        .iter()
+        .filter_map(|e| e.status)
+        .filter_map(|s| u16::try_from(s).ok())
+        .filter(|s| (400..=599).contains(s))
+        .max()
 }
 
 #[cfg(test)]
@@ -214,6 +239,76 @@ mod tests {
         assert!(matches!(
             ProviderError::from(AniListError::InvalidConfig("x".into())),
             ProviderError::InvalidInput(_)
+        ));
+    }
+
+    #[cfg(feature = "anilist")]
+    fn gql(errors: serde_json::Value) -> crate::providers::anilist::AniListError {
+        crate::providers::anilist::AniListError::GraphQL {
+            errors: serde_json::from_value(errors).expect("valid GraphQL error fixture"),
+            retry_after: None,
+        }
+    }
+
+    #[cfg(feature = "anilist")]
+    #[test]
+    fn maps_anilist_graphql_5xx_to_api() {
+        let err = ProviderError::from(gql(serde_json::json!([
+            { "message": "Bad input", "status": 400 },
+            { "message": "Internal", "status": 500 }
+        ])));
+        match err {
+            ProviderError::Api { status, message } => {
+                assert_eq!(status, 500, "5xx outranks 4xx");
+                assert_eq!(message, "Bad input; Internal");
+            }
+            other => panic!("expected Api, got {other:?}"),
+        }
+    }
+
+    #[cfg(feature = "anilist")]
+    #[test]
+    fn maps_anilist_graphql_special_statuses() {
+        assert!(matches!(
+            ProviderError::from(gql(serde_json::json!([
+                { "message": "Internal", "status": 500 },
+                { "message": "Too Many Requests.", "status": 429 }
+            ]))),
+            ProviderError::RateLimited { .. }
+        ));
+        assert!(matches!(
+            ProviderError::from(gql(serde_json::json!([
+                { "message": "Not Found.", "status": 404 }
+            ]))),
+            ProviderError::NotFound
+        ));
+        assert!(matches!(
+            ProviderError::from(gql(serde_json::json!([
+                { "message": "Invalid token", "status": 401 }
+            ]))),
+            ProviderError::Auth(_)
+        ));
+        assert!(matches!(
+            ProviderError::from(gql(serde_json::json!([
+                { "message": "Forbidden", "status": 403 }
+            ]))),
+            ProviderError::Auth(_)
+        ));
+        // A 5xx outranks an auth status.
+        assert!(matches!(
+            ProviderError::from(gql(serde_json::json!([
+                { "message": "Forbidden", "status": 403 },
+                { "message": "Internal", "status": 502 }
+            ]))),
+            ProviderError::Api { status: 502, .. }
+        ));
+        // No HTTP-error status at all stays `Other`.
+        assert!(matches!(
+            ProviderError::from(gql(serde_json::json!([
+                { "message": "no status" },
+                { "message": "non-fatal", "status": 200 }
+            ]))),
+            ProviderError::Other(_)
         ));
     }
 }

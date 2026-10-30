@@ -25,6 +25,9 @@ pub struct AniListGqlError {
     pub message: String,
     /// Machine-readable status code (mirrors the HTTP status; `404` for
     /// not-found, `429` for rate limiting, etc.).
+    ///
+    /// When AniList omits it on a non-2xx response, the client fills it in
+    /// from the HTTP status.
     #[serde(default)]
     pub status: Option<i64>,
     /// Query locations the error refers to.
@@ -58,7 +61,9 @@ pub enum AniListError {
         message: String,
     },
 
-    /// One or more GraphQL errors were returned with no usable `data`.
+    /// One or more GraphQL errors were returned with no usable `data` — the
+    /// root field the query needed (e.g. `Media` or `Page`) was null or
+    /// missing. Errors without a `status` inherit a non-2xx HTTP status.
     ///
     /// Carries the `Retry-After` delay so a retry layer can honor rate limits
     /// signaled via GraphQL errors (AniList returns `429` this way).
