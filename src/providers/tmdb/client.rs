@@ -10,6 +10,7 @@ use crate::{
     generated::tmdb::{self, types},
     providers::rate_limit::RateLimiter,
     unified::{
+        external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         genre::Genre,
         media_id::MediaId,
         models::{
@@ -674,6 +675,86 @@ impl TmdbClient {
         })
     }
 
+    // ── External IDs ──
+
+    /// Get the external ids (IMDb, Wikidata) of a movie.
+    ///
+    /// The returned [`ExternalIds`] also carries `tmdb: Some(movie_id)`. TMDB
+    /// does not track TheTVDB or MyAnimeList ids for movies, so those stay
+    /// `None`; empty strings TMDB sends for unknown ids are reported as `None`.
+    #[tracing::instrument(skip(self))]
+    pub async fn movie_external_ids(&self, movie_id: i32) -> Result<ExternalIds, TmdbError> {
+        let body = self
+            .execute(|| self.inner.movie_external_ids(movie_id))
+            .await?;
+        let mut ids = ExternalIds::new().with_tmdb(movie_id as u64);
+        ids.imdb = non_empty(body.imdb_id);
+        // The spec leaves the movie `wikidata_id` untyped; it is a string or null.
+        ids.wikidata = non_empty(
+            body.wikidata_id
+                .as_ref()
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_owned),
+        );
+        Ok(ids)
+    }
+
+    /// Get the external ids (IMDb, TheTVDB, Wikidata) of a TV series.
+    ///
+    /// The returned [`ExternalIds`] also carries `tmdb: Some(series_id)`.
+    #[tracing::instrument(skip(self))]
+    pub async fn tv_external_ids(&self, series_id: i32) -> Result<ExternalIds, TmdbError> {
+        let body = self
+            .execute(|| self.inner.tv_series_external_ids(series_id))
+            .await?;
+        let mut ids = ExternalIds::new().with_tmdb(series_id as u64);
+        ids.imdb = non_empty(body.imdb_id);
+        ids.tvdb = body.tvdb_id.and_then(|n| u64::try_from(n).ok());
+        ids.wikidata = non_empty(body.wikidata_id);
+        Ok(ids)
+    }
+
+    /// Find TMDB movies and TV shows by an IMDb, TheTVDB, or Wikidata id
+    /// (TMDB's `/find` endpoint).
+    ///
+    /// Only movie and TV-series results are returned (movies first); TMDB's
+    /// person, season, and episode matches are dropped because they are not
+    /// titles a [`MatchKind`](crate::unified::MatchKind) can describe. TV
+    /// results with a missing or malformed `id` are skipped. No match yields
+    /// an empty `Vec`.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::UnsupportedSource`] for MyAnimeList ids (TMDB does not
+    /// index them), plus the usual request errors.
+    #[tracing::instrument(skip(self))]
+    pub async fn find_by_external_id(
+        &self,
+        id: &ExternalId,
+    ) -> Result<Vec<ExternalMatch>, TmdbError> {
+        let source = match id.source {
+            ExternalSource::Imdb => types::FindByIdExternalSource::ImdbId,
+            ExternalSource::Tvdb => types::FindByIdExternalSource::TvdbId,
+            ExternalSource::Wikidata => types::FindByIdExternalSource::WikidataId,
+            other => return Err(TmdbError::UnsupportedSource(other)),
+        };
+        let body = self
+            .execute(|| self.inner.find_by_id(&id.id, source, self.language()))
+            .await?;
+        let movies = body
+            .movie_results
+            .iter()
+            .filter_map(|m| m.id.and_then(|n| u64::try_from(n).ok()))
+            .map(|n| ExternalMatch::movie(MediaId::tmdb(n)));
+        // `tv_results` is untyped in the spec; only the `id` is needed.
+        let shows = body
+            .tv_results
+            .iter()
+            .filter_map(|v| v.get("id").and_then(serde_json::Value::as_u64))
+            .map(|n| ExternalMatch::tv_show(MediaId::tmdb(n)));
+        Ok(movies.chain(shows).collect())
+    }
+
     // ── Genres ──
 
     /// Get the list of official movie genres.
@@ -790,6 +871,11 @@ fn unified_services(list: Vec<WatchProviderService>) -> Vec<UnifiedStreamingServ
             })
         })
         .collect()
+}
+
+/// Treat an empty string (TMDB's placeholder for an unknown external id) as absent.
+fn non_empty(value: Option<String>) -> Option<String> {
+    value.filter(|s| !s.is_empty())
 }
 
 /// Parse TMDB watch-provider results (a per-country object) into unified entries

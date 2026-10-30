@@ -38,7 +38,7 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 
 ## Coverage Matrix
 
-### TmdbClient (29 methods)
+### TmdbClient (32 methods)
 
 | Method | Unit | Wiremock | Facade | Live |
 |---|---|---|---|---|
@@ -66,6 +66,9 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `tv_episode_details` | — | ✓ | — | — |
 | `movie_watch_providers` | — | ✓ | ✓ (facade) | — |
 | `tv_watch_providers` | — | ✓ | — | — |
+| `movie_external_ids` | — | ✓ | — | — |
+| `tv_external_ids` | — | ✓ | — | — |
+| `find_by_external_id` | — | ✓ | — | — |
 | `movie_genres` | — | ✓ | — | — |
 | `tv_genres` | — | ✓ | — | — |
 | `movie_images` | — | ✓ | — | — |
@@ -164,6 +167,10 @@ All fixtures live in `tests/fixtures/` and are trimmed to 1–2 results for spee
 | `tv_genres_response.json` | `/3/genre/tv/list` |
 | `tv_episode_details_response.json` | `/3/tv/{id}/season/{n}/episode/{n}` |
 | `tv_watch_providers_response.json` | `/3/tv/{id}/watch/providers` |
+| `movie_external_ids_response.json` | `/3/movie/{id}/external_ids` |
+| `tv_external_ids_response.json` | `/3/tv/{id}/external_ids` |
+| `find_by_imdb_id_response.json` | `/3/find/{id}?external_source=imdb_id` |
+| `find_by_tvdb_id_response.json` | `/3/find/{id}?external_source=tvdb_id` |
 | `trending_tv_response.json` | `/3/trending/tv/week` |
 | `discover_tv_response.json` | `/3/discover/tv` |
 
@@ -186,8 +193,8 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 | Layer | Count |
 |---|---|
 | Unit | 69 |
-| Wiremock (TMDB) | 33 |
+| Wiremock (TMDB) | 41 |
 | Wiremock (AniList) | 25 |
 | Facade / Cache | 16 |
 | Live (TMDB) | 8 |
-| **Total** | **~151** |
+| **Total** | **~159** |

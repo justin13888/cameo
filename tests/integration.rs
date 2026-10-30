@@ -30,6 +30,8 @@ mod integration {
     #[cfg(feature = "tmdb")]
     mod tmdb_error_scenarios_test;
     #[cfg(feature = "tmdb")]
+    mod tmdb_external_ids_test;
+    #[cfg(feature = "tmdb")]
     mod tmdb_movies_test;
     #[cfg(feature = "tmdb")]
     mod tmdb_people_test;
