@@ -50,9 +50,12 @@ fn anilist_client_is_a_dyn_provider() {
     use cameo::providers::anilist::{AniListClient, AniListConfig};
 
     let client = AniListClient::new(AniListConfig::new()).unwrap();
-    let search: Arc<dyn SearchProvider> = Arc::new(client);
+    let search: Arc<dyn SearchProvider> = Arc::new(client.clone());
+    let external: Arc<dyn cameo::ExternalIdProvider> = Arc::new(client);
 
     assert_eq!(search.id(), "anilist");
+    assert!(search.supports(Capability::ExternalIds));
+    assert_eq!(external.external_sources(), &[cameo::ExternalSource::Mal]);
     assert!(search.supports(Capability::Search));
     assert!(search.supports(Capability::Discovery));
     // AniList does not implement recommendations / seasons / watch availability.

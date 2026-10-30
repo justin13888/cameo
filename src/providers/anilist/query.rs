@@ -99,6 +99,32 @@ query MediaDetails($id: Int!) {
 }
 "#;
 
+/// Fetch only the ids of a single anime by AniList ID — a cheap query for
+/// external-id lookups that skips the full detail selection.
+///
+/// Variables: `$id: Int!`.
+pub const MEDIA_EXTERNAL_IDS: &str = r#"
+query MediaExternalIds($id: Int!) {
+  Media(id: $id, type: ANIME) {
+    id
+    idMal
+  }
+}
+"#;
+
+/// Find a single anime by its MyAnimeList ID, returning its AniList id and
+/// format (to tell movies from series).
+///
+/// Variables: `$idMal: Int!`.
+pub const MEDIA_BY_MAL_ID: &str = r#"
+query MediaByMalId($idMal: Int!) {
+  Media(idMal: $idMal, type: ANIME) {
+    id
+    format
+  }
+}
+"#;
+
 /// Search staff (real people) by name.
 ///
 /// Variables: `$query: String`, `$page: Int`, `$perPage: Int`.
@@ -146,6 +172,8 @@ mod tests {
         ("LIST_POPULAR_ANIME", LIST_POPULAR_ANIME),
         ("LIST_TOP_SCORED_ANIME", LIST_TOP_SCORED_ANIME),
         ("MEDIA_DETAILS", MEDIA_DETAILS),
+        ("MEDIA_EXTERNAL_IDS", MEDIA_EXTERNAL_IDS),
+        ("MEDIA_BY_MAL_ID", MEDIA_BY_MAL_ID),
         ("SEARCH_STAFF", SEARCH_STAFF),
         ("STAFF_DETAILS", STAFF_DETAILS),
     ];
@@ -207,6 +235,14 @@ mod tests {
             !MEDIA_DETAILS.contains("season"),
             "details still requests season*"
         );
+        // `idMal` is only read by the external-id lookup, never by the list or
+        // detail conversions.
+        for q in LIST_QUERIES
+            .iter()
+            .chain([&MEDIA_DETAILS, &MEDIA_BY_MAL_ID])
+        {
+            assert!(!q.contains("  idMal"), "query selects unused idMal");
+        }
         assert!(
             !SEARCH_STAFF.contains("languageV2"),
             "staff search requests languageV2"

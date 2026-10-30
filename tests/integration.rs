@@ -5,6 +5,8 @@ mod integration {
     #[cfg(feature = "anilist")]
     mod anilist_discovery_test;
     #[cfg(feature = "anilist")]
+    mod anilist_external_ids_test;
+    #[cfg(feature = "anilist")]
     mod anilist_search_test;
     #[cfg(all(feature = "cache", feature = "tmdb"))]
     mod cache_integration_test;
