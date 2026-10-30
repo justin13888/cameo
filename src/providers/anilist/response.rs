@@ -4,6 +4,18 @@ use serde::Deserialize;
 
 use super::error::AniListGqlError;
 
+/// Deserialize a GraphQL `[String]` list, dropping `null` entries.
+///
+/// AniList's schema allows null items in string lists such as `synonyms`; one
+/// null must not fail the whole response.
+fn strings_skipping_nulls<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let items: Option<Vec<Option<String>>> = Option::deserialize(deserializer)?;
+    Ok(items.map(|v| v.into_iter().flatten().collect()))
+}
+
 // ── GraphQL envelope ──────────────────────────────────────────────────────────
 
 /// Top-level GraphQL response wrapper.
@@ -83,6 +95,7 @@ pub struct AniListMedia {
     pub id: i32,
     pub title: Option<AniListTitle>,
     /// Alternative titles / aliases (abbreviations, other-language titles).
+    #[serde(default, deserialize_with = "strings_skipping_nulls")]
     pub synonyms: Option<Vec<String>>,
     /// Synopsis (HTML stripped if `asHtml: false` in query).
     pub description: Option<String>,
@@ -112,6 +125,7 @@ pub struct AniListMediaDetail {
     pub id: i32,
     pub title: Option<AniListTitle>,
     /// Alternative titles / aliases (abbreviations, other-language titles).
+    #[serde(default, deserialize_with = "strings_skipping_nulls")]
     pub synonyms: Option<Vec<String>>,
     pub description: Option<String>,
     #[serde(rename = "startDate")]

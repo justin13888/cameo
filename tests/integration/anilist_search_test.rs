@@ -145,6 +145,24 @@ async fn search_movies_keeps_all_title_variants() {
     );
 }
 
+#[tokio::test]
+async fn search_movies_skips_null_synonym_entries() {
+    let mut item = media_item(21519, "Your Name.", "MOVIE");
+    item["synonyms"] = json!([null, "Kimi no Na wa"]);
+    let body = page_response(vec![item], 1);
+    let (_server, client) = mock_client(body).await;
+
+    let result = client.search_movies("Your Name", None).await.unwrap();
+
+    let synonyms: Vec<_> = result.results[0]
+        .alternative_titles
+        .iter()
+        .filter(|a| a.kind == TitleKind::Synonym)
+        .map(|a| a.title.as_str())
+        .collect();
+    assert_eq!(synonyms, vec!["Kimi no Na wa"]);
+}
+
 // ── search_tv_shows ───────────────────────────────────────────────────────────
 
 #[tokio::test]
