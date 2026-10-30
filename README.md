@@ -76,7 +76,7 @@ CameoClient (unified facade)
 |--------|---------|
 | `cameo::unified` | `CameoClient` facade, traits, unified model types, `Genre` |
 | `cameo::providers::tmdb` | `TmdbClient`, `TmdbConfig`, `ImageUrl`, discover builders |
-| `cameo::providers::anilist` | `AniListClient`, `AniListConfig`, `AniListError` |
+| `cameo::providers::anilist` | `AniListClient`, `AniListConfig`, `AniListError`, `DiscoverAnimeBuilder` (filtered discover) |
 | `cameo::cache` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig` |
 | `cameo::core` | `PaginatedResponse`, `into_stream`, `TimeWindow`, `CameoError` |
 | `cameo::generated` | Progenitor-generated low-level TMDB client (do not use directly) |

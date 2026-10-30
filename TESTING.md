@@ -72,7 +72,7 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `discover_movies` | — | ✓ | — | ✓ |
 | `discover_tv` | — | ✓ | — | ✓ |
 
-### AniListClient (13 methods)
+### AniListClient (14 methods)
 
 | Method | Unit | Wiremock |
 |---|---|---|
@@ -89,6 +89,7 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `popular_tv_shows` | — | ✓ |
 | `top_rated_movies` | — | ✓ |
 | `top_rated_tv_shows` | — | ✓ |
+| `discover_anime` (`execute_movies` / `execute_tv`) | ✓ | ✓ |
 
 ### CameoClient Facade (22 trait methods)
 
@@ -167,7 +168,7 @@ All fixtures live in `tests/fixtures/` and are trimmed to 1–2 results for spee
 | `trending_tv_response.json` | `/3/trending/tv/week` |
 | `discover_tv_response.json` | `/3/discover/tv` |
 
-AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture files (`anilist_media_details_response.json`, `anilist_staff_details_response.json`). Search and discovery tests use inline JSON constructed via `serde_json::json!` helpers — no separate fixture files for those.
+AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture files (`anilist_media_details_response.json`, `anilist_staff_details_response.json`). Search, discovery, and discover-builder (`anilist_discover_test.rs`) tests use inline JSON constructed via `serde_json::json!` helpers — no separate fixture files for those.
 
 ---
 
@@ -187,7 +188,7 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 |---|---|
 | Unit | 64 |
 | Wiremock (TMDB) | 33 |
-| Wiremock (AniList) | 25 |
+| Wiremock (AniList) | 31 |
 | Facade / Cache | 16 |
 | Live (TMDB) | 8 |
-| **Total** | **~146** |
+| **Total** | **~152** |

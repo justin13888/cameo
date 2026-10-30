@@ -5,6 +5,7 @@ use serde_json::{Value, json};
 
 use super::{
     config::AniListConfig,
+    discover::{AnimeFormat, DiscoverAnimeBuilder},
     error::AniListError,
     query,
     response::{
@@ -23,11 +24,11 @@ use crate::{
     },
 };
 
-/// AniList format strings for anime that map to the "movie" media type.
-const MOVIE_FORMATS: &[&str] = &["MOVIE"];
+/// AniList formats for anime that map to the "movie" media type.
+const MOVIE_FORMATS: &[AnimeFormat] = AnimeFormat::MOVIES;
 
-/// AniList format strings for anime that map to the "TV show" media type.
-const TV_FORMATS: &[&str] = &["TV", "TV_SHORT", "ONA", "OVA", "SPECIAL"];
+/// AniList formats for anime that map to the "TV show" media type.
+const TV_FORMATS: &[AnimeFormat] = AnimeFormat::TV;
 
 // ── Client ─────────────────────────────────────────────────────────────────────
 
@@ -215,11 +216,11 @@ impl AniListClient {
 
     // ── Helper: build JSON array for format_in variable ───────────────────────
 
-    fn format_in_value(formats: &[&str]) -> Value {
+    fn format_in_value(formats: &[AnimeFormat]) -> Value {
         Value::Array(
             formats
                 .iter()
-                .map(|s| Value::String(s.to_string()))
+                .map(|f| Value::String(f.as_str().to_string()))
                 .collect(),
         )
     }
@@ -494,6 +495,41 @@ impl AniListClient {
             "anilist: graphql LIST_TOP_SCORED_ANIME (top_rated_tv_shows)"
         );
         let resp: MediaPageResponse = self.graphql(query::LIST_TOP_SCORED_ANIME, vars).await?;
+        media_page_to_tv(resp)
+    }
+
+    /// Create a builder for discovering anime with filters (genres, country,
+    /// broadcast season, format, status, adult flag, sort order).
+    ///
+    /// See [`DiscoverAnimeBuilder`] for the available filters and how the
+    /// movie/TV terminal methods choose formats.
+    pub fn discover_anime(&self) -> DiscoverAnimeBuilder<'_> {
+        DiscoverAnimeBuilder::new(self)
+    }
+
+    /// Run [`query::DISCOVER_ANIME`] and convert the page to movies.
+    pub(crate) async fn discover_movies_page(
+        &self,
+        vars: Value,
+    ) -> Result<Page<UnifiedMovie>, AniListError> {
+        tracing::debug!(
+            page = %vars["page"],
+            "anilist: graphql DISCOVER_ANIME (discover_anime movies)"
+        );
+        let resp: MediaPageResponse = self.graphql(query::DISCOVER_ANIME, vars).await?;
+        media_page_to_movies(resp)
+    }
+
+    /// Run [`query::DISCOVER_ANIME`] and convert the page to TV shows.
+    pub(crate) async fn discover_tv_page(
+        &self,
+        vars: Value,
+    ) -> Result<Page<UnifiedTvShow>, AniListError> {
+        tracing::debug!(
+            page = %vars["page"],
+            "anilist: graphql DISCOVER_ANIME (discover_anime tv)"
+        );
+        let resp: MediaPageResponse = self.graphql(query::DISCOVER_ANIME, vars).await?;
         media_page_to_tv(resp)
     }
 }

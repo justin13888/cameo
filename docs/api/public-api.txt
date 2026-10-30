@@ -751,6 +751,7 @@ pub mod cameo::providers::anilist::client
 pub struct cameo::providers::anilist::client::AniListClient
 impl cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::config(&self) -> &cameo::providers::anilist::config::AniListConfig
+pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
 pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
 pub fn cameo::providers::anilist::client::AniListClient::new(cameo::providers::anilist::config::AniListConfig) -> core::result::Result<Self, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::anilist::error::AniListError>
@@ -880,6 +881,292 @@ pub fn cameo::providers::anilist::config::AniListConfig::and<P, B, E>(self, P) -
 pub fn cameo::providers::anilist::config::AniListConfig::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::providers::anilist::config::AniListConfig
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::config::AniListConfig
+pub mod cameo::providers::anilist::discover
+#[non_exhaustive] pub enum cameo::providers::anilist::discover::AnimeFormat
+pub cameo::providers::anilist::discover::AnimeFormat::Movie
+pub cameo::providers::anilist::discover::AnimeFormat::Music
+pub cameo::providers::anilist::discover::AnimeFormat::Ona
+pub cameo::providers::anilist::discover::AnimeFormat::Ova
+pub cameo::providers::anilist::discover::AnimeFormat::Special
+pub cameo::providers::anilist::discover::AnimeFormat::Tv
+pub cameo::providers::anilist::discover::AnimeFormat::TvShort
+impl core::clone::Clone for cameo::providers::anilist::discover::AnimeFormat
+pub fn cameo::providers::anilist::discover::AnimeFormat::clone(&self) -> cameo::providers::anilist::discover::AnimeFormat
+impl core::cmp::Eq for cameo::providers::anilist::discover::AnimeFormat
+impl core::cmp::PartialEq for cameo::providers::anilist::discover::AnimeFormat
+pub fn cameo::providers::anilist::discover::AnimeFormat::eq(&self, &cameo::providers::anilist::discover::AnimeFormat) -> bool
+impl core::fmt::Debug for cameo::providers::anilist::discover::AnimeFormat
+pub fn cameo::providers::anilist::discover::AnimeFormat::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::anilist::discover::AnimeFormat
+pub fn cameo::providers::anilist::discover::AnimeFormat::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::Freeze for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::Send for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::Sync for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::Unpin for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::UnsafeUnpin for cameo::providers::anilist::discover::AnimeFormat
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::discover::AnimeFormat
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::discover::AnimeFormat
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::discover::AnimeFormat where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeFormat where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeFormat where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::equivalent(&self, &K) -> bool
+pub fn cameo::providers::anilist::discover::AnimeFormat::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::anilist::discover::AnimeFormat where U: core::convert::From<T>
+pub fn cameo::providers::anilist::discover::AnimeFormat::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::discover::AnimeFormat where U: core::convert::Into<T>
+pub type cameo::providers::anilist::discover::AnimeFormat::Error = core::convert::Infallible
+pub fn cameo::providers::anilist::discover::AnimeFormat::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::anilist::discover::AnimeFormat where U: core::convert::TryFrom<T>
+pub type cameo::providers::anilist::discover::AnimeFormat::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::anilist::discover::AnimeFormat::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::anilist::discover::AnimeFormat where T: core::clone::Clone
+pub type cameo::providers::anilist::discover::AnimeFormat::Owned = T
+pub fn cameo::providers::anilist::discover::AnimeFormat::clone_into(&self, &mut T)
+pub fn cameo::providers::anilist::discover::AnimeFormat::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::anilist::discover::AnimeFormat where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::anilist::discover::AnimeFormat where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::anilist::discover::AnimeFormat where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::anilist::discover::AnimeFormat where T: core::clone::Clone
+pub unsafe fn cameo::providers::anilist::discover::AnimeFormat::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::anilist::discover::AnimeFormat
+pub fn cameo::providers::anilist::discover::AnimeFormat::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::anilist::discover::AnimeFormat where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::anilist::discover::AnimeFormat::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::anilist::discover::AnimeFormat
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::discover::AnimeFormat
+#[non_exhaustive] pub enum cameo::providers::anilist::discover::AnimeSeason
+pub cameo::providers::anilist::discover::AnimeSeason::Fall
+pub cameo::providers::anilist::discover::AnimeSeason::Spring
+pub cameo::providers::anilist::discover::AnimeSeason::Summer
+pub cameo::providers::anilist::discover::AnimeSeason::Winter
+impl core::clone::Clone for cameo::providers::anilist::discover::AnimeSeason
+pub fn cameo::providers::anilist::discover::AnimeSeason::clone(&self) -> cameo::providers::anilist::discover::AnimeSeason
+impl core::cmp::Eq for cameo::providers::anilist::discover::AnimeSeason
+impl core::cmp::PartialEq for cameo::providers::anilist::discover::AnimeSeason
+pub fn cameo::providers::anilist::discover::AnimeSeason::eq(&self, &cameo::providers::anilist::discover::AnimeSeason) -> bool
+impl core::fmt::Debug for cameo::providers::anilist::discover::AnimeSeason
+pub fn cameo::providers::anilist::discover::AnimeSeason::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::anilist::discover::AnimeSeason
+pub fn cameo::providers::anilist::discover::AnimeSeason::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::Freeze for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::Send for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::Sync for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::Unpin for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::UnsafeUnpin for cameo::providers::anilist::discover::AnimeSeason
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::discover::AnimeSeason
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::discover::AnimeSeason
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::discover::AnimeSeason where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeSeason where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeSeason where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::equivalent(&self, &K) -> bool
+pub fn cameo::providers::anilist::discover::AnimeSeason::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::anilist::discover::AnimeSeason where U: core::convert::From<T>
+pub fn cameo::providers::anilist::discover::AnimeSeason::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::discover::AnimeSeason where U: core::convert::Into<T>
+pub type cameo::providers::anilist::discover::AnimeSeason::Error = core::convert::Infallible
+pub fn cameo::providers::anilist::discover::AnimeSeason::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::anilist::discover::AnimeSeason where U: core::convert::TryFrom<T>
+pub type cameo::providers::anilist::discover::AnimeSeason::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::anilist::discover::AnimeSeason::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::anilist::discover::AnimeSeason where T: core::clone::Clone
+pub type cameo::providers::anilist::discover::AnimeSeason::Owned = T
+pub fn cameo::providers::anilist::discover::AnimeSeason::clone_into(&self, &mut T)
+pub fn cameo::providers::anilist::discover::AnimeSeason::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::anilist::discover::AnimeSeason where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::anilist::discover::AnimeSeason where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::anilist::discover::AnimeSeason where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::anilist::discover::AnimeSeason where T: core::clone::Clone
+pub unsafe fn cameo::providers::anilist::discover::AnimeSeason::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::anilist::discover::AnimeSeason
+pub fn cameo::providers::anilist::discover::AnimeSeason::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::anilist::discover::AnimeSeason where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::anilist::discover::AnimeSeason::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::anilist::discover::AnimeSeason
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::discover::AnimeSeason
+#[non_exhaustive] pub enum cameo::providers::anilist::discover::AnimeSort
+pub cameo::providers::anilist::discover::AnimeSort::FavouritesDesc
+pub cameo::providers::anilist::discover::AnimeSort::PopularityDesc
+pub cameo::providers::anilist::discover::AnimeSort::ScoreDesc
+pub cameo::providers::anilist::discover::AnimeSort::StartDateAsc
+pub cameo::providers::anilist::discover::AnimeSort::StartDateDesc
+pub cameo::providers::anilist::discover::AnimeSort::TitleRomajiAsc
+pub cameo::providers::anilist::discover::AnimeSort::TrendingDesc
+impl core::clone::Clone for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::clone(&self) -> cameo::providers::anilist::discover::AnimeSort
+impl core::cmp::Eq for cameo::providers::anilist::discover::AnimeSort
+impl core::cmp::PartialEq for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::eq(&self, &cameo::providers::anilist::discover::AnimeSort) -> bool
+impl core::default::Default for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::default() -> cameo::providers::anilist::discover::AnimeSort
+impl core::fmt::Debug for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::Freeze for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::Send for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::Sync for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::Unpin for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::UnsafeUnpin for cameo::providers::anilist::discover::AnimeSort
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::discover::AnimeSort
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::discover::AnimeSort
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::discover::AnimeSort where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeSort where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeSort where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::equivalent(&self, &K) -> bool
+pub fn cameo::providers::anilist::discover::AnimeSort::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::anilist::discover::AnimeSort where U: core::convert::From<T>
+pub fn cameo::providers::anilist::discover::AnimeSort::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::discover::AnimeSort where U: core::convert::Into<T>
+pub type cameo::providers::anilist::discover::AnimeSort::Error = core::convert::Infallible
+pub fn cameo::providers::anilist::discover::AnimeSort::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::anilist::discover::AnimeSort where U: core::convert::TryFrom<T>
+pub type cameo::providers::anilist::discover::AnimeSort::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::anilist::discover::AnimeSort::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::anilist::discover::AnimeSort where T: core::clone::Clone
+pub type cameo::providers::anilist::discover::AnimeSort::Owned = T
+pub fn cameo::providers::anilist::discover::AnimeSort::clone_into(&self, &mut T)
+pub fn cameo::providers::anilist::discover::AnimeSort::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::anilist::discover::AnimeSort where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::anilist::discover::AnimeSort where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::anilist::discover::AnimeSort where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::anilist::discover::AnimeSort where T: core::clone::Clone
+pub unsafe fn cameo::providers::anilist::discover::AnimeSort::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::anilist::discover::AnimeSort where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::anilist::discover::AnimeSort::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::anilist::discover::AnimeSort
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::discover::AnimeSort
+#[non_exhaustive] pub enum cameo::providers::anilist::discover::AnimeStatus
+pub cameo::providers::anilist::discover::AnimeStatus::Cancelled
+pub cameo::providers::anilist::discover::AnimeStatus::Finished
+pub cameo::providers::anilist::discover::AnimeStatus::Hiatus
+pub cameo::providers::anilist::discover::AnimeStatus::NotYetReleased
+pub cameo::providers::anilist::discover::AnimeStatus::Releasing
+impl core::clone::Clone for cameo::providers::anilist::discover::AnimeStatus
+pub fn cameo::providers::anilist::discover::AnimeStatus::clone(&self) -> cameo::providers::anilist::discover::AnimeStatus
+impl core::cmp::Eq for cameo::providers::anilist::discover::AnimeStatus
+impl core::cmp::PartialEq for cameo::providers::anilist::discover::AnimeStatus
+pub fn cameo::providers::anilist::discover::AnimeStatus::eq(&self, &cameo::providers::anilist::discover::AnimeStatus) -> bool
+impl core::fmt::Debug for cameo::providers::anilist::discover::AnimeStatus
+pub fn cameo::providers::anilist::discover::AnimeStatus::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::anilist::discover::AnimeStatus
+pub fn cameo::providers::anilist::discover::AnimeStatus::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::Freeze for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::Send for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::Sync for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::Unpin for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::UnsafeUnpin for cameo::providers::anilist::discover::AnimeStatus
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::discover::AnimeStatus
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::discover::AnimeStatus
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::discover::AnimeStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::equivalent(&self, &K) -> bool
+pub fn cameo::providers::anilist::discover::AnimeStatus::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::anilist::discover::AnimeStatus where U: core::convert::From<T>
+pub fn cameo::providers::anilist::discover::AnimeStatus::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::discover::AnimeStatus where U: core::convert::Into<T>
+pub type cameo::providers::anilist::discover::AnimeStatus::Error = core::convert::Infallible
+pub fn cameo::providers::anilist::discover::AnimeStatus::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::anilist::discover::AnimeStatus where U: core::convert::TryFrom<T>
+pub type cameo::providers::anilist::discover::AnimeStatus::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::anilist::discover::AnimeStatus::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::anilist::discover::AnimeStatus where T: core::clone::Clone
+pub type cameo::providers::anilist::discover::AnimeStatus::Owned = T
+pub fn cameo::providers::anilist::discover::AnimeStatus::clone_into(&self, &mut T)
+pub fn cameo::providers::anilist::discover::AnimeStatus::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::anilist::discover::AnimeStatus where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::anilist::discover::AnimeStatus where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::anilist::discover::AnimeStatus where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::anilist::discover::AnimeStatus where T: core::clone::Clone
+pub unsafe fn cameo::providers::anilist::discover::AnimeStatus::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::anilist::discover::AnimeStatus
+pub fn cameo::providers::anilist::discover::AnimeStatus::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::anilist::discover::AnimeStatus where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::anilist::discover::AnimeStatus::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::anilist::discover::AnimeStatus
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::discover::AnimeStatus
+pub struct cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::country_of_origin(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::exclude_genres<I, S>(self, I) -> Self where I: core::iter::traits::collect::IntoIterator<Item = S>, S: core::convert::Into<alloc::string::String>
+pub async fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::execute_movies(self) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::execute_tv(self) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::formats(self, &[cameo::providers::anilist::discover::AnimeFormat]) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::genres<I, S>(self, I) -> Self where I: core::iter::traits::collect::IntoIterator<Item = S>, S: core::convert::Into<alloc::string::String>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::is_adult(self, core::option::Option<bool>) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::page(self, u32) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::season(self, cameo::providers::anilist::discover::AnimeSeason, i32) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::season_year(self, i32) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::sort(self, cameo::providers::anilist::discover::AnimeSort) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::status(self, cameo::providers::anilist::discover::AnimeStatus) -> Self
+impl<'a> core::clone::Clone for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::clone(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> core::fmt::Debug for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl<'a> core::marker::Freeze for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> core::marker::Send for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> core::marker::Sync for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> core::marker::Unpin for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> core::marker::UnsafeUnpin for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> !core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> !core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<T, U> core::convert::Into<U> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where U: core::convert::From<T>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where U: core::convert::Into<T>
+pub type cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::Error = core::convert::Infallible
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where U: core::convert::TryFrom<T>
+pub type cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: core::clone::Clone
+pub type cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::Owned = T
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::clone_into(&self, &mut T)
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: core::clone::Clone
+pub unsafe fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
 pub mod cameo::providers::anilist::error
 #[non_exhaustive] pub enum cameo::providers::anilist::error::AniListError
 pub cameo::providers::anilist::error::AniListError::Deserialization(serde_json::error::Error)
@@ -1082,9 +1369,243 @@ pub fn cameo::providers::anilist::error::AniListError::and<P, B, E>(self, P) -> 
 pub fn cameo::providers::anilist::error::AniListError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::providers::anilist::error::AniListError
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::error::AniListError
+#[non_exhaustive] pub enum cameo::providers::anilist::AnimeFormat
+pub cameo::providers::anilist::AnimeFormat::Movie
+pub cameo::providers::anilist::AnimeFormat::Music
+pub cameo::providers::anilist::AnimeFormat::Ona
+pub cameo::providers::anilist::AnimeFormat::Ova
+pub cameo::providers::anilist::AnimeFormat::Special
+pub cameo::providers::anilist::AnimeFormat::Tv
+pub cameo::providers::anilist::AnimeFormat::TvShort
+impl core::clone::Clone for cameo::providers::anilist::discover::AnimeFormat
+pub fn cameo::providers::anilist::discover::AnimeFormat::clone(&self) -> cameo::providers::anilist::discover::AnimeFormat
+impl core::cmp::Eq for cameo::providers::anilist::discover::AnimeFormat
+impl core::cmp::PartialEq for cameo::providers::anilist::discover::AnimeFormat
+pub fn cameo::providers::anilist::discover::AnimeFormat::eq(&self, &cameo::providers::anilist::discover::AnimeFormat) -> bool
+impl core::fmt::Debug for cameo::providers::anilist::discover::AnimeFormat
+pub fn cameo::providers::anilist::discover::AnimeFormat::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::anilist::discover::AnimeFormat
+pub fn cameo::providers::anilist::discover::AnimeFormat::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::Freeze for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::Send for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::Sync for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::Unpin for cameo::providers::anilist::discover::AnimeFormat
+impl core::marker::UnsafeUnpin for cameo::providers::anilist::discover::AnimeFormat
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::discover::AnimeFormat
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::discover::AnimeFormat
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::discover::AnimeFormat where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeFormat where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeFormat where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::equivalent(&self, &K) -> bool
+pub fn cameo::providers::anilist::discover::AnimeFormat::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::anilist::discover::AnimeFormat where U: core::convert::From<T>
+pub fn cameo::providers::anilist::discover::AnimeFormat::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::discover::AnimeFormat where U: core::convert::Into<T>
+pub type cameo::providers::anilist::discover::AnimeFormat::Error = core::convert::Infallible
+pub fn cameo::providers::anilist::discover::AnimeFormat::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::anilist::discover::AnimeFormat where U: core::convert::TryFrom<T>
+pub type cameo::providers::anilist::discover::AnimeFormat::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::anilist::discover::AnimeFormat::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::anilist::discover::AnimeFormat where T: core::clone::Clone
+pub type cameo::providers::anilist::discover::AnimeFormat::Owned = T
+pub fn cameo::providers::anilist::discover::AnimeFormat::clone_into(&self, &mut T)
+pub fn cameo::providers::anilist::discover::AnimeFormat::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::anilist::discover::AnimeFormat where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::anilist::discover::AnimeFormat where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::anilist::discover::AnimeFormat where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::anilist::discover::AnimeFormat where T: core::clone::Clone
+pub unsafe fn cameo::providers::anilist::discover::AnimeFormat::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::anilist::discover::AnimeFormat
+pub fn cameo::providers::anilist::discover::AnimeFormat::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::anilist::discover::AnimeFormat where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeFormat::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::anilist::discover::AnimeFormat::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::anilist::discover::AnimeFormat
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::discover::AnimeFormat
+#[non_exhaustive] pub enum cameo::providers::anilist::AnimeSeason
+pub cameo::providers::anilist::AnimeSeason::Fall
+pub cameo::providers::anilist::AnimeSeason::Spring
+pub cameo::providers::anilist::AnimeSeason::Summer
+pub cameo::providers::anilist::AnimeSeason::Winter
+impl core::clone::Clone for cameo::providers::anilist::discover::AnimeSeason
+pub fn cameo::providers::anilist::discover::AnimeSeason::clone(&self) -> cameo::providers::anilist::discover::AnimeSeason
+impl core::cmp::Eq for cameo::providers::anilist::discover::AnimeSeason
+impl core::cmp::PartialEq for cameo::providers::anilist::discover::AnimeSeason
+pub fn cameo::providers::anilist::discover::AnimeSeason::eq(&self, &cameo::providers::anilist::discover::AnimeSeason) -> bool
+impl core::fmt::Debug for cameo::providers::anilist::discover::AnimeSeason
+pub fn cameo::providers::anilist::discover::AnimeSeason::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::anilist::discover::AnimeSeason
+pub fn cameo::providers::anilist::discover::AnimeSeason::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::Freeze for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::Send for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::Sync for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::Unpin for cameo::providers::anilist::discover::AnimeSeason
+impl core::marker::UnsafeUnpin for cameo::providers::anilist::discover::AnimeSeason
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::discover::AnimeSeason
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::discover::AnimeSeason
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::discover::AnimeSeason where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeSeason where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeSeason where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::equivalent(&self, &K) -> bool
+pub fn cameo::providers::anilist::discover::AnimeSeason::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::anilist::discover::AnimeSeason where U: core::convert::From<T>
+pub fn cameo::providers::anilist::discover::AnimeSeason::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::discover::AnimeSeason where U: core::convert::Into<T>
+pub type cameo::providers::anilist::discover::AnimeSeason::Error = core::convert::Infallible
+pub fn cameo::providers::anilist::discover::AnimeSeason::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::anilist::discover::AnimeSeason where U: core::convert::TryFrom<T>
+pub type cameo::providers::anilist::discover::AnimeSeason::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::anilist::discover::AnimeSeason::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::anilist::discover::AnimeSeason where T: core::clone::Clone
+pub type cameo::providers::anilist::discover::AnimeSeason::Owned = T
+pub fn cameo::providers::anilist::discover::AnimeSeason::clone_into(&self, &mut T)
+pub fn cameo::providers::anilist::discover::AnimeSeason::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::anilist::discover::AnimeSeason where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::anilist::discover::AnimeSeason where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::anilist::discover::AnimeSeason where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::anilist::discover::AnimeSeason where T: core::clone::Clone
+pub unsafe fn cameo::providers::anilist::discover::AnimeSeason::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::anilist::discover::AnimeSeason
+pub fn cameo::providers::anilist::discover::AnimeSeason::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::anilist::discover::AnimeSeason where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSeason::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::anilist::discover::AnimeSeason::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::anilist::discover::AnimeSeason
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::discover::AnimeSeason
+#[non_exhaustive] pub enum cameo::providers::anilist::AnimeSort
+pub cameo::providers::anilist::AnimeSort::FavouritesDesc
+pub cameo::providers::anilist::AnimeSort::PopularityDesc
+pub cameo::providers::anilist::AnimeSort::ScoreDesc
+pub cameo::providers::anilist::AnimeSort::StartDateAsc
+pub cameo::providers::anilist::AnimeSort::StartDateDesc
+pub cameo::providers::anilist::AnimeSort::TitleRomajiAsc
+pub cameo::providers::anilist::AnimeSort::TrendingDesc
+impl core::clone::Clone for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::clone(&self) -> cameo::providers::anilist::discover::AnimeSort
+impl core::cmp::Eq for cameo::providers::anilist::discover::AnimeSort
+impl core::cmp::PartialEq for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::eq(&self, &cameo::providers::anilist::discover::AnimeSort) -> bool
+impl core::default::Default for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::default() -> cameo::providers::anilist::discover::AnimeSort
+impl core::fmt::Debug for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::Freeze for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::Send for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::Sync for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::Unpin for cameo::providers::anilist::discover::AnimeSort
+impl core::marker::UnsafeUnpin for cameo::providers::anilist::discover::AnimeSort
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::discover::AnimeSort
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::discover::AnimeSort
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::discover::AnimeSort where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeSort where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeSort where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::equivalent(&self, &K) -> bool
+pub fn cameo::providers::anilist::discover::AnimeSort::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::anilist::discover::AnimeSort where U: core::convert::From<T>
+pub fn cameo::providers::anilist::discover::AnimeSort::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::discover::AnimeSort where U: core::convert::Into<T>
+pub type cameo::providers::anilist::discover::AnimeSort::Error = core::convert::Infallible
+pub fn cameo::providers::anilist::discover::AnimeSort::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::anilist::discover::AnimeSort where U: core::convert::TryFrom<T>
+pub type cameo::providers::anilist::discover::AnimeSort::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::anilist::discover::AnimeSort::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::anilist::discover::AnimeSort where T: core::clone::Clone
+pub type cameo::providers::anilist::discover::AnimeSort::Owned = T
+pub fn cameo::providers::anilist::discover::AnimeSort::clone_into(&self, &mut T)
+pub fn cameo::providers::anilist::discover::AnimeSort::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::anilist::discover::AnimeSort where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::anilist::discover::AnimeSort where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::anilist::discover::AnimeSort where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::anilist::discover::AnimeSort where T: core::clone::Clone
+pub unsafe fn cameo::providers::anilist::discover::AnimeSort::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::anilist::discover::AnimeSort
+pub fn cameo::providers::anilist::discover::AnimeSort::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::anilist::discover::AnimeSort where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeSort::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::anilist::discover::AnimeSort::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::anilist::discover::AnimeSort
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::discover::AnimeSort
+#[non_exhaustive] pub enum cameo::providers::anilist::AnimeStatus
+pub cameo::providers::anilist::AnimeStatus::Cancelled
+pub cameo::providers::anilist::AnimeStatus::Finished
+pub cameo::providers::anilist::AnimeStatus::Hiatus
+pub cameo::providers::anilist::AnimeStatus::NotYetReleased
+pub cameo::providers::anilist::AnimeStatus::Releasing
+impl core::clone::Clone for cameo::providers::anilist::discover::AnimeStatus
+pub fn cameo::providers::anilist::discover::AnimeStatus::clone(&self) -> cameo::providers::anilist::discover::AnimeStatus
+impl core::cmp::Eq for cameo::providers::anilist::discover::AnimeStatus
+impl core::cmp::PartialEq for cameo::providers::anilist::discover::AnimeStatus
+pub fn cameo::providers::anilist::discover::AnimeStatus::eq(&self, &cameo::providers::anilist::discover::AnimeStatus) -> bool
+impl core::fmt::Debug for cameo::providers::anilist::discover::AnimeStatus
+pub fn cameo::providers::anilist::discover::AnimeStatus::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::anilist::discover::AnimeStatus
+pub fn cameo::providers::anilist::discover::AnimeStatus::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::Freeze for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::Send for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::Sync for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::Unpin for cameo::providers::anilist::discover::AnimeStatus
+impl core::marker::UnsafeUnpin for cameo::providers::anilist::discover::AnimeStatus
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::discover::AnimeStatus
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::discover::AnimeStatus
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::discover::AnimeStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::discover::AnimeStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::equivalent(&self, &K) -> bool
+pub fn cameo::providers::anilist::discover::AnimeStatus::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::anilist::discover::AnimeStatus where U: core::convert::From<T>
+pub fn cameo::providers::anilist::discover::AnimeStatus::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::discover::AnimeStatus where U: core::convert::Into<T>
+pub type cameo::providers::anilist::discover::AnimeStatus::Error = core::convert::Infallible
+pub fn cameo::providers::anilist::discover::AnimeStatus::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::anilist::discover::AnimeStatus where U: core::convert::TryFrom<T>
+pub type cameo::providers::anilist::discover::AnimeStatus::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::anilist::discover::AnimeStatus::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::anilist::discover::AnimeStatus where T: core::clone::Clone
+pub type cameo::providers::anilist::discover::AnimeStatus::Owned = T
+pub fn cameo::providers::anilist::discover::AnimeStatus::clone_into(&self, &mut T)
+pub fn cameo::providers::anilist::discover::AnimeStatus::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::anilist::discover::AnimeStatus where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::anilist::discover::AnimeStatus where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::anilist::discover::AnimeStatus where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::anilist::discover::AnimeStatus where T: core::clone::Clone
+pub unsafe fn cameo::providers::anilist::discover::AnimeStatus::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::anilist::discover::AnimeStatus
+pub fn cameo::providers::anilist::discover::AnimeStatus::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::anilist::discover::AnimeStatus where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::AnimeStatus::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::anilist::discover::AnimeStatus::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::anilist::discover::AnimeStatus
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::discover::AnimeStatus
 pub struct cameo::providers::anilist::AniListClient
 impl cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::config(&self) -> &cameo::providers::anilist::config::AniListConfig
+pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
 pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
 pub fn cameo::providers::anilist::client::AniListClient::new(cameo::providers::anilist::config::AniListConfig) -> core::result::Result<Self, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::anilist::error::AniListError>
@@ -1213,6 +1734,58 @@ pub fn cameo::providers::anilist::config::AniListConfig::and<P, B, E>(self, P) -
 pub fn cameo::providers::anilist::config::AniListConfig::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::providers::anilist::config::AniListConfig
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::config::AniListConfig
+pub struct cameo::providers::anilist::DiscoverAnimeBuilder<'a>
+impl<'a> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::country_of_origin(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::exclude_genres<I, S>(self, I) -> Self where I: core::iter::traits::collect::IntoIterator<Item = S>, S: core::convert::Into<alloc::string::String>
+pub async fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::execute_movies(self) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::execute_tv(self) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::formats(self, &[cameo::providers::anilist::discover::AnimeFormat]) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::genres<I, S>(self, I) -> Self where I: core::iter::traits::collect::IntoIterator<Item = S>, S: core::convert::Into<alloc::string::String>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::is_adult(self, core::option::Option<bool>) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::page(self, u32) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::season(self, cameo::providers::anilist::discover::AnimeSeason, i32) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::season_year(self, i32) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::sort(self, cameo::providers::anilist::discover::AnimeSort) -> Self
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::status(self, cameo::providers::anilist::discover::AnimeStatus) -> Self
+impl<'a> core::clone::Clone for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::clone(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> core::fmt::Debug for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl<'a> core::marker::Freeze for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> core::marker::Send for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> core::marker::Sync for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> core::marker::Unpin for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> core::marker::UnsafeUnpin for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> !core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<'a> !core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<T, U> core::convert::Into<U> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where U: core::convert::From<T>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where U: core::convert::Into<T>
+pub type cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::Error = core::convert::Infallible
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where U: core::convert::TryFrom<T>
+pub type cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: core::clone::Clone
+pub type cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::Owned = T
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::clone_into(&self, &mut T)
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: core::clone::Clone
+pub unsafe fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a> where T: ?core::marker::Sized
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::discover::DiscoverAnimeBuilder<'a>
 pub mod cameo::providers::rate_limit
 #[non_exhaustive] pub enum cameo::providers::rate_limit::RateLimit
 pub cameo::providers::rate_limit::RateLimit::Limited
@@ -8839,6 +9412,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::genre::UnknownGe
 pub struct cameo::AniListClient
 impl cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::config(&self) -> &cameo::providers::anilist::config::AniListConfig
+pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
 pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
 pub fn cameo::providers::anilist::client::AniListClient::new(cameo::providers::anilist::config::AniListConfig) -> core::result::Result<Self, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::anilist::error::AniListError>
