@@ -9,6 +9,8 @@ mod integration {
     #[cfg(all(feature = "cache", feature = "tmdb"))]
     mod cache_integration_test;
     #[cfg(feature = "tmdb")]
+    mod credential_redaction_test;
+    #[cfg(feature = "tmdb")]
     mod facade_dispatch_test;
     #[cfg(any(feature = "tmdb", feature = "anilist"))]
     mod http_config_test;

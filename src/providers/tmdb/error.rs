@@ -22,8 +22,13 @@ pub enum TmdbError {
     ///
     /// No HTTP response was received — distinct from [`TmdbError::Api`], which
     /// always carries a real HTTP status.
+    ///
+    /// Errors built by this crate (including via `From<reqwest::Error>`) have
+    /// the request URL stripped with [`reqwest::Error::without_url`], because
+    /// a v3 API key travels in the URL's `api_key` query parameter and would
+    /// otherwise leak through `Display`/`Debug`.
     #[error("HTTP transport error: {0}")]
-    Http(#[from] reqwest::Error),
+    Http(#[source] reqwest::Error),
 
     /// The TMDB API returned an error status.
     ///
@@ -52,6 +57,14 @@ pub enum TmdbError {
     /// Invalid configuration (rejected at construction time).
     #[error("invalid configuration: {0}")]
     InvalidConfig(String),
+}
+
+/// Wrap a transport error, stripping its request URL so a v3 `api_key` query
+/// parameter can never surface through `Display` or `Debug`.
+impl From<reqwest::Error> for TmdbError {
+    fn from(err: reqwest::Error) -> Self {
+        TmdbError::Http(err.without_url())
+    }
 }
 
 /// TMDB's structured error body, e.g. `{"status_code": 7, "status_message": "..."}`.
@@ -95,7 +108,7 @@ impl TmdbError {
             // Transport-level failures: no usable HTTP response.
             ProgenitorError::CommunicationError(e)
             | ProgenitorError::ResponseBodyError(e)
-            | ProgenitorError::InvalidUpgrade(e) => TmdbError::Http(e),
+            | ProgenitorError::InvalidUpgrade(e) => TmdbError::from(e),
 
             // A successful response whose body did not match the schema.
             ProgenitorError::InvalidResponsePayload(_bytes, e) => TmdbError::Deserialization(e),
@@ -146,14 +159,20 @@ impl TmdbError {
 
 /// Best-effort synchronous mapping, used where an `async` body read is not
 /// possible (the `?` operator). Preserves the transport/deserialization/API
-/// split and the HTTP status + `Retry-After`, but cannot decode the error body,
-/// so the message falls back to the progenitor `Display`.
+/// split and the HTTP status + `Retry-After`, but cannot read an undeclared
+/// error body, so an unexpected response's message is a generic
+/// `unexpected response: HTTP <status>` description (a declared error response
+/// uses its typed body, as `TmdbError::from_progenitor` does).
+///
+/// Progenitor's own `Display` is deliberately not used: for unexpected
+/// responses it prints the `reqwest::Response` debug form, which includes the
+/// request URL (and therefore a v3 `api_key` query parameter).
 impl<E: std::fmt::Debug + Send + Sync + 'static> From<ProgenitorError<E>> for TmdbError {
     fn from(err: ProgenitorError<E>) -> Self {
         match err {
             ProgenitorError::CommunicationError(e)
             | ProgenitorError::ResponseBodyError(e)
-            | ProgenitorError::InvalidUpgrade(e) => TmdbError::Http(e),
+            | ProgenitorError::InvalidUpgrade(e) => TmdbError::from(e),
             ProgenitorError::InvalidResponsePayload(_, e) => TmdbError::Deserialization(e),
             ProgenitorError::InvalidRequest(msg) => TmdbError::Api {
                 status: 0,
@@ -167,23 +186,23 @@ impl<E: std::fmt::Debug + Send + Sync + 'static> From<ProgenitorError<E>> for Tm
                 message: format!("client hook error: {msg}"),
                 retry_after: None,
             },
-            ProgenitorError::ErrorResponse(ref rv) => {
+            ProgenitorError::ErrorResponse(rv) => {
                 let status = rv.status().as_u16();
                 let retry_after = parse_retry_after(rv.headers());
                 TmdbError::Api {
                     status,
                     status_code: None,
-                    message: format!("{err}"),
+                    message: format!("{:?}", rv.into_inner()),
                     retry_after,
                 }
             }
-            ProgenitorError::UnexpectedResponse(ref resp) => {
+            ProgenitorError::UnexpectedResponse(resp) => {
                 let status = resp.status().as_u16();
                 let retry_after = parse_retry_after(resp.headers());
                 TmdbError::Api {
                     status,
                     status_code: None,
-                    message: format!("{err}"),
+                    message: format!("unexpected response: HTTP {status}"),
                     retry_after,
                 }
             }

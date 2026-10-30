@@ -31,11 +31,26 @@ const TMDB_BASE_URL: &str = "https://api.themoviedb.org";
 /// `TmdbClient` is cheaply cloneable — the underlying HTTP client,
 /// configuration, and rate limiter are all reference-counted so clones share
 /// the same connection pool and the same rate-limit budget.
-#[derive(Debug, Clone)]
+///
+/// # Debug output
+///
+/// The `Debug` output never contains the API credential: it shows the
+/// (redacted) [`TmdbConfig`] and the rate limiter, and omits the underlying
+/// HTTP client, whose default headers and query parameters carry the secret.
+#[derive(Clone)]
 pub struct TmdbClient {
     inner: tmdb::Client,
     config: TmdbConfig,
     rate_limiter: RateLimiter,
+}
+
+impl std::fmt::Debug for TmdbClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TmdbClient")
+            .field("config", &self.config)
+            .field("rate_limiter", &self.rate_limiter)
+            .finish_non_exhaustive()
+    }
 }
 
 impl TmdbClient {
@@ -47,12 +62,12 @@ impl TmdbClient {
         // v4 bearer tokens travel in the Authorization header; v3 API keys
         // travel as a query parameter (wired below via the generated client).
         if let TmdbAuth::V4Bearer(token) = &config.auth {
-            let auth_value = format!("Bearer {token}");
-            headers.insert(
-                reqwest::header::AUTHORIZATION,
-                reqwest::header::HeaderValue::from_str(&auth_value)
-                    .map_err(|e| TmdbError::InvalidConfig(format!("invalid API token: {e}")))?,
-            );
+            let mut auth_value = reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
+                .map_err(|e| TmdbError::InvalidConfig(format!("invalid API token: {e}")))?;
+            // Sensitive values print as `Sensitive` in `Debug` (reqwest's
+            // client `Debug` lists its default headers).
+            auth_value.set_sensitive(true);
+            headers.insert(reqwest::header::AUTHORIZATION, auth_value);
         }
 
         let http_client = crate::providers::http::build_client(
@@ -60,7 +75,7 @@ impl TmdbClient {
             config.request_timeout,
             headers,
         )
-        .map_err(TmdbError::Http)?;
+        .map_err(TmdbError::from)?;
 
         let base_url = config.base_url.as_deref().unwrap_or(TMDB_BASE_URL);
         let mut inner = tmdb::Client::new_with_client(base_url, http_client);
@@ -802,4 +817,36 @@ fn parse_watch_provider_results(
         .into_iter()
         .map(|(country, entry)| (country, entry.into()))
         .collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const SECRET: &str = "SECRETKEY123";
+
+    /// The generated client's `Debug` (patched by `cargo xtask codegen`) and
+    /// the underlying reqwest client's default headers must not expose the
+    /// credential for either auth scheme.
+    #[test]
+    fn generated_client_debug_redacts_credentials() {
+        for config in [TmdbConfig::new(SECRET), TmdbConfig::new_v3(SECRET)] {
+            let client = TmdbClient::new(config).expect("valid config");
+            let debug = format!("{:?}", client.inner());
+            assert!(!debug.contains(SECRET), "credential leaked: {debug}");
+        }
+    }
+
+    /// The v3 key is still wired into the generated client (only its `Debug`
+    /// is redacted).
+    #[test]
+    fn v3_key_is_still_attached() {
+        let client = TmdbClient::new(TmdbConfig::new_v3(SECRET)).expect("valid config");
+        let debug = format!("{:?}", client.inner());
+        assert!(debug.contains("api_key"), "{debug}");
+        assert_eq!(
+            client.inner().auth_query,
+            Some(("api_key".to_string(), SECRET.to_string()))
+        );
+    }
 }
