@@ -119,11 +119,18 @@ impl AniListClient {
     /// - When the response carries errors and the root field is null or
     ///   missing, the errors are surfaced as [`AniListError::GraphQL`] (never
     ///   as not-found / no-data), retried when any status is 429/5xx.
+    ///   This holds even when the errors carry only a non-error status (e.g.
+    ///   `200`): the server reported errors, so we do not claim the item is
+    ///   missing.
     /// - If the HTTP status is non-2xx, GraphQL errors without a `status`
-    ///   inherit the HTTP status, so e.g. an HTTP 500 with status-less errors
-    ///   is treated as a 5xx.
-    /// - With no errors, a null root yields `Ok(None)`; the caller decides
-    ///   whether that means not-found (details) or no-data (lists).
+    ///   inherit the HTTP status (before any other check), so e.g. an HTTP 500
+    ///   with status-less errors is treated as a 5xx and an HTTP 404 as
+    ///   not-found.
+    /// - With no errors (absent or empty) and a null root, a non-2xx HTTP
+    ///   status yields [`AniListError::Status`] (retried on 429/5xx).
+    /// - With no errors, a null root on a 2xx response yields `Ok(None)`; the
+    ///   caller decides whether that means not-found (details) or no-data
+    ///   (lists).
     async fn graphql<R, T>(
         &self,
         query: &str,
@@ -207,6 +214,14 @@ impl AniListClient {
         };
 
         if let Some(mut errors) = gql_resp.errors.filter(|e| !e.is_empty()) {
+            // Status-less errors inherit a non-2xx HTTP status so they
+            // classify correctly (e.g. HTTP 404 → not found, HTTP 500 → 5xx).
+            if !status.is_success() {
+                let http_status = i64::from(status.as_u16());
+                for e in errors.iter_mut().filter(|e| e.status.is_none()) {
+                    e.status = Some(http_status);
+                }
+            }
             // Derive not-found from the structured `status`, not the message.
             if errors.iter().any(|e| e.status == Some(404)) {
                 return Err(AniListError::NotFound);
@@ -216,14 +231,7 @@ impl AniListClient {
                 tracing::warn!(?errors, "anilist: returning partial data alongside errors");
                 return Ok(Some(value));
             }
-            // The root is null/missing: the errors explain why. Status-less
-            // errors inherit a non-2xx HTTP status so they classify correctly.
-            if !status.is_success() {
-                let http_status = i64::from(status.as_u16());
-                for e in errors.iter_mut().filter(|e| e.status.is_none()) {
-                    e.status = Some(http_status);
-                }
-            }
+            // The root is null/missing: the errors explain why.
             tracing::warn!(?errors, "anilist: graphql errors");
             return Err(AniListError::GraphQL {
                 errors,
@@ -231,11 +239,12 @@ impl AniListClient {
             });
         }
 
-        if let Some(data) = gql_resp.data {
-            return Ok(root(data));
+        // No errors (absent or empty).
+        let data_present = gql_resp.data.is_some();
+        if let Some(value) = gql_resp.data.and_then(root) {
+            return Ok(Some(value));
         }
-
-        // No data and no errors: distinguish an error status from an empty body.
+        // Null root / no data on an error status: report the HTTP status.
         if !status.is_success() {
             return Err(AniListError::Status {
                 status: status.as_u16(),
@@ -243,7 +252,12 @@ impl AniListClient {
                 message: truncate_body(&text),
             });
         }
-        Err(AniListError::NoData)
+        if data_present {
+            // A successful response with a null root: the caller decides.
+            Ok(None)
+        } else {
+            Err(AniListError::NoData)
+        }
     }
 
     // ── Helper: build JSON array for format_in variable ───────────────────────

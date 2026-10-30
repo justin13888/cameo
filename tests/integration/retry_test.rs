@@ -307,4 +307,75 @@ mod anilist {
             .unwrap_err();
         assert!(matches!(err, AniListError::NoData), "got {err:?}");
     }
+
+    #[tokio::test]
+    async fn http_404_with_statusless_errors_is_not_found() {
+        let body = serde_json::json!({
+            "data": { "Media": null },
+            "errors": [{ "message": "Not Found." }]
+        });
+        let (_server, client) =
+            client_expecting(ResponseTemplate::new(404).set_body_json(body), 1).await;
+
+        let err = client.movie_details(1).await.unwrap_err();
+        assert!(matches!(err, AniListError::NotFound), "got {err:?}");
+    }
+
+    fn assert_status_503(err: AniListError) {
+        assert!(
+            matches!(err, AniListError::Status { status: 503, .. }),
+            "expected Status 503, got {err:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn http_503_null_root_without_errors_is_retried_then_status() {
+        let body = serde_json::json!({ "data": { "Media": null } });
+        let (_server, client) =
+            client_expecting(ResponseTemplate::new(503).set_body_json(body), 3).await;
+
+        let err = client.movie_details(1).await.unwrap_err();
+        assert_status_503(err);
+    }
+
+    #[tokio::test]
+    async fn http_503_null_page_with_empty_errors_is_retried_then_status() {
+        let body = serde_json::json!({ "data": { "Page": null }, "errors": [] });
+        let (_server, client) =
+            client_expecting(ResponseTemplate::new(503).set_body_json(body), 3).await;
+
+        let err = client.popular_tv_shows(None).await.unwrap_err();
+        assert_status_503(err);
+    }
+
+    #[tokio::test]
+    async fn null_root_with_non_error_status_errors_is_graphql_not_not_found() {
+        // The server reported errors, so a null root is not claimed missing.
+        let body = serde_json::json!({
+            "data": { "Media": null },
+            "errors": [{ "message": "Some field failed to resolve.", "status": 200 }]
+        });
+        let (_server, client) =
+            client_expecting(ResponseTemplate::new(200).set_body_json(body), 1).await;
+
+        let err = client.movie_details(1).await.unwrap_err();
+        assert!(
+            matches!(err, AniListError::GraphQL { .. }),
+            "expected GraphQL error, got {err:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn partial_data_with_non_null_root_and_5xx_errors_is_ok() {
+        let mut body: serde_json::Value = serde_json::from_str(include_str!(
+            "../fixtures/anilist_media_details_response.json"
+        ))
+        .unwrap();
+        body["errors"] = serde_json::json!([{ "message": "Internal", "status": 500 }]);
+        let (_server, client) =
+            client_expecting(ResponseTemplate::new(200).set_body_json(body), 1).await;
+
+        let details = client.movie_details(1535).await.unwrap();
+        assert_eq!(details.movie.provider_id, "anilist:1535");
+    }
 }

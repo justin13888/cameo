@@ -25,6 +25,9 @@ pub struct AniListGqlError {
     pub message: String,
     /// Machine-readable status code (mirrors the HTTP status; `404` for
     /// not-found, `429` for rate limiting, etc.).
+    ///
+    /// When AniList omits it on a non-2xx response, the client fills it in
+    /// from the HTTP status.
     #[serde(default)]
     pub status: Option<i64>,
     /// Query locations the error refers to.

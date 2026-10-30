@@ -128,7 +128,10 @@ impl From<crate::providers::anilist::AniListError> for ProviderError {
                         .map(|e| e.message.as_str())
                         .collect::<Vec<_>>()
                         .join("; ");
-                    ProviderError::Api { status, message }
+                    match status {
+                        401 | 403 => ProviderError::Auth(message),
+                        _ => ProviderError::Api { status, message },
+                    }
                 } else {
                     ProviderError::Other(err.to_string())
                 }
@@ -278,6 +281,26 @@ mod tests {
                 { "message": "Not Found.", "status": 404 }
             ]))),
             ProviderError::NotFound
+        ));
+        assert!(matches!(
+            ProviderError::from(gql(serde_json::json!([
+                { "message": "Invalid token", "status": 401 }
+            ]))),
+            ProviderError::Auth(_)
+        ));
+        assert!(matches!(
+            ProviderError::from(gql(serde_json::json!([
+                { "message": "Forbidden", "status": 403 }
+            ]))),
+            ProviderError::Auth(_)
+        ));
+        // A 5xx outranks an auth status.
+        assert!(matches!(
+            ProviderError::from(gql(serde_json::json!([
+                { "message": "Forbidden", "status": 403 },
+                { "message": "Internal", "status": 502 }
+            ]))),
+            ProviderError::Api { status: 502, .. }
         ));
         // No HTTP-error status at all stays `Other`.
         assert!(matches!(
