@@ -1,9 +1,23 @@
 //! Unified provider-trait implementations for [`AniListClient`].
 //!
-//! AniList supports search, details, and discovery. It does not implement the
-//! recommendation, season, or watch-availability traits, so the facade reports
-//! those capabilities as [`Unsupported`](crate::unified::CameoClientError::Unsupported)
-//! when AniList is the only configured provider.
+//! AniList supports search, details, discovery, and recommendations.
+//!
+//! - **Recommendations:** [`RecommendationProvider::movie_recommendations`] and
+//!   [`RecommendationProvider::tv_recommendations`] return AniList's community
+//!   recommendations filtered to movies / series (see
+//!   [`AniListClient::movie_recommendations`]). AniList has no separate
+//!   "similar titles" list, so `similar_movies` and `similar_tv_shows` return
+//!   [`ProviderError::Unsupported`].
+//! - **Seasons:** not implemented. AniList "seasons" are *broadcast* seasons
+//!   (e.g. Spring 2024, available as a discover filter via
+//!   [`AniListClient::discover_anime`]); each season of a series is its own
+//!   AniList media entry, so there is no TV-season/episode structure to map to
+//!   [`SeasonProvider`](crate::unified::SeasonProvider).
+//! - **Watch availability:** not implemented.
+//!
+//! The facade reports unimplemented capabilities as
+//! [`Unsupported`](crate::unified::CameoClientError::Unsupported) for
+//! `anilist:*` ids.
 
 use async_trait::async_trait;
 
@@ -16,7 +30,10 @@ use crate::{
             UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
             UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
         },
-        traits::{Capability, DetailProvider, DiscoveryProvider, Provider, SearchProvider},
+        traits::{
+            Capability, DetailProvider, DiscoveryProvider, Provider, RecommendationProvider,
+            SearchProvider,
+        },
     },
 };
 
@@ -24,6 +41,7 @@ const ANILIST_CAPABILITIES: &[Capability] = &[
     Capability::Search,
     Capability::Details,
     Capability::Discovery,
+    Capability::Recommendations,
 ];
 
 impl Provider for AniListClient {
@@ -150,5 +168,42 @@ impl DiscoveryProvider for AniListClient {
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
         Ok(AniListClient::top_rated_tv_shows(self, page).await?)
+    }
+}
+
+#[async_trait]
+impl RecommendationProvider for AniListClient {
+    async fn movie_recommendations(
+        &self,
+        id: &MediaId,
+        page: Option<u32>,
+    ) -> Result<Page<UnifiedMovie>, ProviderError> {
+        Ok(AniListClient::movie_recommendations(self, anilist_id(id)?, page).await?)
+    }
+
+    async fn tv_recommendations(
+        &self,
+        id: &MediaId,
+        page: Option<u32>,
+    ) -> Result<Page<UnifiedTvShow>, ProviderError> {
+        Ok(AniListClient::tv_recommendations(self, anilist_id(id)?, page).await?)
+    }
+
+    /// AniList has no "similar titles" list distinct from recommendations.
+    async fn similar_movies(
+        &self,
+        _id: &MediaId,
+        _page: Option<u32>,
+    ) -> Result<Page<UnifiedMovie>, ProviderError> {
+        Err(ProviderError::Unsupported)
+    }
+
+    /// AniList has no "similar titles" list distinct from recommendations.
+    async fn similar_tv_shows(
+        &self,
+        _id: &MediaId,
+        _page: Option<u32>,
+    ) -> Result<Page<UnifiedTvShow>, ProviderError> {
+        Err(ProviderError::Unsupported)
     }
 }

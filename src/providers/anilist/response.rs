@@ -159,6 +159,37 @@ pub(crate) struct MediaDetailResponse {
     pub media: Option<AniListMediaDetail>,
 }
 
+/// `data` object for the media-recommendations query.
+#[derive(Debug, Deserialize)]
+pub(crate) struct MediaRecommendationsResponse {
+    /// `null` when the media does not exist.
+    #[serde(rename = "Media")]
+    pub media: Option<MediaRecommendationsData>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct MediaRecommendationsData {
+    pub recommendations: Option<RecommendationConnection>,
+}
+
+/// A page of recommendations (`Media.recommendations`).
+#[derive(Debug, Deserialize)]
+pub(crate) struct RecommendationConnection {
+    #[serde(rename = "pageInfo")]
+    pub page_info: PageInfo,
+    /// Nodes may themselves be `null` in the AniList schema.
+    #[serde(default)]
+    pub nodes: Vec<Option<RecommendationNode>>,
+}
+
+/// A single recommendation edge.
+#[derive(Debug, Deserialize)]
+pub(crate) struct RecommendationNode {
+    /// The recommended media; `null` when it was deleted or is hidden.
+    #[serde(rename = "mediaRecommendation")]
+    pub media_recommendation: Option<AniListMedia>,
+}
+
 // ── Staff types ───────────────────────────────────────────────────────────────
 
 /// Name object for an AniList staff member.

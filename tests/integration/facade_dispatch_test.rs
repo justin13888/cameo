@@ -244,6 +244,73 @@ mod anilist_tests {
         );
     }
 
+    fn recommendations_response(media: Vec<Value>) -> Value {
+        let total = media.len();
+        let nodes: Vec<Value> = media
+            .into_iter()
+            .map(|m| json!({ "mediaRecommendation": m }))
+            .collect();
+        json!({
+            "data": {
+                "Media": {
+                    "recommendations": {
+                        "pageInfo": {
+                            "total": total,
+                            "currentPage": 1,
+                            "lastPage": 1,
+                            "hasNextPage": false
+                        },
+                        "nodes": nodes
+                    }
+                }
+            }
+        })
+    }
+
+    #[tokio::test]
+    async fn facade_routes_anilist_recommendations_to_anilist() {
+        let body = recommendations_response(vec![
+            media_item(5114, "Recommended Series", "TV"),
+            media_item(199, "Recommended Film", "MOVIE"),
+        ]);
+        let (server, client) = setup_anilist_only(body).await;
+
+        let shows = client
+            .tv_recommendations(&cameo::MediaId::anilist(1), None)
+            .await
+            .unwrap();
+        let movies = client
+            .movie_recommendations(&cameo::MediaId::anilist(1), None)
+            .await
+            .unwrap();
+
+        assert_eq!(shows.results.len(), 1);
+        assert_eq!(shows.results[0].name, "Recommended Series");
+        assert_eq!(shows.results[0].provider_id.to_string(), "anilist:5114");
+        assert_eq!(movies.results.len(), 1);
+        assert_eq!(movies.results[0].title, "Recommended Film");
+        assert_eq!(server.received_requests().await.unwrap().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn facade_anilist_similar_titles_are_provider_unsupported() {
+        let (_server, client) = setup_anilist_only(page_response(vec![], 0)).await;
+
+        let result = client
+            .similar_tv_shows(&cameo::MediaId::anilist(1), None)
+            .await;
+
+        assert!(
+            matches!(
+                result,
+                Err(CameoClientError::Provider(
+                    cameo::core::error::ProviderError::Unsupported
+                ))
+            ),
+            "expected Provider(Unsupported), got: {result:?}"
+        );
+    }
+
     #[tokio::test]
     async fn facade_anilist_only_season_details_returns_unsupported() {
         let body = page_response(vec![], 0);

@@ -99,6 +99,25 @@ pub const DISCOVER_ANIME: &str = anime_list_query!(
      status: $status, isAdult: $isAdult, sort: $sort"
 );
 
+/// Fetch a page of community recommendations for an anime, highest-rated
+/// first. Each recommended media uses the shared list selection.
+///
+/// Variables: `$id: Int!`, `$page: Int`, `$perPage: Int`.
+pub const MEDIA_RECOMMENDATIONS: &str = concat!(
+    "query MediaRecommendations($id: Int!, $page: Int, $perPage: Int) {\n",
+    "  Media(id: $id, type: ANIME) {\n",
+    "    recommendations(page: $page, perPage: $perPage, sort: [RATING_DESC]) {\n",
+    "      pageInfo { total currentPage lastPage hasNextPage }\n",
+    "      nodes {\n",
+    "        mediaRecommendation {\n",
+    anime_media_selection!(),
+    "        }\n",
+    "      }\n",
+    "    }\n",
+    "  }\n",
+    "}\n"
+);
+
 /// Fetch full details for a single anime by AniList ID.
 ///
 /// Variables: `$id: Int!`.
@@ -175,6 +194,7 @@ mod tests {
         ("LIST_POPULAR_ANIME", LIST_POPULAR_ANIME),
         ("LIST_TOP_SCORED_ANIME", LIST_TOP_SCORED_ANIME),
         ("DISCOVER_ANIME", DISCOVER_ANIME),
+        ("MEDIA_RECOMMENDATIONS", MEDIA_RECOMMENDATIONS),
         ("MEDIA_DETAILS", MEDIA_DETAILS),
         ("SEARCH_STAFF", SEARCH_STAFF),
         ("STAFF_DETAILS", STAFF_DETAILS),
@@ -222,6 +242,21 @@ mod tests {
         // The shared selection requests exactly the fields the conversions use.
         for field in ["id", "title", "startDate", "coverImage", "genres", "format"] {
             assert!(first.contains(field), "missing {field}");
+        }
+    }
+
+    /// Recommended media are requested with the same selection as the list
+    /// queries, so they convert identically.
+    #[test]
+    fn recommendations_reuse_the_list_media_selection() {
+        let list = selection(LIST_QUERIES[0]);
+        assert!(
+            MEDIA_RECOMMENDATIONS.contains(&list),
+            "recommendations selection diverged from the list selection"
+        );
+        assert!(MEDIA_RECOMMENDATIONS.contains("sort: [RATING_DESC]"));
+        for dead in ["episodes", "duration", "status"] {
+            assert!(!MEDIA_RECOMMENDATIONS.contains(dead), "dead field {dead}");
         }
     }
 

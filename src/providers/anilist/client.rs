@@ -9,14 +9,16 @@ use super::{
     error::AniListError,
     query,
     response::{
-        GraphQlResponse, MediaDetailResponse, MediaPageResponse, StaffDetailResponse,
-        StaffPageResponse,
+        GraphQlResponse, MediaDetailResponse, MediaPageResponse, MediaRecommendationsResponse,
+        RecommendationConnection, StaffDetailResponse, StaffPageResponse,
     },
 };
 use crate::{
     core::{config::TimeWindow, pagination::Page},
     unified::{
-        conversions::anilist::{anilist_media_to_movie, anilist_media_to_tv},
+        conversions::anilist::{
+            anilist_media_to_movie, anilist_media_to_search_result, anilist_media_to_tv,
+        },
         models::{
             UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
             UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
@@ -328,7 +330,7 @@ impl AniListClient {
         let results = page_data
             .media
             .into_iter()
-            .filter_map(crate::unified::conversions::anilist::anilist_media_to_search_result)
+            .filter_map(anilist_media_to_search_result)
             .collect();
         Ok(Page::with_has_next(
             pi.current_page.unwrap_or(1) as u32,
@@ -498,6 +500,81 @@ impl AniListClient {
         media_page_to_tv(resp)
     }
 
+    // ── Recommendations ────────────────────────────────────────────────────────
+
+    /// Get community recommendations for an anime, keeping only recommended
+    /// **movies** (format `MOVIE`).
+    ///
+    /// Recommendations are ordered by community rating (`RATING_DESC`).
+    /// AniList cannot filter recommendations by format server-side, so
+    /// non-movie entries (and entries with no format, or deleted/hidden
+    /// recommended media) are dropped locally: a page may hold **fewer** items
+    /// than the configured page size, or none, while `total_results`,
+    /// `total_pages`, and `has_next_page` keep describing AniList's unfiltered
+    /// recommendation list.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AniListError::NotFound`] if no anime has this id.
+    pub async fn movie_recommendations(
+        &self,
+        id: i32,
+        page: Option<u32>,
+    ) -> Result<Page<UnifiedMovie>, AniListError> {
+        let recs = self.recommendations(id, page).await?;
+        Ok(recommendations_page(recs).filter_map(|item| match item {
+            UnifiedSearchResult::Movie(movie) => Some(movie),
+            _ => None,
+        }))
+    }
+
+    /// Get community recommendations for an anime, keeping only recommended
+    /// **series** (any present format other than `MOVIE`, e.g. `TV`, `OVA`).
+    ///
+    /// Uses the same classification as [`search_multi`](Self::search_multi);
+    /// see [`movie_recommendations`](Self::movie_recommendations) for how
+    /// local filtering affects page sizes and pagination metadata.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AniListError::NotFound`] if no anime has this id.
+    pub async fn tv_recommendations(
+        &self,
+        id: i32,
+        page: Option<u32>,
+    ) -> Result<Page<UnifiedTvShow>, AniListError> {
+        let recs = self.recommendations(id, page).await?;
+        Ok(recommendations_page(recs).filter_map(|item| match item {
+            UnifiedSearchResult::TvShow(show) => Some(show),
+            _ => None,
+        }))
+    }
+
+    /// Fetch one page of raw recommendations for an anime.
+    async fn recommendations(
+        &self,
+        id: i32,
+        page: Option<u32>,
+    ) -> Result<Option<RecommendationConnection>, AniListError> {
+        let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
+        let vars = json!({
+            "id": id,
+            "page": page_num,
+            "perPage": per_page,
+        });
+        tracing::debug!(
+            id,
+            page = page_num,
+            "anilist: graphql MEDIA_RECOMMENDATIONS"
+        );
+        let resp: MediaRecommendationsResponse =
+            self.graphql(query::MEDIA_RECOMMENDATIONS, vars).await?;
+        let media = resp.media.ok_or(AniListError::NotFound)?;
+        Ok(media.recommendations)
+    }
+
+    // ── Filtered discovery ─────────────────────────────────────────────────────
+
     /// Create a builder for discovering anime with filters (genres, country,
     /// broadcast season, format, status, adult flag, sort order).
     ///
@@ -549,6 +626,30 @@ fn truncate_body(body: &str) -> String {
     } else {
         truncated
     }
+}
+
+/// Convert a recommendation connection to a page of classified media,
+/// skipping null nodes, null recommended media, and entries with no format.
+/// A missing connection is an empty first page.
+fn recommendations_page(conn: Option<RecommendationConnection>) -> Page<UnifiedSearchResult> {
+    let Some(conn) = conn else {
+        return Page::with_has_next(1, Vec::new(), false, 1, 0);
+    };
+    let pi = &conn.page_info;
+    let results = conn
+        .nodes
+        .into_iter()
+        .flatten()
+        .filter_map(|node| node.media_recommendation)
+        .filter_map(anilist_media_to_search_result)
+        .collect();
+    Page::with_has_next(
+        pi.current_page.unwrap_or(1) as u32,
+        results,
+        pi.has_next_page,
+        pi.last_page.unwrap_or(1) as u32,
+        pi.total.unwrap_or(0) as u32,
+    )
 }
 
 fn media_page_to_movies(

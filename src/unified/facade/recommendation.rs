@@ -69,6 +69,10 @@ impl CameoClient {
     }
 
     /// Get movies similar to a given movie.
+    ///
+    /// Providers without a "similar titles" list (AniList) answer with
+    /// [`ProviderError::Unsupported`](crate::core::error::ProviderError::Unsupported),
+    /// surfaced as [`CameoClientError::Provider`].
     pub async fn similar_movies(
         &self,
         id: &MediaId,
@@ -98,6 +102,10 @@ impl CameoClient {
     }
 
     /// Get TV shows similar to a given TV show.
+    ///
+    /// Providers without a "similar titles" list (AniList) answer with
+    /// [`ProviderError::Unsupported`](crate::core::error::ProviderError::Unsupported),
+    /// surfaced as [`CameoClientError::Provider`].
     pub async fn similar_tv_shows(
         &self,
         id: &MediaId,
