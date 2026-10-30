@@ -5,6 +5,8 @@ mod integration {
     #[cfg(feature = "anilist")]
     mod anilist_discovery_test;
     #[cfg(feature = "anilist")]
+    mod anilist_external_ids_test;
+    #[cfg(feature = "anilist")]
     mod anilist_search_test;
     #[cfg(all(feature = "cache", feature = "tmdb"))]
     mod cache_integration_test;
@@ -29,6 +31,8 @@ mod integration {
     mod tmdb_episode_test;
     #[cfg(feature = "tmdb")]
     mod tmdb_error_scenarios_test;
+    #[cfg(feature = "tmdb")]
+    mod tmdb_external_ids_test;
     #[cfg(feature = "tmdb")]
     mod tmdb_movies_test;
     #[cfg(feature = "tmdb")]

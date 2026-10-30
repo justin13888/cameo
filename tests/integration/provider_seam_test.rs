@@ -25,6 +25,19 @@ fn tmdb_client_is_a_dyn_provider() {
     assert_eq!(search.id(), "tmdb");
     assert!(search.supports(Capability::Search));
     assert!(search.supports(Capability::WatchAvailability));
+    assert!(search.supports(Capability::ExternalIds));
+
+    let external: Arc<dyn cameo::ExternalIdProvider> =
+        Arc::new(TmdbClient::new(TmdbConfig::new("token")).unwrap());
+    assert_eq!(
+        external.external_sources(),
+        &[
+            cameo::ExternalSource::Imdb,
+            cameo::ExternalSource::Tvdb,
+            cameo::ExternalSource::Wikidata
+        ]
+    );
+    assert_send_sync::<Arc<dyn cameo::ExternalIdProvider>>();
 
     // The trait objects are Send + Sync, so they can cross `tokio::spawn`.
     assert_send_sync::<Arc<dyn SearchProvider>>();
@@ -37,9 +50,12 @@ fn anilist_client_is_a_dyn_provider() {
     use cameo::providers::anilist::{AniListClient, AniListConfig};
 
     let client = AniListClient::new(AniListConfig::new()).unwrap();
-    let search: Arc<dyn SearchProvider> = Arc::new(client);
+    let search: Arc<dyn SearchProvider> = Arc::new(client.clone());
+    let external: Arc<dyn cameo::ExternalIdProvider> = Arc::new(client);
 
     assert_eq!(search.id(), "anilist");
+    assert!(search.supports(Capability::ExternalIds));
+    assert_eq!(external.external_sources(), &[cameo::ExternalSource::Mal]);
     assert!(search.supports(Capability::Search));
     assert!(search.supports(Capability::Discovery));
     // AniList does not implement recommendations / seasons / watch availability.

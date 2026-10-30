@@ -155,6 +155,51 @@ async fn facade_movie_watch_providers_dispatches_to_tmdb() {
     assert_eq!(us.flatrate[0].name, "fuboTV");
 }
 
+#[tokio::test]
+async fn facade_tv_external_ids_dispatches_to_tmdb() {
+    let server = MockServer::start().await;
+    let client = setup(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/tv/1396/external_ids"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../fixtures/tv_external_ids_response.json"),
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let ids = client.tv_external_ids(&MediaId::tmdb(1396)).await.unwrap();
+
+    assert_eq!(ids.tmdb, Some(1396));
+    assert_eq!(ids.tvdb, Some(81189));
+}
+
+#[tokio::test]
+async fn facade_find_by_external_id_dispatches_to_tmdb() {
+    let server = MockServer::start().await;
+    let client = setup(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/find/tt0137523"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../fixtures/find_by_imdb_id_response.json"),
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let matches = client
+        .find_by_external_id(&cameo::ExternalId::imdb("tt0137523"))
+        .await
+        .unwrap();
+
+    assert_eq!(
+        matches,
+        vec![cameo::ExternalMatch::movie(MediaId::tmdb(550))]
+    );
+}
+
 // ── AniList fallback ──────────────────────────────────────────────────────────
 
 #[cfg(feature = "anilist")]
@@ -255,6 +300,35 @@ mod anilist_tests {
         assert!(
             matches!(result, Err(CameoClientError::Unsupported)),
             "expected Unsupported, got: {result:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn facade_anilist_only_find_by_imdb_id_returns_unsupported() {
+        let body = page_response(vec![], 0);
+        let (_server, client) = setup_anilist_only(body).await;
+        let result = client
+            .find_by_external_id(&cameo::ExternalId::imdb("tt0137523"))
+            .await;
+
+        assert!(
+            matches!(result, Err(CameoClientError::Unsupported)),
+            "expected Unsupported, got: {result:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn facade_anilist_find_by_mal_id() {
+        let body = json!({ "data": { "Media": { "id": 5114, "format": "TV" } } });
+        let (_server, client) = setup_anilist_only(body).await;
+        let result = client
+            .find_by_external_id(&cameo::ExternalId::mal(5114))
+            .await
+            .unwrap();
+
+        assert_eq!(
+            result,
+            vec![cameo::ExternalMatch::tv_show(cameo::MediaId::anilist(5114))]
         );
     }
 

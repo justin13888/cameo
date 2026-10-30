@@ -159,6 +159,25 @@ pub(crate) struct MediaDetailResponse {
     pub media: Option<AniListMediaDetail>,
 }
 
+/// The id-only selection of a media entry, used by the external-id queries
+/// ([`MEDIA_EXTERNAL_IDS`](super::query::MEDIA_EXTERNAL_IDS) selects `idMal`,
+/// [`MEDIA_BY_MAL_ID`](super::query::MEDIA_BY_MAL_ID) selects `format`).
+#[derive(Debug, Deserialize)]
+pub(crate) struct AniListMediaIds {
+    pub id: i32,
+    #[serde(rename = "idMal", default)]
+    pub id_mal: Option<i32>,
+    #[serde(default)]
+    pub format: Option<String>,
+}
+
+/// `data` object for the external-id queries.
+#[derive(Debug, Deserialize)]
+pub(crate) struct MediaIdsResponse {
+    #[serde(rename = "Media")]
+    pub media: Option<AniListMediaIds>,
+}
+
 // ── Staff types ───────────────────────────────────────────────────────────────
 
 /// Name object for an AniList staff member.

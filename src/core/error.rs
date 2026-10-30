@@ -79,6 +79,7 @@ impl From<crate::providers::tmdb::TmdbError> for ProviderError {
             TmdbError::Http(e) => ProviderError::Transport(e.to_string()),
             TmdbError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
             TmdbError::InvalidConfig(s) => ProviderError::InvalidInput(s),
+            TmdbError::UnsupportedSource(_) => ProviderError::Unsupported,
             TmdbError::Api {
                 status,
                 message,
@@ -190,6 +191,12 @@ mod tests {
         assert!(matches!(
             ProviderError::from(TmdbError::InvalidConfig("x".into())),
             ProviderError::InvalidInput(_)
+        ));
+        assert!(matches!(
+            ProviderError::from(TmdbError::UnsupportedSource(
+                crate::unified::external_ids::ExternalSource::Mal
+            )),
+            ProviderError::Unsupported
         ));
     }
 

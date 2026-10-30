@@ -8,14 +8,16 @@ use super::{
     error::AniListError,
     query,
     response::{
-        GraphQlResponse, MediaDetailResponse, MediaPageResponse, StaffDetailResponse,
-        StaffPageResponse,
+        GraphQlResponse, MediaDetailResponse, MediaIdsResponse, MediaPageResponse,
+        StaffDetailResponse, StaffPageResponse,
     },
 };
 use crate::{
     core::{config::TimeWindow, pagination::Page},
     unified::{
         conversions::anilist::{anilist_media_to_movie, anilist_media_to_tv},
+        external_ids::{ExternalIds, ExternalMatch},
+        media_id::MediaId,
         models::{
             UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
             UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
@@ -365,6 +367,52 @@ impl AniListClient {
         let resp: StaffDetailResponse = self.graphql(query::STAFF_DETAILS, vars).await?;
         let staff = resp.staff.ok_or(AniListError::NotFound)?;
         Ok(crate::unified::conversions::anilist::staff_detail_to_person_details(staff))
+    }
+
+    // ── External IDs ───────────────────────────────────────────────────────────
+
+    /// Get the external ids of an anime by AniList ID: its MyAnimeList id
+    /// (when AniList knows one) and `anilist: Some(id)`.
+    ///
+    /// AniList tracks no IMDb, TheTVDB, Wikidata, or TMDB ids, so those stay
+    /// `None`. Uses a minimal `{ id idMal }` query rather than the full detail
+    /// selection.
+    ///
+    /// # Errors
+    ///
+    /// [`AniListError::NotFound`] when no anime has this id.
+    pub async fn external_ids(&self, id: i32) -> Result<ExternalIds, AniListError> {
+        let vars = json!({ "id": id });
+        tracing::debug!(id, "anilist: graphql MEDIA_EXTERNAL_IDS");
+        let resp: MediaIdsResponse = self.graphql(query::MEDIA_EXTERNAL_IDS, vars).await?;
+        let media = resp.media.ok_or(AniListError::NotFound)?;
+        let mut ids = ExternalIds::new();
+        ids.anilist = u64::try_from(media.id).ok();
+        ids.mal = media.id_mal.and_then(|n| u64::try_from(n).ok());
+        Ok(ids)
+    }
+
+    /// Find the anime with the given MyAnimeList ID.
+    ///
+    /// Returns `Ok(None)` when AniList has no anime with that MAL id. The match
+    /// is a [`MatchKind::Movie`](crate::unified::MatchKind::Movie) for the
+    /// `MOVIE` format and a [`MatchKind::TvShow`](crate::unified::MatchKind::TvShow)
+    /// for every other format (TV, OVA, ONA, special, …).
+    pub async fn find_by_mal_id(&self, mal_id: i32) -> Result<Option<ExternalMatch>, AniListError> {
+        let vars = json!({ "idMal": mal_id });
+        tracing::debug!(mal_id, "anilist: graphql MEDIA_BY_MAL_ID");
+        let resp: MediaIdsResponse = match self.graphql(query::MEDIA_BY_MAL_ID, vars).await {
+            Ok(resp) => resp,
+            Err(AniListError::NotFound) => return Ok(None),
+            Err(e) => return Err(e),
+        };
+        Ok(resp.media.and_then(|media| {
+            let id = MediaId::anilist(u64::try_from(media.id).ok()?);
+            Some(match media.format.as_deref() {
+                Some("MOVIE") => ExternalMatch::movie(id),
+                _ => ExternalMatch::tv_show(id),
+            })
+        }))
     }
 
     // ── Discovery ──────────────────────────────────────────────────────────────
