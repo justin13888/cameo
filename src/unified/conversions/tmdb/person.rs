@@ -13,7 +13,7 @@ impl From<types::SearchPersonResponseResultsItem> for UnifiedPerson {
             name: p.name.unwrap_or_default(),
             known_for_department: p.known_for_department,
             profile_url: resolve_profile(&p.profile_path),
-            popularity: Some(p.popularity.unwrap_or_default()),
+            popularity: p.popularity,
             gender: p.gender.and_then(Gender::from_tmdb),
             adult: p.adult,
         }
@@ -28,7 +28,7 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
                 name: p.name.unwrap_or_default(),
                 known_for_department: p.known_for_department,
                 profile_url: resolve_profile(&p.profile_path),
-                popularity: Some(p.popularity.unwrap_or_default()),
+                popularity: p.popularity,
                 gender: p.gender.and_then(Gender::from_tmdb),
                 adult: p.adult,
             },
@@ -52,12 +52,14 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
 /// Shared unknown-media policy: an item whose category is absent or not one of
 /// `movie` / `tv` / `person` is **omitted** (`None`) rather than coerced to an
 /// arbitrary type. AniList follows the same policy for its `format` field.
+/// An item without a TMDB id is omitted too: it cannot be fetched or cached.
 pub(crate) fn multi_search_result(
     item: types::SearchMultiResponseResultsItem,
 ) -> Option<UnifiedSearchResult> {
+    let id = item.id?;
     match item.media_type.as_deref() {
         Some("movie") => Some(UnifiedSearchResult::Movie(UnifiedMovie {
-            provider_id: MediaId::tmdb(item.id.unwrap_or_default() as u64),
+            provider_id: MediaId::tmdb(id as u64),
             title: item.title.or(item.name).unwrap_or_default(),
             original_title: item.original_title,
             overview: item.overview,
@@ -69,14 +71,14 @@ pub(crate) fn multi_search_result(
                 .iter()
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
-            popularity: Some(item.popularity.unwrap_or_default()),
-            vote_average: Some(item.vote_average.unwrap_or_default()),
-            vote_count: Some(item.vote_count.unwrap_or_default().max(0) as u64),
+            popularity: item.popularity,
+            vote_average: item.vote_average,
+            vote_count: item.vote_count.map(|c| c.max(0) as u64),
             original_language: item.original_language,
             adult: item.adult,
         })),
         Some("tv") => Some(UnifiedSearchResult::TvShow(UnifiedTvShow {
-            provider_id: MediaId::tmdb(item.id.unwrap_or_default() as u64),
+            provider_id: MediaId::tmdb(id as u64),
             name: item.name.or(item.title).unwrap_or_default(),
             original_name: item.original_name,
             overview: item.overview,
@@ -89,19 +91,19 @@ pub(crate) fn multi_search_result(
                 .iter()
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
-            popularity: Some(item.popularity.unwrap_or_default()),
-            vote_average: Some(item.vote_average.unwrap_or_default()),
-            vote_count: Some(item.vote_count.unwrap_or_default().max(0) as u64),
+            popularity: item.popularity,
+            vote_average: item.vote_average,
+            vote_count: item.vote_count.map(|c| c.max(0) as u64),
             original_language: item.original_language,
             origin_country: Vec::new(),
             adult: item.adult,
         })),
         Some("person") => Some(UnifiedSearchResult::Person(UnifiedPerson {
-            provider_id: MediaId::tmdb(item.id.unwrap_or_default() as u64),
+            provider_id: MediaId::tmdb(id as u64),
             name: item.name.or(item.title).unwrap_or_default(),
             known_for_department: None,
             profile_url: resolve_poster(&item.poster_path), // multi uses poster_path
-            popularity: Some(item.popularity.unwrap_or_default()),
+            popularity: item.popularity,
             gender: None,
             adult: item.adult,
         })),
@@ -160,6 +162,27 @@ mod tests {
             multi_search_result(multi_item(287, Some("person"))),
             Some(UnifiedSearchResult::Person(_))
         ));
+    }
+
+    #[test]
+    fn multi_item_without_id_is_dropped() {
+        let mut item = multi_item(550, Some("movie"));
+        item.id = None;
+        assert!(multi_search_result(item).is_none());
+    }
+
+    #[test]
+    fn multi_item_unknown_adult_and_counts_are_none() {
+        let mut item = multi_item(550, Some("movie"));
+        item.adult = None;
+        item.vote_count = None;
+        match multi_search_result(item) {
+            Some(UnifiedSearchResult::Movie(m)) => {
+                assert_eq!(m.adult, None);
+                assert_eq!(m.vote_count, None);
+            }
+            other => panic!("expected Movie, got {other:?}"),
+        }
     }
 
     #[test]

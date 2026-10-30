@@ -187,11 +187,58 @@ async fn tv_series_details_accepts_explicit_nulls() {
 
     assert_eq!(details.show.name, "Breaking Bad");
     assert_eq!(details.in_production, None);
-    // Numeric nulls keep the pre-existing zero fallback.
-    assert!(details.show.provider_id == "tmdb:0");
-    assert_eq!(details.show.vote_count, Some(0));
-    assert_eq!(details.number_of_episodes, Some(0));
+    // A null id falls back to the requested id rather than `tmdb:0`.
+    assert_eq!(details.show.provider_id, "tmdb:1396");
+    // Null counts are unknown, not zero.
+    assert_eq!(details.show.vote_count, None);
+    assert_eq!(details.number_of_episodes, None);
     assert_eq!(details.number_of_seasons, Some(5));
+}
+
+#[tokio::test]
+async fn tv_series_details_missing_counts_are_none_and_zero_is_kept() {
+    let mut body = tv_details_json();
+    body.remove("id");
+    body.remove("number_of_seasons");
+    body.remove("popularity");
+    body.insert("vote_count".to_string(), serde_json::json!(0));
+
+    let details = tv_details_with_body(body.into()).await;
+
+    assert_eq!(details.show.provider_id, "tmdb:1396");
+    assert_eq!(details.number_of_seasons, None);
+    assert_eq!(details.show.popularity, None);
+    // A zero TMDB actually sends is kept.
+    assert_eq!(details.show.vote_count, Some(0));
+}
+
+#[tokio::test]
+async fn tv_series_details_null_nested_ids_are_none() {
+    let mut body = tv_details_json();
+    for key in ["networks", "created_by"] {
+        if let Some(serde_json::Value::Array(items)) = body.get_mut(key) {
+            for item in items {
+                item["id"] = serde_json::Value::Null;
+            }
+        }
+    }
+    body.insert(
+        "production_companies".to_string(),
+        serde_json::json!([{ "id": null, "name": "Sony", "logo_path": null, "origin_country": "US" }]),
+    );
+    body.insert(
+        "seasons".to_string(),
+        serde_json::json!([{ "id": null, "season_number": 1, "episode_count": null }]),
+    );
+
+    let details = tv_details_with_body(body.into()).await;
+
+    assert_eq!(details.networks[0].name, "AMC");
+    assert_eq!(details.networks[0].id, None);
+    assert_eq!(details.production_companies[0].name, "Sony");
+    assert_eq!(details.production_companies[0].id, None);
+    assert_eq!(details.created_by[0].id, None);
+    assert_eq!(details.seasons[0].episode_count, None);
 }
 
 #[tokio::test]
@@ -223,4 +270,42 @@ async fn tv_series_details_in_production_true_is_some_true() {
     let details = tv_details_with_body(body.into()).await;
 
     assert_eq!(details.in_production, Some(true));
+}
+
+/// Serve `body` as the `/3/search/tv` response and run a search for `page`.
+async fn search_tv_with_body(
+    body: serde_json::Value,
+    page: Option<u32>,
+) -> cameo::core::pagination::Page<cameo::UnifiedTvShow> {
+    let (server, client) = setup_mock_client().await;
+    Mock::given(method("GET"))
+        .and(path("/3/search/tv"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(body))
+        .mount(&server)
+        .await;
+    client.search_tv_shows("breaking bad", page).await.unwrap()
+}
+
+#[tokio::test]
+async fn search_tv_drops_items_without_id_and_keeps_unknown_adult() {
+    let body = serde_json::json!({
+        "page": 1,
+        "results": [
+            { "id": null, "name": "Null id" },
+            { "name": "Missing id" },
+            { "id": 1, "name": "Null adult", "adult": null, "vote_count": null },
+            { "id": 2, "name": "Missing adult" }
+        ],
+        "total_pages": 1,
+        "total_results": 4
+    });
+
+    let page = search_tv_with_body(body, None).await;
+
+    let names: Vec<_> = page.results.iter().map(|s| s.name.as_str()).collect();
+    assert_eq!(names, ["Null adult", "Missing adult"]);
+    assert_eq!(page.results[0].adult, None);
+    assert_eq!(page.results[1].adult, None);
+    assert_eq!(page.results[0].vote_count, None);
+    assert_eq!(page.results[0].popularity, None);
 }

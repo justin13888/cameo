@@ -25,9 +25,9 @@ macro_rules! impl_tv_from {
                         .iter()
                         .map(|&id| Genre::from_tmdb_id(id))
                         .collect(),
-                    popularity: Some(t.popularity.unwrap_or_default()),
-                    vote_average: Some(t.vote_average.unwrap_or_default()),
-                    vote_count: Some(t.vote_count.unwrap_or_default().max(0) as u64),
+                    popularity: t.popularity,
+                    vote_average: t.vote_average,
+                    vote_count: t.vote_count.map(|c| c.max(0) as u64),
                     original_language: t.original_language,
                     origin_country: t.origin_country,
                     adult: t.adult,
@@ -61,9 +61,9 @@ macro_rules! impl_tv_from_no_adult {
                         .iter()
                         .map(|&id| Genre::from_tmdb_id(id))
                         .collect(),
-                    popularity: Some(t.popularity.unwrap_or_default()),
-                    vote_average: Some(t.vote_average.unwrap_or_default()),
-                    vote_count: Some(t.vote_count.unwrap_or_default().max(0) as u64),
+                    popularity: t.popularity,
+                    vote_average: t.vote_average,
+                    vote_count: t.vote_count.map(|c| c.max(0) as u64),
                     original_language: t.original_language,
                     origin_country: t.origin_country,
                     adult: None,
@@ -89,7 +89,7 @@ impl From<types::TvSeasonDetailsResponseEpisodesItem> for UnifiedEpisode {
                 .still_path
                 .as_deref()
                 .map(|p| ImageUrl::still(p, StillSize::W300)),
-            vote_average: Some(e.vote_average.unwrap_or_default()),
+            vote_average: e.vote_average,
         }
     }
 }
@@ -106,7 +106,7 @@ impl From<types::TvEpisodeDetailsResponse> for UnifiedEpisode {
                 .still_path
                 .as_deref()
                 .map(|p| ImageUrl::still(p, StillSize::W300)),
-            vote_average: Some(e.vote_average.unwrap_or_default()),
+            vote_average: e.vote_average,
         }
     }
 }
@@ -150,7 +150,7 @@ impl From<types::TvSeriesDetailsResponseSeasonsItem> for UnifiedSeason {
             name: s.name,
             overview: s.overview,
             air_date: resolve_date(&s.air_date),
-            episode_count: Some(s.episode_count.unwrap_or_default().max(0) as u32),
+            episode_count: s.episode_count.map(|n| n.max(0) as u32),
             poster_url: resolve_poster(&s.poster_path),
         }
     }
@@ -170,18 +170,18 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 genres: t
                     .genres
                     .iter()
-                    .map(|g| Genre::from_tmdb_id(g.id.unwrap_or_default()))
+                    .filter_map(|g| g.id.map(Genre::from_tmdb_id))
                     .collect(),
-                popularity: Some(t.popularity.unwrap_or_default()),
-                vote_average: Some(t.vote_average.unwrap_or_default()),
-                vote_count: Some(t.vote_count.unwrap_or_default().max(0) as u64),
+                popularity: t.popularity,
+                vote_average: t.vote_average,
+                vote_count: t.vote_count.map(|c| c.max(0) as u64),
                 original_language: t.original_language,
                 origin_country: t.origin_country,
                 adult: t.adult,
             },
             tagline: t.tagline,
-            number_of_seasons: Some(t.number_of_seasons.unwrap_or_default().max(0) as u32),
-            number_of_episodes: Some(t.number_of_episodes.unwrap_or_default().max(0) as u32),
+            number_of_seasons: t.number_of_seasons.map(|n| n.max(0) as u32),
+            number_of_episodes: t.number_of_episodes.map(|n| n.max(0) as u32),
             // Spec default was `true`; an absent/null flag stays unknown.
             in_production: t.in_production,
             status: t.status,
