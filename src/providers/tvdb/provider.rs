@@ -24,15 +24,15 @@ use async_trait::async_trait;
 
 use super::{
     client::{TvdbClient, TvdbSearchType},
+    convert::{
+        episode_to_unified, external_ids, movie_to_details, search_to_movie, search_to_result,
+        search_to_tv_show, season_details, series_to_details,
+    },
     error::TvdbError,
 };
 use crate::{
     core::{error::ProviderError, pagination::Page},
     unified::{
-        conversions::tvdb::{
-            episode_to_unified, external_ids, movie_to_details, search_to_movie, search_to_result,
-            search_to_tv_show, season_details, series_to_details,
-        },
         external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         media_id::MediaId,
         models::{

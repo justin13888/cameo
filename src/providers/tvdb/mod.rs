@@ -8,6 +8,8 @@
 pub mod client;
 /// TheTVDB client configuration.
 pub mod config;
+/// Conversions from TheTVDB records to unified models.
+mod convert;
 /// TheTVDB-specific error types.
 pub mod error;
 /// Unified provider-trait implementations.
