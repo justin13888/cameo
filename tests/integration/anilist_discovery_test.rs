@@ -1,5 +1,5 @@
 use cameo::{
-    core::config::TimeWindow,
+    TimeWindow,
     providers::anilist::{AniListClient, AniListConfig},
 };
 use serde_json::{Value, json};

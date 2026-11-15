@@ -20,7 +20,7 @@ use crate::{
 /// ```no_run
 /// # async fn example(client: &cameo::providers::tmdb::TmdbClient) -> Result<(), cameo::providers::tmdb::TmdbError> {
 /// use cameo::Genre;
-/// use cameo::providers::tmdb::builders::MovieSortBy;
+/// use cameo::providers::tmdb::MovieSortBy;
 /// let results = client
 ///     .discover_movies()
 ///     .sort_by(MovieSortBy::PopularityDesc)

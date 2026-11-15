@@ -4,9 +4,13 @@
 //! implementation. Use [`CacheTtlConfig`] to control how long different
 //! response types are cached.
 
-pub mod backend;
-pub mod key;
-pub mod sqlite;
+//!
+//! The leaf modules are private; every item is re-exported here and from the
+//! crate root, which is its canonical path.
+
+pub(crate) mod backend;
+pub(crate) mod key;
+pub(crate) mod sqlite;
 
 use std::time::Duration;
 

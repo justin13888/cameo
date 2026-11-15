@@ -1,7 +1,6 @@
 use cameo::{
-    core::config::TimeWindow,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
-    unified::models::UnifiedSearchResult,
+    unified::{TimeWindow, UnifiedSearchResult},
 };
 use serde_json::{Value, json};
 use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};

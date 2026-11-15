@@ -2,9 +2,8 @@
 
 use cameo::{
     MediaId,
-    core::config::TimeWindow,
     providers::tmdb::TmdbConfig,
-    unified::{CameoClient, models::UnifiedSearchResult},
+    unified::{CameoClient, TimeWindow, UnifiedSearchResult},
 };
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
@@ -420,7 +419,7 @@ mod anilist_tests {
             matches!(
                 result,
                 Err(CameoClientError::Provider(
-                    cameo::core::error::ProviderError::Unsupported
+                    cameo::ProviderError::Unsupported
                 ))
             ),
             "expected Provider(Unsupported), got: {result:?}"

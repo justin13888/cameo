@@ -8,11 +8,16 @@ pub(crate) mod http;
 
 /// Per-provider request-rate limiting.
 #[cfg(any(feature = "tmdb", feature = "anilist", feature = "tvdb"))]
-pub mod rate_limit;
+pub(crate) mod rate_limit;
 
 /// Retry policy for transient provider failures.
 #[cfg(any(feature = "tmdb", feature = "anilist", feature = "tvdb"))]
-pub mod retry;
+pub(crate) mod retry;
+
+#[cfg(any(feature = "tmdb", feature = "anilist", feature = "tvdb"))]
+pub use rate_limit::RateLimit;
+#[cfg(any(feature = "tmdb", feature = "anilist", feature = "tvdb"))]
+pub use retry::RetryPolicy;
 
 /// TMDB (The Movie Database) provider.
 #[cfg(feature = "tmdb")]

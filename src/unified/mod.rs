@@ -3,19 +3,19 @@ mod builders;
 /// Conversion implementations from provider types to unified types.
 pub(crate) mod conversions;
 /// Partial calendar dates for release/air dates.
-pub mod date;
+pub(crate) mod date;
 /// Third-party database identifiers (IMDb, TVDB, MyAnimeList, Wikidata).
-pub mod external_ids;
+pub(crate) mod external_ids;
 /// Multi-provider facade client.
-pub mod facade;
+pub(crate) mod facade;
 /// Genre enum covering all known media genres.
-pub mod genre;
+pub(crate) mod genre;
 /// Typed, provider-qualified media identifiers.
-pub mod media_id;
+pub(crate) mod media_id;
 /// Unified data models.
-pub mod models;
+pub(crate) mod models;
 /// Provider traits.
-pub mod traits;
+pub(crate) mod traits;
 
 pub use date::{ParseDateError, PartialDate};
 pub use external_ids::{
@@ -30,3 +30,7 @@ pub use traits::{
     MediaProvider, Provider, RecommendationProvider, SearchProvider, SeasonProvider,
     WatchAvailabilityProvider,
 };
+
+/// The discovery time window the trending methods take, re-exported from
+/// [`crate::core`] so it sits beside the traits that use it.
+pub use crate::core::TimeWindow;

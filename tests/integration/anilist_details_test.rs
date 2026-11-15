@@ -1,7 +1,7 @@
 use cameo::{
     AlternativeTitle, TitleKind,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
-    unified::genre::Genre,
+    unified::Genre,
 };
 use serde_json::json;
 use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
