@@ -48,7 +48,13 @@ fn decode_with_success_status_is_deserialization_error() {
         body: bytes::Bytes::new(),
         truncated: false,
     });
-    assert!(matches!(err, TmdbError::Deserialization(_)), "got {err:?}");
+    match &err {
+        TmdbError::Deserialization(e) => {
+            assert_eq!(e.to_string(), "invalid type: null, expected i64");
+            assert!(std::error::Error::source(e).is_none(), "{e:?}");
+        }
+        other => panic!("expected Deserialization, got {other:?}"),
+    }
     assert!(err.to_string().contains("expected i64"), "{err}");
 }
 
@@ -178,8 +184,16 @@ fn maps_every_tmdb_error_branch() {
         }
     }
 
-    let http = TmdbError::from(reqwest_builder_error());
+    let http = TmdbError::from_reqwest(reqwest_builder_error());
     let http_text = http.to_string();
+    // The original stays reachable: TmdbError -> TransportError -> reqwest.
+    let transport = std::error::Error::source(&http).expect("TransportError source");
+    assert!(
+        std::error::Error::source(transport)
+            .and_then(|e| e.downcast_ref::<reqwest::Error>())
+            .is_some(),
+        "{http:?}"
+    );
     match ProviderError::from(http) {
         ProviderError::Transport(m) => {
             assert!(!m.is_empty());
@@ -193,7 +207,7 @@ fn maps_every_tmdb_error_branch() {
 
     let json = json_error();
     let json_text = json.to_string();
-    match ProviderError::from(TmdbError::Deserialization(json)) {
+    match ProviderError::from(TmdbError::Deserialization(DecodeError::json(json))) {
         ProviderError::Deserialization(m) => assert_eq!(m, json_text),
         other => panic!("expected Deserialization, got {other:?}"),
     }

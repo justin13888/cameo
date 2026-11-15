@@ -255,7 +255,7 @@ impl CacheBackend for SqliteCache {
 
             match result.map_err(CacheError::backend)? {
                 Some(json_str) => {
-                    let value = serde_json::from_str(&json_str)?;
+                    let value = serde_json::from_str(&json_str).map_err(CacheError::json)?;
                     Ok(Some(value))
                 }
                 None => Ok(None),
@@ -280,7 +280,7 @@ impl CacheBackend for SqliteCache {
         let conn = Arc::clone(&self.write_conn);
         let key_type = key.key_type().to_string();
         let key_id = key.key_id();
-        let json_str = serde_json::to_string(&value)?;
+        let json_str = serde_json::to_string(&value).map_err(CacheError::json)?;
         let now = self.now();
         let expires_at = now + ttl.as_secs();
 

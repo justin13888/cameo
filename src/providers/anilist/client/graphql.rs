@@ -5,9 +5,12 @@ use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 
 use super::AniListClient;
-use crate::providers::{
-    anilist::{error::AniListError, response::GraphQlResponse},
-    http, retry,
+use crate::{
+    core::error::DecodeError,
+    providers::{
+        anilist::{error::AniListError, response::GraphQlResponse},
+        http, retry,
+    },
 };
 
 impl AniListClient {
@@ -84,12 +87,13 @@ impl AniListClient {
             .header(reqwest::header::ACCEPT, "application/json")
             .json(body)
             .send()
-            .await?;
+            .await
+            .map_err(AniListError::from_reqwest)?;
 
         // Capture status and rate-limit headers before consuming the body.
         let status = resp.status();
         let retry_after = http::parse_retry_after(resp.headers());
-        let text = resp.text().await?;
+        let text = resp.text().await.map_err(AniListError::from_reqwest)?;
 
         // Parse the GraphQL envelope regardless of HTTP status.
         let gql_resp: GraphQlResponse<R> = match serde_json::from_str(&text) {
@@ -104,7 +108,7 @@ impl AniListClient {
                         message: truncate_body(&text),
                     });
                 }
-                return Err(AniListError::Deserialization(parse_err));
+                return Err(AniListError::Deserialization(DecodeError::json(parse_err)));
             }
         };
 
