@@ -295,7 +295,7 @@ fn register_all(builder: CameoClientBuilder, fake: &Arc<Fake>) -> CameoClientBui
         .register_discovery_provider(fake.clone())
         .register_recommendation_provider(fake.clone())
         .register_season_provider(fake.clone())
-        .register_watch_provider(fake.clone())
+        .register_watch_availability_provider(fake.clone())
         .register_external_id_provider(fake.clone())
         .register_credits_provider(fake.clone())
 }
@@ -311,7 +311,7 @@ const REGISTER_ONE: [(&str, Register); 8] = [
         b.register_recommendation_provider(f)
     }),
     ("season", |b, f| b.register_season_provider(f)),
-    ("watch", |b, f| b.register_watch_provider(f)),
+    ("watch", |b, f| b.register_watch_availability_provider(f)),
     ("external", |b, f| b.register_external_id_provider(f)),
     ("credits", |b, f| b.register_credits_provider(f)),
 ];

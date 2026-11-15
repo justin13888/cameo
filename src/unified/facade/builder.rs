@@ -133,7 +133,10 @@ impl CameoClientBuilder {
     }
 
     /// Register an out-of-crate watch-availability provider.
-    pub fn register_watch_provider(mut self, provider: Arc<dyn WatchAvailabilityProvider>) -> Self {
+    pub fn register_watch_availability_provider(
+        mut self,
+        provider: Arc<dyn WatchAvailabilityProvider>,
+    ) -> Self {
         self.ext_watch.push(provider);
         self
     }
