@@ -101,6 +101,18 @@ pub struct AlternativeTitle {
     pub language: Option<String>,
 }
 
+/// A title's certification (content rating) in one country, such as `PG-13`
+/// in the US or `TV-MA` for a US TV series.
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Certification {
+    /// ISO 3166-1 alpha-2 code of the country the rating applies in, e.g.
+    /// `"US"`.
+    pub country: String,
+    /// The rating that country's rating board assigned, e.g. `"R"`.
+    pub rating: String,
+}
+
 /// A movie in the unified model.
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -183,6 +195,12 @@ pub struct UnifiedMovieDetails {
     pub video: Option<bool>,
     /// The collection (franchise) this movie belongs to, if any.
     pub belongs_to_collection: Option<Collection>,
+    /// Certifications (content ratings), at most one per country.
+    ///
+    /// Empty unless the provider returned them with the details. TMDB returns
+    /// them only when the `release_dates` append is requested (see
+    /// `TmdbClient::movie_details_with_append`).
+    pub certifications: Vec<Certification>,
 }
 
 /// A TV show in the unified model.
@@ -287,6 +305,12 @@ pub struct UnifiedTvShowDetails {
     pub production_countries: Vec<String>,
     /// The show's seasons.
     pub seasons: Vec<UnifiedSeason>,
+    /// Certifications (content ratings), at most one per country.
+    ///
+    /// Empty unless the provider returned them with the details. TMDB returns
+    /// them only when the `content_ratings` append is requested (see
+    /// `TmdbClient::tv_series_details_with_append`).
+    pub certifications: Vec<Certification>,
 }
 
 /// Summary information about a single season of a TV show.

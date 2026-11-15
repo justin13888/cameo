@@ -34,6 +34,12 @@ impl TmdbClient {
     }
 
     /// Get detailed information about a movie with appended responses.
+    ///
+    /// `append` is TMDB's comma-separated `append_to_response` list. Including
+    /// `release_dates` fills [`UnifiedMovieDetails::certifications`] with one
+    /// certification per country, picked as
+    /// [`movie_certifications`](Self::movie_certifications) picks them; without
+    /// it that field stays empty. Other appended blocks are not read.
     #[tracing::instrument(skip(self))]
     pub async fn movie_details_with_append(
         &self,
@@ -60,6 +66,30 @@ impl TmdbClient {
         let params = tmdb::TvSeriesDetailsParams {
             language: self.language(),
             ..Default::default()
+        };
+        let mut body = self
+            .execute(|| self.inner.tv_series_details(series_id, params.clone()))
+            .await?;
+        details_id(&mut body.id, series_id);
+        Ok(body.into())
+    }
+
+    /// Get detailed information about a TV series with appended responses.
+    ///
+    /// `append` is TMDB's comma-separated `append_to_response` list. Including
+    /// `content_ratings` fills [`UnifiedTvShowDetails::certifications`] with
+    /// the series' content ratings, kept as
+    /// [`tv_series_certifications`](Self::tv_series_certifications) keeps them;
+    /// without it that field stays empty. Other appended blocks are not read.
+    #[tracing::instrument(skip(self))]
+    pub async fn tv_series_details_with_append(
+        &self,
+        series_id: i32,
+        append: &str,
+    ) -> Result<UnifiedTvShowDetails, TmdbError> {
+        let params = tmdb::TvSeriesDetailsParams {
+            append_to_response: Some(append.to_owned()),
+            language: self.language(),
         };
         let mut body = self
             .execute(|| self.inner.tv_series_details(series_id, params.clone()))

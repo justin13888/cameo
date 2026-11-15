@@ -132,6 +132,7 @@ impl UnifiedTvShowDetails {
             spoken_languages: Vec::new(),
             production_countries: Vec::new(),
             seasons: Vec::new(),
+            certifications: Vec::new(),
         }
     }
 
@@ -213,6 +214,11 @@ impl UnifiedTvShowDetails {
     /// Set the seasons.
     pub fn with_seasons(mut self, value: Vec<UnifiedSeason>) -> Self {
         self.seasons = value;
+        self
+    }
+    /// Set the certifications (content ratings).
+    pub fn with_certifications(mut self, value: Vec<Certification>) -> Self {
+        self.certifications = value;
         self
     }
 }

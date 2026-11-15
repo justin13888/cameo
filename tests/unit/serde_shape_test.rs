@@ -8,8 +8,8 @@
 //! schema version) deliberately.
 
 use cameo::{
-    AlternativeTitle, Collection, Company, Creator, Gender, Genre, MediaId, Network, Page,
-    PartialDate, SeriesStatus, SeriesType, TitleKind, UnifiedCastCredit, UnifiedCredits,
+    AlternativeTitle, Certification, Collection, Company, Creator, Gender, Genre, MediaId, Network,
+    Page, PartialDate, SeriesStatus, SeriesType, TitleKind, UnifiedCastCredit, UnifiedCredits,
     UnifiedCrewCredit, UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson,
     UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeason, UnifiedSeasonDetails,
     UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails, UnifiedWatchProviderEntry,
@@ -115,7 +115,8 @@ fn movie_details_shape_is_pinned() {
                 .with_id(1)
                 .with_poster_url("https://example.com/c-poster.jpg")
                 .with_backdrop_url("https://example.com/c-backdrop.jpg"),
-        );
+        )
+        .with_certifications(vec![Certification::new("US", "R")]);
     assert_golden(
         &details,
         include_str!("../fixtures/golden/unified_movie_details.json"),
@@ -156,7 +157,8 @@ fn tv_show_details_shape_is_pinned() {
                 .with_air_date(PartialDate::ymd(2009, 4, 5).expect("valid date"))
                 .with_episode_count(64)
                 .with_poster_url("https://example.com/s1.jpg"),
-        ]);
+        ])
+        .with_certifications(vec![Certification::new("JP", "PG-12")]);
     assert_golden(
         &details,
         include_str!("../fixtures/golden/unified_tv_show_details.json"),

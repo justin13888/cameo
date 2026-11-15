@@ -6,11 +6,12 @@
 //! another field (or wrote the wrong one) fails.
 
 use cameo::{
-    AlternativeTitle, Collection, Company, Creator, Gender, Genre, MediaId, Network, PartialDate,
-    SeriesStatus, SeriesType, TitleKind, UnifiedCastCredit, UnifiedCredits, UnifiedCrewCredit,
-    UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
-    UnifiedSearchResult, UnifiedSeason, UnifiedSeasonDetails, UnifiedStreamingService,
-    UnifiedTvShow, UnifiedTvShowDetails, UnifiedWatchProviderEntry, UnifiedWatchProviders,
+    AlternativeTitle, Certification, Collection, Company, Creator, Gender, Genre, MediaId, Network,
+    PartialDate, SeriesStatus, SeriesType, TitleKind, UnifiedCastCredit, UnifiedCredits,
+    UnifiedCrewCredit, UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson,
+    UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeason, UnifiedSeasonDetails,
+    UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails, UnifiedWatchProviderEntry,
+    UnifiedWatchProviders,
 };
 
 /// `base.setter(args)` equals `base` with only `field` replaced by `value`.
@@ -96,6 +97,7 @@ fn unified_movie_details_defaults_and_setters() {
     assert!(d.spoken_languages.is_empty());
     assert_eq!(d.video, None);
     assert_eq!(d.belongs_to_collection, None);
+    assert!(d.certifications.is_empty());
 
     let base = || UnifiedMovieDetails::new(movie());
     let companies = vec![Company::new("Fox")];
@@ -113,6 +115,15 @@ fn unified_movie_details_defaults_and_setters() {
     assert_sets!(base(), with_spoken_languages(vec![s("en")]) => spoken_languages = vec![s("en")]);
     assert_sets!(base(), with_video(true) => video = Some(true));
     assert_sets!(base(), with_collection(collection.clone()) => belongs_to_collection = Some(collection.clone()));
+    let certs = vec![Certification::new("US", "R")];
+    assert_sets!(base(), with_certifications(certs.clone()) => certifications = certs.clone());
+}
+
+#[test]
+fn certification_new_sets_country_and_rating() {
+    let c = Certification::new("US", "PG-13");
+    assert_eq!(c.country, "US");
+    assert_eq!(c.rating, "PG-13");
 }
 
 #[test]
@@ -176,6 +187,7 @@ fn unified_tv_show_details_defaults_and_setters() {
     assert!(d.spoken_languages.is_empty());
     assert!(d.production_countries.is_empty());
     assert!(d.seasons.is_empty());
+    assert!(d.certifications.is_empty());
 
     let base = || UnifiedTvShowDetails::new(show());
     let networks = vec![Network::new("AMC")];
@@ -198,6 +210,8 @@ fn unified_tv_show_details_defaults_and_setters() {
     assert_sets!(base(), with_spoken_languages(vec![s("en")]) => spoken_languages = vec![s("en")]);
     assert_sets!(base(), with_production_countries(vec![s("US")]) => production_countries = vec![s("US")]);
     assert_sets!(base(), with_seasons(seasons.clone()) => seasons = seasons.clone());
+    let certs = vec![Certification::new("US", "TV-MA")];
+    assert_sets!(base(), with_certifications(certs.clone()) => certifications = certs.clone());
 }
 
 #[test]

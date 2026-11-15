@@ -1,6 +1,8 @@
 //! TMDB movie type → unified model conversions.
 
-use super::{resolve_backdrop, resolve_date, resolve_logo, resolve_poster, tmdb_media_id};
+use super::{
+    certifications, resolve_backdrop, resolve_date, resolve_logo, resolve_poster, tmdb_media_id,
+};
 use crate::{
     generated::tmdb::types,
     unified::{genre::Genre, models::*},
@@ -115,6 +117,13 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
             // Spec default was `true`; an absent/null flag stays unknown.
             video: m.video,
             belongs_to_collection,
+            // Present only when the `release_dates` append was requested.
+            certifications: certifications::movie_results(
+                m.release_dates.and_then(|block| block.results),
+            )
+            .into_iter()
+            .map(Certification::from)
+            .collect(),
         }
     }
 }

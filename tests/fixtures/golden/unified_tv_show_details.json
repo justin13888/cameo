@@ -1,4 +1,10 @@
 {
+  "certifications": [
+    {
+      "country": "JP",
+      "rating": "PG-12"
+    }
+  ],
   "created_by": [
     {
       "id": 7,

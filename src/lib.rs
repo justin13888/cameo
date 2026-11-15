@@ -134,8 +134,8 @@ pub use providers::tmdb::{TmdbAuth, TmdbClient, TmdbConfig, TmdbError};
 #[cfg(feature = "tvdb")]
 pub use providers::tvdb::{TvdbClient, TvdbConfig, TvdbError};
 pub use unified::{
-    AlternativeTitle, CameoClient, CameoClientBuilder, CameoClientError, Capability, Collection,
-    Company, Creator, CreditsProvider, DetailProvider, DiscoveryProvider, ExternalId,
+    AlternativeTitle, CameoClient, CameoClientBuilder, CameoClientError, Capability, Certification,
+    Collection, Company, Creator, CreditsProvider, DetailProvider, DiscoveryProvider, ExternalId,
     ExternalIdProvider, ExternalIds, ExternalMatch, ExternalSource, Gender, Genre, MatchKind,
     MediaId, MediaProvider, NativeId, Network, ParseDateError, PartialDate, Provider,
     RecommendationProvider, SearchProvider, SeasonProvider, SeriesStatus, SeriesType, TitleKind,

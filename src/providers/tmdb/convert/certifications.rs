@@ -1,6 +1,19 @@
-//! TMDB release-date and content-rating responses → [`TmdbCertification`].
+//! TMDB release-date and content-rating responses → [`TmdbCertification`]
+//! and the unified [`Certification`].
 
-use crate::{generated::tmdb::types, providers::tmdb::models::TmdbCertification};
+use crate::{
+    generated::tmdb::types, providers::tmdb::models::TmdbCertification,
+    unified::models::Certification,
+};
+
+impl From<TmdbCertification> for Certification {
+    fn from(c: TmdbCertification) -> Self {
+        Self {
+            country: c.country,
+            rating: c.certification,
+        }
+    }
+}
 
 impl TmdbCertification {
     /// Pair a country with a rating, trimming both and rejecting either when
@@ -34,8 +47,15 @@ const THEATRICAL_RELEASE: i64 = 3;
 pub(crate) fn movie_certifications(
     response: types::MovieReleaseDatesResponse,
 ) -> Vec<TmdbCertification> {
-    response
-        .results
+    movie_results(response.results)
+}
+
+/// [`movie_certifications`] over the `results` list, which the
+/// `/release_dates` response and the details `release_dates` append share.
+pub(crate) fn movie_results(
+    results: Option<types::MovieReleaseDatesResponseResults>,
+) -> Vec<TmdbCertification> {
+    results
         .into_iter()
         .flatten()
         .filter_map(|country| {
@@ -55,8 +75,15 @@ pub(crate) fn movie_certifications(
 pub(crate) fn tv_series_certifications(
     response: types::TvSeriesContentRatingsResponse,
 ) -> Vec<TmdbCertification> {
-    response
-        .results
+    tv_series_results(response.results)
+}
+
+/// [`tv_series_certifications`] over the `results` list, which the
+/// `/content_ratings` response and the details `content_ratings` append share.
+pub(crate) fn tv_series_results(
+    results: Option<types::TvSeriesContentRatingsResponseResults>,
+) -> Vec<TmdbCertification> {
+    results
         .into_iter()
         .flatten()
         .filter_map(|r| TmdbCertification::from_parts(r.iso_3166_1, r.rating))

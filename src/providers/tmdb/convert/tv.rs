@@ -1,7 +1,8 @@
 //! TMDB TV type → unified model conversions.
 
 use super::{
-    resolve_backdrop, resolve_date, resolve_logo, resolve_poster, resolve_still, tmdb_media_id,
+    certifications, resolve_backdrop, resolve_date, resolve_logo, resolve_poster, resolve_still,
+    tmdb_media_id,
 };
 use crate::{
     generated::tmdb::types,
@@ -251,6 +252,13 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 .filter(|s| s.season_number.is_some())
                 .map(UnifiedSeason::from)
                 .collect(),
+            // Present only when the `content_ratings` append was requested.
+            certifications: certifications::tv_series_results(
+                t.content_ratings.and_then(|block| block.results),
+            )
+            .into_iter()
+            .map(Certification::from)
+            .collect(),
         }
     }
 }
