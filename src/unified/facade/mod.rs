@@ -87,6 +87,7 @@ pub enum CameoClientError {
 // ── Cache helper ─────────────────────────────────────────────────────────────
 
 #[cfg(feature = "cache")]
+#[derive(Clone)]
 struct Cache {
     backend: Arc<dyn CacheBackend>,
     ttl: CacheTtlConfig,
@@ -364,6 +365,11 @@ impl CameoClientBuilder {
 /// origin to route by: it queries every provider accepting the id's source and
 /// merges the matches in priority order. Otherwise, cross-provider result
 /// merging or de-duplication is out of scope for v1.
+///
+/// Cloning is cheap: every provider and the cache backend are held behind an
+/// [`Arc`], so a clone shares them (including rate limiters and the cache)
+/// with the original.
+#[derive(Clone)]
 pub struct CameoClient {
     search: Vec<Arc<dyn SearchProvider>>,
     detail: Vec<Arc<dyn DetailProvider>>,
