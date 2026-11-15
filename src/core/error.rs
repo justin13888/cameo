@@ -80,6 +80,7 @@ impl From<crate::providers::tmdb::TmdbError> for ProviderError {
             // carries the request URL's `api_key`.
             TmdbError::Http(e) => ProviderError::Transport(e.to_string()),
             TmdbError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
+            e @ TmdbError::PageOutOfRange { .. } => ProviderError::Deserialization(e.to_string()),
             TmdbError::InvalidConfig(s) => ProviderError::InvalidInput(s),
             TmdbError::UnsupportedSource(_) => ProviderError::Unsupported,
             TmdbError::Request { kind, message } => match kind {
@@ -113,6 +114,9 @@ impl From<crate::providers::anilist::AniListError> for ProviderError {
             AniListError::InvalidConfig(s) => ProviderError::InvalidInput(s),
             AniListError::NotFound => ProviderError::NotFound,
             AniListError::NoData => ProviderError::Other("no data returned".to_string()),
+            e @ AniListError::PageOutOfRange { .. } => {
+                ProviderError::Deserialization(e.to_string())
+            }
             AniListError::Status {
                 status,
                 retry_after,
@@ -356,6 +360,16 @@ mod tests {
             other => panic!("expected Deserialization, got {other:?}"),
         }
 
+        match ProviderError::from(TmdbError::PageOutOfRange {
+            field: "total_pages",
+            value: -1,
+        }) {
+            ProviderError::Deserialization(m) => {
+                assert_eq!(m, "TMDB reported an out-of-range `total_pages`: -1");
+            }
+            other => panic!("expected Deserialization, got {other:?}"),
+        }
+
         match ProviderError::from(TmdbError::InvalidConfig("empty token".into())) {
             ProviderError::InvalidInput(m) => assert_eq!(m, "empty token"),
             other => panic!("expected InvalidInput, got {other:?}"),
@@ -435,6 +449,15 @@ mod tests {
         match ProviderError::from(AniListError::NoData) {
             ProviderError::Other(m) => assert_eq!(m, "no data returned"),
             other => panic!("expected Other, got {other:?}"),
+        }
+        match ProviderError::from(AniListError::PageOutOfRange {
+            field: "total",
+            value: -1,
+        }) {
+            ProviderError::Deserialization(m) => {
+                assert_eq!(m, "AniList reported an out-of-range `total`: -1");
+            }
+            other => panic!("expected Deserialization, got {other:?}"),
         }
     }
 
