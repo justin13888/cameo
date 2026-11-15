@@ -2,7 +2,7 @@
 #[cfg(feature = "anilist")]
 pub mod anilist;
 
-/// Shared HTTP client construction (timeouts, `User-Agent`).
+/// Shared HTTP helpers (client construction, `Retry-After`, retryable statuses).
 #[cfg(any(feature = "tmdb", feature = "anilist"))]
 pub(crate) mod http;
 

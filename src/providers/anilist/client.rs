@@ -16,6 +16,7 @@ use super::{
 };
 use crate::{
     core::{config::TimeWindow, pagination::Page},
+    providers::{http, retry},
     unified::{
         conversions::{
             anilist::{
@@ -191,30 +192,11 @@ impl AniListClient {
             "variables": variables,
         });
 
-        let policy = self.config.retry;
-        let mut retry_index = 0u32;
-        loop {
-            // Pace requests (including retries) within the rate limit.
-            self.rate_limiter.acquire().await;
-            match self.graphql_attempt(&body, root).await {
-                Ok(data) => return Ok(data),
-                Err(err) => {
-                    if policy.should_retry(retry_index) && err.is_retryable() {
-                        let delay = policy.backoff(retry_index, err.retry_after());
-                        tracing::debug!(
-                            retry = retry_index,
-                            ?delay,
-                            error = %err,
-                            "anilist: retrying transient error"
-                        );
-                        tokio::time::sleep(delay).await;
-                        retry_index += 1;
-                        continue;
-                    }
-                    return Err(err);
-                }
-            }
-        }
+        // Pace requests (including retries) within the rate limit.
+        retry::run(self.config.retry, &self.rate_limiter, "anilist", || {
+            self.graphql_attempt(&body, root)
+        })
+        .await
     }
 
     /// A single GraphQL request attempt (no rate limiting or retrying).
@@ -239,7 +221,7 @@ impl AniListClient {
 
         // Capture status and rate-limit headers before consuming the body.
         let status = resp.status();
-        let retry_after = super::error::parse_retry_after(resp.headers());
+        let retry_after = http::parse_retry_after(resp.headers());
         let text = resp.text().await?;
 
         // Parse the GraphQL envelope regardless of HTTP status.
@@ -999,7 +981,10 @@ mod tests {
     use super::*;
     use crate::{
         core::pagination::PageToken,
-        providers::{rate_limit::RateLimit, retry::RetryPolicy},
+        providers::{
+            rate_limit::RateLimit,
+            retry::{RetryPolicy, Retryable},
+        },
     };
 
     #[test]
