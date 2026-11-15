@@ -7,8 +7,8 @@
 
 use cameo::{
     AlternativeTitle, Collection, Company, Creator, Gender, Genre, MediaId, Network, PartialDate,
-    TitleKind, UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson,
-    UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeason, UnifiedSeasonDetails,
+    SeriesStatus, SeriesType, TitleKind, UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails,
+    UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeason, UnifiedSeasonDetails,
     UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails, UnifiedWatchProviderEntry,
     UnifiedWatchProviders,
 };
@@ -129,11 +129,11 @@ fn build_tv_show_and_details() {
         .with_adult(false)
         .with_number_of_episodes(62)
         .with_episode_run_time(47)
-        .with_status("Ended");
+        .with_status(SeriesStatus::Ended);
     assert_eq!(show.name, "Breaking Bad");
     assert_eq!(show.number_of_episodes, Some(62));
     assert_eq!(show.episode_run_time, Some(47));
-    assert_eq!(show.status.as_deref(), Some("Ended"));
+    assert_eq!(show.status, Some(SeriesStatus::Ended));
     assert_eq!(show.alternative_titles[0].title, "BrBa");
     assert_eq!(show.alternative_titles[0].language, None);
 
@@ -142,14 +142,14 @@ fn build_tv_show_and_details() {
         .with_number_of_seasons(5)
         .with_number_of_episodes(62)
         .with_in_production(false)
-        .with_status("Ended")
+        .with_status(SeriesStatus::Ended)
         .with_homepage("https://example.com")
         .with_networks(vec![
             Network::new("AMC").with_id(174).with_origin_country("US"),
         ])
         .with_production_companies(vec![Company::new("Sony")])
         .with_last_air_date(PartialDate::ymd(2013, 9, 29).unwrap())
-        .with_type("Scripted")
+        .with_type(SeriesType::Scripted)
         .with_media_format("TV")
         .with_created_by(vec![Creator::new("Vince Gilligan").with_id(66633)])
         .with_episode_run_time(vec![47])

@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use cameo::{
-    ProviderError,
+    Genre, ProviderError, UnknownGenre,
     providers::tmdb::{
         TmdbClient, TmdbConfig, TmdbError,
         builders::{
@@ -202,6 +202,45 @@ async fn discover_tv_sends_every_filter_encoded_on_the_wire() {
             ("with_watch_monetization_types", "free"),
             ("without_genres", "99"),
         ])
+    );
+}
+
+#[tokio::test]
+async fn discover_movies_typed_genre_lists_send_tmdb_ids() {
+    let (server, client) = serve("/3/discover/movie", DISCOVER_MOVIES, |c| c).await;
+
+    client
+        .discover_movies()
+        // Mecha has no TMDB id and is skipped.
+        .with_genre_list(&[Genre::Action, Genre::Mecha, Genre::ScienceFiction])
+        .without_genre_list(&[Genre::Documentary, Genre::Other(UnknownGenre::TmdbId(4242))])
+        .execute()
+        .await
+        .expect("discover succeeds");
+
+    assert_eq!(
+        sent_query(&server).await,
+        query(&[("with_genres", "28,878"), ("without_genres", "99,4242")])
+    );
+}
+
+#[tokio::test]
+async fn discover_tv_typed_genre_lists_send_tmdb_ids() {
+    let (server, client) = serve("/3/discover/tv", DISCOVER_TV, |c| c).await;
+
+    client
+        .discover_tv()
+        .with_genres(&[1])
+        // The typed setter replaces the raw-id filter set before it.
+        .with_genre_list(&[Genre::SciFiFantasy, Genre::Animation])
+        .without_genre_list(&[Genre::Reality])
+        .execute()
+        .await
+        .expect("discover succeeds");
+
+    assert_eq!(
+        sent_query(&server).await,
+        query(&[("with_genres", "10765,16"), ("without_genres", "10764")])
     );
 }
 
