@@ -8,7 +8,13 @@
 //!   omits the field or sends `null`; a value TMDB actually sends (including
 //!   `0`) is kept. Boolean flags whose spec default is `true` therefore never
 //!   read as `true` when unknown.
-//! - Non-`Option` unified numbers (episode/season numbers) fall back to `0`.
+//! - Season-list and episode-list items without a number are dropped: a season
+//!   or episode with no number cannot be addressed, and defaulting it to `0`
+//!   would pass it off as the Specials season or invent a phantom episode 0.
+//! - A missing number on a single season or episode: the conversions fall back
+//!   to `0`, but [`TmdbClient`](crate::providers::tmdb::TmdbClient) never relies
+//!   on that — season and episode details requests fill in the requested
+//!   number before converting.
 //! - Genre entries without an id are dropped.
 //! - A missing top-level id: the `From` impls fall back to `tmdb:0`, but
 //!   [`TmdbClient`](crate::providers::tmdb::TmdbClient) never relies on that —
