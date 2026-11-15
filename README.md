@@ -15,7 +15,7 @@ cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the
 
 ```toml
 [dependencies]
-cameo = "0.1"
+cameo = "0.4"
 ```
 
 ### Feature flags
@@ -25,15 +25,14 @@ cameo = "0.1"
 | `tmdb` | yes | TMDB provider support |
 | `cache` | yes | SQLite caching layer (requires `rusqlite`) |
 | `anilist` | yes | AniList GraphQL provider (anime; no API key required) |
-| `live-tests` | no | Gates tests that hit the real TMDB API |
+| `live-tests` | no | Gates tests that hit the real provider APIs (TMDB and AniList) |
 
-For a minimal install without caching: `cameo = { version = "0.1", default-features = false, features = ["tmdb"] }`
+For a minimal install without caching: `cameo = { version = "0.4", default-features = false, features = ["tmdb"] }`
 
 ## Quick Start
 
 ```rust
 use cameo::{CameoClient, TmdbConfig};
-use cameo::SearchProvider;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -56,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 |---------|--------|-------------|
 | `facade_showcase` | Search, details, discovery, recommendations, seasons, watch providers | `TMDB_API_TOKEN=xxx cargo run --example facade_showcase -- "query"` |
 | `tmdb_lowlevel` | Direct TmdbClient: pagination, images, discover builder, credits, trending, genres | `TMDB_API_TOKEN=xxx cargo run --example tmdb_lowlevel -- "query"` |
-| `anilist_showcase` | AniList search, details, discovery (no API key needed) | `cargo run --example anilist_showcase --features anilist -- "query"` |
+| `anilist_showcase` | AniList search, details, discovery (no API key needed) | `cargo run --example anilist_showcase -- "query"` |
 | `cache_showcase` | File-backed/in-memory cache, custom TTLs, invalidation, clearing | `TMDB_API_TOKEN=xxx cargo run --example cache_showcase` |
 | `error_handling` | Error variants, status matching, recovery patterns | `cargo run --example error_handling` |
 

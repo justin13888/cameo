@@ -22,7 +22,7 @@ marked otherwise is part of the stable API and follows [SemVer](https://semver.o
 - anything gated behind the `live-tests` feature or documented as internal;
 - exact error *messages* (the error *variants* are stable; their `Display`
   strings are not);
-- the on-disk cache format and `CACHE_SCHEMA_VERSION` (the cache self-migrates);
+- the on-disk cache format (self-migrating);
 - the vendored `generated` module — it is `pub(crate)` and unreachable.
 
 ## `#[non_exhaustive]`
@@ -32,8 +32,9 @@ types, configs, `Capability`, …) are `#[non_exhaustive]`. This lets us **add**
 variants and fields in a minor release without it being breaking. Consequently:
 
 - match on these enums with a `_` arm;
-- construct these structs via their `new()` + `with_*` builders, not struct
-  literals.
+- construct input models and configs via their `new()` + `with_*` builders,
+  not struct literals; output-only types (provider responses and error
+  details) are not constructed by callers at all.
 
 ## What counts as a breaking change
 

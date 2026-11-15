@@ -2,9 +2,8 @@
 //!
 //! The movie and TV discover builders share ~15 common filters; those setters
 //! are defined **once** in the `common_discover_setters` macro and invoked from
-//! builder. Provider ID filters take `&[u64]` slices (joined internally) and the
-//! previously stringly-typed codes are replaced by typed enums so invalid
-//! inputs are unrepresentable.
+//! each builder. Provider ID filters take `&[u64]` slices (joined internally) and
+//! codes are typed enums so invalid inputs are unrepresentable.
 
 use chrono::NaiveDate;
 

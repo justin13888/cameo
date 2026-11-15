@@ -1,9 +1,7 @@
-//! A real per-provider request-rate limiter.
+//! A per-provider request-rate limiter.
 //!
-//! Replaces the old concurrency semaphore, which only bounded *simultaneous*
-//! in-flight requests (permits were released as soon as a response returned, so
-//! fast responses trivially exceeded a provider's real throughput limit). This
-//! is a token bucket: it bounds the *sustained request rate* and paces bursts.
+//! This is a token bucket: it bounds the *sustained request rate* and paces
+//! bursts, rather than only the number of simultaneous in-flight requests.
 //!
 //! Time is read through [`tokio::time`], so tests can drive it deterministically
 //! with `#[tokio::test(start_paused = true)]` — no wall-clock sleeps.

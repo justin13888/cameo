@@ -3,8 +3,9 @@
 A pre-1.0 pass over the entire public surface against the
 [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) and
 [docs/STABILITY.md](../STABILITY.md). The full surface is snapshotted in
-[`public-api.txt`](public-api.txt) (regenerate with
-`cargo public-api --features full`); `cargo semver-checks` gates it in CI.
+[`public-api.txt`](public-api.txt) (regenerated manually with
+`cargo public-api --features full`; nothing diffs it in CI); `cargo semver-checks`
+gates compatibility in CI.
 
 Findings are **fixed** (addressed for v1) or **waived** (intentional, with
 rationale). Nothing is left open.
@@ -19,8 +20,9 @@ rationale). Nothing is left open.
   and `DiscoverTvBuilder` are `#[must_use]` — a built-but-dropped config or an
   un-`.execute()`d query is a bug and now warns.
 - **Future-proof enums/structs (C-STRUCT-PRIVATE, C-FUTURE-PROOF).** Every
-  public model, error, and config enum is `#[non_exhaustive]`; construction goes
-  through `new()` + `with_*`, so adding fields/variants is non-breaking.
+  public model, error, and config enum is `#[non_exhaustive]`; input models and
+  configs are constructed through `new()` + `with_*`, and output-only types are
+  not constructed by callers, so adding fields/variants is non-breaking.
 - **Honest optionality.** Fields absent from a provider are `Option` (dates →
   `Option<PartialDate>`, `vote_count`/`adult`/season+episode counts) rather than
   sentinel defaults, so "unknown" and "zero" are distinct.
@@ -46,7 +48,7 @@ rationale). Nothing is left open.
   models and additive default methods, not sealing.
 - **`i32`/`i64` id widths in some `Unknown*`/TMDB-native spots.** These mirror the
   upstream TMDB wire types deliberately; normalizing to `u64` everywhere would
-  lose fidelity for the raw-id escape hatches. Unified ids use `NativeId`.
+  lose fidelity for the raw-id escape hatches. Unified ids use `MediaId` (wrapping `NativeId`).
 - **`PartialDate` is not `chrono::NaiveDate`.** Providers routinely return
   year-only or year-month dates; a full `NaiveDate` cannot represent them. Lossy
   conversion is offered explicitly instead of imposed.

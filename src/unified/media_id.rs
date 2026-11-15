@@ -1,8 +1,7 @@
 //! A typed, provider-qualified media identifier.
 //!
-//! Replaces the old `provider_id: String` / raw `i32` split: [`MediaId`]
-//! preserves which provider an id came from and round-trips the canonical
-//! `"provider:native"` string form used across the API and cache.
+//! [`MediaId`] preserves which provider an id came from and round-trips the
+//! canonical `"provider:native"` string form used across the API and cache.
 
 use std::{borrow::Cow, fmt, str::FromStr};
 
