@@ -29,42 +29,53 @@ pub(super) fn resolve_date(date: &AniListDate) -> Option<PartialDate> {
 
 #[cfg(test)]
 mod tests {
+    use serde::de::DeserializeOwned;
+    use serde_json::{Value, json};
+
     use super::*;
-    use crate::providers::anilist::response::{
-        AniListCoverImage, AniListDate, AniListMedia, AniListStaffImage, AniListStaffName,
-        AniListTitle,
-    };
+    use crate::providers::anilist::response::{AniListDate, AniListMedia, AniListStaff};
+
+    /// Deserialize a fixture from AniList's wire JSON, so fixtures track the
+    /// response schema rather than the response types' Rust fields.
+    fn from_json<T: DeserializeOwned>(value: Value) -> T {
+        serde_json::from_value(value).expect("fixture matches the AniList response shape")
+    }
+
+    /// A fully-populated list-media object as AniList returns it.
+    fn media_json(id: i32, format: &str) -> Value {
+        json!({
+            "id": id,
+            "title": {
+                "romaji": "Romaji Title",
+                "english": "English Title",
+                "native": "ネイティブ"
+            },
+            "synonyms": ["Synonym"],
+            "description": "A description.",
+            "startDate": { "year": 2022, "month": 4, "day": 1 },
+            "coverImage": {
+                "large": "https://example.com/large.jpg",
+                "extraLarge": "https://example.com/xl.jpg"
+            },
+            "bannerImage": "https://example.com/banner.jpg",
+            "genres": ["Action", "Mecha"],
+            "popularity": 100000,
+            "averageScore": 78,
+            "episodes": 12,
+            "duration": 24,
+            "status": "FINISHED",
+            "format": format,
+            "countryOfOrigin": "JP",
+            "isAdult": false
+        })
+    }
 
     fn make_media(id: i32, format: &str) -> AniListMedia {
-        AniListMedia {
-            id,
-            title: Some(AniListTitle {
-                romaji: Some("Romaji Title".to_string()),
-                english: Some("English Title".to_string()),
-                native: Some("ネイティブ".to_string()),
-            }),
-            synonyms: Some(vec!["Synonym".to_string()]),
-            description: Some("A description.".to_string()),
-            start_date: Some(AniListDate {
-                year: Some(2022),
-                month: Some(4),
-                day: Some(1),
-            }),
-            cover_image: Some(AniListCoverImage {
-                large: Some("https://example.com/large.jpg".to_string()),
-                extra_large: Some("https://example.com/xl.jpg".to_string()),
-            }),
-            banner_image: Some("https://example.com/banner.jpg".to_string()),
-            genres: Some(vec!["Action".to_string(), "Mecha".to_string()]),
-            popularity: Some(100000),
-            average_score: Some(78),
-            episodes: Some(12),
-            duration: Some(24),
-            status: Some("FINISHED".to_string()),
-            format: Some(format.to_string()),
-            country_of_origin: Some("JP".to_string()),
-            is_adult: Some(false),
-        }
+        from_json(media_json(id, format))
+    }
+
+    fn date(value: Value) -> AniListDate {
+        from_json(value)
     }
 
     #[test]
@@ -89,14 +100,14 @@ mod tests {
 
     #[test]
     fn test_unmapped_country_yields_no_original_language() {
-        let mut movie_media = make_media(7, "MOVIE");
-        movie_media.country_of_origin = Some("US".to_string());
-        let movie = anilist_media_to_movie(movie_media);
+        let mut movie_media = media_json(7, "MOVIE");
+        movie_media["countryOfOrigin"] = json!("US");
+        let movie = anilist_media_to_movie(from_json(movie_media));
         assert_eq!(movie.original_language, None);
 
-        let mut tv_media = make_media(8, "TV");
-        tv_media.country_of_origin = Some("US".to_string());
-        let tv = anilist_media_to_tv(tv_media);
+        let mut tv_media = media_json(8, "TV");
+        tv_media["countryOfOrigin"] = json!("US");
+        let tv = anilist_media_to_tv(from_json(tv_media));
         assert_eq!(tv.original_language, None);
         assert_eq!(tv.origin_country, vec!["US"]);
     }
@@ -138,11 +149,11 @@ mod tests {
 
     #[test]
     fn test_media_list_fields_absent_or_negative() {
-        let mut m = make_media(3, "TV");
-        m.episodes = None;
-        m.duration = Some(-5);
-        m.status = None;
-        let tv = anilist_media_to_tv(m);
+        let mut m = media_json(3, "TV");
+        m["episodes"] = Value::Null;
+        m["duration"] = json!(-5);
+        m["status"] = Value::Null;
+        let tv = anilist_media_to_tv(from_json(m));
         assert_eq!(tv.number_of_episodes, None);
         // Negative values clamp to 0, matching the detail conversion.
         assert_eq!(tv.episode_run_time, Some(0));
@@ -164,19 +175,12 @@ mod tests {
 
     #[test]
     fn test_staff_to_person() {
-        use crate::providers::anilist::response::AniListStaff;
-        let staff = AniListStaff {
-            id: 123,
-            name: Some(AniListStaffName {
-                full: Some("Test Person".to_string()),
-                native: Some("テスト".to_string()),
-                alternative: vec![],
-            }),
-            image: Some(AniListStaffImage {
-                large: Some("https://example.com/p.jpg".to_string()),
-            }),
-            primary_occupations: Some(vec!["Voice Actor".to_string()]),
-        };
+        let staff: AniListStaff = from_json(json!({
+            "id": 123,
+            "name": { "full": "Test Person", "native": "テスト", "alternative": [] },
+            "image": { "large": "https://example.com/p.jpg" },
+            "primaryOccupations": ["Voice Actor"]
+        }));
         let person = staff_to_person(staff);
         assert_eq!(person.provider_id, "anilist:staff:123");
         assert_eq!(person.name, "Test Person");
@@ -191,32 +195,16 @@ mod tests {
     fn test_partial_date_preserves_precision() {
         use crate::unified::date::PartialDate;
 
-        let full = AniListDate {
-            year: Some(2022),
-            month: Some(4),
-            day: Some(1),
-        };
+        let full = date(json!({ "year": 2022, "month": 4, "day": 1 }));
         assert_eq!(resolve_date(&full), PartialDate::ymd(2022, 4, 1));
 
-        let partial = AniListDate {
-            year: Some(2022),
-            month: Some(4),
-            day: None,
-        };
+        let partial = date(json!({ "year": 2022, "month": 4, "day": null }));
         assert_eq!(resolve_date(&partial), PartialDate::year_month(2022, 4));
 
-        let year_only = AniListDate {
-            year: Some(2022),
-            month: None,
-            day: None,
-        };
+        let year_only = date(json!({ "year": 2022, "month": null, "day": null }));
         assert_eq!(resolve_date(&year_only), Some(PartialDate::from_year(2022)));
 
-        let empty = AniListDate {
-            year: None,
-            month: None,
-            day: None,
-        };
+        let empty = date(json!({ "year": null, "month": null, "day": null }));
         assert_eq!(resolve_date(&empty), None);
     }
 
