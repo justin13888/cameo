@@ -4,7 +4,7 @@ use super::params::{self, TvShowType, TvStatus};
 use crate::{
     core::pagination::Page,
     generated::tmdb as generated,
-    providers::tmdb::{TmdbClient, builders::TvSortBy, error::TmdbError},
+    providers::tmdb::{TmdbClient, builders::TvSortBy, client::wire_int, error::TmdbError},
     unified::models::UnifiedTvShow,
 };
 
@@ -56,7 +56,7 @@ pub struct DiscoverTvBuilder<'a> {
     with_companies: Option<String>,
     with_genres: Option<String>,
     with_keywords: Option<String>,
-    with_networks: Option<i32>,
+    with_networks: Option<u64>,
     with_origin_country: Option<String>,
     with_original_language: Option<String>,
     with_runtime_gte: Option<i32>,
@@ -169,8 +169,12 @@ impl<'a> DiscoverTvBuilder<'a> {
     }
 
     /// Filter by network ID.
+    ///
+    /// An id above `i32::MAX`, which TMDB cannot carry, makes
+    /// [`execute`](Self::execute) fail with [`TmdbError::Request`] rather than
+    /// filter on a different network.
     pub fn with_networks(mut self, network_id: u64) -> Self {
-        self.with_networks = Some(network_id.min(i32::MAX as u64) as i32);
+        self.with_networks = Some(network_id);
         self
     }
 
@@ -203,7 +207,8 @@ impl<'a> DiscoverTvBuilder<'a> {
     /// Returns [`TmdbError::Api`] (with TMDB's decoded `status_code` and
     /// `status_message`) on a non-2xx response once retries are spent,
     /// [`TmdbError::Http`] on network failures, and [`TmdbError::Request`]
-    /// when a date filter cannot be encoded.
+    /// when a date filter cannot be encoded or the
+    /// [`with_networks`](Self::with_networks) id is above `i32::MAX`.
     pub async fn execute(self) -> Result<Page<UnifiedTvShow>, TmdbError> {
         let query = generated::DiscoverTvParams {
             air_date_gte: params::tmdb_date(self.air_date_gte)?,
@@ -226,7 +231,10 @@ impl<'a> DiscoverTvBuilder<'a> {
             with_companies: self.with_companies,
             with_genres: self.with_genres,
             with_keywords: self.with_keywords,
-            with_networks: self.with_networks,
+            with_networks: self
+                .with_networks
+                .map(|id| wire_int(id, "network id"))
+                .transpose()?,
             with_origin_country: self.with_origin_country,
             with_original_language: self.with_original_language,
             with_runtime_gte: self.with_runtime_gte,

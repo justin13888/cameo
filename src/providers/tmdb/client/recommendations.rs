@@ -1,6 +1,6 @@
 //! Recommendation endpoints: recommended and similar movies and TV shows.
 
-use super::TmdbClient;
+use super::{TmdbClient, wire_int};
 use crate::{
     core::pagination::Page,
     generated::tmdb,
@@ -13,9 +13,10 @@ impl TmdbClient {
     #[tracing::instrument(skip(self))]
     pub async fn movie_recommendations(
         &self,
-        movie_id: i32,
+        movie_id: u64,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, TmdbError> {
+        let movie_id = wire_int(movie_id, "id")?;
         let params = tmdb::MovieRecommendationsParams {
             language: self.language(),
             page: Self::tmdb_page(page),
@@ -33,9 +34,10 @@ impl TmdbClient {
     #[tracing::instrument(skip(self))]
     pub async fn tv_recommendations(
         &self,
-        series_id: i32,
+        series_id: u64,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, TmdbError> {
+        let series_id = wire_int(series_id, "id")?;
         let params = tmdb::TvSeriesRecommendationsParams {
             language: self.language(),
             page: Self::tmdb_page(page),
@@ -53,9 +55,10 @@ impl TmdbClient {
     #[tracing::instrument(skip(self))]
     pub async fn similar_movies(
         &self,
-        movie_id: i32,
+        movie_id: u64,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, TmdbError> {
+        let movie_id = wire_int(movie_id, "id")?;
         let params = tmdb::MovieSimilarParams {
             language: self.language(),
             page: Self::tmdb_page(page),
@@ -72,15 +75,16 @@ impl TmdbClient {
     ///
     /// The generated `tv_series_similar` endpoint takes a `&str` series ID
     /// (unlike most other endpoints that take `i32`). The integer `series_id`
-    /// is converted to a string before calling the generated client so that
-    /// the correct path (e.g. `/3/tv/1399/similar`) is constructed.
+    /// is range-checked like every other id, then converted to a string before
+    /// calling the generated client so that the correct path (e.g.
+    /// `/3/tv/1399/similar`) is constructed.
     #[tracing::instrument(skip(self))]
     pub async fn similar_tv_shows(
         &self,
-        series_id: i32,
+        series_id: u64,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, TmdbError> {
-        let id_str = series_id.to_string();
+        let id_str = wire_int(series_id, "id")?.to_string();
         let params = tmdb::TvSeriesSimilarParams {
             language: self.language(),
             page: Self::tmdb_page(page),

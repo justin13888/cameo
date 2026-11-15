@@ -106,19 +106,22 @@ async fn certifications_without_results_are_empty() {
     assert!(client.tv_show_certifications(1).await.unwrap().is_empty());
 }
 
-/// A non-positive id is rejected before any request is sent.
+/// A zero id, or one above `i32::MAX`, is rejected before any request is sent.
 #[tokio::test]
-async fn certifications_reject_non_positive_ids() {
+async fn certifications_reject_zero_and_out_of_range_ids() {
     let (server, client) = setup_mock_client().await;
+    let too_big = u64::try_from(i32::MAX).expect("positive") + 1;
 
-    assert!(matches!(
-        client.movie_certifications(0).await,
-        Err(TmdbError::Request { .. })
-    ));
-    assert!(matches!(
-        client.tv_show_certifications(-5).await,
-        Err(TmdbError::Request { .. })
-    ));
+    for id in [0, too_big] {
+        assert!(matches!(
+            client.movie_certifications(id).await,
+            Err(TmdbError::Request { .. })
+        ));
+        assert!(matches!(
+            client.tv_show_certifications(id).await,
+            Err(TmdbError::Request { .. })
+        ));
+    }
     let received = server.received_requests().await.unwrap_or_default();
     assert!(received.is_empty(), "no request may be sent: {received:?}");
 }
