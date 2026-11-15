@@ -46,10 +46,14 @@ mod tmdb {
         Mock::given(method("GET"))
             .and(path("/3/movie/550"))
             .respond_with(ResponseTemplate::new(200).set_delay(Duration::from_millis(400)))
+            .expect(1)
             .mount(&server)
             .await;
+        // Retry disabled: one attempt, no backoff sleep (timeout retries are
+        // pinned in `retry_test.rs`).
         let config = TmdbConfig::new_with_base_url("t", server.uri())
-            .with_request_timeout(Duration::from_millis(50));
+            .with_request_timeout(Duration::from_millis(50))
+            .with_retry(cameo::RetryPolicy::disabled());
         let client = TmdbClient::new(config).unwrap();
 
         let err = client.movie_details(550).await.unwrap_err();
