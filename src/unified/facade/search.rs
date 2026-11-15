@@ -15,7 +15,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
-            provider: self.search_ns(),
+            provider: Self::cache_ns(&self.search),
             media_type: Some(MediaType::Movie),
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -30,18 +30,9 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_search_ttl()).await;
-            for item in &result.results {
-                self.cache_put(
-                    CacheKey::Item {
-                        media_type: MediaType::Movie,
-                        provider_id: item.provider_id.to_string(),
-                    },
-                    item,
-                    self.cache_items_ttl(),
-                )
+            self.cache_put(key, &result, self.cache_ttl(|t| t.search))
                 .await;
-            }
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }
@@ -54,7 +45,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
-            provider: self.search_ns(),
+            provider: Self::cache_ns(&self.search),
             media_type: Some(MediaType::TvShow),
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -69,18 +60,9 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_search_ttl()).await;
-            for item in &result.results {
-                self.cache_put(
-                    CacheKey::Item {
-                        media_type: MediaType::TvShow,
-                        provider_id: item.provider_id.to_string(),
-                    },
-                    item,
-                    self.cache_items_ttl(),
-                )
+            self.cache_put(key, &result, self.cache_ttl(|t| t.search))
                 .await;
-            }
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }
@@ -93,7 +75,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedPerson>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
-            provider: self.search_ns(),
+            provider: Self::cache_ns(&self.search),
             media_type: Some(MediaType::Person),
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -108,18 +90,9 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_search_ttl()).await;
-            for item in &result.results {
-                self.cache_put(
-                    CacheKey::Item {
-                        media_type: MediaType::Person,
-                        provider_id: item.provider_id.to_string(),
-                    },
-                    item,
-                    self.cache_items_ttl(),
-                )
+            self.cache_put(key, &result, self.cache_ttl(|t| t.search))
                 .await;
-            }
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }
@@ -132,7 +105,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedSearchResult>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
-            provider: self.search_ns(),
+            provider: Self::cache_ns(&self.search),
             media_type: None,
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -147,27 +120,9 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_search_ttl()).await;
-            for item in &result.results {
-                let (media_type, provider_id) = match item {
-                    UnifiedSearchResult::Movie(m) => (MediaType::Movie, m.provider_id.to_string()),
-                    UnifiedSearchResult::TvShow(t) => {
-                        (MediaType::TvShow, t.provider_id.to_string())
-                    }
-                    UnifiedSearchResult::Person(p) => {
-                        (MediaType::Person, p.provider_id.to_string())
-                    }
-                };
-                self.cache_put(
-                    CacheKey::Item {
-                        media_type,
-                        provider_id,
-                    },
-                    item,
-                    self.cache_items_ttl(),
-                )
+            self.cache_put(key, &result, self.cache_ttl(|t| t.search))
                 .await;
-            }
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }
