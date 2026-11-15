@@ -18,7 +18,7 @@ impl TmdbClient {
     /// [`TmdbError::Request`] when `series_id` is zero or negative (nothing is
     /// sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_season_details(
+    pub async fn season_details(
         &self,
         series_id: i32,
         season_number: u32,
@@ -40,7 +40,7 @@ impl TmdbClient {
 
     /// Get episode details for a TV show.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_episode_details(
+    pub async fn episode_details(
         &self,
         series_id: i32,
         season_number: u32,

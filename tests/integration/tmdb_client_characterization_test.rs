@@ -207,7 +207,7 @@ async fn trending_day_hits_day_window_and_sends_no_page() {
 
     // TMDB trending is not paginated: the inherent methods take no page.
     let movies = client.trending_movies(TimeWindow::Day).await.unwrap();
-    let shows = client.trending_tv(TimeWindow::Day).await.unwrap();
+    let shows = client.trending_tv_shows(TimeWindow::Day).await.unwrap();
 
     assert_eq!(movies.page, 1);
     assert_eq!(shows.page, 1);
@@ -392,7 +392,7 @@ async fn season_details_take_show_id_and_season_number_from_the_request() {
     .await;
     let client = client(&server, |c| c);
 
-    let season = client.tv_season_details(42, 3).await.unwrap();
+    let season = client.season_details(42, 3).await.unwrap();
 
     assert_eq!(season.show_id, "tmdb:42");
     assert_eq!(season.season_number, 3);

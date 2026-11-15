@@ -51,7 +51,7 @@ impl TmdbClient {
     /// trending results: the page reports `has_next == false` and
     /// `total_pages == 1`, whatever TMDB's body claims.
     #[tracing::instrument(skip(self))]
-    pub async fn trending_tv(
+    pub async fn trending_tv_shows(
         &self,
         time_window: TimeWindow,
     ) -> Result<Page<UnifiedTvShow>, TmdbError> {

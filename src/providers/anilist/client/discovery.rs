@@ -50,7 +50,7 @@ impl AniListClient {
     /// AniList has no time-window concept. The `time_window` argument is
     /// accepted for trait compatibility but is always ignored — AniList
     /// returns a single global trending list regardless of the requested window.
-    pub async fn trending_tv(
+    pub async fn trending_tv_shows(
         &self,
         _time_window: TimeWindow,
         page: Option<u32>,
@@ -58,7 +58,7 @@ impl AniListClient {
         let (page_num, vars) = self.list_vars(page, TV_FORMATS);
         tracing::debug!(
             page = page_num,
-            "anilist: graphql LIST_TRENDING_ANIME (trending_tv)"
+            "anilist: graphql LIST_TRENDING_ANIME (trending_tv_shows)"
         );
         let page = self
             .graphql(query::LIST_TRENDING_ANIME, vars, media_page_root)

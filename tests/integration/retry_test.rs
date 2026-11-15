@@ -558,7 +558,7 @@ mod anilist {
         )
         .await;
         let err = client
-            .trending_tv(cameo::TimeWindow::Day, None)
+            .trending_tv_shows(cameo::TimeWindow::Day, None)
             .await
             .unwrap_err();
         assert!(matches!(err, AniListError::NoData), "got {err:?}");

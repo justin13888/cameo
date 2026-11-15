@@ -112,7 +112,7 @@ impl DetailProvider for TmdbClient {
     }
 
     async fn tv_show_details(&self, id: &MediaId) -> Result<UnifiedTvShowDetails, ProviderError> {
-        Ok(TmdbClient::tv_series_details(self, tmdb_id(id)?).await?)
+        Ok(TmdbClient::tv_show_details(self, tmdb_id(id)?).await?)
     }
 
     async fn person_details(&self, id: &MediaId) -> Result<UnifiedPersonDetails, ProviderError> {
@@ -139,7 +139,7 @@ impl DiscoveryProvider for TmdbClient {
         time_window: TimeWindow,
         _page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(TmdbClient::trending_tv(self, time_window).await?)
+        Ok(TmdbClient::trending_tv_shows(self, time_window).await?)
     }
 
     async fn popular_movies(&self, page: Option<u32>) -> Result<Page<UnifiedMovie>, ProviderError> {
@@ -210,7 +210,7 @@ impl SeasonProvider for TmdbClient {
         show_id: &MediaId,
         season_number: u32,
     ) -> Result<UnifiedSeasonDetails, ProviderError> {
-        Ok(TmdbClient::tv_season_details(self, tmdb_id(show_id)?, season_number).await?)
+        Ok(TmdbClient::season_details(self, tmdb_id(show_id)?, season_number).await?)
     }
 
     async fn episode_details(
@@ -220,7 +220,7 @@ impl SeasonProvider for TmdbClient {
         episode_number: u32,
     ) -> Result<UnifiedEpisode, ProviderError> {
         Ok(
-            TmdbClient::tv_episode_details(self, tmdb_id(show_id)?, season_number, episode_number)
+            TmdbClient::episode_details(self, tmdb_id(show_id)?, season_number, episode_number)
                 .await?,
         )
     }

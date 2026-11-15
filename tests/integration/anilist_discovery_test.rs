@@ -83,14 +83,17 @@ async fn trending_movies_week_returns_results() {
     assert_eq!(result.results[0].title, "Weekly Movie");
 }
 
-// ── trending_tv ───────────────────────────────────────────────────────────────
+// ── trending_tv_shows ─────────────────────────────────────────────────────────
 
 #[tokio::test]
 async fn trending_tv_day_returns_results() {
     let body = page_response(vec![media_item(10, "Trending TV", "TV")], 1);
     let (_server, client) = mock_client(body).await;
 
-    let result = client.trending_tv(TimeWindow::Day, None).await.unwrap();
+    let result = client
+        .trending_tv_shows(TimeWindow::Day, None)
+        .await
+        .unwrap();
 
     assert_eq!(result.results.len(), 1);
     assert_eq!(result.results[0].name, "Trending TV");
@@ -101,7 +104,10 @@ async fn trending_tv_maps_episode_fields_and_status() {
     let (_server, client) =
         mock_client(page_response(vec![media_item(10, "Trending TV", "TV")], 1)).await;
 
-    let result = client.trending_tv(TimeWindow::Day, None).await.unwrap();
+    let result = client
+        .trending_tv_shows(TimeWindow::Day, None)
+        .await
+        .unwrap();
 
     let show = &result.results[0];
     assert_eq!(show.number_of_episodes, Some(12));
@@ -114,7 +120,10 @@ async fn trending_tv_week_returns_results() {
     let body = page_response(vec![media_item(11, "Weekly TV", "TV")], 1);
     let (_server, client) = mock_client(body).await;
 
-    let result = client.trending_tv(TimeWindow::Week, None).await.unwrap();
+    let result = client
+        .trending_tv_shows(TimeWindow::Week, None)
+        .await
+        .unwrap();
 
     assert_eq!(result.results.len(), 1);
     assert_eq!(result.results[0].name, "Weekly TV");
@@ -242,8 +251,8 @@ async fn top_rated_tv_shows_returns_results() {
 async fn live_discovery_smoke() {
     let c = AniListClient::new(AniListConfig::new()).unwrap();
 
-    // trending_tv — exercises trending path
-    let trending = c.trending_tv(TimeWindow::Week, None).await.unwrap();
+    // trending_tv_shows — exercises trending path
+    let trending = c.trending_tv_shows(TimeWindow::Week, None).await.unwrap();
     assert!(!trending.results.is_empty());
 
     tokio::time::sleep(tokio::time::Duration::from_millis(750)).await;
