@@ -221,9 +221,26 @@ async fn test_graphql_errors_propagate() {
 async fn test_trending_movies_ignores_time_window() {
     let media = vec![mock_media_item(1, "Trending Movie", "MOVIE")];
     let body = mock_page_response(media, 1);
-    let (_server, client) = setup_server_with_response(body).await;
+    let (server, client) = setup_server_with_response(body).await;
 
-    // Both time windows should work — AniList ignores the window.
+    // AniList has no time window: both windows send the same request and
+    // yield the same results.
     let day = client.trending_movies(TimeWindow::Day, None).await.unwrap();
+    let week = client
+        .trending_movies(TimeWindow::Week, None)
+        .await
+        .unwrap();
     assert_eq!(day.results.len(), 1);
+    assert_eq!(day.results, week.results);
+
+    let requests = server.received_requests().await.expect("recording enabled");
+    assert_eq!(requests.len(), 2);
+    let bodies: Vec<Value> = requests
+        .iter()
+        .map(|r| serde_json::from_slice(&r.body).expect("JSON request body"))
+        .collect();
+    assert_eq!(
+        bodies[0], bodies[1],
+        "the time window leaked into the request"
+    );
 }

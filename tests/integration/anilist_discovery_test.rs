@@ -3,7 +3,10 @@ use cameo::{
     providers::anilist::{AniListClient, AniListConfig},
 };
 use serde_json::{Value, json};
-use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+use wiremock::{
+    Mock, MockServer, ResponseTemplate,
+    matchers::{body_partial_json, method},
+};
 
 fn media_item(id: i32, title: &str, format: &str) -> Value {
     json!({
@@ -139,14 +142,25 @@ async fn popular_movies_returns_results() {
 
 #[tokio::test]
 async fn popular_movies_respects_pagination() {
-    let body = page_response(vec![media_item(1, "Movie", "MOVIE")], 100);
-    let (_server, client) = mock_client(body).await;
+    let mut body = page_response(vec![media_item(1, "Movie", "MOVIE")], 100);
+    body["data"]["Page"]["pageInfo"]["currentPage"] = json!(2);
+    let server = MockServer::start().await;
+    // Only a request asking for page 2 is answered, exactly once.
+    Mock::given(method("POST"))
+        .and(body_partial_json(json!({ "variables": { "page": 2 } })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(body))
+        .expect(1)
+        .mount(&server)
+        .await;
+    let client = AniListClient::new(AniListConfig::new_with_base_url(server.uri())).unwrap();
 
     let result = client.popular_movies(Some(2)).await.unwrap();
 
-    // Total from the mock — pagination metadata is passed through
+    // The requested page is sent and the response's metadata passed through.
+    assert_eq!(result.page, 2);
     assert_eq!(result.total_results, 100);
     assert_eq!(result.total_pages, 5);
+    assert!(result.has_next_page());
 }
 
 // ── top_rated_movies ──────────────────────────────────────────────────────────
