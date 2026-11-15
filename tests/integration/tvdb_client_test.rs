@@ -311,6 +311,41 @@ async fn transient_errors_are_retried() {
 }
 
 #[tokio::test]
+async fn an_unreachable_server_is_a_transport_error() {
+    let client = TvdbClient::new(
+        TvdbConfig::new(SECRET)
+            .with_base_url("http://127.0.0.1:1")
+            .with_retry(RetryPolicy::disabled()),
+    )
+    .unwrap();
+    match client.login().await {
+        Err(TvdbError::Http(e)) => {
+            assert!(e.is_connect(), "{e}");
+            assert!(std::error::Error::source(&e).is_some());
+        }
+        other => panic!("expected Http, got {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn a_malformed_body_is_a_decode_error_with_a_json_source() {
+    let server = MockServer::start().await;
+    mount_login(&server, "T", 1).await;
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("not json"))
+        .mount(&server)
+        .await;
+    let client = TvdbClient::new(config(&server)).unwrap();
+    match client.series_extended(9).await {
+        Err(TvdbError::Deserialization(e)) => {
+            let source = std::error::Error::source(&e).expect("JSON parser error source");
+            assert!(source.downcast_ref::<serde_json::Error>().is_some());
+        }
+        other => panic!("expected Deserialization, got {other:?}"),
+    }
+}
+
+#[tokio::test]
 async fn non_tvdb_ids_are_rejected_without_a_request() {
     let server = MockServer::start().await;
     let client = TvdbClient::new(config(&server)).unwrap();

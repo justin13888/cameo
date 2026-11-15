@@ -119,7 +119,8 @@ impl TvdbClient {
             config.connect_timeout,
             config.request_timeout,
             reqwest::header::HeaderMap::new(),
-        )?;
+        )
+        .map_err(TvdbError::from_reqwest)?;
         let base_url = Arc::from(config.base_url.trim_end_matches('/'));
         let rate_limiter = RateLimiter::new(config.rate_limit);
         Ok(Self {
@@ -297,7 +298,8 @@ impl TvdbClient {
             .bearer_auth(token)
             .header(reqwest::header::ACCEPT, "application/json")
             .send()
-            .await?;
+            .await
+            .map_err(TvdbError::from_reqwest)?;
         decode(resp).await
     }
 
@@ -341,7 +343,8 @@ impl TvdbClient {
             .header(reqwest::header::ACCEPT, "application/json")
             .json(&body)
             .send()
-            .await?;
+            .await
+            .map_err(TvdbError::from_reqwest)?;
         let envelope: Envelope<LoginData> = decode(resp).await?;
         envelope
             .data
@@ -366,9 +369,9 @@ fn extended_query() -> [(&'static str, String); 1] {
 async fn decode<T: DeserializeOwned>(resp: reqwest::Response) -> Result<Envelope<T>, TvdbError> {
     let status = resp.status();
     let retry_after = http::parse_retry_after(resp.headers());
-    let text = resp.text().await?;
+    let text = resp.text().await.map_err(TvdbError::from_reqwest)?;
     if status.is_success() {
-        return Ok(serde_json::from_str(&text)?);
+        return serde_json::from_str(&text).map_err(TvdbError::from_json);
     }
     if status == reqwest::StatusCode::NOT_FOUND {
         return Err(TvdbError::NotFound);

@@ -2725,8 +2725,8 @@ impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::TmdbImages
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::TmdbImages
 pub mod cameo::providers::tvdb
 #[non_exhaustive] pub enum cameo::providers::tvdb::TvdbError
-pub cameo::providers::tvdb::TvdbError::Deserialization(serde_json::error::Error)
-pub cameo::providers::tvdb::TvdbError::Http(reqwest::error::Error)
+pub cameo::providers::tvdb::TvdbError::Deserialization(cameo::DecodeError)
+pub cameo::providers::tvdb::TvdbError::Http(cameo::TransportError)
 pub cameo::providers::tvdb::TvdbError::InvalidConfig(alloc::string::String)
 pub cameo::providers::tvdb::TvdbError::NoData
 pub cameo::providers::tvdb::TvdbError::NotFound
@@ -2736,10 +2736,6 @@ pub cameo::providers::tvdb::TvdbError::Status::retry_after: core::option::Option
 pub cameo::providers::tvdb::TvdbError::Status::status: u16
 impl core::convert::From<cameo::TvdbError> for cameo::ProviderError
 pub fn cameo::ProviderError::from(cameo::TvdbError) -> Self
-impl core::convert::From<reqwest::error::Error> for cameo::TvdbError
-pub fn cameo::TvdbError::from(reqwest::error::Error) -> Self
-impl core::convert::From<serde_json::error::Error> for cameo::TvdbError
-pub fn cameo::TvdbError::from(serde_json::error::Error) -> Self
 impl core::error::Error for cameo::TvdbError
 pub fn cameo::TvdbError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
 impl core::fmt::Debug for cameo::TvdbError
@@ -8210,8 +8206,8 @@ pub fn cameo::TmdbError::or<P, B, E>(self, P) -> tower_http::follow_redirect::po
 impl<T> tracing::instrument::Instrument for cameo::TmdbError
 impl<T> tracing::instrument::WithSubscriber for cameo::TmdbError
 #[non_exhaustive] pub enum cameo::TvdbError
-pub cameo::TvdbError::Deserialization(serde_json::error::Error)
-pub cameo::TvdbError::Http(reqwest::error::Error)
+pub cameo::TvdbError::Deserialization(cameo::DecodeError)
+pub cameo::TvdbError::Http(cameo::TransportError)
 pub cameo::TvdbError::InvalidConfig(alloc::string::String)
 pub cameo::TvdbError::NoData
 pub cameo::TvdbError::NotFound
@@ -8221,10 +8217,6 @@ pub cameo::TvdbError::Status::retry_after: core::option::Option<core::time::Dura
 pub cameo::TvdbError::Status::status: u16
 impl core::convert::From<cameo::TvdbError> for cameo::ProviderError
 pub fn cameo::ProviderError::from(cameo::TvdbError) -> Self
-impl core::convert::From<reqwest::error::Error> for cameo::TvdbError
-pub fn cameo::TvdbError::from(reqwest::error::Error) -> Self
-impl core::convert::From<serde_json::error::Error> for cameo::TvdbError
-pub fn cameo::TvdbError::from(serde_json::error::Error) -> Self
 impl core::error::Error for cameo::TvdbError
 pub fn cameo::TvdbError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
 impl core::fmt::Debug for cameo::TvdbError
