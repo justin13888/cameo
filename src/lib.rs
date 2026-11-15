@@ -111,7 +111,7 @@ pub mod unified;
 // Re-export the most common types.
 pub use core::{
     config::TimeWindow,
-    error::ProviderError,
+    error::{DecodeError, ProviderError, TransportError},
     pagination::{Page, PageToken, into_stream},
 };
 

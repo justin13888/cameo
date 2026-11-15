@@ -70,7 +70,8 @@ impl AniListClient {
             config.connect_timeout,
             config.request_timeout,
             reqwest::header::HeaderMap::new(),
-        )?;
+        )
+        .map_err(AniListError::from_reqwest)?;
         let rate_limiter = RateLimiter::new(config.rate_limit);
         Ok(Self {
             http,

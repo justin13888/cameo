@@ -9,5 +9,5 @@ pub(crate) mod error;
 pub(crate) mod pagination;
 
 pub use config::TimeWindow;
-pub use error::ProviderError;
+pub use error::{DecodeError, ProviderError, TransportError};
 pub use pagination::{Page, PageToken, into_stream};

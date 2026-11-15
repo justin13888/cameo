@@ -3,18 +3,13 @@ use std::{fmt, time::Duration};
 use reqwest::header::HeaderMap;
 
 use crate::{
-    core::error::ProviderError,
+    core::error::{DecodeError, ProviderError, TransportError, TransportKind},
     generated::tmdb as generated,
     providers::{
         http::{is_retryable_status, parse_retry_after},
         retry::Retryable,
     },
 };
-
-mod transport;
-
-pub use transport::TransportError;
-use transport::TransportKind;
 
 /// Error type for the TMDB provider.
 ///
@@ -42,7 +37,9 @@ pub enum TmdbError {
     ///
     /// The [`TransportError`] never holds the request URL: a v3 API key
     /// travels in the URL's `api_key` query parameter and would otherwise leak
-    /// through `Display`/`Debug`.
+    /// through `Display`/`Debug`. A failure raised inside the request pipeline
+    /// has no [`source`](std::error::Error::source), because its original
+    /// cannot be separated from that URL.
     #[error("HTTP transport error: {0}")]
     Http(#[source] TransportError),
 
@@ -69,8 +66,12 @@ pub enum TmdbError {
     },
 
     /// A response body could not be deserialized into the expected type.
+    ///
+    /// The [`DecodeError`] carries the decoder's message, which is all the
+    /// request pipeline reports, so it has no
+    /// [`source`](std::error::Error::source).
     #[error("deserialization error: {0}")]
-    Deserialization(#[from] serde_json::Error),
+    Deserialization(#[source] DecodeError),
 
     /// The request failed without any HTTP response being involved.
     ///
@@ -134,22 +135,6 @@ impl fmt::Display for RequestErrorKind {
     }
 }
 
-/// Wrap a transport error, stripping its request URL so a v3 `api_key` query
-/// parameter can never surface through `Display` or `Debug`.
-impl From<reqwest::Error> for TmdbError {
-    fn from(err: reqwest::Error) -> Self {
-        let kind = if err.is_timeout() {
-            TransportKind::Timeout
-        } else if err.is_connect() {
-            TransportKind::Connect
-        } else {
-            TransportKind::Other
-        };
-        let err = err.without_url();
-        TmdbError::Http(TransportError::new(kind, &error_chain(&err)))
-    }
-}
-
 /// TMDB's structured error body, e.g. `{"status_code": 7, "status_message": "..."}`.
 #[derive(Debug, serde::Deserialize)]
 struct TmdbErrorBody {
@@ -204,6 +189,15 @@ impl From<TmdbError> for ProviderError {
 }
 
 impl TmdbError {
+    /// Wrap a `reqwest` error as [`TmdbError::Http`], stripping its request
+    /// URL so a v3 `api_key` query parameter can never surface through
+    /// `Display`, `Debug`, or the kept [`source`](std::error::Error::source).
+    pub(crate) fn from_reqwest(err: reqwest::Error) -> Self {
+        TmdbError::Http(TransportError::from_reqwest(err, |e| {
+            redact_api_key(&error_chain(e))
+        }))
+    }
+
     /// Map a generated-client error into a structured [`TmdbError`], decoding
     /// the TMDB error body and `Retry-After` header for error responses.
     ///
@@ -217,7 +211,7 @@ impl TmdbError {
             G::Transport(e) => Self::transport(TransportKind::Connect, &e),
             G::Timeout(kind) => TmdbError::Http(TransportError::new(
                 TransportKind::Timeout,
-                &format!("{kind:?} timeout elapsed"),
+                format!("{kind:?} timeout elapsed"),
             )),
             G::Protocol(e) => Self::transport(TransportKind::Other, &e),
             G::Redirect(e) => Self::transport(TransportKind::Other, &e),
@@ -271,9 +265,7 @@ impl TmdbError {
                 ..
             } => {
                 if status.is_success() {
-                    TmdbError::Deserialization(<serde_json::Error as serde::de::Error>::custom(
-                        path,
-                    ))
+                    TmdbError::Deserialization(DecodeError::new(path))
                 } else {
                     Self::api(status.as_u16(), &headers, &body)
                 }
@@ -283,7 +275,7 @@ impl TmdbError {
 
     /// A [`TmdbError::Http`] of `kind` describing `err` (redacted).
     fn transport(kind: TransportKind, err: &(dyn std::error::Error + 'static)) -> Self {
-        TmdbError::Http(TransportError::new(kind, &error_chain(err)))
+        TmdbError::Http(TransportError::new(kind, redact_api_key(&error_chain(err))))
     }
 
     /// A [`TmdbError::Api`] for an error `status`, decoding TMDB's error body.

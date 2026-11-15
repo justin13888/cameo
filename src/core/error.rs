@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{fmt, sync::Arc, time::Duration};
 
 /// The unified error type returned by provider trait implementations.
 ///
@@ -87,6 +87,156 @@ impl ProviderError {
             429 => ProviderError::RateLimited { retry_after },
             _ => ProviderError::Api { status, message },
         }
+    }
+}
+
+/// The shared, type-erased source of a [`TransportError`] or [`DecodeError`].
+type Source = Arc<dyn std::error::Error + Send + Sync + 'static>;
+
+/// A transport failure: no usable HTTP response was received.
+///
+/// Carried by `TmdbError::Http` and `AniListError::Http`. It classifies the
+/// failure the way a retry layer needs ([`is_connect`](Self::is_connect),
+/// [`is_timeout`](Self::is_timeout)) and describes it in its `Display` output.
+///
+/// The HTTP client's own error type is not part of cameo's public API, so a
+/// major upgrade of that client is not a cameo breaking change. Where the
+/// original error can be kept without its request URL, it is the
+/// [`source`](std::error::Error::source) (downcast it to inspect it); a TMDB
+/// failure raised inside the generated client has no source, because that
+/// original cannot be separated from a URL that carries a v3 `api_key`.
+/// Neither the description nor the source ever holds the request URL's
+/// `api_key` query value.
+#[derive(Debug, Clone)]
+pub struct TransportError {
+    kind: TransportKind,
+    message: String,
+    source: Option<Source>,
+}
+
+/// The class of a [`TransportError`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(not(any(feature = "tmdb", feature = "anilist")), allow(dead_code))]
+pub(crate) enum TransportKind {
+    /// Connection-level: DNS, refused or reset connection, TLS handshake.
+    Connect,
+    /// A connect or total-request timeout elapsed.
+    Timeout,
+    /// Anything else: malformed HTTP, redirect exhaustion, a body cut short,
+    /// a connection closed before any response.
+    Other,
+}
+
+impl TransportError {
+    /// A transport error of `kind` described by `message`, with no source.
+    ///
+    /// The caller redacts `message`: it is printed as given.
+    #[cfg_attr(not(feature = "tmdb"), allow(dead_code))]
+    pub(crate) fn new(kind: TransportKind, message: String) -> Self {
+        Self {
+            kind,
+            message,
+            source: None,
+        }
+    }
+
+    /// A transport error wrapping `err`, classified from it and described by
+    /// `describe`. The request URL is stripped from `err` before `describe`
+    /// sees it and before it is kept as the [`source`](std::error::Error::source).
+    #[cfg_attr(not(any(feature = "tmdb", feature = "anilist")), allow(dead_code))]
+    pub(crate) fn from_reqwest(
+        err: reqwest::Error,
+        describe: impl FnOnce(&reqwest::Error) -> String,
+    ) -> Self {
+        let kind = if err.is_timeout() {
+            TransportKind::Timeout
+        } else if err.is_connect() {
+            TransportKind::Connect
+        } else {
+            TransportKind::Other
+        };
+        let err = err.without_url();
+        Self {
+            kind,
+            message: describe(&err),
+            source: Some(Arc::new(err)),
+        }
+    }
+
+    /// Whether the connection could not be established (DNS, refused or reset
+    /// connection, TLS handshake). Transient: worth retrying.
+    pub fn is_connect(&self) -> bool {
+        self.kind == TransportKind::Connect
+    }
+
+    /// Whether a connect or total-request timeout elapsed. Transient: worth
+    /// retrying.
+    pub fn is_timeout(&self) -> bool {
+        self.kind == TransportKind::Timeout
+    }
+}
+
+impl fmt::Display for TransportError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
+impl std::error::Error for TransportError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.source
+            .as_deref()
+            .map(|e| e as &(dyn std::error::Error + 'static))
+    }
+}
+
+/// A body or stored value that could not be decoded from (or encoded to) its
+/// JSON form.
+///
+/// Carried by `TmdbError::Deserialization`, `AniListError::Deserialization`
+/// and `CacheError::Serialization`. The JSON library's own error type is not
+/// part of cameo's public API, so a major upgrade of that library is not a
+/// cameo breaking change. Where a JSON parser error produced it, that error is
+/// the [`source`](std::error::Error::source) (downcast it to inspect it); a
+/// decode failure the generated TMDB client reports carries only its message.
+#[derive(Debug, Clone)]
+pub struct DecodeError {
+    message: String,
+    source: Option<Source>,
+}
+
+impl DecodeError {
+    /// A decode error described by `message`, with no source.
+    #[cfg_attr(not(feature = "tmdb"), allow(dead_code))]
+    pub(crate) fn new(message: String) -> Self {
+        Self {
+            message,
+            source: None,
+        }
+    }
+
+    /// A decode error wrapping a JSON parser error, which becomes its
+    /// [`source`](std::error::Error::source).
+    #[cfg_attr(not(any(feature = "anilist", feature = "cache")), allow(dead_code))]
+    pub(crate) fn json(err: serde_json::Error) -> Self {
+        Self {
+            message: err.to_string(),
+            source: Some(Arc::new(err)),
+        }
+    }
+}
+
+impl fmt::Display for DecodeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
+impl std::error::Error for DecodeError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.source
+            .as_deref()
+            .map(|e| e as &(dyn std::error::Error + 'static))
     }
 }
 
@@ -189,5 +339,68 @@ mod tests {
                 "{status}"
             );
         }
+    }
+
+    /// A `reqwest::Error` whose request URL carries a v3 `api_key`: a send to
+    /// a loopback port nothing listens on, refused without leaving the host.
+    async fn reqwest_error_with_url() -> reqwest::Error {
+        match reqwest::Client::new()
+            .get("http://127.0.0.1:1/3/movie/1?api_key=SECRET")
+            .send()
+            .await
+        {
+            Ok(response) => panic!("expected a send error, got {response:?}"),
+            Err(e) => e,
+        }
+    }
+
+    /// `from_reqwest` keeps the original as `source()`, stripped of its URL,
+    /// classifies it, and describes it through the caller's closure.
+    #[tokio::test]
+    async fn transport_error_keeps_url_free_reqwest_source() {
+        let original = reqwest_error_with_url().await;
+        assert!(original.url().is_some(), "fixture must carry a URL");
+        let err = TransportError::from_reqwest(original, |e| format!("described: {e}"));
+
+        assert!(err.to_string().starts_with("described: "), "{err}");
+        assert!(err.is_connect() && !err.is_timeout(), "{err:?}");
+        let source = std::error::Error::source(&err).expect("source");
+        let inner = source
+            .downcast_ref::<reqwest::Error>()
+            .expect("source downcasts to reqwest::Error");
+        assert!(inner.url().is_none(), "source kept its URL: {inner:?}");
+        assert!(!format!("{err:?}").contains("SECRET"), "{err:?}");
+        // Clone shares the source.
+        assert!(std::error::Error::source(&err.clone()).is_some());
+    }
+
+    /// `TransportError::new` classifies by its kind and has no source.
+    #[test]
+    fn transport_error_new_has_kind_and_no_source() {
+        let err = TransportError::new(TransportKind::Timeout, "slow".into());
+        assert!(err.is_timeout() && !err.is_connect());
+        assert_eq!(err.to_string(), "slow");
+        assert!(std::error::Error::source(&err).is_none());
+        let err = TransportError::new(TransportKind::Connect, "refused".into());
+        assert!(err.is_connect() && !err.is_timeout());
+    }
+
+    /// `DecodeError::json` prints the parser's message and returns the parser
+    /// error from `source()`; `DecodeError::new` has no source.
+    #[test]
+    fn decode_error_source_is_the_json_error() {
+        let Err(json) = serde_json::from_str::<u32>("not json") else {
+            panic!("expected a JSON error");
+        };
+        let text = json.to_string();
+        let err = DecodeError::json(json);
+        assert_eq!(err.to_string(), text);
+        let source = std::error::Error::source(&err).expect("source");
+        assert!(source.downcast_ref::<serde_json::Error>().is_some());
+        assert!(std::error::Error::source(&err.clone()).is_some());
+
+        let err = DecodeError::new("results[0].id".into());
+        assert_eq!(err.to_string(), "results[0].id");
+        assert!(std::error::Error::source(&err).is_none());
     }
 }

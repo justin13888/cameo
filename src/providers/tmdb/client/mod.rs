@@ -85,7 +85,7 @@ impl TmdbClient {
             config.request_timeout,
             reqwest::header::HeaderMap::new(),
         )
-        .map_err(TmdbError::from)?;
+        .map_err(TmdbError::from_reqwest)?;
 
         let base_url = config.base_url.as_str();
         let inner = tmdb::Client::with_client(http_client, base_url)

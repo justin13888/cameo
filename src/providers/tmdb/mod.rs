@@ -24,6 +24,6 @@ pub use builders::{
 };
 pub use client::TmdbClient;
 pub use config::{TmdbAuth, TmdbConfig};
-pub use error::{RequestErrorKind, TmdbError, TransportError};
+pub use error::{RequestErrorKind, TmdbError};
 pub use image_url::{BackdropSize, ImageUrl, LogoSize, PosterSize, ProfileSize, StillSize};
 pub use models::{CastMember, CrewMember, TmdbCertification, TmdbCredits, TmdbImage, TmdbImages};

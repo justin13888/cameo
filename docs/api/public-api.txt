@@ -3,11 +3,9 @@ pub use cameo::async_trait
 pub mod cameo::cache
 #[non_exhaustive] pub enum cameo::cache::CacheError
 pub cameo::cache::CacheError::Backend(alloc::boxed::Box<(dyn core::error::Error + core::marker::Send + core::marker::Sync)>)
-pub cameo::cache::CacheError::Serialization(serde_json::error::Error)
+pub cameo::cache::CacheError::Serialization(cameo::DecodeError)
 impl cameo::CacheError
 pub fn cameo::CacheError::backend<E: core::error::Error + core::marker::Send + core::marker::Sync + 'static>(E) -> Self
-impl core::convert::From<serde_json::error::Error> for cameo::CacheError
-pub fn cameo::CacheError::from(serde_json::error::Error) -> Self
 impl core::error::Error for cameo::CacheError
 pub fn cameo::CacheError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
 impl core::fmt::Debug for cameo::CacheError
@@ -476,6 +474,51 @@ pub fn cameo::TimeWindow::and<P, B, E>(self, P) -> tower_http::follow_redirect::
 pub fn cameo::TimeWindow::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::TimeWindow
 impl<T> tracing::instrument::WithSubscriber for cameo::TimeWindow
+pub struct cameo::core::DecodeError
+impl core::clone::Clone for cameo::DecodeError
+pub fn cameo::DecodeError::clone(&self) -> cameo::DecodeError
+impl core::error::Error for cameo::DecodeError
+pub fn cameo::DecodeError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
+impl core::fmt::Debug for cameo::DecodeError
+pub fn cameo::DecodeError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::DecodeError
+pub fn cameo::DecodeError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::DecodeError
+impl core::marker::Send for cameo::DecodeError
+impl core::marker::Sync for cameo::DecodeError
+impl core::marker::Unpin for cameo::DecodeError
+impl core::marker::UnsafeUnpin for cameo::DecodeError
+impl !core::panic::unwind_safe::RefUnwindSafe for cameo::DecodeError
+impl !core::panic::unwind_safe::UnwindSafe for cameo::DecodeError
+impl<T, U> core::convert::Into<U> for cameo::DecodeError where U: core::convert::From<T>
+pub fn cameo::DecodeError::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::DecodeError where U: core::convert::Into<T>
+pub type cameo::DecodeError::Error = core::convert::Infallible
+pub fn cameo::DecodeError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::DecodeError where U: core::convert::TryFrom<T>
+pub type cameo::DecodeError::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::DecodeError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::DecodeError where T: core::clone::Clone
+pub type cameo::DecodeError::Owned = T
+pub fn cameo::DecodeError::clone_into(&self, &mut T)
+pub fn cameo::DecodeError::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::DecodeError where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::DecodeError::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::DecodeError where T: 'static + ?core::marker::Sized
+pub fn cameo::DecodeError::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::DecodeError where T: ?core::marker::Sized
+pub fn cameo::DecodeError::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::DecodeError where T: ?core::marker::Sized
+pub fn cameo::DecodeError::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::DecodeError where T: core::clone::Clone
+pub unsafe fn cameo::DecodeError::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::DecodeError
+pub fn cameo::DecodeError::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::DecodeError where T: ?core::marker::Sized
+pub fn cameo::DecodeError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::DecodeError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::DecodeError
+impl<T> tracing::instrument::WithSubscriber for cameo::DecodeError
 #[non_exhaustive] pub struct cameo::core::Page<T>
 pub cameo::core::Page::has_next: bool
 pub cameo::core::Page::next: core::option::Option<cameo::PageToken>
@@ -536,15 +579,63 @@ pub fn cameo::Page<T>::and<P, B, E>(self, P) -> tower_http::follow_redirect::pol
 pub fn cameo::Page<T>::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::Page<T>
 impl<T> tracing::instrument::WithSubscriber for cameo::Page<T>
+pub struct cameo::core::TransportError
+impl cameo::TransportError
+pub fn cameo::TransportError::is_connect(&self) -> bool
+pub fn cameo::TransportError::is_timeout(&self) -> bool
+impl core::clone::Clone for cameo::TransportError
+pub fn cameo::TransportError::clone(&self) -> cameo::TransportError
+impl core::error::Error for cameo::TransportError
+pub fn cameo::TransportError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
+impl core::fmt::Debug for cameo::TransportError
+pub fn cameo::TransportError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::TransportError
+pub fn cameo::TransportError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::TransportError
+impl core::marker::Send for cameo::TransportError
+impl core::marker::Sync for cameo::TransportError
+impl core::marker::Unpin for cameo::TransportError
+impl core::marker::UnsafeUnpin for cameo::TransportError
+impl !core::panic::unwind_safe::RefUnwindSafe for cameo::TransportError
+impl !core::panic::unwind_safe::UnwindSafe for cameo::TransportError
+impl<T, U> core::convert::Into<U> for cameo::TransportError where U: core::convert::From<T>
+pub fn cameo::TransportError::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::TransportError where U: core::convert::Into<T>
+pub type cameo::TransportError::Error = core::convert::Infallible
+pub fn cameo::TransportError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::TransportError where U: core::convert::TryFrom<T>
+pub type cameo::TransportError::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::TransportError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::TransportError where T: core::clone::Clone
+pub type cameo::TransportError::Owned = T
+pub fn cameo::TransportError::clone_into(&self, &mut T)
+pub fn cameo::TransportError::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::TransportError where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::TransportError::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::TransportError where T: 'static + ?core::marker::Sized
+pub fn cameo::TransportError::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::TransportError where T: ?core::marker::Sized
+pub fn cameo::TransportError::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::TransportError where T: ?core::marker::Sized
+pub fn cameo::TransportError::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::TransportError where T: core::clone::Clone
+pub unsafe fn cameo::TransportError::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::TransportError
+pub fn cameo::TransportError::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::TransportError where T: ?core::marker::Sized
+pub fn cameo::TransportError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::TransportError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::TransportError
+impl<T> tracing::instrument::WithSubscriber for cameo::TransportError
 pub fn cameo::core::into_stream<T, E, F, Fut>(F) -> impl futures_core::stream::Stream<Item = core::result::Result<T, E>> + core::marker::Send where T: core::marker::Send + 'static, E: core::marker::Send + 'static, F: core::ops::function::Fn(u32) -> Fut + core::marker::Send + 'static, Fut: core::future::future::Future<Output = core::result::Result<cameo::Page<T>, E>> + core::marker::Send + 'static
 pub mod cameo::providers
 pub mod cameo::providers::anilist
 #[non_exhaustive] pub enum cameo::providers::anilist::AniListError
-pub cameo::providers::anilist::AniListError::Deserialization(serde_json::error::Error)
+pub cameo::providers::anilist::AniListError::Deserialization(cameo::DecodeError)
 pub cameo::providers::anilist::AniListError::GraphQL
 pub cameo::providers::anilist::AniListError::GraphQL::errors: alloc::vec::Vec<cameo::AniListGqlError>
 pub cameo::providers::anilist::AniListError::GraphQL::retry_after: core::option::Option<core::time::Duration>
-pub cameo::providers::anilist::AniListError::Http(reqwest::error::Error)
+pub cameo::providers::anilist::AniListError::Http(cameo::TransportError)
 pub cameo::providers::anilist::AniListError::InvalidConfig(alloc::string::String)
 pub cameo::providers::anilist::AniListError::NoData
 pub cameo::providers::anilist::AniListError::NotFound
@@ -557,10 +648,6 @@ pub cameo::providers::anilist::AniListError::Status::retry_after: core::option::
 pub cameo::providers::anilist::AniListError::Status::status: u16
 impl core::convert::From<cameo::AniListError> for cameo::ProviderError
 pub fn cameo::ProviderError::from(cameo::AniListError) -> Self
-impl core::convert::From<reqwest::error::Error> for cameo::AniListError
-pub fn cameo::AniListError::from(reqwest::error::Error) -> Self
-impl core::convert::From<serde_json::error::Error> for cameo::AniListError
-pub fn cameo::AniListError::from(serde_json::error::Error) -> Self
 impl core::error::Error for cameo::AniListError
 pub fn cameo::AniListError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
 impl core::fmt::Debug for cameo::AniListError
@@ -1692,8 +1779,8 @@ pub cameo::providers::tmdb::TmdbError::Api::message: alloc::string::String
 pub cameo::providers::tmdb::TmdbError::Api::retry_after: core::option::Option<core::time::Duration>
 pub cameo::providers::tmdb::TmdbError::Api::status: u16
 pub cameo::providers::tmdb::TmdbError::Api::status_code: core::option::Option<i64>
-pub cameo::providers::tmdb::TmdbError::Deserialization(serde_json::error::Error)
-pub cameo::providers::tmdb::TmdbError::Http(cameo::providers::tmdb::TransportError)
+pub cameo::providers::tmdb::TmdbError::Deserialization(cameo::DecodeError)
+pub cameo::providers::tmdb::TmdbError::Http(cameo::TransportError)
 pub cameo::providers::tmdb::TmdbError::InvalidConfig(alloc::string::String)
 pub cameo::providers::tmdb::TmdbError::PageOutOfRange
 pub cameo::providers::tmdb::TmdbError::PageOutOfRange::field: &'static str
@@ -1704,10 +1791,6 @@ pub cameo::providers::tmdb::TmdbError::Request::message: alloc::string::String
 pub cameo::providers::tmdb::TmdbError::UnsupportedSource(cameo::ExternalSource)
 impl core::convert::From<cameo::TmdbError> for cameo::ProviderError
 pub fn cameo::ProviderError::from(cameo::TmdbError) -> Self
-impl core::convert::From<reqwest::error::Error> for cameo::TmdbError
-pub fn cameo::TmdbError::from(reqwest::error::Error) -> Self
-impl core::convert::From<serde_json::error::Error> for cameo::TmdbError
-pub fn cameo::TmdbError::from(serde_json::error::Error) -> Self
 impl core::error::Error for cameo::TmdbError
 pub fn cameo::TmdbError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
 impl core::fmt::Debug for cameo::TmdbError
@@ -2640,53 +2723,6 @@ pub fn cameo::providers::tmdb::TmdbImages::and<P, B, E>(self, P) -> tower_http::
 pub fn cameo::providers::tmdb::TmdbImages::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::TmdbImages
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::TmdbImages
-pub struct cameo::providers::tmdb::TransportError
-impl cameo::providers::tmdb::TransportError
-pub fn cameo::providers::tmdb::TransportError::is_connect(&self) -> bool
-pub fn cameo::providers::tmdb::TransportError::is_timeout(&self) -> bool
-impl core::clone::Clone for cameo::providers::tmdb::TransportError
-pub fn cameo::providers::tmdb::TransportError::clone(&self) -> cameo::providers::tmdb::TransportError
-impl core::error::Error for cameo::providers::tmdb::TransportError
-impl core::fmt::Debug for cameo::providers::tmdb::TransportError
-pub fn cameo::providers::tmdb::TransportError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::fmt::Display for cameo::providers::tmdb::TransportError
-pub fn cameo::providers::tmdb::TransportError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::marker::Freeze for cameo::providers::tmdb::TransportError
-impl core::marker::Send for cameo::providers::tmdb::TransportError
-impl core::marker::Sync for cameo::providers::tmdb::TransportError
-impl core::marker::Unpin for cameo::providers::tmdb::TransportError
-impl core::marker::UnsafeUnpin for cameo::providers::tmdb::TransportError
-impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::TransportError
-impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::TransportError
-impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::TransportError where U: core::convert::From<T>
-pub fn cameo::providers::tmdb::TransportError::into(self) -> U
-impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::TransportError where U: core::convert::Into<T>
-pub type cameo::providers::tmdb::TransportError::Error = core::convert::Infallible
-pub fn cameo::providers::tmdb::TransportError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
-impl<T, U> core::convert::TryInto<U> for cameo::providers::tmdb::TransportError where U: core::convert::TryFrom<T>
-pub type cameo::providers::tmdb::TransportError::Error = <U as core::convert::TryFrom<T>>::Error
-pub fn cameo::providers::tmdb::TransportError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
-impl<T> alloc::borrow::ToOwned for cameo::providers::tmdb::TransportError where T: core::clone::Clone
-pub type cameo::providers::tmdb::TransportError::Owned = T
-pub fn cameo::providers::tmdb::TransportError::clone_into(&self, &mut T)
-pub fn cameo::providers::tmdb::TransportError::to_owned(&self) -> T
-impl<T> alloc::string::ToString for cameo::providers::tmdb::TransportError where T: core::fmt::Display + ?core::marker::Sized
-pub fn cameo::providers::tmdb::TransportError::to_string(&self) -> alloc::string::String
-impl<T> core::any::Any for cameo::providers::tmdb::TransportError where T: 'static + ?core::marker::Sized
-pub fn cameo::providers::tmdb::TransportError::type_id(&self) -> core::any::TypeId
-impl<T> core::borrow::Borrow<T> for cameo::providers::tmdb::TransportError where T: ?core::marker::Sized
-pub fn cameo::providers::tmdb::TransportError::borrow(&self) -> &T
-impl<T> core::borrow::BorrowMut<T> for cameo::providers::tmdb::TransportError where T: ?core::marker::Sized
-pub fn cameo::providers::tmdb::TransportError::borrow_mut(&mut self) -> &mut T
-impl<T> core::clone::CloneToUninit for cameo::providers::tmdb::TransportError where T: core::clone::Clone
-pub unsafe fn cameo::providers::tmdb::TransportError::clone_to_uninit(&self, *mut u8)
-impl<T> core::convert::From<T> for cameo::providers::tmdb::TransportError
-pub fn cameo::providers::tmdb::TransportError::from(T) -> T
-impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::tmdb::TransportError where T: ?core::marker::Sized
-pub fn cameo::providers::tmdb::TransportError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-pub fn cameo::providers::tmdb::TransportError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::TransportError
-impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::TransportError
 pub mod cameo::providers::tvdb
 #[non_exhaustive] pub enum cameo::providers::tvdb::TvdbError
 pub cameo::providers::tvdb::TvdbError::Deserialization(serde_json::error::Error)
@@ -6982,11 +7018,11 @@ impl cameo::WatchAvailabilityProvider for cameo::TmdbClient
 pub fn cameo::TmdbClient::movie_watch_providers<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::TmdbClient::tv_watch_providers<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 #[non_exhaustive] pub enum cameo::AniListError
-pub cameo::AniListError::Deserialization(serde_json::error::Error)
+pub cameo::AniListError::Deserialization(cameo::DecodeError)
 pub cameo::AniListError::GraphQL
 pub cameo::AniListError::GraphQL::errors: alloc::vec::Vec<cameo::AniListGqlError>
 pub cameo::AniListError::GraphQL::retry_after: core::option::Option<core::time::Duration>
-pub cameo::AniListError::Http(reqwest::error::Error)
+pub cameo::AniListError::Http(cameo::TransportError)
 pub cameo::AniListError::InvalidConfig(alloc::string::String)
 pub cameo::AniListError::NoData
 pub cameo::AniListError::NotFound
@@ -6999,10 +7035,6 @@ pub cameo::AniListError::Status::retry_after: core::option::Option<core::time::D
 pub cameo::AniListError::Status::status: u16
 impl core::convert::From<cameo::AniListError> for cameo::ProviderError
 pub fn cameo::ProviderError::from(cameo::AniListError) -> Self
-impl core::convert::From<reqwest::error::Error> for cameo::AniListError
-pub fn cameo::AniListError::from(reqwest::error::Error) -> Self
-impl core::convert::From<serde_json::error::Error> for cameo::AniListError
-pub fn cameo::AniListError::from(serde_json::error::Error) -> Self
 impl core::error::Error for cameo::AniListError
 pub fn cameo::AniListError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
 impl core::fmt::Debug for cameo::AniListError
@@ -7041,11 +7073,9 @@ impl<T> tracing::instrument::Instrument for cameo::AniListError
 impl<T> tracing::instrument::WithSubscriber for cameo::AniListError
 #[non_exhaustive] pub enum cameo::CacheError
 pub cameo::CacheError::Backend(alloc::boxed::Box<(dyn core::error::Error + core::marker::Send + core::marker::Sync)>)
-pub cameo::CacheError::Serialization(serde_json::error::Error)
+pub cameo::CacheError::Serialization(cameo::DecodeError)
 impl cameo::CacheError
 pub fn cameo::CacheError::backend<E: core::error::Error + core::marker::Send + core::marker::Sync + 'static>(E) -> Self
-impl core::convert::From<serde_json::error::Error> for cameo::CacheError
-pub fn cameo::CacheError::from(serde_json::error::Error) -> Self
 impl core::error::Error for cameo::CacheError
 pub fn cameo::CacheError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
 impl core::fmt::Debug for cameo::CacheError
@@ -8131,8 +8161,8 @@ pub cameo::TmdbError::Api::message: alloc::string::String
 pub cameo::TmdbError::Api::retry_after: core::option::Option<core::time::Duration>
 pub cameo::TmdbError::Api::status: u16
 pub cameo::TmdbError::Api::status_code: core::option::Option<i64>
-pub cameo::TmdbError::Deserialization(serde_json::error::Error)
-pub cameo::TmdbError::Http(cameo::providers::tmdb::TransportError)
+pub cameo::TmdbError::Deserialization(cameo::DecodeError)
+pub cameo::TmdbError::Http(cameo::TransportError)
 pub cameo::TmdbError::InvalidConfig(alloc::string::String)
 pub cameo::TmdbError::PageOutOfRange
 pub cameo::TmdbError::PageOutOfRange::field: &'static str
@@ -8143,10 +8173,6 @@ pub cameo::TmdbError::Request::message: alloc::string::String
 pub cameo::TmdbError::UnsupportedSource(cameo::ExternalSource)
 impl core::convert::From<cameo::TmdbError> for cameo::ProviderError
 pub fn cameo::ProviderError::from(cameo::TmdbError) -> Self
-impl core::convert::From<reqwest::error::Error> for cameo::TmdbError
-pub fn cameo::TmdbError::from(reqwest::error::Error) -> Self
-impl core::convert::From<serde_json::error::Error> for cameo::TmdbError
-pub fn cameo::TmdbError::from(serde_json::error::Error) -> Self
 impl core::error::Error for cameo::TmdbError
 pub fn cameo::TmdbError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
 impl core::fmt::Debug for cameo::TmdbError
@@ -9085,6 +9111,51 @@ pub fn cameo::unified::Creator::and<P, B, E>(self, P) -> tower_http::follow_redi
 pub fn cameo::unified::Creator::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::Creator
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::Creator
+pub struct cameo::DecodeError
+impl core::clone::Clone for cameo::DecodeError
+pub fn cameo::DecodeError::clone(&self) -> cameo::DecodeError
+impl core::error::Error for cameo::DecodeError
+pub fn cameo::DecodeError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
+impl core::fmt::Debug for cameo::DecodeError
+pub fn cameo::DecodeError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::DecodeError
+pub fn cameo::DecodeError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::DecodeError
+impl core::marker::Send for cameo::DecodeError
+impl core::marker::Sync for cameo::DecodeError
+impl core::marker::Unpin for cameo::DecodeError
+impl core::marker::UnsafeUnpin for cameo::DecodeError
+impl !core::panic::unwind_safe::RefUnwindSafe for cameo::DecodeError
+impl !core::panic::unwind_safe::UnwindSafe for cameo::DecodeError
+impl<T, U> core::convert::Into<U> for cameo::DecodeError where U: core::convert::From<T>
+pub fn cameo::DecodeError::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::DecodeError where U: core::convert::Into<T>
+pub type cameo::DecodeError::Error = core::convert::Infallible
+pub fn cameo::DecodeError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::DecodeError where U: core::convert::TryFrom<T>
+pub type cameo::DecodeError::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::DecodeError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::DecodeError where T: core::clone::Clone
+pub type cameo::DecodeError::Owned = T
+pub fn cameo::DecodeError::clone_into(&self, &mut T)
+pub fn cameo::DecodeError::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::DecodeError where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::DecodeError::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::DecodeError where T: 'static + ?core::marker::Sized
+pub fn cameo::DecodeError::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::DecodeError where T: ?core::marker::Sized
+pub fn cameo::DecodeError::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::DecodeError where T: ?core::marker::Sized
+pub fn cameo::DecodeError::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::DecodeError where T: core::clone::Clone
+pub unsafe fn cameo::DecodeError::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::DecodeError
+pub fn cameo::DecodeError::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::DecodeError where T: ?core::marker::Sized
+pub fn cameo::DecodeError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::DecodeError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::DecodeError
+impl<T> tracing::instrument::WithSubscriber for cameo::DecodeError
 #[non_exhaustive] pub struct cameo::ExternalId
 pub cameo::ExternalId::id: alloc::string::String
 pub cameo::ExternalId::source: cameo::ExternalSource
@@ -9901,6 +9972,54 @@ pub fn cameo::TmdbConfig::and<P, B, E>(self, P) -> tower_http::follow_redirect::
 pub fn cameo::TmdbConfig::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::TmdbConfig
 impl<T> tracing::instrument::WithSubscriber for cameo::TmdbConfig
+pub struct cameo::TransportError
+impl cameo::TransportError
+pub fn cameo::TransportError::is_connect(&self) -> bool
+pub fn cameo::TransportError::is_timeout(&self) -> bool
+impl core::clone::Clone for cameo::TransportError
+pub fn cameo::TransportError::clone(&self) -> cameo::TransportError
+impl core::error::Error for cameo::TransportError
+pub fn cameo::TransportError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
+impl core::fmt::Debug for cameo::TransportError
+pub fn cameo::TransportError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::TransportError
+pub fn cameo::TransportError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::TransportError
+impl core::marker::Send for cameo::TransportError
+impl core::marker::Sync for cameo::TransportError
+impl core::marker::Unpin for cameo::TransportError
+impl core::marker::UnsafeUnpin for cameo::TransportError
+impl !core::panic::unwind_safe::RefUnwindSafe for cameo::TransportError
+impl !core::panic::unwind_safe::UnwindSafe for cameo::TransportError
+impl<T, U> core::convert::Into<U> for cameo::TransportError where U: core::convert::From<T>
+pub fn cameo::TransportError::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::TransportError where U: core::convert::Into<T>
+pub type cameo::TransportError::Error = core::convert::Infallible
+pub fn cameo::TransportError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::TransportError where U: core::convert::TryFrom<T>
+pub type cameo::TransportError::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::TransportError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::TransportError where T: core::clone::Clone
+pub type cameo::TransportError::Owned = T
+pub fn cameo::TransportError::clone_into(&self, &mut T)
+pub fn cameo::TransportError::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::TransportError where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::TransportError::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::TransportError where T: 'static + ?core::marker::Sized
+pub fn cameo::TransportError::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::TransportError where T: ?core::marker::Sized
+pub fn cameo::TransportError::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::TransportError where T: ?core::marker::Sized
+pub fn cameo::TransportError::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::TransportError where T: core::clone::Clone
+pub unsafe fn cameo::TransportError::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::TransportError
+pub fn cameo::TransportError::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::TransportError where T: ?core::marker::Sized
+pub fn cameo::TransportError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::TransportError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::TransportError
+impl<T> tracing::instrument::WithSubscriber for cameo::TransportError
 pub struct cameo::TvdbClient
 impl cameo::TvdbClient
 pub async fn cameo::TvdbClient::all_series_episodes(&self, u64) -> core::result::Result<alloc::vec::Vec<cameo::providers::tvdb::TvdbEpisode>, cameo::TvdbError>

@@ -3,7 +3,7 @@ use std::time::Duration;
 use serde::Deserialize;
 
 use crate::{
-    core::error::ProviderError,
+    core::error::{DecodeError, ProviderError, TransportError},
     providers::{http::is_retryable_status, retry::Retryable},
 };
 
@@ -51,11 +51,11 @@ pub struct AniListGqlError {
 pub enum AniListError {
     /// HTTP transport error (connection, DNS, TLS) — no response was received.
     ///
-    /// Errors built by this crate (including via `From<reqwest::Error>`) have
-    /// the request URL stripped with [`reqwest::Error::without_url`], matching
-    /// the TMDB provider's redaction policy.
+    /// The [`TransportError`] never holds the request URL, matching the TMDB
+    /// provider's redaction policy. The original HTTP-client error, stripped
+    /// of that URL, is its [`source`](std::error::Error::source).
     #[error("HTTP transport error: {0}")]
-    Http(#[source] reqwest::Error),
+    Http(#[source] TransportError),
 
     /// The server returned an error HTTP status with no usable GraphQL body
     /// (e.g. a 5xx HTML page). Carries the `Retry-After` delay when present.
@@ -84,8 +84,11 @@ pub enum AniListError {
     },
 
     /// The response body could not be parsed as a GraphQL envelope.
+    ///
+    /// The JSON parser's error is the [`DecodeError`]'s
+    /// [`source`](std::error::Error::source).
     #[error("deserialization error: {0}")]
-    Deserialization(#[from] serde_json::Error),
+    Deserialization(#[source] DecodeError),
 
     /// A successful response contained no `data` field.
     #[error("no data returned from AniList")]
@@ -113,11 +116,11 @@ pub enum AniListError {
     InvalidConfig(String),
 }
 
-/// Wrap a transport error, stripping its request URL (consistent with
-/// `TmdbError`, whose v3 API key travels in the URL).
-impl From<reqwest::Error> for AniListError {
-    fn from(err: reqwest::Error) -> Self {
-        AniListError::Http(err.without_url())
+impl AniListError {
+    /// Wrap a `reqwest` error as [`AniListError::Http`], stripping its request
+    /// URL (consistent with `TmdbError`, whose v3 API key travels in the URL).
+    pub(crate) fn from_reqwest(err: reqwest::Error) -> Self {
+        AniListError::Http(TransportError::from_reqwest(err, ToString::to_string))
     }
 }
 
@@ -150,7 +153,7 @@ impl Retryable for AniListError {
 impl From<AniListError> for ProviderError {
     fn from(err: AniListError) -> Self {
         match err {
-            AniListError::Http(e) => ProviderError::Transport(e.without_url().to_string()),
+            AniListError::Http(e) => ProviderError::Transport(e.to_string()),
             AniListError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
             AniListError::InvalidConfig(s) => ProviderError::InvalidInput(s),
             AniListError::NotFound => ProviderError::NotFound,
@@ -240,14 +243,14 @@ mod tests {
 
         let http = reqwest_builder_error();
         let http_text = http.to_string();
-        match ProviderError::from(AniListError::Http(http)) {
+        match ProviderError::from(AniListError::from_reqwest(http)) {
             ProviderError::Transport(m) => assert_eq!(m, http_text),
             other => panic!("expected Transport, got {other:?}"),
         }
 
         let json = json_error();
         let json_text = json.to_string();
-        match ProviderError::from(AniListError::Deserialization(json)) {
+        match ProviderError::from(AniListError::Deserialization(DecodeError::json(json))) {
             ProviderError::Deserialization(m) => assert_eq!(m, json_text),
             other => panic!("expected Deserialization, got {other:?}"),
         }

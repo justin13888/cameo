@@ -5,6 +5,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 
 use super::key::CacheKey;
+use crate::core::error::DecodeError;
 
 /// Error returned by [`CacheBackend`] operations.
 ///
@@ -20,8 +21,11 @@ use super::key::CacheKey;
 #[derive(Debug, thiserror::Error)]
 pub enum CacheError {
     /// The value could not be serialized to or deserialized from its stored form.
+    ///
+    /// Where a JSON (de)serializer error produced it, that error is the
+    /// [`DecodeError`]'s [`source`](std::error::Error::source).
     #[error("cache serialization error: {0}")]
-    Serialization(#[from] serde_json::Error),
+    Serialization(#[source] DecodeError),
     /// The underlying store failed (I/O, connection, corruption, …).
     #[error("cache backend error: {0}")]
     Backend(Box<dyn std::error::Error + Send + Sync>),
@@ -31,6 +35,11 @@ impl CacheError {
     /// Wrap an arbitrary store error as [`CacheError::Backend`].
     pub fn backend<E: std::error::Error + Send + Sync + 'static>(error: E) -> Self {
         CacheError::Backend(Box::new(error))
+    }
+
+    /// Wrap a JSON (de)serializer error as [`CacheError::Serialization`].
+    pub(crate) fn json(error: serde_json::Error) -> Self {
+        CacheError::Serialization(DecodeError::json(error))
     }
 }
 
