@@ -5,17 +5,21 @@ use serde_json::{Value, json};
 
 use super::{
     config::AniListConfig,
+    discover::{AnimeFormat, DiscoverAnimeBuilder},
     error::AniListError,
     query,
     response::{
         GraphQlResponse, MediaDetailResponse, MediaPageData, MediaPageResponse,
-        StaffDetailResponse, StaffPageResponse,
+        MediaRecommendationsResponse, RecommendationConnection, StaffDetailResponse,
+        StaffPageResponse,
     },
 };
 use crate::{
     core::{config::TimeWindow, pagination::Page},
     unified::{
-        conversions::anilist::{anilist_media_to_movie, anilist_media_to_tv},
+        conversions::anilist::{
+            anilist_media_to_movie, anilist_media_to_search_result, anilist_media_to_tv,
+        },
         models::{
             UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
             UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
@@ -23,11 +27,11 @@ use crate::{
     },
 };
 
-/// AniList format strings for anime that map to the "movie" media type.
-const MOVIE_FORMATS: &[&str] = &["MOVIE"];
+/// AniList formats for anime that map to the "movie" media type.
+const MOVIE_FORMATS: &[AnimeFormat] = AnimeFormat::MOVIES;
 
-/// AniList format strings for anime that map to the "TV show" media type.
-const TV_FORMATS: &[&str] = &["TV", "TV_SHORT", "ONA", "OVA", "SPECIAL"];
+/// AniList formats for anime that map to the "TV show" media type.
+const TV_FORMATS: &[AnimeFormat] = AnimeFormat::TV;
 
 // ── Client ─────────────────────────────────────────────────────────────────────
 
@@ -262,11 +266,11 @@ impl AniListClient {
 
     // ── Helper: build JSON array for format_in variable ───────────────────────
 
-    fn format_in_value(formats: &[&str]) -> Value {
+    fn format_in_value(formats: &[AnimeFormat]) -> Value {
         Value::Array(
             formats
                 .iter()
-                .map(|s| Value::String(s.to_string()))
+                .map(|f| Value::String(f.as_str().to_string()))
                 .collect(),
         )
     }
@@ -382,7 +386,7 @@ impl AniListClient {
         let results = page_data
             .media
             .into_iter()
-            .filter_map(crate::unified::conversions::anilist::anilist_media_to_search_result)
+            .filter_map(anilist_media_to_search_result)
             .collect();
         Ok(Page::with_has_next(
             pi.current_page.unwrap_or(1) as u32,
@@ -569,6 +573,125 @@ impl AniListClient {
             .await?;
         media_page_to_tv(page)
     }
+
+    // ── Recommendations ────────────────────────────────────────────────────────
+
+    /// Get community recommendations for an anime, keeping only recommended
+    /// **movies** (format `MOVIE`).
+    ///
+    /// Recommendations are ordered by community rating (`RATING_DESC`).
+    /// AniList cannot filter recommendations by format server-side, so
+    /// non-movie entries (and entries with no format, or deleted/hidden
+    /// recommended media) are dropped locally: a page may hold **fewer** items
+    /// than the configured page size, or none, while `total_results`,
+    /// `total_pages`, and `has_next_page` keep describing AniList's unfiltered
+    /// recommendation list.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AniListError::NotFound`] if no anime has this id.
+    pub async fn movie_recommendations(
+        &self,
+        id: i32,
+        page: Option<u32>,
+    ) -> Result<Page<UnifiedMovie>, AniListError> {
+        let recs = self.recommendations(id, page).await?;
+        Ok(recommendations_page(recs).filter_map(|item| match item {
+            UnifiedSearchResult::Movie(movie) => Some(movie),
+            _ => None,
+        }))
+    }
+
+    /// Get community recommendations for an anime, keeping only recommended
+    /// **series** (any present format other than `MOVIE`, e.g. `TV`, `OVA`).
+    ///
+    /// Uses the same classification as [`search_multi`](Self::search_multi);
+    /// see [`movie_recommendations`](Self::movie_recommendations) for how
+    /// local filtering affects page sizes and pagination metadata.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AniListError::NotFound`] if no anime has this id.
+    pub async fn tv_recommendations(
+        &self,
+        id: i32,
+        page: Option<u32>,
+    ) -> Result<Page<UnifiedTvShow>, AniListError> {
+        let recs = self.recommendations(id, page).await?;
+        Ok(recommendations_page(recs).filter_map(|item| match item {
+            UnifiedSearchResult::TvShow(show) => Some(show),
+            _ => None,
+        }))
+    }
+
+    /// Fetch one page of raw recommendations for an anime.
+    async fn recommendations(
+        &self,
+        id: i32,
+        page: Option<u32>,
+    ) -> Result<Option<RecommendationConnection>, AniListError> {
+        let (page_num, per_page) = Self::page_vars(page, self.config.per_page);
+        let vars = json!({
+            "id": id,
+            "page": page_num,
+            "perPage": per_page,
+        });
+        tracing::debug!(
+            id,
+            page = page_num,
+            "anilist: graphql MEDIA_RECOMMENDATIONS"
+        );
+        let media = self
+            .graphql(
+                query::MEDIA_RECOMMENDATIONS,
+                vars,
+                |r: MediaRecommendationsResponse| r.media,
+            )
+            .await?
+            .ok_or(AniListError::NotFound)?;
+        Ok(media.recommendations)
+    }
+
+    // ── Filtered discovery ─────────────────────────────────────────────────────
+
+    /// Create a builder for discovering anime with filters (genres, country,
+    /// broadcast season, format, status, adult flag, sort order).
+    ///
+    /// See [`DiscoverAnimeBuilder`] for the available filters and how the
+    /// movie/TV terminal methods choose formats.
+    pub fn discover_anime(&self) -> DiscoverAnimeBuilder<'_> {
+        DiscoverAnimeBuilder::new(self)
+    }
+
+    /// Run [`query::DISCOVER_ANIME`] and convert the page to movies.
+    pub(crate) async fn discover_movies_page(
+        &self,
+        vars: Value,
+    ) -> Result<Page<UnifiedMovie>, AniListError> {
+        tracing::debug!(
+            page = %vars["page"],
+            "anilist: graphql DISCOVER_ANIME (discover_anime movies)"
+        );
+        let page = self
+            .graphql(query::DISCOVER_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_movies(page)
+    }
+
+    /// Run [`query::DISCOVER_ANIME`] and convert the page to TV shows.
+    pub(crate) async fn discover_tv_page(
+        &self,
+        vars: Value,
+    ) -> Result<Page<UnifiedTvShow>, AniListError> {
+        tracing::debug!(
+            page = %vars["page"],
+            "anilist: graphql DISCOVER_ANIME (discover_anime tv)"
+        );
+        let page = self
+            .graphql(query::DISCOVER_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_tv(page)
+    }
 }
 
 // ── Page conversion helpers ───────────────────────────────────────────────────
@@ -591,6 +714,30 @@ fn truncate_body(body: &str) -> String {
 /// Root-field extractor for queries returning a media `Page`.
 fn media_page_root(resp: MediaPageResponse) -> Option<MediaPageData> {
     resp.page
+}
+
+/// Convert a recommendation connection to a page of classified media,
+/// skipping null nodes, null recommended media, and entries with no format.
+/// A missing connection is an empty first page.
+fn recommendations_page(conn: Option<RecommendationConnection>) -> Page<UnifiedSearchResult> {
+    let Some(conn) = conn else {
+        return Page::with_has_next(1, Vec::new(), false, 1, 0);
+    };
+    let pi = &conn.page_info;
+    let results = conn
+        .nodes
+        .into_iter()
+        .flatten()
+        .filter_map(|node| node.media_recommendation)
+        .filter_map(anilist_media_to_search_result)
+        .collect();
+    Page::with_has_next(
+        pi.current_page.unwrap_or(1) as u32,
+        results,
+        pi.has_next_page,
+        pi.last_page.unwrap_or(1) as u32,
+        pi.total.unwrap_or(0) as u32,
+    )
 }
 
 fn media_page_to_movies(page: Option<MediaPageData>) -> Result<Page<UnifiedMovie>, AniListError> {

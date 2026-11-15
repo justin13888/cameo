@@ -102005,7 +102005,7 @@ pub mod types {
         }
     }
 }
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 /**Client for tmdb-api
 
 Version: 3*/
@@ -102042,6 +102042,18 @@ impl Client {
             client,
             auth_query: None,
         }
+    }
+}
+impl ::std::fmt::Debug for Client {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        f.debug_struct("Client")
+            .field("baseurl", &self.baseurl)
+            .field("client", &self.client)
+            .field(
+                "auth_query",
+                &self.auth_query.as_ref().map(|(key, _)| (key.as_str(), "<redacted>")),
+            )
+            .finish()
     }
 }
 impl ClientInfo<()> for Client {

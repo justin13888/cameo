@@ -18,7 +18,7 @@ it with `lefthook install`. Use [conventional commits](https://www.conventionalc
 
 ## Toolchain and MSRV
 
-The crate's **support target is stable Rust `1.88`** (the MSRV — see
+The crate's **support target is stable Rust `1.89`** (the MSRV — see
 `Cargo.toml` `rust-version` and [docs/STABILITY.md](docs/STABILITY.md)); the
 `msrv` CI job builds and tests on it. `rust-toolchain.toml` pins a specific
 **nightly only** because `rustfmt.toml` uses nightly-only formatting options
