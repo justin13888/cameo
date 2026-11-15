@@ -25,7 +25,8 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 /// [`Display`](fmt::Display) and [`FromStr`] use `YYYY`, `YYYY-MM`, or
 /// `YYYY-MM-DD` depending on how much is known, and serde serializes to that
 /// same string — so any `PartialDate` round-trips losslessly through text and
-/// JSON.
+/// JSON. A negative year carries a leading `-` (year -5 renders as `-005`),
+/// which parsing accepts as the year's sign.
 ///
 /// # Examples
 ///
@@ -174,8 +175,17 @@ impl FromStr for PartialDate {
         let err = || ParseDateError {
             input: s.to_string(),
         };
-        let mut parts = s.split('-');
-        let year = parts.next().ok_or_else(err)?.parse().map_err(|_| err())?;
+        // A leading `-` is the year's sign (Display renders year -5 as
+        // `-005`), not a component separator.
+        let unsigned = s.strip_prefix('-').unwrap_or(s);
+        let mut parts = unsigned.split('-');
+        let year_digits = parts.next().ok_or_else(err)?;
+        let year_len = s.len() - unsigned.len() + year_digits.len();
+        let year = s
+            .get(..year_len)
+            .ok_or_else(err)?
+            .parse()
+            .map_err(|_| err())?;
         let month = parts
             .next()
             .map(|m| m.parse::<u8>())
@@ -253,9 +263,30 @@ mod tests {
             "2022-00-00",
             "2022-04-99",
             "2022-04-01-01",
-            "-2022",
+            "-",
+            "--2022",
+            "-2022-",
+            "2022--04",
+            "-2022-13",
         ] {
             assert!(s.parse::<PartialDate>().is_err(), "should reject {s:?}");
+        }
+    }
+
+    #[test]
+    fn parse_accepts_signed_years() {
+        assert_eq!("-005".parse(), Ok(PartialDate::from_year(-5)));
+        assert_eq!("-2022".parse(), Ok(PartialDate::from_year(-2022)));
+        assert_eq!(
+            "-0005-03".parse::<PartialDate>().ok(),
+            PartialDate::year_month(-5, 3)
+        );
+        // Display pads to four characters including the sign.
+        for s in ["-005", "-005-03", "-044-03-15", "-2147483648-12-31"] {
+            let parsed: PartialDate = s.parse().unwrap();
+            assert_eq!(parsed.to_string(), s, "round-trip failed for {s:?}");
+            let json = serde_json::to_string(&parsed).unwrap();
+            assert_eq!(serde_json::from_str::<PartialDate>(&json).unwrap(), parsed);
         }
     }
 
