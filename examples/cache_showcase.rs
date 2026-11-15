@@ -118,8 +118,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\n=== 3. Item-level cache from search ===\n");
 
     if let Some(first_movie) = movies.results.first() {
-        let pid = first_movie.provider_id.to_string();
-        let cached = client.cached_movie(&pid).await;
+        let pid = &first_movie.provider_id;
+        let cached = client.cached_movie(pid).await;
         match cached {
             Some(m) => println!("  cached_movie(\"{pid}\"): found \"{}\"", m.title),
             None => println!("  cached_movie(\"{pid}\"): not found (unexpected!)"),
@@ -133,12 +133,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\n=== 4. Details with auto-cache ===\n");
 
     let detail_id = 550; // Fight Club
-    let provider_id = format!("tmdb:{detail_id}");
+    let provider_id = MediaId::tmdb(detail_id);
 
     let t3 = Instant::now();
-    let details = client
-        .movie_details(&MediaId::tmdb(detail_id as u64))
-        .await?;
+    let details = client.movie_details(&provider_id).await?;
     let elapsed3 = t3.elapsed();
     println!(
         "  movie_details({detail_id}): \"{}\" ({:.0?})",
@@ -150,9 +148,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let t4 = Instant::now();
-    let details2 = client
-        .movie_details(&MediaId::tmdb(detail_id as u64))
-        .await?;
+    let details2 = client.movie_details(&provider_id).await?;
     let elapsed4 = t4.elapsed();
     println!(
         "\n  Second call (cache hit): \"{}\" ({:.0?})",
@@ -228,8 +224,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\n=== 7. Cache clearing ===\n");
 
     if let Some(first_trending) = trending.results.first() {
-        let pid = first_trending.provider_id.to_string();
-        let before = client.cached_movie(&pid).await;
+        let pid = &first_trending.provider_id;
+        let before = client.cached_movie(pid).await;
         println!(
             "  Before clear_cache(): cached_movie(\"{pid}\"): {}",
             if before.is_some() {
@@ -242,7 +238,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         client.clear_cache().await;
         println!("  Called clear_cache()");
 
-        let after = client.cached_movie(&pid).await;
+        let after = client.cached_movie(pid).await;
         println!(
             "  After clear_cache():  cached_movie(\"{pid}\"): {}",
             if after.is_some() {

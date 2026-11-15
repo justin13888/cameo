@@ -1,4 +1,4 @@
-/// AniList anime/manga database provider.
+/// AniList anime database provider.
 #[cfg(feature = "anilist")]
 pub mod anilist;
 

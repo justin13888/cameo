@@ -1,25 +1,25 @@
 //! AniList staff → unified person conversions.
 
+use super::staff_id;
 use crate::{
     providers::anilist::response::{AniListStaff, AniListStaffDetail},
-    unified::{
-        media_id::MediaId,
-        models::{Gender, UnifiedPerson, UnifiedPersonDetails},
-    },
+    unified::models::{Gender, UnifiedPerson, UnifiedPersonDetails},
 };
 
 // ── AniListStaff → UnifiedPerson ──────────────────────────────────────────────
 
-/// Convert an AniList staff member to a [`UnifiedPerson`].
-pub fn staff_to_person(s: AniListStaff) -> UnifiedPerson {
+/// Convert an AniList staff member to a [`UnifiedPerson`], or `None` (logged at
+/// `warn`) when its id is not a valid AniList staff id (zero or negative).
+pub fn staff_to_person(s: AniListStaff) -> Option<UnifiedPerson> {
+    let provider_id = staff_id(s.id)?;
     let department = s
         .primary_occupations
         .as_deref()
         .and_then(|occ| occ.first())
         .map(|occ| normalize_occupation(occ));
 
-    UnifiedPerson {
-        provider_id: MediaId::anilist_staff(s.id as u64),
+    Some(UnifiedPerson {
+        provider_id,
         name: s
             .name
             .as_ref()
@@ -30,11 +30,13 @@ pub fn staff_to_person(s: AniListStaff) -> UnifiedPerson {
         popularity: None,
         gender: None,
         adult: None,
-    }
+    })
 }
 
-/// Convert an AniList staff detail to [`UnifiedPersonDetails`].
-pub fn staff_detail_to_person_details(s: AniListStaffDetail) -> UnifiedPersonDetails {
+/// Convert an AniList staff detail to [`UnifiedPersonDetails`], or `None`
+/// (logged at `warn`) when its id is not a valid AniList staff id.
+pub fn staff_detail_to_person_details(s: AniListStaffDetail) -> Option<UnifiedPersonDetails> {
+    let provider_id = staff_id(s.id)?;
     let department = s
         .primary_occupations
         .as_deref()
@@ -53,9 +55,9 @@ pub fn staff_detail_to_person_details(s: AniListStaffDetail) -> UnifiedPersonDet
         })
         .unwrap_or_default();
 
-    UnifiedPersonDetails {
+    Some(UnifiedPersonDetails {
         person: UnifiedPerson {
-            provider_id: MediaId::anilist_staff(s.id as u64),
+            provider_id,
             name: s
                 .name
                 .as_ref()
@@ -74,7 +76,7 @@ pub fn staff_detail_to_person_details(s: AniListStaffDetail) -> UnifiedPersonDet
         imdb_id: None,
         homepage: s.site_url,
         also_known_as,
-    }
+    })
 }
 
 /// Normalize an AniList primary occupation to a consistent department string.

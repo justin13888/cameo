@@ -2,15 +2,15 @@ use std::collections::HashMap;
 
 use super::{
     config::{TmdbAuth, TmdbConfig},
-    error::TmdbError,
-    models::{TmdbCredits, TmdbImages},
+    error::{RequestErrorKind, TmdbError},
+    models::{self, TmdbCertification, TmdbCredits, TmdbImages},
 };
 use crate::{
     core::{config::TimeWindow, pagination::Page},
     generated::tmdb::{self, Credential, SecretString, types},
     providers::rate_limit::RateLimiter,
     unified::{
-        conversions::tmdb::TmdbListItem,
+        conversions::{native_id, tmdb::TmdbListItem},
         external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         genre::Genre,
         media_id::MediaId,
@@ -215,7 +215,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -241,7 +241,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -266,7 +266,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -291,7 +291,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .filter_map(crate::unified::conversions::tmdb::person::multi_search_result))
     }
 
@@ -307,8 +307,8 @@ impl TmdbClient {
         let mut body = self
             .execute(|| self.inner.movie_details(movie_id, params.clone()))
             .await?;
-        // TMDB may send a null/missing id; fall back to the requested one.
-        body.id.get_or_insert(i64::from(movie_id));
+        // TMDB may send a null/missing or invalid id; fall back to the requested one.
+        details_id(&mut body.id, movie_id);
         Ok(body.into())
     }
 
@@ -326,7 +326,7 @@ impl TmdbClient {
         let mut body = self
             .execute(|| self.inner.movie_details(movie_id, params.clone()))
             .await?;
-        body.id.get_or_insert(i64::from(movie_id));
+        details_id(&mut body.id, movie_id);
         Ok(body.into())
     }
 
@@ -343,7 +343,7 @@ impl TmdbClient {
         let mut body = self
             .execute(|| self.inner.tv_series_details(series_id, params.clone()))
             .await?;
-        body.id.get_or_insert(i64::from(series_id));
+        details_id(&mut body.id, series_id);
         Ok(body.into())
     }
 
@@ -357,7 +357,7 @@ impl TmdbClient {
         let mut body = self
             .execute(|| self.inner.person_details(person_id, params.clone()))
             .await?;
-        body.id.get_or_insert(i64::from(person_id));
+        details_id(&mut body.id, person_id);
         Ok(body.into())
     }
 
@@ -439,7 +439,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -471,7 +471,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -494,7 +494,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -518,7 +518,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -541,7 +541,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -564,7 +564,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -591,7 +591,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(UnifiedMovie::from))
     }
 
@@ -618,7 +618,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -642,7 +642,7 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
@@ -677,19 +677,25 @@ impl TmdbClient {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 
     // ── Season / Episode ──
 
     /// Get season details for a TV show.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `series_id` is zero or negative (nothing is
+    /// sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
     pub async fn tv_season_details(
         &self,
         series_id: i32,
         season_number: u32,
     ) -> Result<UnifiedSeasonDetails, TmdbError> {
+        let show_id = MediaId::tmdb(requested_id(series_id)?);
         let params = tmdb::TvSeasonDetailsParams {
             language: self.language(),
             ..Default::default()
@@ -701,7 +707,6 @@ impl TmdbClient {
             })
             .await?;
         body.season_number.get_or_insert(i64::from(season_number));
-        let show_id = MediaId::tmdb(series_id as u64);
         Ok(crate::unified::conversions::tmdb::tv::season_details_from(
             body, show_id,
         ))
@@ -736,15 +741,20 @@ impl TmdbClient {
     // ── Watch Providers ──
 
     /// Get streaming providers for a movie.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `movie_id` is zero or negative (nothing is
+    /// sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
     pub async fn movie_watch_providers(
         &self,
         movie_id: i32,
     ) -> Result<UnifiedWatchProviders, TmdbError> {
+        let provider_id = MediaId::tmdb(requested_id(movie_id)?);
         let body = self
             .execute(|| self.inner.movie_watch_providers(movie_id))
             .await?;
-        let provider_id = MediaId::tmdb(movie_id as u64);
         let results = match body.results {
             Some(r) => parse_watch_provider_results(serde_json::to_value(r)?)?,
             None => HashMap::new(),
@@ -756,15 +766,20 @@ impl TmdbClient {
     }
 
     /// Get streaming providers for a TV show.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `series_id` is zero or negative (nothing is
+    /// sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
     pub async fn tv_watch_providers(
         &self,
         series_id: i32,
     ) -> Result<UnifiedWatchProviders, TmdbError> {
+        let provider_id = MediaId::tmdb(requested_id(series_id)?);
         let body = self
             .execute(|| self.inner.tv_series_watch_providers(series_id))
             .await?;
-        let provider_id = MediaId::tmdb(series_id as u64);
         let results = match body.results {
             Some(r) => parse_watch_provider_results(serde_json::to_value(r)?)?,
             None => HashMap::new(),
@@ -775,6 +790,55 @@ impl TmdbClient {
         })
     }
 
+    // ── Certifications ──
+
+    /// Get a movie's certification (content rating) per country, from TMDB's
+    /// `/movie/{id}/release_dates`.
+    ///
+    /// A country lists one release per type (premiere, theatrical, digital,
+    /// ...). Each country appears at most once: its theatrical release's
+    /// certification when that is non-empty, otherwise the first non-empty
+    /// one. Countries with no certification are left out, so a title nobody
+    /// rated yields an empty `Vec`.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `movie_id` is zero or negative (nothing is
+    /// sent), plus the usual request errors.
+    #[tracing::instrument(skip(self))]
+    pub async fn movie_certifications(
+        &self,
+        movie_id: i32,
+    ) -> Result<Vec<TmdbCertification>, TmdbError> {
+        requested_id(movie_id)?;
+        let body = self
+            .execute(|| self.inner.movie_release_dates(movie_id))
+            .await?;
+        Ok(models::movie_certifications(body))
+    }
+
+    /// Get a TV series' certification (content rating) per country, from
+    /// TMDB's `/tv/{id}/content_ratings`.
+    ///
+    /// Entries with no country code or an empty rating are left out, so a
+    /// series nobody rated yields an empty `Vec`.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `series_id` is zero or negative (nothing is
+    /// sent), plus the usual request errors.
+    #[tracing::instrument(skip(self))]
+    pub async fn tv_series_certifications(
+        &self,
+        series_id: i32,
+    ) -> Result<Vec<TmdbCertification>, TmdbError> {
+        requested_id(series_id)?;
+        let body = self
+            .execute(|| self.inner.tv_series_content_ratings(series_id))
+            .await?;
+        Ok(models::tv_series_certifications(body))
+    }
+
     // ── External IDs ──
 
     /// Get the external ids (IMDb, Wikidata) of a movie.
@@ -782,13 +846,19 @@ impl TmdbClient {
     /// The returned [`ExternalIds`] also carries `tmdb: Some(movie_id)`. TMDB
     /// does not track TheTVDB or MyAnimeList ids for movies, so those stay
     /// `None`; empty strings TMDB sends for unknown ids are reported as `None`.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `movie_id` is zero or negative (nothing is
+    /// sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
     pub async fn movie_external_ids(&self, movie_id: i32) -> Result<ExternalIds, TmdbError> {
+        // The requested id, not the body's (TMDB may send a null `id`).
+        let tmdb_id = requested_id(movie_id)?;
         let body = self
             .execute(|| self.inner.movie_external_ids(movie_id))
             .await?;
-        // The requested id, not the body's (TMDB may send a null `id`).
-        let mut ids = ExternalIds::new().with_tmdb(movie_id as u64);
+        let mut ids = ExternalIds::new().with_tmdb(tmdb_id);
         ids.imdb = non_empty(body.imdb_id);
         // The spec leaves the movie `wikidata_id` untyped; it is a string or null.
         ids.wikidata = non_empty(
@@ -802,16 +872,23 @@ impl TmdbClient {
 
     /// Get the external ids (IMDb, TheTVDB, Wikidata) of a TV series.
     ///
-    /// The returned [`ExternalIds`] also carries `tmdb: Some(series_id)`.
+    /// The returned [`ExternalIds`] also carries `tmdb: Some(series_id)`. A
+    /// TheTVDB id of `0` or below is reported as `None`.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `series_id` is zero or negative (nothing is
+    /// sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
     pub async fn tv_external_ids(&self, series_id: i32) -> Result<ExternalIds, TmdbError> {
+        // The requested id, not the body's (TMDB may send a null `id`).
+        let tmdb_id = requested_id(series_id)?;
         let body = self
             .execute(|| self.inner.tv_series_external_ids(series_id))
             .await?;
-        // The requested id, not the body's (TMDB may send a null `id`).
-        let mut ids = ExternalIds::new().with_tmdb(series_id as u64);
+        let mut ids = ExternalIds::new().with_tmdb(tmdb_id);
         ids.imdb = non_empty(body.imdb_id);
-        ids.tvdb = body.tvdb_id.and_then(|n| u64::try_from(n).ok());
+        ids.tvdb = body.tvdb_id.and_then(native_id);
         ids.wikidata = non_empty(body.wikidata_id);
         Ok(ids)
     }
@@ -821,8 +898,9 @@ impl TmdbClient {
     ///
     /// Only movie and TV-series results are returned (movies first); TMDB's
     /// person, season, and episode matches are dropped because they are not
-    /// titles a [`MatchKind`](crate::unified::MatchKind) can describe. TV
-    /// results with a missing or malformed `id` are skipped. No match yields
+    /// titles a [`MatchKind`](crate::unified::MatchKind) can describe.
+    /// Results whose `id` is missing, malformed, zero, or negative are
+    /// skipped. No match yields
     /// an empty `Vec`.
     ///
     /// # Errors
@@ -853,14 +931,15 @@ impl TmdbClient {
             .movie_results
             .iter()
             .flatten()
-            .filter_map(|m| m.id.and_then(|n| u64::try_from(n).ok()))
+            .filter_map(|m| m.id.and_then(native_id))
             .map(|n| ExternalMatch::movie(MediaId::tmdb(n)));
         // `tv_results` is untyped in the spec; only the `id` is needed.
         let shows = body
             .tv_results
             .iter()
             .flatten()
-            .filter_map(|v| v.get("id").and_then(serde_json::Value::as_u64))
+            .filter_map(|v| v.get("id").and_then(serde_json::Value::as_i64))
+            .filter_map(native_id)
             .map(|n| ExternalMatch::tv_show(MediaId::tmdb(n)));
         Ok(movies.chain(shows).collect())
     }
@@ -931,31 +1010,74 @@ impl TmdbClient {
 // ── Typed recommendation / watch-provider response models ───────────────────────
 
 /// Build a [`Page`] from TMDB offset-pagination fields, tolerating `null`s,
-/// and drop result items without a TMDB id (see [`TmdbListItem`]).
+/// and drop result items without a valid TMDB id (see [`TmdbListItem`]).
 ///
 /// `requested` is the page number sent to TMDB (`None` when no page was sent).
-/// A missing or invalid `page` falls back to `requested` (or `1`), a missing
-/// `total_pages` falls back to that page (so `has_next` is `false`), and a
-/// missing `total_results` falls back to `0`, and missing `results` read as
-/// an empty list.
+/// A missing `page` falls back to `requested` (or `1`). A missing
+/// `total_pages` or `total_results` is unknown and reads as `0`, as [`Page`]
+/// documents, so `has_next` (`page < total_pages`) is `false`. Missing
+/// `results` read as an empty list. An item whose id is missing, zero, or
+/// negative is dropped and logged at `warn`.
+///
+/// # Errors
+///
+/// [`TmdbError::PageOutOfRange`] when TMDB reports a `page`, `total_pages`, or
+/// `total_results` that does not fit a `u32` (negative or too large).
 pub(crate) fn offset_page<T: TmdbListItem>(
     requested: Option<i32>,
     page: Option<i64>,
     results: Option<Vec<T>>,
     total_pages: Option<i64>,
     total_results: Option<i64>,
-) -> Page<T> {
-    let to_u32 = |v: i64| u32::try_from(v).ok();
+) -> Result<Page<T>, TmdbError> {
     let requested = requested.and_then(|p| u32::try_from(p).ok()).unwrap_or(1);
-    let page = page.and_then(to_u32).unwrap_or(requested);
-    let total_pages = total_pages.and_then(to_u32).unwrap_or(page);
-    let total_results = total_results.and_then(to_u32).unwrap_or(0);
+    let page = page_field("page", page)?.unwrap_or(requested);
+    let total_pages = page_field("total_pages", total_pages)?.unwrap_or(0);
+    let total_results = page_field("total_results", total_results)?.unwrap_or(0);
     let results = results
         .unwrap_or_default()
         .into_iter()
-        .filter(|item| item.tmdb_id().is_some())
+        .filter(|item| {
+            let valid = item.tmdb_id().and_then(native_id).is_some();
+            if !valid {
+                tracing::warn!(
+                    tmdb_id = item.tmdb_id(),
+                    "tmdb: skipping result without a valid TMDB id"
+                );
+            }
+            valid
+        })
         .collect();
-    Page::offset(page, results, total_pages, total_results)
+    Ok(Page::offset(page, results, total_pages, total_results))
+}
+
+/// A reported pagination `field` as a `u32`: `None` when TMDB omitted it, and
+/// [`TmdbError::PageOutOfRange`] when the value does not fit.
+fn page_field(field: &'static str, value: Option<i64>) -> Result<Option<u32>, TmdbError> {
+    value
+        .map(|v| u32::try_from(v).map_err(|_| TmdbError::PageOutOfRange { field, value: v }))
+        .transpose()
+}
+
+/// The id a details response is converted under: the id TMDB reported when it
+/// is valid, otherwise (missing, zero, or negative) the requested id.
+fn details_id(reported: &mut Option<i64>, requested: i32) {
+    if reported.and_then(native_id).is_none() {
+        *reported = Some(i64::from(requested));
+    }
+}
+
+/// A requested TMDB id as a [`MediaId`] number.
+///
+/// # Errors
+///
+/// [`TmdbError::Request`] ([`RequestErrorKind::InvalidRequest`]) when `id` is
+/// zero or negative: no TMDB record has such an id, so nothing is sent.
+fn requested_id(id: i32) -> Result<u64, TmdbError> {
+    native_id(i64::from(id)).ok_or_else(|| TmdbError::Request {
+        kind: RequestErrorKind::InvalidRequest,
+        message: format!("TMDB ids are positive integers, got {id}"),
+    })
 }
 
 /// One streaming service under a watch-provider country entry.
@@ -1056,5 +1178,118 @@ mod tests {
             .expect("valid url");
         assert_eq!(url.path(), "/3/movie/550");
         assert!(!url.as_str().contains(SECRET), "{url}");
+    }
+
+    /// A list item with an optional id, standing in for a generated TMDB item.
+    #[derive(Debug)]
+    struct Item(Option<i64>);
+
+    impl TmdbListItem for Item {
+        fn tmdb_id(&self) -> Option<i64> {
+            self.0
+        }
+    }
+
+    /// Omitted totals are unknown and read as `0`, as `Page` documents, and
+    /// leave no next page; an omitted page falls back to the requested one.
+    #[test]
+    fn offset_page_omitted_totals_read_as_zero() {
+        let page = offset_page(Some(2), None, Some(vec![Item(Some(1))]), None, None)
+            .expect("page in range");
+        assert_eq!(page.page, 2);
+        assert_eq!(page.total_pages, 0);
+        assert_eq!(page.total_results, 0);
+        assert!(!page.has_next);
+        assert_eq!(page.next, None);
+        assert_eq!(page.results.len(), 1);
+    }
+
+    /// Reported totals pass through and drive `has_next`; items without a
+    /// valid id (missing, zero, or negative) drop.
+    #[test]
+    fn offset_page_reported_totals_pass_through() {
+        let page = offset_page(
+            None,
+            Some(1),
+            Some(vec![
+                Item(Some(1)),
+                Item(None),
+                Item(Some(0)),
+                Item(Some(-7)),
+            ]),
+            Some(3),
+            Some(41),
+        )
+        .expect("page in range");
+        assert_eq!(page.page, 1);
+        assert_eq!(page.total_pages, 3);
+        assert_eq!(page.total_results, 41);
+        assert!(page.has_next);
+        assert_eq!(page.results.len(), 1);
+    }
+
+    /// A page number or total that does not fit a `u32` is a typed error
+    /// naming the field and value, never a wrapped or clamped number.
+    #[test]
+    fn offset_page_out_of_range_fields_are_errors() {
+        let too_big = i64::from(u32::MAX) + 1;
+        let cases = [
+            ("page", (Some(-1), None, None)),
+            ("page", (Some(too_big), None, None)),
+            ("total_pages", (Some(1), Some(-1), None)),
+            ("total_pages", (Some(1), Some(too_big), None)),
+            ("total_results", (Some(1), Some(1), Some(-1))),
+            ("total_results", (Some(1), Some(1), Some(too_big))),
+        ];
+        for (expected, (page, total_pages, total_results)) in cases {
+            let err = offset_page::<Item>(None, page, None, total_pages, total_results)
+                .expect_err("out-of-range field");
+            match err {
+                TmdbError::PageOutOfRange { field, value } => {
+                    assert_eq!(field, expected);
+                    assert!(value < 0 || value == too_big, "{value}");
+                }
+                other => panic!("expected PageOutOfRange, got {other:?}"),
+            }
+        }
+        // `u32::MAX` itself still fits.
+        let max = i64::from(u32::MAX);
+        let page = offset_page::<Item>(None, Some(max), None, Some(max), Some(max))
+            .expect("u32::MAX fits");
+        assert_eq!(page.page, u32::MAX);
+        assert_eq!(page.total_results, u32::MAX);
+    }
+
+    /// An invalid id in a details response gives way to the requested id; a
+    /// valid one is kept.
+    #[test]
+    fn details_id_replaces_only_invalid_ids() {
+        for reported in [None, Some(0), Some(-5)] {
+            let mut id = reported;
+            details_id(&mut id, 550);
+            assert_eq!(id, Some(550), "reported {reported:?}");
+        }
+        let mut id = Some(603);
+        details_id(&mut id, 550);
+        assert_eq!(id, Some(603));
+    }
+
+    /// A zero or negative requested id is rejected before anything is sent.
+    #[test]
+    fn requested_id_rejects_non_positive_ids() {
+        assert_eq!(requested_id(550).expect("valid id"), 550);
+        for id in [0, -1, i32::MIN] {
+            let err = requested_id(id).expect_err("invalid id");
+            assert!(
+                matches!(
+                    err,
+                    TmdbError::Request {
+                        kind: RequestErrorKind::InvalidRequest,
+                        ..
+                    }
+                ),
+                "got {err:?}"
+            );
+        }
     }
 }

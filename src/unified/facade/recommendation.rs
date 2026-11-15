@@ -32,9 +32,9 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_discovery_ttl())
+            self.cache_put(key, &result, self.cache_ttl(|t| t.discovery))
                 .await;
-            self.cache_movie_items(&result).await;
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }
@@ -61,9 +61,9 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_discovery_ttl())
+            self.cache_put(key, &result, self.cache_ttl(|t| t.discovery))
                 .await;
-            self.cache_tv_items(&result).await;
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }
@@ -94,9 +94,9 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_discovery_ttl())
+            self.cache_put(key, &result, self.cache_ttl(|t| t.discovery))
                 .await;
-            self.cache_movie_items(&result).await;
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }
@@ -127,9 +127,9 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_discovery_ttl())
+            self.cache_put(key, &result, self.cache_ttl(|t| t.discovery))
                 .await;
-            self.cache_tv_items(&result).await;
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }

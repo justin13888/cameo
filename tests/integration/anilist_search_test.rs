@@ -305,6 +305,23 @@ async fn search_multi_returns_mixed_types() {
 }
 
 #[tokio::test]
+async fn search_multi_omits_formats_outside_movie_and_tv_lists() {
+    let body = page_response(
+        vec![
+            media_item(1, "Music Video", "MUSIC"),
+            media_item(2, "Series B", "ONA"),
+        ],
+        2,
+    );
+    let (_server, client) = mock_client(body).await;
+
+    let result = client.search_multi("test", None).await.unwrap();
+
+    assert_eq!(result.results.len(), 1);
+    assert!(matches!(result.results[0], UnifiedSearchResult::TvShow(_)));
+}
+
+#[tokio::test]
 async fn search_multi_graphql_error_propagates() {
     let body = json!({ "errors": [{ "message": "Internal Server Error.", "status": 500 }] });
     let (_server, client) = mock_client(body).await;

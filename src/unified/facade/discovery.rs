@@ -11,7 +11,7 @@ macro_rules! discover_movies {
     ($self:ident, $endpoint:expr, $page:expr, $provider:ident => $call:expr) => {{
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
-            provider: $self.discovery_ns(),
+            provider: CameoClient::cache_ns(&$self.discovery),
             endpoint: $endpoint,
             page: $page.unwrap_or(1),
         };
@@ -24,9 +24,9 @@ macro_rules! discover_movies {
         #[cfg(feature = "cache")]
         {
             $self
-                .cache_put(key, &result, $self.cache_discovery_ttl())
+                .cache_put(key, &result, $self.cache_ttl(|t| t.discovery))
                 .await;
-            $self.cache_movie_items(&result).await;
+            $self.cache_items(&result.results).await;
         }
         Ok(result)
     }};
@@ -37,7 +37,7 @@ macro_rules! discover_tv {
     ($self:ident, $endpoint:expr, $page:expr, $provider:ident => $call:expr) => {{
         #[cfg(feature = "cache")]
         let key = CacheKey::Discovery {
-            provider: $self.discovery_ns(),
+            provider: CameoClient::cache_ns(&$self.discovery),
             endpoint: $endpoint,
             page: $page.unwrap_or(1),
         };
@@ -50,9 +50,9 @@ macro_rules! discover_tv {
         #[cfg(feature = "cache")]
         {
             $self
-                .cache_put(key, &result, $self.cache_discovery_ttl())
+                .cache_put(key, &result, $self.cache_ttl(|t| t.discovery))
                 .await;
-            $self.cache_tv_items(&result).await;
+            $self.cache_items(&result.results).await;
         }
         Ok(result)
     }};

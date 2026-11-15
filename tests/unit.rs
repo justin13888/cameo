@@ -6,11 +6,16 @@ mod unit {
     mod builder_test;
     #[cfg(feature = "cache")]
     mod cache_test;
+    mod common_traits_test;
     mod external_ids_test;
     mod genre_test;
     #[cfg(feature = "tmdb")]
     mod image_url_test;
     mod model_builders_test;
+    mod model_setters_test;
     mod pagination_test;
     mod property_test;
+    mod serde_shape_test;
+    #[cfg(feature = "tmdb")]
+    mod sort_wire_test;
 }

@@ -1,9 +1,9 @@
 //! TMDB movie type → unified model conversions.
 
-use super::{resolve_backdrop, resolve_date, resolve_logo, resolve_poster};
+use super::{resolve_backdrop, resolve_date, resolve_logo, resolve_poster, tmdb_media_id};
 use crate::{
     generated::tmdb::types,
-    unified::{genre::Genre, media_id::MediaId, models::*},
+    unified::{genre::Genre, models::*},
 };
 
 macro_rules! impl_movie_from {
@@ -11,7 +11,7 @@ macro_rules! impl_movie_from {
         impl From<$ty> for UnifiedMovie {
             fn from(m: $ty) -> Self {
                 UnifiedMovie {
-                    provider_id: MediaId::tmdb(m.id.unwrap_or_default() as u64),
+                    provider_id: tmdb_media_id(m.id),
                     title: m.title.unwrap_or_default(),
                     original_title: m.original_title,
                     alternative_titles: Vec::new(),
@@ -64,7 +64,7 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
 
         UnifiedMovieDetails {
             movie: UnifiedMovie {
-                provider_id: MediaId::tmdb(m.id.unwrap_or_default() as u64),
+                provider_id: tmdb_media_id(m.id),
                 title: m.title.unwrap_or_default(),
                 original_title: m.original_title,
                 alternative_titles: Vec::new(),
@@ -344,6 +344,15 @@ mod tests {
         assert!(details.belongs_to_collection.is_none());
         assert!(details.production_companies.is_empty());
         assert_eq!(details.movie.title, "");
+    }
+
+    /// A negative id is never wrapped into a huge `u64`.
+    #[test]
+    fn negative_id_is_not_wrapped() {
+        let mut raw = make_search_movie();
+        raw.id = Some(-1);
+        let unified: UnifiedMovie = raw.into();
+        assert_eq!(unified.provider_id, "tmdb:0");
     }
 
     #[test]

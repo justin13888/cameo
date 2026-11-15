@@ -59,6 +59,20 @@ type Clock = Arc<dyn Fn() -> u64 + Send + Sync>;
 /// count-based expiry purge rarely fires.
 const MAX_ENTRIES: i64 = 50_000;
 
+/// Run blocking SQLite work on tokio's blocking pool.
+///
+/// A task that panics or is cancelled becomes [`CacheError::Backend`] carrying
+/// the [`tokio::task::JoinError`] itself, so its cause stays inspectable.
+async fn run_blocking<T, F>(work: F) -> Result<T, CacheError>
+where
+    F: FnOnce() -> Result<T, CacheError> + Send + 'static,
+    T: Send + 'static,
+{
+    tokio::task::spawn_blocking(work)
+        .await
+        .map_err(CacheError::backend)?
+}
+
 fn system_clock() -> Clock {
     Arc::new(|| {
         SystemTime::now()
@@ -114,15 +128,15 @@ impl SqliteCache {
         let path = path.as_ref();
 
         // Writer: enable WAL for better concurrency and lower write latency.
-        let write_conn = Connection::open(path).map_err(|e| CacheError::Backend(Box::new(e)))?;
+        let write_conn = Connection::open(path).map_err(CacheError::backend)?;
         write_conn
             .execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")
-            .map_err(|e| CacheError::Backend(Box::new(e)))?;
+            .map_err(CacheError::backend)?;
         init_schema(&write_conn)?;
 
         // Separate reader: in WAL mode this connection can read without
         // blocking the writer connection.
-        let read_conn = Connection::open(path).map_err(|e| CacheError::Backend(Box::new(e)))?;
+        let read_conn = Connection::open(path).map_err(CacheError::backend)?;
 
         Ok(Self {
             read_conn: Arc::new(Mutex::new(read_conn)),
@@ -137,7 +151,7 @@ impl SqliteCache {
     /// A single connection is used for both reads and writes because
     /// SQLite in-memory databases are not shared across connections.
     pub fn in_memory() -> Result<Self, CacheError> {
-        let conn = Connection::open_in_memory().map_err(|e| CacheError::Backend(Box::new(e)))?;
+        let conn = Connection::open_in_memory().map_err(CacheError::backend)?;
         init_schema(&conn)?;
         let conn = Arc::new(Mutex::new(conn));
         Ok(Self {
@@ -157,7 +171,7 @@ impl SqliteCache {
     pub async fn purge_expired(&self) -> Result<(), CacheError> {
         let conn = Arc::clone(&self.write_conn);
         let now = self.now();
-        tokio::task::spawn_blocking(move || {
+        run_blocking(move || {
             // Recover from a poisoned mutex rather than failing forever: cache
             // data is best-effort and a prior panic left it structurally intact.
             let conn = conn.lock().unwrap_or_else(|poison| poison.into_inner());
@@ -165,11 +179,10 @@ impl SqliteCache {
                 "DELETE FROM cache_entries WHERE expires_at < ?1",
                 rusqlite::params![now as i64],
             )
-            .map_err(|e| CacheError::Backend(Box::new(e)))?;
+            .map_err(CacheError::backend)?;
             Ok(())
         })
         .await
-        .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?
     }
 
     /// Override the time source. Intended for deterministic TTL tests.
@@ -232,7 +245,7 @@ impl CacheBackend for SqliteCache {
         let key_id = key.key_id();
         let now = self.now();
 
-        let result = tokio::task::spawn_blocking(move || {
+        let result = run_blocking(move || {
             let conn = conn.lock().unwrap_or_else(|poison| poison.into_inner());
             let result = conn.query_row(
                 "SELECT value FROM cache_entries WHERE key_type = ?1 AND key_id = ?2 AND expires_at > ?3",
@@ -240,7 +253,7 @@ impl CacheBackend for SqliteCache {
                 |row| row.get::<_, String>(0),
             ).optional();
 
-            match result.map_err(|e| CacheError::Backend(Box::new(e)))? {
+            match result.map_err(CacheError::backend)? {
                 Some(json_str) => {
                     let value = serde_json::from_str(&json_str)?;
                     Ok(Some(value))
@@ -248,8 +261,7 @@ impl CacheBackend for SqliteCache {
                 None => Ok(None),
             }
         })
-        .await
-        .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?;
+        .await;
 
         // Periodically evict expired rows even on read-heavy workloads.
         let count = read_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -272,13 +284,13 @@ impl CacheBackend for SqliteCache {
         let now = self.now();
         let expires_at = now + ttl.as_secs();
 
-        tokio::task::spawn_blocking(move || {
+        run_blocking(move || {
             let conn = conn.lock().unwrap_or_else(|poison| poison.into_inner());
             conn.execute(
                 "INSERT OR REPLACE INTO cache_entries (key_type, key_id, value, expires_at) VALUES (?1, ?2, ?3, ?4)",
                 params![key_type, key_id, json_str, expires_at as i64],
             )
-            .map_err(|e| CacheError::Backend(Box::new(e)))?;
+            .map_err(CacheError::backend)?;
 
             // Bound the file: reclaim expired rows and trim to MAX_ENTRIES.
             Self::enforce_limits(&conn, now);
@@ -286,7 +298,6 @@ impl CacheBackend for SqliteCache {
             Ok(())
         })
         .await
-        .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?
     }
 
     #[tracing::instrument(skip(self, key), fields(key_type = key.key_type(), key_id = %key.key_id()))]
@@ -295,30 +306,28 @@ impl CacheBackend for SqliteCache {
         let key_type = key.key_type().to_string();
         let key_id = key.key_id();
 
-        tokio::task::spawn_blocking(move || {
+        run_blocking(move || {
             let conn = conn.lock().unwrap_or_else(|poison| poison.into_inner());
             conn.execute(
                 "DELETE FROM cache_entries WHERE key_type = ?1 AND key_id = ?2",
                 params![key_type, key_id],
             )
-            .map_err(|e| CacheError::Backend(Box::new(e)))?;
+            .map_err(CacheError::backend)?;
             Ok(())
         })
         .await
-        .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?
     }
 
     async fn clear(&self) -> Result<(), CacheError> {
         let conn = Arc::clone(&self.write_conn);
 
-        tokio::task::spawn_blocking(move || {
+        run_blocking(move || {
             let conn = conn.lock().unwrap_or_else(|poison| poison.into_inner());
             conn.execute("DELETE FROM cache_entries", [])
-                .map_err(|e| CacheError::Backend(Box::new(e)))?;
+                .map_err(CacheError::backend)?;
             Ok(())
         })
         .await
-        .map_err(|e| CacheError::Backend(Box::from(format!("spawn_blocking failed: {e}"))))?
     }
 }
 
@@ -331,6 +340,35 @@ mod tests {
         CacheBackend,
         key::{CacheKey, MediaType},
     };
+
+    /// A blocking task that panics surfaces as `Backend` carrying the
+    /// `JoinError` itself, not a stringified copy of it.
+    #[tokio::test]
+    async fn run_blocking_keeps_the_join_error() {
+        let err = run_blocking::<(), _>(|| panic!("boom"))
+            .await
+            .expect_err("a panicking task is an error");
+        let CacheError::Backend(source) = err else {
+            panic!("expected CacheError::Backend, got {err:?}");
+        };
+        let join = source
+            .downcast_ref::<tokio::task::JoinError>()
+            .expect("the boxed source is the JoinError");
+        assert!(join.is_panic());
+    }
+
+    /// Work that succeeds or fails on its own passes its result through.
+    #[tokio::test]
+    async fn run_blocking_passes_the_work_result_through() {
+        assert_eq!(run_blocking(|| Ok(7)).await.unwrap(), 7);
+        let err = run_blocking::<(), _>(|| Err(CacheError::backend(std::fmt::Error)))
+            .await
+            .expect_err("the work's own error is returned");
+        let CacheError::Backend(source) = err else {
+            panic!("expected CacheError::Backend, got {err:?}");
+        };
+        assert!(source.downcast_ref::<std::fmt::Error>().is_some());
+    }
 
     /// A schema-version mismatch flushes stale entries when the DB is reopened.
     #[tokio::test]
@@ -432,5 +470,110 @@ mod tests {
         // it, not because a read-time filter hid it.
         now.store(1_000, std::sync::atomic::Ordering::Relaxed);
         assert!(cache.get(&stale).await.unwrap().is_none());
+    }
+
+    fn row_count(cache: &SqliteCache) -> i64 {
+        let conn = cache.write_conn.lock().unwrap();
+        conn.query_row("SELECT COUNT(*) FROM cache_entries", [], |row| row.get(0))
+            .unwrap()
+    }
+
+    fn detail(id: u32) -> CacheKey {
+        CacheKey::Detail {
+            media_type: MediaType::Movie,
+            provider_id: format!("tmdb:{id}"),
+        }
+    }
+
+    /// `purge_expired` deletes exactly the rows whose expiry is before the
+    /// injected clock, and keeps rows that expire now or later.
+    #[tokio::test]
+    async fn purge_expired_deletes_only_expired_rows() {
+        let now = Arc::new(std::sync::atomic::AtomicU64::new(1_000));
+        let cache = SqliteCache::in_memory().unwrap().with_clock(mock(&now));
+        for (id, ttl) in [(1, 10), (2, 50), (3, 500)] {
+            cache
+                .set(
+                    detail(id),
+                    serde_json::json!({ "id": id }),
+                    Duration::from_secs(ttl),
+                )
+                .await
+                .unwrap();
+        }
+        assert_eq!(row_count(&cache), 3);
+
+        // Rows expire at 1_010, 1_050 and 1_500; at 1_050 only the first is
+        // strictly past its expiry.
+        now.store(1_050, std::sync::atomic::Ordering::Relaxed);
+        cache.purge_expired().await.unwrap();
+        assert_eq!(row_count(&cache), 2);
+
+        // Rewind so the read filter hides nothing: absence is the purge's doing.
+        now.store(0, std::sync::atomic::Ordering::Relaxed);
+        assert!(cache.get(&detail(1)).await.unwrap().is_none());
+        assert!(cache.get(&detail(2)).await.unwrap().is_some());
+        assert!(cache.get(&detail(3)).await.unwrap().is_some());
+
+        now.store(10_000, std::sync::atomic::Ordering::Relaxed);
+        cache.purge_expired().await.unwrap();
+        assert_eq!(row_count(&cache), 0);
+    }
+
+    /// A write trims the table to `MAX_ENTRIES`, evicting the rows that expire
+    /// soonest.
+    #[tokio::test]
+    async fn write_enforces_max_entries_by_evicting_soonest_expiring() {
+        let now = Arc::new(std::sync::atomic::AtomicU64::new(1_000));
+        let cache = SqliteCache::in_memory().unwrap().with_clock(mock(&now));
+        // Fill the table to the cap directly; going through `set` would run
+        // the trim on every one of the 50 000 writes.
+        {
+            let mut conn = cache.write_conn.lock().unwrap();
+            let tx = conn.transaction().unwrap();
+            {
+                let mut insert = tx
+                    .prepare(
+                        "INSERT INTO cache_entries (key_type, key_id, value, expires_at) \
+                         VALUES ('detail', ?1, '{}', ?2)",
+                    )
+                    .unwrap();
+                for i in 0..MAX_ENTRIES {
+                    insert
+                        .execute(params![format!("movie:bulk:{i}"), 100_000 + i])
+                        .unwrap();
+                }
+            }
+            tx.commit().unwrap();
+        }
+        assert_eq!(row_count(&cache), MAX_ENTRIES);
+
+        cache
+            .set(
+                detail(1),
+                serde_json::json!({ "fresh": true }),
+                Duration::from_secs(1_000_000),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(row_count(&cache), MAX_ENTRIES);
+        assert!(cache.get(&detail(1)).await.unwrap().is_some());
+        let conn = cache.write_conn.lock().unwrap();
+        let soonest: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM cache_entries WHERE key_id = 'movie:bulk:0'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        let next: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM cache_entries WHERE key_id = 'movie:bulk:1'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!((soonest, next), (0, 1));
     }
 }

@@ -21,7 +21,7 @@ pub use sqlite::SqliteCache;
 /// Age-aware TTL fields allow stable/old content to be cached longer while
 /// keeping volatile or recently-released content fresher.
 #[non_exhaustive]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CacheTtlConfig {
     /// Fallback TTL for detail responses when no age policy matches.
     pub details: Duration,

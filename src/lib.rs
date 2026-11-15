@@ -10,7 +10,7 @@
 //! # #[cfg(feature = "tmdb")]
 //! # {
 //! use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
-//! use cameo::unified::{CameoClient, SearchProvider};
+//! use cameo::unified::CameoClient;
 //!
 //! // Low-level TMDB client
 //! let client = TmdbClient::new(TmdbConfig::new("your-tmdb-token"))?;
@@ -26,7 +26,7 @@
 //! # }
 //! ```
 //!
-//! ## AniList (anime/manga)
+//! ## AniList (anime)
 //!
 //! ```no_run
 //! # #[tokio::main]
@@ -34,7 +34,7 @@
 //! # #[cfg(feature = "anilist")]
 //! # {
 //! use cameo::providers::anilist::{AniListClient, AniListConfig};
-//! use cameo::unified::{CameoClient, SearchProvider};
+//! use cameo::unified::CameoClient;
 //!
 //! // Low-level AniList client (no auth required)
 //! let client = AniListClient::new(AniListConfig::new())?;
@@ -84,10 +84,10 @@ pub mod providers;
 /// Unified cross-provider types, traits, and facade client.
 pub mod unified;
 
-/// Re-export the most common types.
-pub use core::error::ProviderError;
+// Re-export the most common types.
 pub use core::{
     config::TimeWindow,
+    error::ProviderError,
     pagination::{Page, PageToken, into_stream},
 };
 

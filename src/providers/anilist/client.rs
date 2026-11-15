@@ -10,16 +10,19 @@ use super::{
     query,
     response::{
         GraphQlResponse, MediaCreditsResponse, MediaDetailResponse, MediaIdsResponse,
-        MediaPageData, MediaPageResponse, MediaRecommendationsResponse, RecommendationConnection,
-        StaffDetailResponse, StaffPageResponse,
+        MediaPageData, MediaPageResponse, MediaRecommendationsResponse, PageInfo,
+        RecommendationConnection, StaffDetailResponse, StaffPageResponse,
     },
 };
 use crate::{
     core::{config::TimeWindow, pagination::Page},
     unified::{
-        conversions::anilist::{
-            anilist_media_to_movie, anilist_media_to_search_result, anilist_media_to_tv,
-            credits::anilist_credits_to_unified,
+        conversions::{
+            anilist::{
+                anilist_media_to_movie, anilist_media_to_search_result, anilist_media_to_tv,
+                credits::anilist_credits_to_unified,
+            },
+            native_id,
         },
         external_ids::{ExternalIds, ExternalMatch},
         media_id::MediaId,
@@ -35,6 +38,32 @@ const MOVIE_FORMATS: &[AnimeFormat] = AnimeFormat::MOVIES;
 
 /// AniList formats for anime that map to the "TV show" media type.
 const TV_FORMATS: &[AnimeFormat] = AnimeFormat::TV;
+
+/// The unified media type an AniList anime format maps to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Kind {
+    /// A movie: a format in [`MOVIE_FORMATS`].
+    Movie,
+    /// A TV show: a format in [`TV_FORMATS`].
+    Tv,
+}
+
+/// Classify an AniList `format` value (e.g. `"MOVIE"`, `"TV"`).
+///
+/// The single source of truth shared by the `formatIn` lists the movie and TV
+/// queries send ([`MOVIE_FORMATS`], [`TV_FORMATS`]) and the conversions that
+/// sort mixed results: a format in neither list (e.g. `MUSIC`) or an unknown
+/// value is `None`, so no result set reports it as a movie or a show.
+pub(crate) fn classify(format: &str) -> Option<Kind> {
+    let in_list = |formats: &[AnimeFormat]| formats.iter().any(|f| f.as_str() == format);
+    if in_list(MOVIE_FORMATS) {
+        Some(Kind::Movie)
+    } else if in_list(TV_FORMATS) {
+        Some(Kind::Tv)
+    } else {
+        None
+    }
+}
 
 /// Characters and staff fetched per [`AniListClient::media_credits`] request.
 ///
@@ -360,20 +389,23 @@ impl AniListClient {
             .await?
             .ok_or(AniListError::NoData)?;
         let pi = &page_data.page_info;
-        Ok(Page::with_has_next(
-            pi.current_page.unwrap_or(1) as u32,
+        page_from(
+            pi,
             page_data
                 .staff
                 .into_iter()
-                .map(crate::unified::conversions::anilist::staff_to_person)
+                .filter_map(crate::unified::conversions::anilist::staff_to_person)
                 .collect(),
-            pi.has_next_page,
-            pi.last_page.unwrap_or(1) as u32,
-            pi.total.unwrap_or(0) as u32,
-        ))
+        )
     }
 
     /// Search across all anime formats. Returns movies and TV shows mixed.
+    ///
+    /// Each result is classified the way the movie and TV list queries filter:
+    /// `MOVIE` is a movie, `TV`, `TV_SHORT`, `ONA`, `OVA`, and `SPECIAL` are TV
+    /// shows, and anything else (e.g. `MUSIC`, or no format) is omitted, so a
+    /// page may hold fewer items than the configured page size while the
+    /// pagination metadata keeps describing AniList's unfiltered results.
     pub async fn search_multi(
         &self,
         query: &str,
@@ -401,48 +433,57 @@ impl AniListClient {
             .into_iter()
             .filter_map(anilist_media_to_search_result)
             .collect();
-        Ok(Page::with_has_next(
-            pi.current_page.unwrap_or(1) as u32,
-            results,
-            pi.has_next_page,
-            pi.last_page.unwrap_or(1) as u32,
-            pi.total.unwrap_or(0) as u32,
-        ))
+        page_from(pi, results)
     }
 
     // ── Details ────────────────────────────────────────────────────────────────
 
     /// Get full details for an anime movie by AniList ID.
+    ///
+    /// The result carries AniList's reported id, or `id` when the reported
+    /// one is not a valid AniList id.
     pub async fn movie_details(&self, id: i32) -> Result<UnifiedMovieDetails, AniListError> {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql MEDIA_DETAILS (movie_details)");
-        let media = self
+        let mut media = self
             .graphql(query::MEDIA_DETAILS, vars, |r: MediaDetailResponse| r.media)
             .await?
             .ok_or(AniListError::NotFound)?;
-        Ok(crate::unified::conversions::anilist::anilist_media_detail_to_movie_details(media))
+        details_id(&mut media.id, id);
+        crate::unified::conversions::anilist::anilist_media_detail_to_movie_details(media)
+            .ok_or(AniListError::NotFound)
     }
 
     /// Get full details for an anime TV series by AniList ID.
+    ///
+    /// The result carries AniList's reported id, or `id` when the reported
+    /// one is not a valid AniList id.
     pub async fn tv_show_details(&self, id: i32) -> Result<UnifiedTvShowDetails, AniListError> {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql MEDIA_DETAILS (tv_show_details)");
-        let media = self
+        let mut media = self
             .graphql(query::MEDIA_DETAILS, vars, |r: MediaDetailResponse| r.media)
             .await?
             .ok_or(AniListError::NotFound)?;
-        Ok(crate::unified::conversions::anilist::anilist_media_detail_to_tv_details(media))
+        details_id(&mut media.id, id);
+        crate::unified::conversions::anilist::anilist_media_detail_to_tv_details(media)
+            .ok_or(AniListError::NotFound)
     }
 
     /// Get full details for a staff member by AniList ID.
+    ///
+    /// The result carries AniList's reported id, or `id` when the reported
+    /// one is not a valid AniList staff id.
     pub async fn person_details(&self, id: i32) -> Result<UnifiedPersonDetails, AniListError> {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql STAFF_DETAILS (person_details)");
-        let staff = self
+        let mut staff = self
             .graphql(query::STAFF_DETAILS, vars, |r: StaffDetailResponse| r.staff)
             .await?
             .ok_or(AniListError::NotFound)?;
-        Ok(crate::unified::conversions::anilist::staff_detail_to_person_details(staff))
+        details_id(&mut staff.id, id);
+        crate::unified::conversions::anilist::staff_detail_to_person_details(staff)
+            .ok_or(AniListError::NotFound)
     }
 
     // ── Credits ────────────────────────────────────────────────────────────────
@@ -463,10 +504,10 @@ impl AniListClient {
     ///
     /// # Errors
     ///
-    /// [`AniListError::NotFound`] when no anime has this id (a negative id
-    /// never names one, so it fails without a request).
+    /// [`AniListError::NotFound`] when no anime has this id (a zero or
+    /// negative id never names one, so it fails without a request).
     pub async fn media_credits(&self, id: i32) -> Result<UnifiedCredits, AniListError> {
-        let title = MediaId::anilist(u64::try_from(id).map_err(|_| AniListError::NotFound)?);
+        let title = MediaId::anilist(native_id(i64::from(id)).ok_or(AniListError::NotFound)?);
         let mut characters = Vec::new();
         let mut staff = Vec::new();
         let mut more_characters = true;
@@ -537,17 +578,22 @@ impl AniListClient {
             .await?
             .ok_or(AniListError::NotFound)?;
         let mut ids = ExternalIds::new();
-        ids.anilist = u64::try_from(media.id).ok();
-        ids.mal = media.id_mal.and_then(|n| u64::try_from(n).ok());
+        ids.anilist = native_id(i64::from(media.id));
+        ids.mal = media.id_mal.map(i64::from).and_then(native_id);
         Ok(ids)
     }
 
     /// Find the anime with the given MyAnimeList ID.
     ///
-    /// Returns `Ok(None)` when AniList has no anime with that MAL id. The match
-    /// is a [`MatchKind::Movie`](crate::unified::MatchKind::Movie) for the
-    /// `MOVIE` format and a [`MatchKind::TvShow`](crate::unified::MatchKind::TvShow)
-    /// for every other format (TV, OVA, ONA, special, …).
+    /// The match uses the same classification as
+    /// [`search_multi`](Self::search_multi): a
+    /// [`MatchKind::Movie`](crate::unified::MatchKind::Movie) for the movie
+    /// formats (`MOVIE`) and a
+    /// [`MatchKind::TvShow`](crate::unified::MatchKind::TvShow) for the TV
+    /// formats (`TV`, `TV_SHORT`, `ONA`, `OVA`, `SPECIAL`).
+    ///
+    /// Returns `Ok(None)` when AniList has no anime with that MAL id, and when
+    /// the anime's format is absent or in neither list (e.g. `MUSIC`).
     pub async fn find_by_mal_id(&self, mal_id: i32) -> Result<Option<ExternalMatch>, AniListError> {
         let vars = json!({ "idMal": mal_id });
         tracing::debug!(mal_id, "anilist: graphql MEDIA_BY_MAL_ID");
@@ -560,10 +606,10 @@ impl AniListClient {
             Err(e) => return Err(e),
         };
         Ok(media.and_then(|media| {
-            let id = MediaId::anilist(u64::try_from(media.id).ok()?);
-            Some(match media.format.as_deref() {
-                Some("MOVIE") => ExternalMatch::movie(id),
-                _ => ExternalMatch::tv_show(id),
+            let id = MediaId::anilist(native_id(i64::from(media.id))?);
+            Some(match media.format.as_deref().and_then(classify)? {
+                Kind::Movie => ExternalMatch::movie(id),
+                Kind::Tv => ExternalMatch::tv_show(id),
             })
         }))
     }
@@ -732,14 +778,14 @@ impl AniListClient {
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, AniListError> {
         let recs = self.recommendations(id, page).await?;
-        Ok(recommendations_page(recs).filter_map(|item| match item {
+        Ok(recommendations_page(recs)?.filter_map(|item| match item {
             UnifiedSearchResult::Movie(movie) => Some(movie),
             _ => None,
         }))
     }
 
     /// Get community recommendations for an anime, keeping only recommended
-    /// **series** (any present format other than `MOVIE`, e.g. `TV`, `OVA`).
+    /// **series** (the TV formats `TV`, `TV_SHORT`, `ONA`, `OVA`, `SPECIAL`).
     ///
     /// Uses the same classification as [`search_multi`](Self::search_multi);
     /// see [`movie_recommendations`](Self::movie_recommendations) for how
@@ -754,7 +800,7 @@ impl AniListClient {
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, AniListError> {
         let recs = self.recommendations(id, page).await?;
-        Ok(recommendations_page(recs).filter_map(|item| match item {
+        Ok(recommendations_page(recs)?.filter_map(|item| match item {
             UnifiedSearchResult::TvShow(show) => Some(show),
             _ => None,
         }))
@@ -853,11 +899,14 @@ fn media_page_root(resp: MediaPageResponse) -> Option<MediaPageData> {
 }
 
 /// Convert a recommendation connection to a page of classified media,
-/// skipping null nodes, null recommended media, and entries with no format.
-/// A missing connection is an empty first page.
-fn recommendations_page(conn: Option<RecommendationConnection>) -> Page<UnifiedSearchResult> {
+/// skipping null nodes, null recommended media, and entries whose format is
+/// absent or that [`classify`] places in neither list (e.g. `MUSIC`).
+/// A missing connection is an empty first page whose totals are unknown (`0`).
+fn recommendations_page(
+    conn: Option<RecommendationConnection>,
+) -> Result<Page<UnifiedSearchResult>, AniListError> {
     let Some(conn) = conn else {
-        return Page::with_has_next(1, Vec::new(), false, 1, 0);
+        return Ok(Page::with_has_next(1, Vec::new(), false, 0, 0));
     };
     let pi = &conn.page_info;
     let results = conn
@@ -867,37 +916,71 @@ fn recommendations_page(conn: Option<RecommendationConnection>) -> Page<UnifiedS
         .filter_map(|node| node.media_recommendation)
         .filter_map(anilist_media_to_search_result)
         .collect();
-    Page::with_has_next(
-        pi.current_page.unwrap_or(1) as u32,
+    page_from(pi, results)
+}
+
+/// Build a [`Page`] from AniList's `pageInfo`.
+///
+/// A missing `currentPage` reads as `1`, and a missing `lastPage` or `total`
+/// as `0` (unknown), as [`Page`] documents.
+///
+/// # Errors
+///
+/// [`AniListError::PageOutOfRange`] when AniList reports a negative
+/// `currentPage`, `lastPage`, or `total`.
+fn page_from<T>(pi: &PageInfo, results: Vec<T>) -> Result<Page<T>, AniListError> {
+    Ok(Page::with_has_next(
+        page_field("currentPage", pi.current_page)?.unwrap_or(1),
         results,
         pi.has_next_page,
-        pi.last_page.unwrap_or(1) as u32,
-        pi.total.unwrap_or(0) as u32,
-    )
+        page_field("lastPage", pi.last_page)?.unwrap_or(0),
+        page_field("total", pi.total)?.unwrap_or(0),
+    ))
+}
+
+/// A reported `pageInfo` field as a `u32`: `None` when AniList omitted it,
+/// and [`AniListError::PageOutOfRange`] when it is negative.
+fn page_field(field: &'static str, value: Option<i32>) -> Result<Option<u32>, AniListError> {
+    value
+        .map(|v| {
+            u32::try_from(v).map_err(|_| AniListError::PageOutOfRange {
+                field,
+                value: i64::from(v),
+            })
+        })
+        .transpose()
+}
+
+/// The id a details response is converted under: the id AniList reported
+/// when it is valid, otherwise (zero or negative) the requested id.
+fn details_id(reported: &mut i32, requested: i32) {
+    if native_id(i64::from(*reported)).is_none() {
+        *reported = requested;
+    }
 }
 
 fn media_page_to_movies(page: Option<MediaPageData>) -> Result<Page<UnifiedMovie>, AniListError> {
     let page = page.ok_or(AniListError::NoData)?;
     let pi = &page.page_info;
-    Ok(Page::with_has_next(
-        pi.current_page.unwrap_or(1) as u32,
-        page.media.into_iter().map(anilist_media_to_movie).collect(),
-        pi.has_next_page,
-        pi.last_page.unwrap_or(1) as u32,
-        pi.total.unwrap_or(0) as u32,
-    ))
+    page_from(
+        pi,
+        page.media
+            .into_iter()
+            .filter_map(anilist_media_to_movie)
+            .collect(),
+    )
 }
 
 fn media_page_to_tv(page: Option<MediaPageData>) -> Result<Page<UnifiedTvShow>, AniListError> {
     let page = page.ok_or(AniListError::NoData)?;
     let pi = &page.page_info;
-    Ok(Page::with_has_next(
-        pi.current_page.unwrap_or(1) as u32,
-        page.media.into_iter().map(anilist_media_to_tv).collect(),
-        pi.has_next_page,
-        pi.last_page.unwrap_or(1) as u32,
-        pi.total.unwrap_or(0) as u32,
-    ))
+    page_from(
+        pi,
+        page.media
+            .into_iter()
+            .filter_map(anilist_media_to_tv)
+            .collect(),
+    )
 }
 
 // ── Characterization tests ────────────────────────────────────────────────────
@@ -918,6 +1001,23 @@ mod tests {
         core::pagination::PageToken,
         providers::{rate_limit::RateLimit, retry::RetryPolicy},
     };
+
+    #[test]
+    fn classify_matches_the_format_in_lists() {
+        for f in MOVIE_FORMATS {
+            assert_eq!(classify(f.as_str()), Some(Kind::Movie), "{f:?}");
+        }
+        for f in TV_FORMATS {
+            assert_eq!(classify(f.as_str()), Some(Kind::Tv), "{f:?}");
+        }
+    }
+
+    #[test]
+    fn classify_formats_outside_both_lists_are_none() {
+        assert_eq!(classify(AnimeFormat::Music.as_str()), None);
+        assert_eq!(classify("UNKNOWN"), None);
+        assert_eq!(classify(""), None);
+    }
 
     // ── Harness ────────────────────────────────────────────────────────────────
 
@@ -1454,6 +1554,13 @@ mod tests {
         assert!(matches!(err, AniListError::NotFound), "got {err:?}");
     }
 
+    #[tokio::test]
+    async fn a_zero_credits_id_is_not_found_without_a_request() {
+        let server = serve(json_response(200, credits()), 0).await;
+        let err = client_for(&server).media_credits(0).await.unwrap_err();
+        assert!(matches!(err, AniListError::NotFound), "got {err:?}");
+    }
+
     // ── Page mapping ───────────────────────────────────────────────────────────
 
     fn assert_passed_through<T>(page: &Page<T>) {
@@ -1466,7 +1573,8 @@ mod tests {
 
     fn assert_defaults<T>(page: &Page<T>) {
         assert_eq!(page.page, 1);
-        assert_eq!(page.total_pages, 1);
+        // Omitted totals are unknown, which `Page` documents as `0`.
+        assert_eq!(page.total_pages, 0);
         assert_eq!(page.total_results, 0);
         assert!(!page.has_next);
         assert_eq!(page.next, None);
@@ -1620,6 +1728,20 @@ mod tests {
         let server = serve(json_response(200, body), 1).await;
         let ids = client_for(&server).external_ids(5).await.expect("ok");
         assert_eq!(ids.mal, None, "a negative MAL id is dropped");
+
+        let body = json!({ "data": { "Media": { "id": 0, "idMal": 9 } } });
+        let server = serve(json_response(200, body), 1).await;
+        let ids = client_for(&server).external_ids(5).await.expect("ok");
+        assert_eq!(ids.anilist, None, "a reported AniList id of 0 is dropped");
+        assert_eq!(ids.mal, Some(9));
+    }
+
+    #[tokio::test]
+    async fn find_by_mal_id_drops_a_media_id_of_zero() {
+        let body = json!({ "data": { "Media": { "id": 0, "format": "MOVIE" } } });
+        let server = serve(json_response(200, body), 1).await;
+        let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
+        assert_eq!(found, None);
     }
 
     #[tokio::test]
@@ -1629,11 +1751,19 @@ mod tests {
         let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
         assert_eq!(found, Some(ExternalMatch::movie(movie.clone())));
 
-        for format in [json!("OVA"), Value::Null] {
-            let body = json!({ "data": { "Media": { "id": 5, "format": format } } });
+        for format in TV_FORMATS {
+            let body = json!({ "data": { "Media": { "id": 5, "format": format.as_str() } } });
             let server = serve(json_response(200, body), 1).await;
             let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
             assert_eq!(found, Some(ExternalMatch::tv_show(movie.clone())));
+        }
+
+        // A format `classify` places in neither list is not a match.
+        for format in [json!("MUSIC"), json!("NOT_A_FORMAT"), Value::Null] {
+            let body = json!({ "data": { "Media": { "id": 5, "format": format } } });
+            let server = serve(json_response(200, body), 1).await;
+            let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
+            assert_eq!(found, None, "format {format}");
         }
 
         let not_found = json!({ "errors": [{ "message": "Not Found.", "status": 404 }] });
@@ -1758,5 +1888,98 @@ mod tests {
             elapsed >= WINDOW * 2 - Duration::from_millis(20),
             "three attempts took only {elapsed:?}"
         );
+    }
+
+    fn reported_page_info(current: Option<i32>, last: Option<i32>, total: Option<i32>) -> PageInfo {
+        serde_json::from_value(json!({
+            "currentPage": current,
+            "lastPage": last,
+            "total": total,
+            "hasNextPage": true,
+        }))
+        .expect("page info")
+    }
+
+    /// Omitted `pageInfo` fields read as `1`/`0`/`0`; reported ones pass
+    /// through.
+    #[test]
+    fn page_from_defaults_omitted_fields() {
+        let page = page_from(&reported_page_info(None, None, None), vec![1]).expect("in range");
+        assert_eq!((page.page, page.total_pages, page.total_results), (1, 0, 0));
+        let page =
+            page_from(&reported_page_info(Some(2), Some(5), Some(90)), vec![1]).expect("in range");
+        assert_eq!(
+            (page.page, page.total_pages, page.total_results),
+            (2, 5, 90)
+        );
+    }
+
+    /// A negative page number or total is a typed error naming the field,
+    /// never wrapped into a huge `u32`.
+    #[test]
+    fn page_from_rejects_negative_fields() {
+        let cases = [
+            ("currentPage", reported_page_info(Some(-1), None, None)),
+            ("lastPage", reported_page_info(Some(1), Some(-1), None)),
+            (
+                "total",
+                reported_page_info(Some(1), Some(1), Some(i32::MIN)),
+            ),
+        ];
+        for (expected, pi) in cases {
+            match page_from(&pi, Vec::<u8>::new()) {
+                Err(AniListError::PageOutOfRange { field, value }) => {
+                    assert_eq!(field, expected);
+                    assert!(value < 0, "{value}");
+                }
+                other => panic!("expected PageOutOfRange for {expected}, got {other:?}"),
+            }
+        }
+    }
+
+    /// Media entries with an invalid id are dropped from a page.
+    #[test]
+    fn media_pages_skip_invalid_ids() {
+        let page: MediaPageData = serde_json::from_value(json!({
+            "pageInfo": { "currentPage": 1, "lastPage": 1, "total": 3, "hasNextPage": false },
+            "media": [{ "id": 1 }, { "id": 0 }, { "id": -2 }],
+        }))
+        .expect("media page");
+        let movies = media_page_to_movies(Some(page)).expect("in range");
+        let ids: Vec<_> = movies
+            .results
+            .iter()
+            .map(|m| m.provider_id.to_string())
+            .collect();
+        assert_eq!(ids, ["anilist:1"]);
+    }
+
+    /// An invalid id in a details response gives way to the requested id.
+    #[test]
+    fn details_id_replaces_only_invalid_ids() {
+        for reported in [0, -3] {
+            let mut id = reported;
+            details_id(&mut id, 5);
+            assert_eq!(id, 5, "reported {reported}");
+        }
+        let mut id = 9;
+        details_id(&mut id, 5);
+        assert_eq!(id, 9);
+    }
+
+    /// A details response with an invalid id is converted under the
+    /// requested id instead of a wrapped one.
+    #[tokio::test]
+    async fn movie_details_with_invalid_reported_id_uses_requested_id() {
+        let server = serve(
+            ResponseTemplate::new(200).set_body_json(json!({
+                "data": { "Media": { "id": -1, "format": "MOVIE" } }
+            })),
+            1,
+        )
+        .await;
+        let client = client_with(&server, |c| c);
+        let movie = client.movie_details(5).await.expect("details");
+        assert_eq!(movie.movie.provider_id, "anilist:5");
     }
 }

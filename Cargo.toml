@@ -1,6 +1,6 @@
 [package]
 name = "cameo"
-version = "0.5.0"
+version = "0.4.0"
 edition = "2024"
 rust-version = "1.89"
 license = "MIT OR Apache-2.0"
@@ -29,7 +29,7 @@ full = ["tmdb", "anilist", "cache"]
 tmdb = ["dep:bytes", "dep:http", "dep:http-body", "dep:secrecy", "dep:time"]
 anilist = []
 cache = ["dep:rusqlite", "dep:dirs"]
-live-tests = [] # Gate for tests that hit real TMDB API
+live-tests = [] # Gate for tests that hit the real provider APIs (TMDB and AniList)
 
 [dependencies]
 # Runtime of the spargen-generated TMDB client (src/generated/tmdb.rs embeds

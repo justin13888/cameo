@@ -17,7 +17,7 @@ const DEFAULT_RATE_LIMIT: RateLimit = RateLimit::Limited {
 /// The `Debug` output redacts the credential (e.g. `V4Bearer(<redacted>)`); use
 /// [`TmdbAuth::credential`] to read it deliberately.
 #[non_exhaustive]
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum TmdbAuth {
     /// TMDB v4 API Read Access Token, sent as `Authorization: Bearer <token>`.
     V4Bearer(String),
@@ -58,7 +58,7 @@ impl std::fmt::Debug for TmdbAuth {
 /// The `Debug` output redacts the credential in [`auth`](Self::auth); all other
 /// fields are shown as-is.
 #[non_exhaustive]
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 #[must_use = "a TmdbConfig does nothing unless passed to TmdbClient::new or CameoClient::builder"]
 pub struct TmdbConfig {
     /// Authentication credential (v4 bearer token or v3 API key).

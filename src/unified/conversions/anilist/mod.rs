@@ -7,7 +7,31 @@ pub mod person;
 pub use media::*;
 pub use person::*;
 
-use crate::{providers::anilist::response::AniListDate, unified::date::PartialDate};
+use crate::{
+    providers::anilist::response::AniListDate,
+    unified::{conversions::native_id, date::PartialDate, media_id::MediaId},
+};
+
+/// The [`MediaId`] of an AniList media entry, or `None` (logged at `warn`)
+/// when `id` is not a valid AniList id (zero or negative): such a record is
+/// skipped rather than given a wrapped id.
+pub(crate) fn media_id(id: i32) -> Option<MediaId> {
+    let valid = native_id(i64::from(id));
+    if valid.is_none() {
+        tracing::warn!(media_id = id, "anilist: skipping media with an invalid id");
+    }
+    valid.map(MediaId::anilist)
+}
+
+/// The [`MediaId`] of an AniList staff member, or `None` (logged at `warn`)
+/// when `id` is not a valid AniList staff id (zero or negative).
+pub(crate) fn staff_id(id: i32) -> Option<MediaId> {
+    let valid = native_id(i64::from(id));
+    if valid.is_none() {
+        tracing::warn!(staff_id = id, "anilist: skipping staff with an invalid id");
+    }
+    valid.map(MediaId::anilist_staff)
+}
 
 /// Convert an AniList fuzzy date into a [`PartialDate`], preserving exactly the
 /// components AniList supplied (year-only and year-month dates stay partial).
@@ -80,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_media_to_movie_basic_fields() {
-        let movie = anilist_media_to_movie(make_media(42, "MOVIE"));
+        let movie = anilist_media_to_movie(make_media(42, "MOVIE")).expect("valid id");
         assert_eq!(movie.provider_id, "anilist:42");
         assert_eq!(movie.title, "English Title");
         assert_eq!(movie.original_title.as_deref(), Some("ネイティブ"));
@@ -102,12 +126,12 @@ mod tests {
     fn test_unmapped_country_yields_no_original_language() {
         let mut movie_media = media_json(7, "MOVIE");
         movie_media["countryOfOrigin"] = json!("US");
-        let movie = anilist_media_to_movie(from_json(movie_media));
+        let movie = anilist_media_to_movie(from_json(movie_media)).expect("valid id");
         assert_eq!(movie.original_language, None);
 
         let mut tv_media = media_json(8, "TV");
         tv_media["countryOfOrigin"] = json!("US");
-        let tv = anilist_media_to_tv(from_json(tv_media));
+        let tv = anilist_media_to_tv(from_json(tv_media)).expect("valid id");
         assert_eq!(tv.original_language, None);
         assert_eq!(tv.origin_country, vec!["US"]);
     }
@@ -115,14 +139,14 @@ mod tests {
     #[test]
     fn test_media_to_movie_genre_mapping() {
         use crate::unified::genre::Genre;
-        let movie = anilist_media_to_movie(make_media(1, "MOVIE"));
+        let movie = anilist_media_to_movie(make_media(1, "MOVIE")).expect("valid id");
         assert!(movie.genres.contains(&Genre::Action));
         assert!(movie.genres.contains(&Genre::Mecha));
     }
 
     #[test]
     fn test_media_to_tv_basic_fields() {
-        let tv = anilist_media_to_tv(make_media(99, "TV"));
+        let tv = anilist_media_to_tv(make_media(99, "TV")).expect("valid id");
         assert_eq!(tv.provider_id, "anilist:99");
         assert_eq!(tv.name, "English Title");
         assert_eq!(
@@ -134,14 +158,14 @@ mod tests {
 
     #[test]
     fn test_media_to_movie_runtime_and_status() {
-        let movie = anilist_media_to_movie(make_media(1, "MOVIE"));
+        let movie = anilist_media_to_movie(make_media(1, "MOVIE")).expect("valid id");
         assert_eq!(movie.runtime, Some(24));
         assert_eq!(movie.status.as_deref(), Some("FINISHED"));
     }
 
     #[test]
     fn test_media_to_tv_episodes_duration_and_status() {
-        let tv = anilist_media_to_tv(make_media(2, "TV"));
+        let tv = anilist_media_to_tv(make_media(2, "TV")).expect("valid id");
         assert_eq!(tv.number_of_episodes, Some(12));
         assert_eq!(tv.episode_run_time, Some(24));
         assert_eq!(tv.status, Some(crate::unified::models::SeriesStatus::Ended));
@@ -153,7 +177,7 @@ mod tests {
         m["episodes"] = Value::Null;
         m["duration"] = json!(-5);
         m["status"] = Value::Null;
-        let tv = anilist_media_to_tv(from_json(m));
+        let tv = anilist_media_to_tv(from_json(m)).expect("valid id");
         assert_eq!(tv.number_of_episodes, None);
         // Negative values clamp to 0, matching the detail conversion.
         assert_eq!(tv.episode_run_time, Some(0));
@@ -171,6 +195,9 @@ mod tests {
 
         let ova_result = anilist_media_to_search_result(make_media(3, "OVA"));
         assert!(matches!(ova_result, Some(UnifiedSearchResult::TvShow(_))));
+
+        let music_result = anilist_media_to_search_result(make_media(4, "MUSIC"));
+        assert!(music_result.is_none());
     }
 
     #[test]
@@ -181,7 +208,7 @@ mod tests {
             "image": { "large": "https://example.com/p.jpg" },
             "primaryOccupations": ["Voice Actor"]
         }));
-        let person = staff_to_person(staff);
+        let person = staff_to_person(staff).expect("valid id");
         assert_eq!(person.provider_id, "anilist:staff:123");
         assert_eq!(person.name, "Test Person");
         assert_eq!(person.known_for_department.as_deref(), Some("Voice Acting"));
@@ -189,6 +216,18 @@ mod tests {
             person.profile_url.as_deref(),
             Some("https://example.com/p.jpg")
         );
+    }
+
+    /// A staff member whose id is zero or negative is skipped, never wrapped.
+    #[test]
+    fn staff_with_invalid_id_is_skipped() {
+        for id in [0, -1] {
+            let staff: AniListStaff = from_json(json!({ "id": id, "name": { "full": "X" } }));
+            assert!(staff_to_person(staff).is_none(), "{id}");
+            let detail: crate::providers::anilist::response::AniListStaffDetail =
+                from_json(json!({ "id": id, "name": { "full": "X" } }));
+            assert!(staff_detail_to_person_details(detail).is_none(), "{id}");
+        }
     }
 
     #[test]

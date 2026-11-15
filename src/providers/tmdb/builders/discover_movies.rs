@@ -289,7 +289,7 @@ impl<'a> DiscoverMoviesBuilder<'a> {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 }

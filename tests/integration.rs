@@ -20,6 +20,7 @@ mod integration {
     mod credential_redaction_test;
     #[cfg(feature = "tmdb")]
     mod facade_dispatch_test;
+    mod facade_routing_test;
     #[cfg(any(feature = "tmdb", feature = "anilist"))]
     mod http_config_test;
     #[cfg(any(feature = "tmdb", feature = "anilist"))]
@@ -29,6 +30,8 @@ mod integration {
     mod retry_test;
     #[cfg(feature = "tmdb")]
     mod tmdb_auth_test;
+    #[cfg(feature = "tmdb")]
+    mod tmdb_certifications_test;
     #[cfg(feature = "tmdb")]
     mod tmdb_client_characterization_test;
     #[cfg(feature = "tmdb")]

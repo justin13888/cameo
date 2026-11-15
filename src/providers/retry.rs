@@ -124,6 +124,40 @@ mod tests {
         }
     }
 
+    proptest::proptest! {
+        /// Without `Retry-After`, every delay lies in `[capped / 2, capped]`
+        /// where `capped = min(base * 2^retry, max_delay)`.
+        #[test]
+        fn exponential_backoff_stays_within_equal_jitter_bounds(
+            base_ms in 0u64..10_000,
+            max_ms in 0u64..120_000,
+            retry_index in 0u32..64,
+        ) {
+            let base = Duration::from_millis(base_ms);
+            let max = Duration::from_millis(max_ms);
+            let policy = RetryPolicy::new(u32::MAX, base, max);
+            let capped = base.saturating_mul(2u32.saturating_pow(retry_index)).min(max);
+            let delay = policy.backoff(retry_index, None);
+            proptest::prop_assert!(delay >= capped / 2, "{delay:?} < {capped:?} / 2");
+            proptest::prop_assert!(delay <= capped, "{delay:?} > {capped:?}");
+        }
+
+        /// A `Retry-After` is honoured with under 250ms of jitter, and never
+        /// exceeds the 300s cap.
+        #[test]
+        fn retry_after_stays_within_jitter_and_cap(
+            retry_after_ms in 0u64..1_000_000,
+            retry_index in 0u32..64,
+        ) {
+            let retry_after = Duration::from_millis(retry_after_ms);
+            let delay = RetryPolicy::default().backoff(retry_index, Some(retry_after));
+            let floor = retry_after.min(RETRY_AFTER_CAP);
+            let ceiling = (retry_after + Duration::from_millis(250)).min(RETRY_AFTER_CAP);
+            proptest::prop_assert!(delay >= floor, "{delay:?} < {floor:?}");
+            proptest::prop_assert!(delay <= ceiling, "{delay:?} > {ceiling:?}");
+        }
+    }
+
     #[test]
     fn disabled_policy_never_retries() {
         let policy = RetryPolicy::disabled();

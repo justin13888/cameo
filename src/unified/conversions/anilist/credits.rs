@@ -3,6 +3,7 @@
 use crate::{
     providers::anilist::response::{AniListCreditStaff, CharacterEdge, StaffEdge},
     unified::{
+        conversions::native_id,
         media_id::MediaId,
         models::{UnifiedCastCredit, UnifiedCredits, UnifiedCrewCredit},
     },
@@ -18,7 +19,7 @@ use crate::{
 /// - **Crew:** one credit per staff edge; the edge's `role` (e.g.
 ///   `"Director"`) is the `job`. AniList reports no department.
 ///
-/// A person whose id is not a valid AniList id (negative) is skipped and
+/// A person whose id is not a valid AniList id (zero or negative) is skipped and
 /// logged at `warn`. AniList reports no gender in this selection.
 pub(crate) fn anilist_credits_to_unified(
     title: MediaId,
@@ -69,7 +70,7 @@ pub(crate) fn anilist_credits_to_unified(
 /// The person id, name, and profile URL of a credited staff member, or `None`
 /// (logged) when the id is not a valid AniList id.
 fn person(title: &MediaId, s: AniListCreditStaff) -> Option<(MediaId, String, Option<String>)> {
-    let Ok(id) = u64::try_from(s.id) else {
+    let Some(id) = native_id(i64::from(s.id)) else {
         tracing::warn!(%title, staff_id = s.id, "anilist: skipping credit with an invalid staff id");
         return None;
     };

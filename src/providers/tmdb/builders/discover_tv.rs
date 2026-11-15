@@ -249,7 +249,7 @@ impl<'a> DiscoverTvBuilder<'a> {
             body.results,
             body.total_pages,
             body.total_results,
-        )
+        )?
         .map(Into::into))
     }
 }

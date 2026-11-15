@@ -22,8 +22,11 @@ use crate::core::{error::ProviderError, pagination::Page};
 
 /// A capability a provider may support. Used by the facade to distinguish
 /// "no provider configured" from "no configured provider supports this".
+///
+/// Serializes as a `snake_case` string (e.g. `"watch_availability"`).
 #[non_exhaustive]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Capability {
     /// Search for movies, TV shows, and people.
     Search,

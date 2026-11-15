@@ -24,7 +24,7 @@ use std::time::Duration;
 /// }
 /// ```
 #[non_exhaustive]
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum ProviderError {
     /// The requested resource was not found.
     #[error("resource not found")]
@@ -80,6 +80,7 @@ impl From<crate::providers::tmdb::TmdbError> for ProviderError {
             // carries the request URL's `api_key`.
             TmdbError::Http(e) => ProviderError::Transport(e.to_string()),
             TmdbError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
+            e @ TmdbError::PageOutOfRange { .. } => ProviderError::Deserialization(e.to_string()),
             TmdbError::InvalidConfig(s) => ProviderError::InvalidInput(s),
             TmdbError::UnsupportedSource(_) => ProviderError::Unsupported,
             TmdbError::Request { kind, message } => match kind {
@@ -113,6 +114,9 @@ impl From<crate::providers::anilist::AniListError> for ProviderError {
             AniListError::InvalidConfig(s) => ProviderError::InvalidInput(s),
             AniListError::NotFound => ProviderError::NotFound,
             AniListError::NoData => ProviderError::Other("no data returned".to_string()),
+            e @ AniListError::PageOutOfRange { .. } => {
+                ProviderError::Deserialization(e.to_string())
+            }
             AniListError::Status {
                 status,
                 retry_after,
@@ -231,6 +235,257 @@ mod tests {
             )),
             ProviderError::Unsupported
         ));
+    }
+
+    /// Every `ProviderError` variant renders its own exact message.
+    #[test]
+    fn every_variant_display_is_pinned() {
+        let cases = [
+            (ProviderError::NotFound, "resource not found"),
+            (
+                ProviderError::Unsupported,
+                "operation not supported by this provider",
+            ),
+            (
+                ProviderError::RateLimited { retry_after: None },
+                "rate limited",
+            ),
+            (
+                ProviderError::RateLimited {
+                    retry_after: Some(Duration::from_secs(7)),
+                },
+                "rate limited (retry after 7s)",
+            ),
+            (
+                ProviderError::Auth("bad token".into()),
+                "authentication failed: bad token",
+            ),
+            (
+                ProviderError::Api {
+                    status: 500,
+                    message: "boom".into(),
+                },
+                "API error (HTTP 500): boom",
+            ),
+            (
+                ProviderError::Transport("reset".into()),
+                "transport error: reset",
+            ),
+            (
+                ProviderError::Deserialization("bad json".into()),
+                "deserialization error: bad json",
+            ),
+            (
+                ProviderError::InvalidInput("negative id".into()),
+                "invalid input: negative id",
+            ),
+            (ProviderError::Other("misc".into()), "provider error: misc"),
+        ];
+        for (err, expected) in cases {
+            assert_eq!(err.to_string(), expected);
+        }
+    }
+
+    /// A `reqwest::Error` built synchronously (an unparseable URL), so the
+    /// transport branches can be exercised without a network.
+    #[cfg(any(feature = "tmdb", feature = "anilist"))]
+    fn reqwest_builder_error() -> reqwest::Error {
+        match reqwest::Client::new().get("not a url").build() {
+            Ok(request) => panic!("expected a builder error, built {request:?}"),
+            Err(e) => e,
+        }
+    }
+
+    #[cfg(any(feature = "tmdb", feature = "anilist"))]
+    fn json_error() -> serde_json::Error {
+        match serde_json::from_str::<u32>("not json") {
+            Ok(v) => panic!("expected a JSON error, parsed {v}"),
+            Err(e) => e,
+        }
+    }
+
+    /// Table-driven: every `TmdbError` variant and every status branch maps to
+    /// the pinned `ProviderError`, carrying its message or `retry_after`.
+    #[cfg(feature = "tmdb")]
+    #[test]
+    fn maps_every_tmdb_error_branch() {
+        use crate::providers::tmdb::{TmdbError, error::RequestErrorKind};
+        let retry = Some(Duration::from_secs(3));
+        let api = |status| TmdbError::Api {
+            status,
+            status_code: Some(7),
+            message: "msg".into(),
+            retry_after: retry,
+        };
+        for status in [401, 403] {
+            match ProviderError::from(api(status)) {
+                ProviderError::Auth(m) => assert_eq!(m, "msg", "status {status}"),
+                other => panic!("status {status}: expected Auth, got {other:?}"),
+            }
+        }
+        assert!(matches!(
+            ProviderError::from(api(404)),
+            ProviderError::NotFound
+        ));
+        match ProviderError::from(api(429)) {
+            ProviderError::RateLimited { retry_after } => assert_eq!(retry_after, retry),
+            other => panic!("expected RateLimited, got {other:?}"),
+        }
+        for status in [400, 418, 500, 503] {
+            match ProviderError::from(api(status)) {
+                ProviderError::Api { status: s, message } => {
+                    assert_eq!((s, message.as_str()), (status, "msg"));
+                }
+                other => panic!("status {status}: expected Api, got {other:?}"),
+            }
+        }
+
+        let http = TmdbError::from(reqwest_builder_error());
+        let http_text = http.to_string();
+        match ProviderError::from(http) {
+            ProviderError::Transport(m) => {
+                assert!(!m.is_empty());
+                assert!(
+                    http_text.ends_with(&m),
+                    "Transport carries the transport description: {m:?} vs {http_text:?}"
+                );
+            }
+            other => panic!("expected Transport, got {other:?}"),
+        }
+
+        let json = json_error();
+        let json_text = json.to_string();
+        match ProviderError::from(TmdbError::Deserialization(json)) {
+            ProviderError::Deserialization(m) => assert_eq!(m, json_text),
+            other => panic!("expected Deserialization, got {other:?}"),
+        }
+
+        match ProviderError::from(TmdbError::PageOutOfRange {
+            field: "total_pages",
+            value: -1,
+        }) {
+            ProviderError::Deserialization(m) => {
+                assert_eq!(m, "TMDB reported an out-of-range `total_pages`: -1");
+            }
+            other => panic!("expected Deserialization, got {other:?}"),
+        }
+
+        match ProviderError::from(TmdbError::InvalidConfig("empty token".into())) {
+            ProviderError::InvalidInput(m) => assert_eq!(m, "empty token"),
+            other => panic!("expected InvalidInput, got {other:?}"),
+        }
+        assert!(matches!(
+            ProviderError::from(TmdbError::UnsupportedSource(
+                crate::unified::external_ids::ExternalSource::Mal
+            )),
+            ProviderError::Unsupported
+        ));
+        assert!(matches!(
+            ProviderError::from(TmdbError::Request {
+                kind: RequestErrorKind::InvalidRequest,
+                message: "m".into(),
+            }),
+            ProviderError::InvalidInput(ref m) if m == "m"
+        ));
+    }
+
+    /// Table-driven: every `AniListError` variant maps to the pinned
+    /// `ProviderError`.
+    #[cfg(feature = "anilist")]
+    #[test]
+    fn maps_every_anilist_error_branch() {
+        use crate::providers::anilist::AniListError;
+        let retry = Some(Duration::from_secs(5));
+        let status = |status| AniListError::Status {
+            status,
+            retry_after: retry,
+            message: "msg".into(),
+        };
+        for code in [401, 403] {
+            match ProviderError::from(status(code)) {
+                ProviderError::Auth(m) => assert_eq!(m, "msg", "status {code}"),
+                other => panic!("status {code}: expected Auth, got {other:?}"),
+            }
+        }
+        assert!(matches!(
+            ProviderError::from(status(404)),
+            ProviderError::NotFound
+        ));
+        match ProviderError::from(status(429)) {
+            ProviderError::RateLimited { retry_after } => assert_eq!(retry_after, retry),
+            other => panic!("expected RateLimited, got {other:?}"),
+        }
+        for code in [400, 500, 502] {
+            match ProviderError::from(status(code)) {
+                ProviderError::Api { status: s, message } => {
+                    assert_eq!((s, message.as_str()), (code, "msg"));
+                }
+                other => panic!("status {code}: expected Api, got {other:?}"),
+            }
+        }
+
+        let http = reqwest_builder_error();
+        let http_text = http.to_string();
+        match ProviderError::from(AniListError::Http(http)) {
+            ProviderError::Transport(m) => assert_eq!(m, http_text),
+            other => panic!("expected Transport, got {other:?}"),
+        }
+
+        let json = json_error();
+        let json_text = json.to_string();
+        match ProviderError::from(AniListError::Deserialization(json)) {
+            ProviderError::Deserialization(m) => assert_eq!(m, json_text),
+            other => panic!("expected Deserialization, got {other:?}"),
+        }
+
+        match ProviderError::from(AniListError::InvalidConfig("per_page".into())) {
+            ProviderError::InvalidInput(m) => assert_eq!(m, "per_page"),
+            other => panic!("expected InvalidInput, got {other:?}"),
+        }
+        assert!(matches!(
+            ProviderError::from(AniListError::NotFound),
+            ProviderError::NotFound
+        ));
+        match ProviderError::from(AniListError::NoData) {
+            ProviderError::Other(m) => assert_eq!(m, "no data returned"),
+            other => panic!("expected Other, got {other:?}"),
+        }
+        match ProviderError::from(AniListError::PageOutOfRange {
+            field: "total",
+            value: -1,
+        }) {
+            ProviderError::Deserialization(m) => {
+                assert_eq!(m, "AniList reported an out-of-range `total`: -1");
+            }
+            other => panic!("expected Deserialization, got {other:?}"),
+        }
+    }
+
+    /// A GraphQL 429 keeps the response's `retry_after`; an unclassified
+    /// GraphQL error keeps the joined messages in `Other`.
+    #[cfg(feature = "anilist")]
+    #[test]
+    fn maps_anilist_graphql_retry_after_and_other_message() {
+        use crate::providers::anilist::AniListError;
+        let errors = |v| serde_json::from_value(v).expect("valid GraphQL error fixture");
+        let limited = AniListError::GraphQL {
+            errors: errors(serde_json::json!([{ "message": "slow down", "status": 429 }])),
+            retry_after: Some(Duration::from_secs(9)),
+        };
+        match ProviderError::from(limited) {
+            ProviderError::RateLimited { retry_after } => {
+                assert_eq!(retry_after, Some(Duration::from_secs(9)));
+            }
+            other => panic!("expected RateLimited, got {other:?}"),
+        }
+        let unclassified = AniListError::GraphQL {
+            errors: errors(serde_json::json!([{ "message": "a" }, { "message": "b" }])),
+            retry_after: None,
+        };
+        match ProviderError::from(unclassified) {
+            ProviderError::Other(m) => assert_eq!(m, "GraphQL errors: a; b"),
+            other => panic!("expected Other, got {other:?}"),
+        }
     }
 
     #[cfg(feature = "tmdb")]

@@ -256,13 +256,16 @@ async fn movie_recommendations_without_totals_or_results_defaults_from_requested
 
     let requested = client.movie_recommendations(550, Some(4)).await.unwrap();
     assert_eq!(requested.page, 4);
-    assert_eq!(requested.total_pages, 4);
+    // Omitted totals are unknown, which `Page` documents as `0`.
+    assert_eq!(requested.total_pages, 0);
     assert_eq!(requested.total_results, 0);
+    assert!(!requested.has_next);
     assert!(requested.results.is_empty());
 
     let unrequested = client.movie_recommendations(550, None).await.unwrap();
     assert_eq!(unrequested.page, 1);
-    assert_eq!(unrequested.total_pages, 1);
+    assert_eq!(unrequested.total_pages, 0);
+    assert!(!unrequested.has_next);
     assert_eq!(unrequested.total_results, 0);
     assert!(unrequested.results.is_empty());
 }

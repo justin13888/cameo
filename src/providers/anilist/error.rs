@@ -91,6 +91,19 @@ pub enum AniListError {
     #[error("not found")]
     NotFound,
 
+    /// A response reported a page number or total that does not fit the
+    /// `u32` a [`Page`](crate::core::pagination::Page) carries (negative).
+    ///
+    /// The value is reported rather than wrapped, so a malformed page is
+    /// never passed off as a real one. Not retryable.
+    #[error("AniList reported an out-of-range `{field}`: {value}")]
+    PageOutOfRange {
+        /// The `pageInfo` field: `currentPage`, `lastPage`, or `total`.
+        field: &'static str,
+        /// The value AniList reported.
+        value: i64,
+    },
+
     /// Invalid configuration (rejected at construction time).
     #[error("invalid configuration: {0}")]
     InvalidConfig(String),

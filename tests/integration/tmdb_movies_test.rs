@@ -308,7 +308,8 @@ async fn search_movies_null_pagination_falls_back_to_requested_page() {
     let page = search_movies_with_body(body, Some(3)).await;
 
     assert_eq!(page.page, 3);
-    assert_eq!(page.total_pages, 3);
+    // Unknown totals read as `0`, as `Page` documents.
+    assert_eq!(page.total_pages, 0);
     assert_eq!(page.total_results, 0);
     assert!(!page.has_next_page());
 }
@@ -320,13 +321,13 @@ async fn search_movies_missing_pagination_without_requested_page_is_page_one() {
     let page = search_movies_with_body(body, None).await;
 
     assert_eq!(page.page, 1);
-    assert_eq!(page.total_pages, 1);
+    assert_eq!(page.total_pages, 0);
     assert_eq!(page.total_results, 0);
     assert!(!page.has_next_page());
 }
 
 #[tokio::test]
-async fn search_movies_null_total_pages_falls_back_to_reported_page() {
+async fn search_movies_null_total_pages_is_unknown() {
     let body = serde_json::json!({
         "page": 2,
         "results": [],
@@ -337,7 +338,7 @@ async fn search_movies_null_total_pages_falls_back_to_reported_page() {
     let page = search_movies_with_body(body, Some(2)).await;
 
     assert_eq!(page.page, 2);
-    assert_eq!(page.total_pages, 2);
+    assert_eq!(page.total_pages, 0);
     assert_eq!(page.total_results, 40);
     assert!(!page.has_next_page());
 }

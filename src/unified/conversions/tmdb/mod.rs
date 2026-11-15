@@ -16,10 +16,12 @@
 //!   on that — season and episode details requests fill in the requested
 //!   number before converting.
 //! - Genre entries without an id are dropped.
-//! - A missing top-level id: the `From` impls fall back to `tmdb:0`, but
+//! - A missing or invalid (zero or negative) top-level id: the `From` impls
+//!   fall back to `tmdb:0` rather than wrap the value, but
 //!   [`TmdbClient`](crate::providers::tmdb::TmdbClient) never relies on that —
 //!   details requests fill in the requested id before converting, and list or
-//!   search items without an id are dropped (see [`TmdbListItem`]).
+//!   search items without a valid id are dropped and logged (see
+//!   [`TmdbListItem`]).
 
 pub mod credits;
 pub mod movie;
@@ -29,7 +31,7 @@ pub mod tv;
 use crate::{
     generated::tmdb::types,
     providers::tmdb::image_url::{BackdropSize, ImageUrl, LogoSize, PosterSize, ProfileSize},
-    unified::date::PartialDate,
+    unified::{conversions::native_id, date::PartialDate, media_id::MediaId},
 };
 
 /// A TMDB list/search result item whose TMDB id may be absent.
@@ -71,6 +73,15 @@ impl_tmdb_list_item!(
     types::SearchPersonResponseResultsItem,
     types::SearchMultiResponseResultsItem,
 );
+
+/// The [`MediaId`] of a top-level TMDB record.
+///
+/// A missing or invalid id reads as `tmdb:0`, never a wrapped value; the
+/// client screens ids before converting (see the module docs), so that
+/// fallback is not reached through [`TmdbClient`](crate::providers::tmdb::TmdbClient).
+pub(super) fn tmdb_media_id(id: Option<i64>) -> MediaId {
+    MediaId::tmdb(id.and_then(native_id).unwrap_or_default())
+}
 
 pub(super) fn resolve_logo(path: &Option<String>) -> Option<String> {
     path.as_deref().map(|p| ImageUrl::logo(p, LogoSize::W92))
