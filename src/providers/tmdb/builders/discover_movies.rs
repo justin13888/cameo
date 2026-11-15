@@ -4,7 +4,7 @@ use super::params::{self, MovieReleaseType};
 use crate::{
     core::pagination::Page,
     generated::tmdb as generated,
-    providers::tmdb::{TmdbClient, builders::MovieSortBy, convert::TmdbPaged, error::TmdbError},
+    providers::tmdb::{TmdbClient, builders::MovieSortBy, error::TmdbError},
     unified::models::UnifiedMovie,
 };
 
@@ -229,12 +229,17 @@ impl<'a> DiscoverMoviesBuilder<'a> {
 
     /// Execute the discover query and return a single page of unified movies.
     ///
+    /// The request is rate limited and retried under the client's
+    /// [`TmdbConfig::retry`](crate::providers::tmdb::TmdbConfig::retry)
+    /// policy, like every other endpoint.
+    ///
     /// # Errors
     ///
-    /// Returns [`TmdbError::Api`] on non-2xx HTTP responses and
-    /// [`TmdbError::Http`] on network failures.
+    /// Returns [`TmdbError::Api`] (with TMDB's decoded `status_code` and
+    /// `status_message`) on a non-2xx response once retries are spent,
+    /// [`TmdbError::Http`] on network failures, and [`TmdbError::Request`]
+    /// when a date filter cannot be encoded.
     pub async fn execute(self) -> Result<Page<UnifiedMovie>, TmdbError> {
-        let page = self.page;
         let query = generated::DiscoverMovieParams {
             certification: self.certification,
             certification_gte: self.certification_gte,
@@ -275,14 +280,6 @@ impl<'a> DiscoverMoviesBuilder<'a> {
             without_watch_providers: self.without_watch_providers,
             year: self.year,
         };
-        self.client.acquire_rate_limit().await;
-        let body = self
-            .client
-            .inner()
-            .discover_movie(query)
-            .await
-            .map_err(TmdbError::from_generated)?
-            .into_inner();
-        Ok(body.into_page(page)?.map(Into::into))
+        self.client.discover_movies_page(query).await
     }
 }

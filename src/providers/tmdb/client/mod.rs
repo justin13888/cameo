@@ -103,12 +103,6 @@ impl TmdbClient {
         })
     }
 
-    /// Returns a reference to the underlying generated client (crate-internal;
-    /// the generated types are not part of cameo's public API).
-    pub(crate) fn inner(&self) -> &tmdb::Client {
-        &self.inner
-    }
-
     /// Returns a reference to the client configuration.
     pub fn config(&self) -> &TmdbConfig {
         &self.config
@@ -132,14 +126,6 @@ impl TmdbClient {
     /// the generated client's `i32` without a wrapping cast.
     fn tmdb_page(page: Option<u32>) -> Option<i32> {
         page.map(|p| p.clamp(1, MAX_PAGE) as i32)
-    }
-
-    /// Wait for a rate-limit slot before issuing a request. Returns once the
-    /// token-bucket limiter permits another request (immediately if a token is
-    /// available). Used by the discover builders; [`Self::execute`] paces its
-    /// attempts through the same limiter.
-    pub(crate) async fn acquire_rate_limit(&self) {
-        self.rate_limiter.acquire().await;
     }
 
     /// Execute a generated-client call under the rate limiter, unwrap the
@@ -205,8 +191,8 @@ mod tests {
         ] {
             let client = TmdbClient::new(config).expect("valid config");
             for debug in [
-                format!("{:?}", client.inner()),
-                format!("{:#?}", client.inner()),
+                format!("{:?}", client.inner),
+                format!("{:#?}", client.inner),
             ] {
                 assert!(!debug.contains(SECRET), "credential leaked: {debug}");
                 assert!(debug.contains(scheme), "{debug}");
@@ -220,7 +206,7 @@ mod tests {
     fn v3_key_is_not_in_url_accessor() {
         let client = TmdbClient::new(TmdbConfig::new_v3(SECRET)).expect("valid config");
         let url = client
-            .inner()
+            .inner
             .movie_details_url(550, None)
             .expect("valid url");
         assert_eq!(url.path(), "/3/movie/550");

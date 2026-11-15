@@ -3,7 +3,7 @@
 //! shapes responses) so a refactor that changes it fails here.
 //!
 //! These pin current behaviour, including behaviour other issues intend to
-//! change (e.g. discover builders bypassing the retry seam); such an issue
+//! change; such an issue
 //! updates the assertion here as part of its change.
 
 use std::{
@@ -448,19 +448,19 @@ async fn clones_share_one_rate_limit_budget() {
     );
 }
 
-// ── Discover builders (outside the retry seam) ────────────────────────────────
+// ── Discover builders (through the retry seam) ────────────────────────────────
 
-/// Discover builders call the generated client directly rather than through
-/// the retry seam: a 5xx is attempted once, and the generated client's error
-/// conversion decodes TMDB's `{status_code, status_message}` error body.
+/// Discover builders run through the same retry seam as every other endpoint:
+/// a 5xx is retried until the budget is spent (two retries, three attempts),
+/// and the final error decodes TMDB's `{status_code, status_message}` body.
 #[tokio::test]
-async fn discover_movies_is_not_retried_and_decodes_the_error_body() {
+async fn discover_movies_is_retried_and_decodes_the_error_body() {
     let server = MockServer::start().await;
     mount(
         &server,
         "/3/discover/movie",
         ResponseTemplate::new(500).set_body_raw(SERVER_ERROR, "application/json"),
-        1,
+        3,
     )
     .await;
     let client = client(&server, |c| c.with_retry(TWO_RETRIES));
@@ -483,9 +483,10 @@ async fn discover_movies_is_not_retried_and_decodes_the_error_body() {
     }
 }
 
-/// See [`discover_movies_is_not_retried_and_decodes_the_error_body`].
+/// See [`discover_movies_is_retried_and_decodes_the_error_body`]; a 429 is
+/// retried the same way, and its `Retry-After` survives on the final error.
 #[tokio::test]
-async fn discover_tv_is_not_retried_and_decodes_the_error_body() {
+async fn discover_tv_is_retried_and_decodes_the_error_body() {
     let server = MockServer::start().await;
     mount(
         &server,
@@ -496,7 +497,7 @@ async fn discover_tv_is_not_retried_and_decodes_the_error_body() {
                 r#"{"status_code":25,"status_message":"limit"}"#,
                 "application/json",
             ),
-        1,
+        3,
     )
     .await;
     let client = client(&server, |c| c.with_retry(TWO_RETRIES));

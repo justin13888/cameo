@@ -144,4 +144,32 @@ impl TmdbClient {
     pub fn discover_tv(&self) -> DiscoverTvBuilder<'_> {
         DiscoverTvBuilder::new(self)
     }
+
+    /// Run a built discover-movie query through [`Self::execute`], so it is
+    /// rate limited, retried, and error-decoded like every other endpoint.
+    /// [`DiscoverMoviesBuilder::execute`] is its only caller.
+    pub(crate) async fn discover_movies_page(
+        &self,
+        query: tmdb::DiscoverMovieParams,
+    ) -> Result<Page<UnifiedMovie>, TmdbError> {
+        let page = query.page;
+        let body = self
+            .execute(|| self.inner.discover_movie(query.clone()))
+            .await?;
+        Ok(body.into_page(page)?.map(Into::into))
+    }
+
+    /// Run a built discover-TV query through [`Self::execute`], so it is rate
+    /// limited, retried, and error-decoded like every other endpoint.
+    /// [`DiscoverTvBuilder::execute`] is its only caller.
+    pub(crate) async fn discover_tv_page(
+        &self,
+        query: tmdb::DiscoverTvParams,
+    ) -> Result<Page<UnifiedTvShow>, TmdbError> {
+        let page = query.page;
+        let body = self
+            .execute(|| self.inner.discover_tv(query.clone()))
+            .await?;
+        Ok(body.into_page(page)?.map(Into::into))
+    }
 }
