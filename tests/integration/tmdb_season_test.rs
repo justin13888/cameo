@@ -55,3 +55,27 @@ async fn tv_season_details_null_season_number_falls_back_to_requested() {
     assert_eq!(season.show_id, "tmdb:1399");
     assert_eq!(season.season_number, 2);
 }
+
+#[tokio::test]
+async fn tv_season_details_drops_episodes_without_number() {
+    let (server, client) = setup_mock_client().await;
+    let mut body: serde_json::Value =
+        serde_json::from_str(include_str!("../fixtures/tv_season_details_response.json")).unwrap();
+    body["episodes"] = serde_json::json!([
+        { "id": 1, "episode_number": null, "name": "Null number" },
+        { "id": 2, "name": "Missing number" },
+        { "id": 3, "episode_number": 1, "name": "Pilot" }
+    ]);
+
+    Mock::given(method("GET"))
+        .and(path("/3/tv/1399/season/1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(body))
+        .mount(&server)
+        .await;
+
+    let season = client.tv_season_details(1399, 1).await.unwrap();
+
+    assert_eq!(season.episodes.len(), 1);
+    assert_eq!(season.episodes[0].episode_number, 1);
+    assert_eq!(season.episodes[0].name.as_deref(), Some("Pilot"));
+}

@@ -211,7 +211,14 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 .iter()
                 .filter_map(|c| c.name.clone())
                 .collect(),
-            seasons: t.seasons.into_iter().map(UnifiedSeason::from).collect(),
+            // A season with no number cannot be addressed; defaulting it to 0
+            // would pass it off as the Specials season, so it is dropped.
+            seasons: t
+                .seasons
+                .into_iter()
+                .filter(|s| s.season_number.is_some())
+                .map(UnifiedSeason::from)
+                .collect(),
         }
     }
 }
@@ -232,7 +239,14 @@ pub(crate) fn season_details_from(
         overview: t.overview,
         air_date: resolve_date(&t.air_date),
         poster_url: resolve_poster(&t.poster_path),
-        episodes: t.episodes.into_iter().map(Into::into).collect(),
+        // An episode with no number cannot be addressed; defaulting it to 0
+        // would invent a phantom episode 0, so it is dropped.
+        episodes: t
+            .episodes
+            .into_iter()
+            .filter(|e| e.episode_number.is_some())
+            .map(Into::into)
+            .collect(),
     }
 }
 
