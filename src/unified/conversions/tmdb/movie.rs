@@ -211,6 +211,148 @@ mod tests {
         assert_eq!(details.movie.status, details.status);
     }
 
+    /// Every detail field is mapped: image paths become full URLs, zero
+    /// runtime/budget/revenue become `None`, id-less genres are dropped, and
+    /// the loosely-typed collection object is parsed.
+    #[test]
+    fn movie_details_converts_every_field() {
+        let raw: types::MovieDetailsResponse = serde_json::from_value(serde_json::json!({
+            "id": 603,
+            "title": "The Matrix",
+            "original_title": "The Matrix",
+            "overview": "A hacker learns the truth.",
+            "release_date": "1999-03-31",
+            "poster_path": "/poster.jpg",
+            "backdrop_path": "/backdrop.jpg",
+            "genres": [{ "id": 28, "name": "Action" }, { "name": "No id" }, { "id": 878 }],
+            "popularity": 80.5,
+            "vote_average": 8.2,
+            "vote_count": -3,
+            "original_language": "en",
+            "adult": false,
+            "tagline": "Welcome to the Real World.",
+            "runtime": 0,
+            "budget": 63000000,
+            "revenue": 0,
+            "status": "Released",
+            "homepage": "https://www.warnerbros.com/movies/matrix",
+            "imdb_id": "tt0133093",
+            "production_companies": [
+                { "id": 79, "name": "Village Roadshow", "logo_path": "/vr.png", "origin_country": "US" },
+                { "id": -1 }
+            ],
+            "production_countries": [{ "iso_3166_1": "US", "name": "United States of America" }, {}],
+            "spoken_languages": [{ "english_name": "English", "iso_639_1": "en" }, {}],
+            "video": true,
+            "belongs_to_collection": {
+                "id": 2344,
+                "name": "The Matrix Collection",
+                "poster_path": "/coll.jpg",
+                "backdrop_path": null
+            }
+        }))
+        .expect("details deserialize");
+
+        let details: UnifiedMovieDetails = raw.into();
+
+        let movie = &details.movie;
+        assert_eq!(movie.provider_id, "tmdb:603");
+        assert_eq!(movie.title, "The Matrix");
+        assert_eq!(movie.original_title.as_deref(), Some("The Matrix"));
+        assert_eq!(
+            movie.overview.as_deref(),
+            Some("A hacker learns the truth.")
+        );
+        assert_eq!(
+            movie.release_date.map(|d| d.to_string()).as_deref(),
+            Some("1999-03-31")
+        );
+        assert_eq!(
+            movie.poster_url.as_deref(),
+            Some("https://image.tmdb.org/t/p/w500/poster.jpg")
+        );
+        assert_eq!(
+            movie.backdrop_url.as_deref(),
+            Some("https://image.tmdb.org/t/p/w780/backdrop.jpg")
+        );
+        assert_eq!(movie.genres, vec![Genre::Action, Genre::ScienceFiction]);
+        assert_eq!(movie.popularity, Some(80.5));
+        assert_eq!(movie.vote_average, Some(8.2));
+        // A negative count is clamped to 0, not wrapped.
+        assert_eq!(movie.vote_count, Some(0));
+        assert_eq!(movie.original_language.as_deref(), Some("en"));
+        assert_eq!(movie.adult, Some(false));
+        assert!(movie.alternative_titles.is_empty());
+        assert_eq!(movie.runtime, None);
+        assert_eq!(movie.status.as_deref(), Some("Released"));
+
+        assert_eq!(
+            details.tagline.as_deref(),
+            Some("Welcome to the Real World.")
+        );
+        assert_eq!(details.runtime, None);
+        assert_eq!(details.budget, Some(63_000_000));
+        assert_eq!(details.revenue, None);
+        assert_eq!(details.status.as_deref(), Some("Released"));
+        assert_eq!(
+            details.homepage.as_deref(),
+            Some("https://www.warnerbros.com/movies/matrix")
+        );
+        assert_eq!(details.imdb_id.as_deref(), Some("tt0133093"));
+        assert_eq!(details.video, Some(true));
+
+        let companies: Vec<_> = details
+            .production_companies
+            .iter()
+            .map(|c| {
+                (
+                    c.id,
+                    c.name.as_str(),
+                    c.logo_url.as_deref(),
+                    c.origin_country.as_deref(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            companies,
+            [
+                (
+                    Some(79),
+                    "Village Roadshow",
+                    Some("https://image.tmdb.org/t/p/w92/vr.png"),
+                    Some("US")
+                ),
+                // A negative id is not a valid TMDB id.
+                (None, "", None, None),
+            ]
+        );
+        assert_eq!(details.production_countries, ["United States of America"]);
+        assert_eq!(details.spoken_languages, ["English"]);
+
+        let collection = details
+            .belongs_to_collection
+            .as_ref()
+            .expect("collection parsed");
+        assert_eq!(collection.id, Some(2344));
+        assert_eq!(collection.name, "The Matrix Collection");
+        assert_eq!(
+            collection.poster_url.as_deref(),
+            Some("https://image.tmdb.org/t/p/w500/coll.jpg")
+        );
+        assert_eq!(collection.backdrop_url, None);
+    }
+
+    #[test]
+    fn movie_details_without_collection_has_none() {
+        let raw: types::MovieDetailsResponse =
+            serde_json::from_value(serde_json::json!({ "id": 1, "belongs_to_collection": null }))
+                .expect("details deserialize");
+        let details: UnifiedMovieDetails = raw.into();
+        assert!(details.belongs_to_collection.is_none());
+        assert!(details.production_companies.is_empty());
+        assert_eq!(details.movie.title, "");
+    }
+
     #[test]
     fn search_movie_no_poster() {
         let mut raw = make_search_movie();

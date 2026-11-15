@@ -63,8 +63,10 @@ async fn tv_series_details_deserializes_response() {
     assert_eq!(details.number_of_seasons, Some(5));
     assert_eq!(details.number_of_episodes, Some(62));
     assert_eq!(details.status.as_deref(), Some("Ended"));
-    assert_eq!(details.show.genres.len(), 2);
-    assert!(details.show.genres.contains(&cameo::Genre::Drama));
+    assert_eq!(
+        details.show.genres,
+        vec![cameo::Genre::Drama, cameo::Genre::Crime]
+    );
     assert_eq!(details.in_production, Some(false));
     assert_eq!(details.show.adult, Some(false));
 }
@@ -84,8 +86,19 @@ async fn tv_genres_deserializes_response() {
 
     let genres = client.tv_genres().await.unwrap();
 
-    assert!(!genres.is_empty());
-    assert!(genres.contains(&cameo::Genre::Drama));
+    assert_eq!(
+        genres,
+        vec![
+            cameo::Genre::ActionAdventure,
+            cameo::Genre::Animation,
+            cameo::Genre::Comedy,
+            cameo::Genre::Crime,
+            cameo::Genre::Documentary,
+            cameo::Genre::Drama,
+            cameo::Genre::SciFiFantasy,
+            cameo::Genre::Mystery,
+        ]
+    );
 }
 
 #[tokio::test]

@@ -35,6 +35,7 @@ mod tmdb {
             )
             .up_to_n_times(1)
             .with_priority(1)
+            .expect(1)
             .mount(&server)
             .await;
         // Subsequent responses: success.
@@ -42,17 +43,22 @@ mod tmdb {
             .and(path("/3/search/movie"))
             .respond_with(ResponseTemplate::new(200).set_body_raw(EMPTY_SEARCH, "application/json"))
             .with_priority(2)
+            .expect(1)
             .mount(&server)
             .await;
 
         let config = TmdbConfig::new_with_base_url("t", server.uri()).with_retry(FAST_RETRY);
         let client = TmdbClient::new(config).unwrap();
 
-        let result = client.search_movies("x", None).await;
-        assert!(
-            result.is_ok(),
-            "expected recovery after 429, got {result:?}"
-        );
+        // One 429, then one success: exactly two attempts (verified on drop).
+        let page = client
+            .search_movies("x", None)
+            .await
+            .expect("recovers after one 429");
+        assert_eq!(page.page, 1);
+        assert_eq!(page.total_pages, 1);
+        assert_eq!(page.total_results, 0);
+        assert!(page.results.is_empty());
     }
 
     #[tokio::test]
@@ -104,6 +110,150 @@ mod tmdb {
             "got {err:?}"
         );
     }
+
+    /// A 2-retry policy with tiny backoff, so give-up tests stay fast.
+    const TWO_RETRIES: RetryPolicy =
+        RetryPolicy::new(2, Duration::from_millis(1), Duration::from_millis(2));
+
+    /// Serve `template` for every `/3/search/movie` request, asserting it is
+    /// hit exactly `expected` times, and build a client from the config
+    /// `configure` returns.
+    async fn search_server(
+        template: ResponseTemplate,
+        expected: u64,
+        configure: impl FnOnce(TmdbConfig) -> TmdbConfig,
+    ) -> (MockServer, TmdbClient) {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/3/search/movie"))
+            .respond_with(template)
+            .expect(expected)
+            .mount(&server)
+            .await;
+        let config = configure(TmdbConfig::new_with_base_url("t", server.uri()));
+        (server, TmdbClient::new(config).unwrap())
+    }
+
+    #[tokio::test]
+    async fn server_error_is_retried_until_the_budget_is_spent() {
+        let template = ResponseTemplate::new(500).set_body_raw(
+            r#"{"status_code":11,"status_message":"Internal error."}"#,
+            "application/json",
+        );
+        // max_retries = 2 → exactly 3 attempts.
+        let (_server, client) = search_server(template, 3, |c| c.with_retry(TWO_RETRIES)).await;
+
+        let err = client.search_movies("x", None).await.unwrap_err();
+        assert!(
+            matches!(
+                err,
+                TmdbError::Api {
+                    status: 500,
+                    status_code: Some(11),
+                    ..
+                }
+            ),
+            "got {err:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn client_errors_are_attempted_exactly_once() {
+        for status in [400u16, 401, 404, 422] {
+            let template = ResponseTemplate::new(status).set_body_raw(
+                r#"{"status_code":34,"status_message":"nope"}"#,
+                "application/json",
+            );
+            let (server, client) = search_server(template, 1, |c| c.with_retry(TWO_RETRIES)).await;
+
+            let err = client.search_movies("x", None).await.unwrap_err();
+            assert!(
+                matches!(&err, TmdbError::Api { status: s, .. } if *s == status),
+                "HTTP {status}: got {err:?}"
+            );
+            server.verify().await;
+        }
+    }
+
+    #[tokio::test]
+    async fn request_timeout_is_retried_until_the_budget_is_spent() {
+        let template = ResponseTemplate::new(200)
+            .set_body_raw(EMPTY_SEARCH, "application/json")
+            .set_delay(Duration::from_millis(300));
+        let (_server, client) = search_server(template, 3, |c| {
+            c.with_retry(TWO_RETRIES)
+                .with_request_timeout(Duration::from_millis(50))
+        })
+        .await;
+
+        match client.search_movies("x", None).await.unwrap_err() {
+            TmdbError::Http(e) => assert!(e.is_timeout(), "expected a timeout, got {e:?}"),
+            other => panic!("expected Http timeout, got {other:?}"),
+        }
+    }
+
+    /// Connect failures never reach a server, so the attempt count is
+    /// observed through the backoff: two retries at `base_delay = max_delay =
+    /// 200ms` wait at least 100ms each (equal jitter keeps half the delay).
+    #[tokio::test]
+    async fn connect_error_is_retried_with_backoff() {
+        let policy = RetryPolicy::new(2, Duration::from_millis(200), Duration::from_millis(200));
+        let config = TmdbConfig::new_with_base_url("t", "http://127.0.0.1:1").with_retry(policy);
+        let client = TmdbClient::new(config).unwrap();
+
+        let started = std::time::Instant::now();
+        let err = client.search_movies("x", None).await.unwrap_err();
+        let elapsed = started.elapsed();
+
+        match err {
+            TmdbError::Http(e) => assert!(e.is_connect(), "expected a connect error, got {e:?}"),
+            other => panic!("expected Http connect error, got {other:?}"),
+        }
+        assert!(
+            elapsed >= Duration::from_millis(200),
+            "two retries should back off >= 200ms in total, took {elapsed:?}"
+        );
+    }
+
+    /// `Retry-After` overrides the (tiny) exponential backoff.
+    #[tokio::test]
+    async fn retry_after_header_sets_the_retry_delay() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/3/search/movie"))
+            .respond_with(
+                ResponseTemplate::new(429)
+                    .insert_header("Retry-After", "1")
+                    .set_body_raw(
+                        r#"{"status_code":25,"status_message":"limit"}"#,
+                        "application/json",
+                    ),
+            )
+            .up_to_n_times(1)
+            .with_priority(1)
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path("/3/search/movie"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(EMPTY_SEARCH, "application/json"))
+            .with_priority(2)
+            .expect(1)
+            .mount(&server)
+            .await;
+        let config = TmdbConfig::new_with_base_url("t", server.uri()).with_retry(TWO_RETRIES);
+        let client = TmdbClient::new(config).unwrap();
+
+        let started = std::time::Instant::now();
+        let page = client.search_movies("x", None).await.unwrap();
+        let elapsed = started.elapsed();
+
+        assert_eq!(page.total_results, 0);
+        assert!(
+            elapsed >= Duration::from_secs(1),
+            "Retry-After: 1 should delay the retry >= 1s, took {elapsed:?}"
+        );
+    }
 }
 
 // ── AniList ───────────────────────────────────────────────────────────────────
@@ -140,22 +290,28 @@ mod anilist {
             )
             .up_to_n_times(1)
             .with_priority(1)
+            .expect(1)
             .mount(&server)
             .await;
         Mock::given(method("POST"))
             .respond_with(ResponseTemplate::new(200).set_body_json(empty_page()))
             .with_priority(2)
+            .expect(1)
             .mount(&server)
             .await;
 
         let config = AniListConfig::new_with_base_url(server.uri()).with_retry(FAST_RETRY);
         let client = AniListClient::new(config).unwrap();
 
-        let result = client.search_tv_shows("x", None).await;
-        assert!(
-            result.is_ok(),
-            "expected recovery after 429, got {result:?}"
-        );
+        // One 429, then one success: exactly two attempts (verified on drop).
+        let page = client
+            .search_tv_shows("x", None)
+            .await
+            .expect("recovers after one 429");
+        assert_eq!(page.page, 1);
+        assert_eq!(page.total_pages, 1);
+        assert_eq!(page.total_results, 0);
+        assert!(page.results.is_empty());
     }
 
     /// Mount a single response for every POST, asserting it is hit exactly

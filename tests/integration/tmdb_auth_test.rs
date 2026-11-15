@@ -1,7 +1,7 @@
 //! Both TMDB auth modes (v4 bearer, v3 api_key) against wiremock, plus config
 //! validation (#39).
 
-use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
+use cameo::providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{header, method, path, query_param},
@@ -49,15 +49,22 @@ async fn v3_api_key_sends_query_param() {
 #[test]
 fn bad_config_is_rejected_with_clear_errors() {
     // Empty credential.
-    assert!(TmdbClient::new(TmdbConfig::new("")).is_err());
+    let err = TmdbClient::new(TmdbConfig::new("")).unwrap_err();
+    assert!(matches!(err, TmdbError::InvalidConfig(_)), "{err:?}");
 
     // Malformed locale.
     let err = TmdbClient::new(TmdbConfig::new("t").with_language("english")).unwrap_err();
-    assert!(err.to_string().to_lowercase().contains("language"), "{err}");
+    assert!(
+        matches!(&err, TmdbError::InvalidConfig(msg) if msg.contains("language")),
+        "{err:?}"
+    );
 
     // Malformed region.
     let err = TmdbClient::new(TmdbConfig::new("t").with_region("usa")).unwrap_err();
-    assert!(err.to_string().to_lowercase().contains("region"), "{err}");
+    assert!(
+        matches!(&err, TmdbError::InvalidConfig(msg) if msg.contains("region")),
+        "{err:?}"
+    );
 
     // A well-formed config is accepted.
     assert!(
