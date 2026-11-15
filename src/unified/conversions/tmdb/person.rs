@@ -1,15 +1,15 @@
 //! TMDB person and multi-search type → unified model conversions.
 
-use super::{resolve_backdrop, resolve_date, resolve_poster, resolve_profile};
+use super::{resolve_backdrop, resolve_date, resolve_poster, resolve_profile, tmdb_media_id};
 use crate::{
     generated::tmdb::types,
-    unified::{genre::Genre, media_id::MediaId, models::*},
+    unified::{conversions::native_id, genre::Genre, media_id::MediaId, models::*},
 };
 
 impl From<types::SearchPersonResponseResultsItem> for UnifiedPerson {
     fn from(p: types::SearchPersonResponseResultsItem) -> Self {
         UnifiedPerson {
-            provider_id: MediaId::tmdb(p.id.unwrap_or_default() as u64),
+            provider_id: tmdb_media_id(p.id),
             name: p.name.unwrap_or_default(),
             known_for_department: p.known_for_department,
             profile_url: resolve_profile(&p.profile_path),
@@ -24,7 +24,7 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
     fn from(p: types::PersonDetailsResponse) -> Self {
         UnifiedPersonDetails {
             person: UnifiedPerson {
-                provider_id: MediaId::tmdb(p.id.unwrap_or_default() as u64),
+                provider_id: tmdb_media_id(p.id),
                 name: p.name.unwrap_or_default(),
                 known_for_department: p.known_for_department,
                 profile_url: resolve_profile(&p.profile_path),
@@ -52,14 +52,15 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
 /// Shared unknown-media policy: an item whose category is absent or not one of
 /// `movie` / `tv` / `person` is **omitted** (`None`) rather than coerced to an
 /// arbitrary type. AniList follows the same policy for its `format` field.
-/// An item without a TMDB id is omitted too: it cannot be fetched or cached.
+/// An item without a valid TMDB id (missing, zero, or negative) is omitted
+/// too: it cannot be fetched or cached.
 pub(crate) fn multi_search_result(
     item: types::SearchMultiResponseResultsItem,
 ) -> Option<UnifiedSearchResult> {
-    let id = item.id?;
+    let id = item.id.and_then(native_id)?;
     match item.media_type.as_deref() {
         Some("movie") => Some(UnifiedSearchResult::Movie(UnifiedMovie {
-            provider_id: MediaId::tmdb(id as u64),
+            provider_id: MediaId::tmdb(id),
             title: item.title.or(item.name).unwrap_or_default(),
             original_title: item.original_title,
             alternative_titles: Vec::new(),
@@ -83,7 +84,7 @@ pub(crate) fn multi_search_result(
             status: None,
         })),
         Some("tv") => Some(UnifiedSearchResult::TvShow(UnifiedTvShow {
-            provider_id: MediaId::tmdb(id as u64),
+            provider_id: MediaId::tmdb(id),
             name: item.name.or(item.title).unwrap_or_default(),
             original_name: item.original_name,
             alternative_titles: Vec::new(),
@@ -110,7 +111,7 @@ pub(crate) fn multi_search_result(
             status: None,
         })),
         Some("person") => Some(UnifiedSearchResult::Person(UnifiedPerson {
-            provider_id: MediaId::tmdb(id as u64),
+            provider_id: MediaId::tmdb(id),
             name: item.name.or(item.title).unwrap_or_default(),
             known_for_department: None,
             profile_url: resolve_poster(&item.poster_path), // multi uses poster_path
@@ -180,6 +181,20 @@ mod tests {
         let mut item = multi_item(550, Some("movie"));
         item.id = None;
         assert!(multi_search_result(item).is_none());
+    }
+
+    /// A zero or negative id is not a TMDB id: the item is dropped, never
+    /// wrapped into a huge `u64`.
+    #[test]
+    fn multi_item_with_invalid_id_is_dropped() {
+        for id in [0, -1, i64::MIN] {
+            for media_type in ["movie", "tv", "person"] {
+                assert!(
+                    multi_search_result(multi_item(id, Some(media_type))).is_none(),
+                    "{media_type} {id}"
+                );
+            }
+        }
     }
 
     #[test]

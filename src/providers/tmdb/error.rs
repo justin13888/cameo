@@ -77,6 +77,20 @@ pub enum TmdbError {
         message: String,
     },
 
+    /// A response reported a page number or total that does not fit the
+    /// `u32` a [`Page`](crate::core::pagination::Page) carries (negative, or
+    /// above `u32::MAX`).
+    ///
+    /// The value is reported rather than wrapped or clamped, so a malformed
+    /// page is never passed off as a real one. Not retryable.
+    #[error("TMDB reported an out-of-range `{field}`: {value}")]
+    PageOutOfRange {
+        /// The pagination field: `page`, `total_pages`, or `total_results`.
+        field: &'static str,
+        /// The value TMDB reported.
+        value: i64,
+    },
+
     /// Invalid configuration (rejected at construction time).
     #[error("invalid configuration: {0}")]
     InvalidConfig(String),

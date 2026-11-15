@@ -10,6 +10,7 @@ use super::resolve_profile;
 use crate::{
     generated::tmdb::types,
     unified::{
+        conversions::native_id,
         media_id::MediaId,
         models::{Gender, UnifiedCastCredit, UnifiedCredits, UnifiedCrewCredit},
     },
@@ -37,11 +38,7 @@ impl Person {
     /// usable person id: missing, zero, or negative.
     fn resolve(self, title: &MediaId, kind: &str) -> Option<Credited> {
         let name = self.name.unwrap_or_default();
-        let Some(id) = self
-            .id
-            .and_then(|id| u64::try_from(id).ok())
-            .filter(|&id| id != 0)
-        else {
+        let Some(id) = self.id.and_then(native_id) else {
             tracing::warn!(%title, %name, kind, "tmdb: skipping credit without a person id");
             return None;
         };

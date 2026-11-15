@@ -1,6 +1,6 @@
 //! TMDB TV type → unified model conversions.
 
-use super::{resolve_backdrop, resolve_date, resolve_logo, resolve_poster};
+use super::{resolve_backdrop, resolve_date, resolve_logo, resolve_poster, tmdb_media_id};
 use crate::{
     generated::tmdb::types,
     providers::tmdb::image_url::{ImageUrl, StillSize},
@@ -13,7 +13,7 @@ macro_rules! impl_tv_from {
         impl From<$ty> for UnifiedTvShow {
             fn from(t: $ty) -> Self {
                 UnifiedTvShow {
-                    provider_id: MediaId::tmdb(t.id.unwrap_or_default() as u64),
+                    provider_id: tmdb_media_id(t.id),
                     name: t.name.unwrap_or_default(),
                     original_name: t.original_name,
                     alternative_titles: Vec::new(),
@@ -55,7 +55,7 @@ macro_rules! impl_tv_from_no_adult {
         impl From<$ty> for UnifiedTvShow {
             fn from(t: $ty) -> Self {
                 UnifiedTvShow {
-                    provider_id: MediaId::tmdb(t.id.unwrap_or_default() as u64),
+                    provider_id: tmdb_media_id(t.id),
                     name: t.name.unwrap_or_default(),
                     original_name: t.original_name,
                     alternative_titles: Vec::new(),
@@ -180,7 +180,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
         let status = t.status.as_deref().map(SeriesStatus::from_tmdb);
         UnifiedTvShowDetails {
             show: UnifiedTvShow {
-                provider_id: MediaId::tmdb(t.id.unwrap_or_default() as u64),
+                provider_id: tmdb_media_id(t.id),
                 name: t.name.unwrap_or_default(),
                 original_name: t.original_name,
                 alternative_titles: Vec::new(),

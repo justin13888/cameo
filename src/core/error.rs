@@ -80,6 +80,7 @@ impl From<crate::providers::tmdb::TmdbError> for ProviderError {
             // carries the request URL's `api_key`.
             TmdbError::Http(e) => ProviderError::Transport(e.to_string()),
             TmdbError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
+            e @ TmdbError::PageOutOfRange { .. } => ProviderError::Deserialization(e.to_string()),
             TmdbError::InvalidConfig(s) => ProviderError::InvalidInput(s),
             TmdbError::UnsupportedSource(_) => ProviderError::Unsupported,
             TmdbError::Request { kind, message } => match kind {
