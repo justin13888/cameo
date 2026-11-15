@@ -1,6 +1,6 @@
 //! AniList media → unified model conversions.
 
-use super::resolve_date;
+use super::{media_id, resolve_date};
 use crate::{
     providers::anilist::{
         client::{Kind, classify},
@@ -8,7 +8,6 @@ use crate::{
     },
     unified::{
         genre::Genre,
-        media_id::MediaId,
         models::{
             AlternativeTitle, Company, SeriesStatus, TitleKind, UnifiedMovie, UnifiedMovieDetails,
             UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
@@ -131,10 +130,11 @@ fn map_genres(genres: &Option<Vec<String>>) -> Vec<Genre> {
 
 // ── AniListMedia → UnifiedMovie ───────────────────────────────────────────────
 
-/// Convert an AniList media entry to a [`UnifiedMovie`].
-pub fn anilist_media_to_movie(m: AniListMedia) -> UnifiedMovie {
-    UnifiedMovie {
-        provider_id: MediaId::anilist(m.id as u64),
+/// Convert an AniList media entry to a [`UnifiedMovie`], or `None` (logged at
+/// `warn`) when its id is not a valid AniList id (zero or negative).
+pub fn anilist_media_to_movie(m: AniListMedia) -> Option<UnifiedMovie> {
+    Some(UnifiedMovie {
+        provider_id: media_id(m.id)?,
         title: resolve_title(m.title.as_ref()),
         original_title: m.title.as_ref().and_then(|t| t.native.clone()),
         alternative_titles: alternative_titles(
@@ -161,13 +161,15 @@ pub fn anilist_media_to_movie(m: AniListMedia) -> UnifiedMovie {
         runtime: non_negative(m.duration),
         // AniList's raw `MediaStatus`, exactly as the detail conversion reports it.
         status: m.status,
-    }
+    })
 }
 
 // ── AniListMedia → UnifiedTvShow ──────────────────────────────────────────────
 
-/// Convert an AniList media entry to a [`UnifiedTvShow`].
-pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
+/// Convert an AniList media entry to a [`UnifiedTvShow`], or `None` (logged at
+/// `warn`) when its id is not a valid AniList id (zero or negative).
+pub fn anilist_media_to_tv(m: AniListMedia) -> Option<UnifiedTvShow> {
+    let provider_id = media_id(m.id)?;
     let origin_country = m
         .country_of_origin
         .as_deref()
@@ -179,8 +181,8 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
         .and_then(country_to_language)
         .map(str::to_owned);
 
-    UnifiedTvShow {
-        provider_id: MediaId::anilist(m.id as u64),
+    Some(UnifiedTvShow {
+        provider_id,
         name: resolve_title(m.title.as_ref()),
         original_name: m.title.as_ref().and_then(|t| t.native.clone()),
         alternative_titles: alternative_titles(
@@ -204,7 +206,7 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
         episode_run_time: non_negative(m.duration),
         // AniList's `MediaStatus`, mapped exactly as the detail conversion maps it.
         status: m.status.as_deref().map(SeriesStatus::from_anilist),
-    }
+    })
 }
 
 // ── AniListMedia → UnifiedSearchResult ───────────────────────────────────────
@@ -218,17 +220,20 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
 /// exactly as the movie and TV list queries filter: `MOVIE` is a movie; `TV`,
 /// `TV_SHORT`, `ONA`, `OVA`, and `SPECIAL` are shows; any other format (e.g.
 /// `MUSIC`) is omitted too, since no movie or TV list would ever return it.
+/// An entry whose id is not a valid AniList id is omitted (and logged).
 pub fn anilist_media_to_search_result(m: AniListMedia) -> Option<UnifiedSearchResult> {
     match m.format.as_deref().and_then(classify)? {
-        Kind::Movie => Some(UnifiedSearchResult::Movie(anilist_media_to_movie(m))),
-        Kind::Tv => Some(UnifiedSearchResult::TvShow(anilist_media_to_tv(m))),
+        Kind::Movie => anilist_media_to_movie(m).map(UnifiedSearchResult::Movie),
+        Kind::Tv => anilist_media_to_tv(m).map(UnifiedSearchResult::TvShow),
     }
 }
 
 // ── AniListMediaDetail → UnifiedMovieDetails ──────────────────────────────────
 
-/// Convert an AniList media detail entry to [`UnifiedMovieDetails`].
-pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMovieDetails {
+/// Convert an AniList media detail entry to [`UnifiedMovieDetails`], or `None`
+/// (logged at `warn`) when its id is not a valid AniList id.
+pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> Option<UnifiedMovieDetails> {
+    let provider_id = media_id(m.id)?;
     let production_companies: Vec<Company> = m
         .studios
         .as_ref()
@@ -266,9 +271,9 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
         .collect();
     let runtime = non_negative(m.duration);
 
-    UnifiedMovieDetails {
+    Some(UnifiedMovieDetails {
         movie: UnifiedMovie {
-            provider_id: MediaId::anilist(m.id as u64),
+            provider_id,
             title: resolve_title(m.title.as_ref()),
             original_title: m.title.as_ref().and_then(|t| t.native.clone()),
             alternative_titles: alternative_titles(
@@ -303,13 +308,15 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
         // AniList has no "video entry" concept.
         video: None,
         belongs_to_collection: None,
-    }
+    })
 }
 
 // ── AniListMediaDetail → UnifiedTvShowDetails ─────────────────────────────────
 
-/// Convert an AniList media detail entry to [`UnifiedTvShowDetails`].
-pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvShowDetails {
+/// Convert an AniList media detail entry to [`UnifiedTvShowDetails`], or
+/// `None` (logged at `warn`) when its id is not a valid AniList id.
+pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> Option<UnifiedTvShowDetails> {
+    let provider_id = media_id(m.id)?;
     let production_companies: Vec<Company> = m
         .studios
         .as_ref()
@@ -355,9 +362,9 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
     let run_time = non_negative(m.duration);
     let number_of_episodes = non_negative(m.episodes);
 
-    UnifiedTvShowDetails {
+    Some(UnifiedTvShowDetails {
         show: UnifiedTvShow {
-            provider_id: MediaId::anilist(m.id as u64),
+            provider_id,
             name: resolve_title(m.title.as_ref()),
             original_name: m.title.as_ref().and_then(|t| t.native.clone()),
             alternative_titles: alternative_titles(
@@ -399,7 +406,7 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         spoken_languages: Vec::new(),
         production_countries: origin_country,
         seasons: Vec::new(),
-    }
+    })
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -501,8 +508,9 @@ mod tests {
         list.episodes = Some(26);
         list.duration = Some(23);
         list.status = Some("RELEASING".to_string());
-        let summary = anilist_media_to_tv(list);
-        let details = anilist_media_detail_to_tv_details(make_list_fields_detail("TV"));
+        let summary = anilist_media_to_tv(list).expect("valid id");
+        let details =
+            anilist_media_detail_to_tv_details(make_list_fields_detail("TV")).expect("valid id");
         assert_eq!(details.show.number_of_episodes, summary.number_of_episodes);
         assert_eq!(details.show.episode_run_time, summary.episode_run_time);
         assert_eq!(details.show.status, summary.status);
@@ -513,8 +521,9 @@ mod tests {
         let mut list = make_media(7, Some("MOVIE"));
         list.duration = Some(23);
         list.status = Some("RELEASING".to_string());
-        let summary = anilist_media_to_movie(list);
-        let details = anilist_media_detail_to_movie_details(make_list_fields_detail("MOVIE"));
+        let summary = anilist_media_to_movie(list).expect("valid id");
+        let details = anilist_media_detail_to_movie_details(make_list_fields_detail("MOVIE"))
+            .expect("valid id");
         assert_eq!(details.movie.runtime, summary.runtime);
         assert_eq!(details.movie.status, summary.status);
         assert_eq!(details.runtime, Some(23));
@@ -579,6 +588,27 @@ mod tests {
         assert!(result.is_none());
     }
 
+    /// A zero or negative id is not an AniList id: every conversion skips the
+    /// record rather than wrap the id into a huge `u64`.
+    #[test]
+    fn invalid_media_id_skips_the_record() {
+        for id in [0, -1, i32::MIN] {
+            assert!(anilist_media_to_movie(make_media(id, Some("MOVIE"))).is_none());
+            assert!(anilist_media_to_tv(make_media(id, Some("TV"))).is_none());
+            for format in ["MOVIE", "TV"] {
+                assert!(anilist_media_to_search_result(make_media(id, Some(format))).is_none());
+            }
+            let detail = || AniListMediaDetail {
+                id,
+                ..make_detail(None, None)
+            };
+            assert!(anilist_media_detail_to_movie_details(detail()).is_none());
+            assert!(anilist_media_detail_to_tv_details(detail()).is_none());
+        }
+        let movie = anilist_media_to_movie(make_media(1, Some("MOVIE"))).expect("valid id");
+        assert_eq!(movie.provider_id, "anilist:1");
+    }
+
     #[test]
     fn romaji_is_kept_when_english_exists() {
         let mut m = make_media(10, Some("MOVIE"));
@@ -588,7 +618,7 @@ mod tests {
             Some("君の名は。"),
         ));
         m.country_of_origin = Some("JP".to_string());
-        let movie = anilist_media_to_movie(m);
+        let movie = anilist_media_to_movie(m).expect("valid id");
         assert_eq!(movie.title, "Your Name.");
         assert_eq!(movie.original_title.as_deref(), Some("君の名は。"));
         assert_eq!(
@@ -605,7 +635,7 @@ mod tests {
     fn romaji_only_falls_back_for_title_and_is_listed() {
         let mut m = make_media(11, Some("TV"));
         m.title = Some(title(None, Some("Shingeki no Kyojin"), None));
-        let show = anilist_media_to_tv(m);
+        let show = anilist_media_to_tv(m).expect("valid id");
         assert_eq!(show.name, "Shingeki no Kyojin");
         assert_eq!(show.original_name, None);
         assert_eq!(
@@ -621,7 +651,7 @@ mod tests {
         m.synonyms = Some(vec!["AoT".to_string(), "SnK".to_string()]);
         // Unknown origin country: native title carries no language.
         m.country_of_origin = Some("US".to_string());
-        let show = anilist_media_to_tv(m);
+        let show = anilist_media_to_tv(m).expect("valid id");
         assert_eq!(
             show.alternative_titles,
             vec![
@@ -643,7 +673,7 @@ mod tests {
             "Alias".to_string(),
             "Alias".to_string(),
         ]);
-        let movie = anilist_media_to_movie(m);
+        let movie = anilist_media_to_movie(m).expect("valid id");
         assert_eq!(
             movie.alternative_titles,
             vec![
@@ -667,7 +697,7 @@ mod tests {
 
     #[test]
     fn absent_title_and_synonyms_yield_no_alternatives() {
-        let movie = anilist_media_to_movie(make_media(14, Some("MOVIE")));
+        let movie = anilist_media_to_movie(make_media(14, Some("MOVIE"))).expect("valid id");
         assert!(movie.alternative_titles.is_empty());
     }
 
@@ -685,10 +715,10 @@ mod tests {
                 Some(vec!["Alias".to_string()]),
             )
         };
-        let movie = anilist_media_detail_to_movie_details(make());
+        let movie = anilist_media_detail_to_movie_details(make()).expect("valid id");
         assert_eq!(movie.movie.title, "English");
         assert_eq!(movie.movie.alternative_titles, expected);
-        let show = anilist_media_detail_to_tv_details(make());
+        let show = anilist_media_detail_to_tv_details(make()).expect("valid id");
         assert_eq!(show.show.name, "English");
         assert_eq!(show.show.alternative_titles, expected);
     }
