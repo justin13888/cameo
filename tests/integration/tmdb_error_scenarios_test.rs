@@ -1,14 +1,20 @@
 use std::time::Duration;
 
-use cameo::providers::tmdb::{TmdbClient, TmdbConfig, TmdbError};
+use cameo::{
+    RetryPolicy,
+    providers::tmdb::{TmdbClient, TmdbConfig, TmdbError},
+};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
 };
 
+/// Error decoding is tested with retries disabled, so each scenario is a
+/// single attempt; attempt counts under retry are pinned in `retry_test.rs`.
 async fn setup_tmdb_client() -> (MockServer, TmdbClient) {
     let server = MockServer::start().await;
-    let config = TmdbConfig::new_with_base_url("test-token", server.uri());
+    let config = TmdbConfig::new_with_base_url("test-token", server.uri())
+        .with_retry(RetryPolicy::disabled());
     let client = TmdbClient::new(config).unwrap();
     (server, client)
 }
@@ -23,6 +29,7 @@ async fn http_401_decodes_status_code_and_message() {
             r#"{"status_code":7,"status_message":"Invalid API key: You must be granted a valid key."}"#,
             "application/json",
         ))
+        .expect(1)
         .mount(&server)
         .await;
 
@@ -53,6 +60,7 @@ async fn http_404_decodes_status_code_and_message() {
             r#"{"status_code":34,"status_message":"The resource you requested could not be found."}"#,
             "application/json",
         ))
+        .expect(1)
         .mount(&server)
         .await;
 
@@ -87,6 +95,7 @@ async fn http_429_decodes_message_and_retry_after() {
                     "application/json",
                 ),
         )
+        .expect(1)
         .mount(&server)
         .await;
 
@@ -118,6 +127,7 @@ async fn http_500_maps_to_api_error() {
             r#"{"status_code":11,"status_message":"Internal error."}"#,
             "application/json",
         ))
+        .expect(1)
         .mount(&server)
         .await;
 
@@ -140,6 +150,7 @@ async fn malformed_json_body_is_deserialization_error() {
         .respond_with(
             ResponseTemplate::new(200).set_body_raw("this is not json {{{{", "application/json"),
         )
+        .expect(1)
         .mount(&server)
         .await;
 
@@ -156,7 +167,8 @@ async fn malformed_json_body_is_deserialization_error() {
 #[tokio::test]
 async fn connection_failure_is_transport_error() {
     // Point at a port that is (almost certainly) closed.
-    let config = TmdbConfig::new_with_base_url("test-token", "http://127.0.0.1:1");
+    let config = TmdbConfig::new_with_base_url("test-token", "http://127.0.0.1:1")
+        .with_retry(RetryPolicy::disabled());
     let client = TmdbClient::new(config).unwrap();
 
     let err = client.movie_details(550).await.unwrap_err();
