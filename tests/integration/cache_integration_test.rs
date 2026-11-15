@@ -234,3 +234,197 @@ async fn clear_cache_empties_everything() {
     assert!(client.cached_movie("tmdb:550").await.is_none());
     assert!(client.cached_movie_details("tmdb:550").await.is_none());
 }
+
+// ── Age-aware detail TTLs ────────────────────────────────────────────────────
+
+mod age_aware_ttl {
+    use std::{
+        sync::{Arc, Mutex},
+        time::Duration,
+    };
+
+    use async_trait::async_trait;
+    use cameo::{
+        MediaId,
+        cache::{CacheBackend, CacheError, CacheKey, CacheTtlConfig, MediaType},
+        providers::tmdb::TmdbConfig,
+        unified::CameoClient,
+    };
+    use chrono::{Days, Utc};
+    use serde_json::Value;
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{method, path},
+    };
+
+    const DETAILS: Duration = Duration::from_secs(11);
+    const OLD: Duration = Duration::from_secs(22);
+    const RECENT: Duration = Duration::from_secs(33);
+    const ACTIVE: Duration = Duration::from_secs(44);
+
+    /// A backend that stores nothing and records the TTL of every write.
+    #[derive(Default)]
+    struct Recording {
+        writes: Mutex<Vec<(CacheKey, Duration)>>,
+    }
+
+    impl Recording {
+        /// The TTL the detail entry for `provider_id` was written with.
+        fn detail_ttl(&self, media_type: MediaType, provider_id: &str) -> Option<Duration> {
+            let key = CacheKey::Detail {
+                media_type,
+                provider_id: provider_id.to_string(),
+            };
+            self.writes
+                .lock()
+                .expect("writes")
+                .iter()
+                .find(|(k, _)| *k == key)
+                .map(|(_, ttl)| *ttl)
+        }
+    }
+
+    #[async_trait]
+    impl CacheBackend for Recording {
+        async fn get(&self, _key: &CacheKey) -> Result<Option<Value>, CacheError> {
+            Ok(None)
+        }
+        async fn set(&self, key: CacheKey, _value: Value, ttl: Duration) -> Result<(), CacheError> {
+            self.writes.lock().expect("writes").push((key, ttl));
+            Ok(())
+        }
+        async fn invalidate(&self, _key: &CacheKey) -> Result<(), CacheError> {
+            Ok(())
+        }
+        async fn clear(&self) -> Result<(), CacheError> {
+            Ok(())
+        }
+    }
+
+    fn ttls() -> CacheTtlConfig {
+        let mut ttl = CacheTtlConfig::default();
+        ttl.details = DETAILS;
+        ttl.old_content_details_ttl = OLD;
+        ttl.recent_content_details_ttl = RECENT;
+        ttl.active_content_details_ttl = ACTIVE;
+        ttl
+    }
+
+    /// `days` days before today, as `YYYY-MM-DD`.
+    fn days_ago(days: u64) -> String {
+        Utc::now()
+            .date_naive()
+            .checked_sub_days(Days::new(days))
+            .expect("in range")
+            .format("%Y-%m-%d")
+            .to_string()
+    }
+
+    /// A fixture with each `(field, value)` overwritten.
+    fn fixture(raw: &str, overrides: &[(&str, Value)]) -> Value {
+        let mut body: Value = serde_json::from_str(raw).expect("fixture is JSON");
+        for (field, value) in overrides {
+            body[*field] = value.clone();
+        }
+        body
+    }
+
+    /// Serve `body` at `endpoint` and return a client caching into `backend`.
+    async fn serve(
+        server: &MockServer,
+        endpoint: &str,
+        body: Value,
+    ) -> (CameoClient, Arc<Recording>) {
+        Mock::given(method("GET"))
+            .and(path(endpoint))
+            .respond_with(ResponseTemplate::new(200).set_body_json(body))
+            .mount(server)
+            .await;
+        let backend = Arc::new(Recording::default());
+        let client = CameoClient::builder()
+            .with_tmdb(TmdbConfig::new_with_base_url("test-token", server.uri()))
+            .with_cache_backend(backend.clone())
+            .with_cache_ttl(ttls())
+            .build()
+            .expect("configured");
+        (client, backend)
+    }
+
+    async fn movie_ttl(overrides: &[(&str, Value)]) -> Option<Duration> {
+        let server = MockServer::start().await;
+        let body = fixture(super::movie_details_fixture(), overrides);
+        let (client, backend) = serve(&server, "/3/movie/550", body).await;
+        client
+            .movie_details(&MediaId::tmdb(550))
+            .await
+            .expect("details");
+        backend.detail_ttl(MediaType::Movie, "tmdb:550")
+    }
+
+    async fn tv_ttl(overrides: &[(&str, Value)]) -> Option<Duration> {
+        let server = MockServer::start().await;
+        let raw = include_str!("../fixtures/tv_details_response.json");
+        let body = fixture(raw, overrides);
+        let (client, backend) = serve(&server, "/3/tv/1396", body).await;
+        client
+            .tv_show_details(&MediaId::tmdb(1396))
+            .await
+            .expect("details");
+        backend.detail_ttl(MediaType::TvShow, "tmdb:1396")
+    }
+
+    #[tokio::test]
+    async fn an_old_released_movie_gets_the_old_content_ttl() {
+        let ttl = movie_ttl(&[("release_date", "1999-10-15".into())]).await;
+        assert_eq!(ttl, Some(OLD));
+    }
+
+    /// A year-only date counts as the first day of that year.
+    #[tokio::test]
+    async fn a_year_only_old_release_gets_the_old_content_ttl() {
+        let ttl = movie_ttl(&[("release_date", "1999".into())]).await;
+        assert_eq!(ttl, Some(OLD));
+    }
+
+    #[tokio::test]
+    async fn a_recent_movie_gets_the_recent_content_ttl() {
+        let ttl = movie_ttl(&[("release_date", days_ago(10).into())]).await;
+        assert_eq!(ttl, Some(RECENT));
+    }
+
+    #[tokio::test]
+    async fn a_movie_no_age_rule_matches_gets_the_details_ttl() {
+        let ttl = movie_ttl(&[("release_date", days_ago(2 * 365).into())]).await;
+        assert_eq!(ttl, Some(DETAILS));
+    }
+
+    #[tokio::test]
+    async fn an_old_ended_show_gets_the_old_content_ttl() {
+        let ttl = tv_ttl(&[
+            ("first_air_date", "2008-01-20".into()),
+            ("last_air_date", "2013-09-29".into()),
+            ("status", "Ended".into()),
+            ("in_production", false.into()),
+        ])
+        .await;
+        assert_eq!(ttl, Some(OLD));
+    }
+
+    #[tokio::test]
+    async fn a_show_in_production_gets_the_active_content_ttl() {
+        let ttl = tv_ttl(&[("in_production", true.into())]).await;
+        assert_eq!(ttl, Some(ACTIVE));
+    }
+
+    #[tokio::test]
+    async fn a_recent_returning_show_gets_the_recent_content_ttl() {
+        let ttl = tv_ttl(&[
+            ("first_air_date", days_ago(30).into()),
+            ("last_air_date", days_ago(120).into()),
+            ("status", "Returning Series".into()),
+            ("in_production", false.into()),
+        ])
+        .await;
+        assert_eq!(ttl, Some(RECENT));
+    }
+}
