@@ -184,6 +184,27 @@ def watch_provider_country_map:
              "additionalProperties": {"$ref": "#/components/schemas/WatchProviderCountry"}}
       else . end);
 
+# (11) Declare the certification blocks `append_to_response` adds to details.
+#     `/movie/{id}?append_to_response=release_dates` and
+#     `/tv/{id}?append_to_response=content_ratings` embed the sub-resource's
+#     body under that key, but the details schemas do not declare it, so the
+#     generated types drop it on deserialization. Declare `release_dates` on
+#     `MovieDetailsResponse` and `content_ratings` on `TvSeriesDetailsResponse`
+#     as optional, nullable references to the sub-resource's own hoisted
+#     schema (every property of which is optional, so the embedded body, which
+#     carries no `id`, reads as it). Applied after (7), and only while the
+#     upstream details schemas still lack the key.
+def append_certification_blocks:
+  def append_block($details; $key; $schema):
+    if .components.schemas[$details] != null
+       and .components.schemas[$schema] != null
+       and (.components.schemas[$details].properties | has($key) | not)
+    then .components.schemas[$details].properties[$key] = {
+           "anyOf": [{"$ref": ("#/components/schemas/" + $schema)}, {"type": "null"}]}
+    else . end;
+  append_block("MovieDetailsResponse"; "release_dates"; "MovieReleaseDatesResponse")
+  | append_block("TvSeriesDetailsResponse"; "content_ratings"; "TvSeriesContentRatingsResponse");
+
 rename_id | fix_vote_average | fix_bool_defaults | strip_examples | strip_property_defaults
 | nullable_responses | name_schemas | fix_movie_recommendations | declare_security
-| watch_provider_country_map
+| watch_provider_country_map | append_certification_blocks
