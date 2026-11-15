@@ -1,32 +1,12 @@
 //! TMDB watch-provider results → unified watch-provider entries.
 
-use std::collections::HashMap;
-
-use serde::Serialize;
+use std::collections::{BTreeMap, HashMap};
 
 use super::resolve_logo;
 use crate::{
-    providers::tmdb::error::TmdbError,
+    generated::tmdb::types::{WatchProviderCountry, WatchProviderService},
     unified::models::{UnifiedStreamingService, UnifiedWatchProviderEntry},
 };
-
-/// One streaming service under a watch-provider country entry.
-#[derive(serde::Deserialize)]
-struct WatchProviderService {
-    provider_name: Option<String>,
-    logo_path: Option<String>,
-}
-
-/// One country's watch-provider lists.
-#[derive(serde::Deserialize, Default)]
-struct WatchProviderCountry {
-    #[serde(default)]
-    flatrate: Vec<WatchProviderService>,
-    #[serde(default)]
-    rent: Vec<WatchProviderService>,
-    #[serde(default)]
-    buy: Vec<WatchProviderService>,
-}
 
 impl From<WatchProviderCountry> for UnifiedWatchProviderEntry {
     fn from(c: WatchProviderCountry) -> Self {
@@ -38,9 +18,11 @@ impl From<WatchProviderCountry> for UnifiedWatchProviderEntry {
     }
 }
 
-/// Map watch-provider services to unified services, dropping any without a name.
-fn unified_services(list: Vec<WatchProviderService>) -> Vec<UnifiedStreamingService> {
-    list.into_iter()
+/// Map watch-provider services to unified services, dropping any without a
+/// name; an absent list reads as empty.
+fn unified_services(list: Option<Vec<WatchProviderService>>) -> Vec<UnifiedStreamingService> {
+    list.unwrap_or_default()
+        .into_iter()
         .filter_map(|s| {
             let name = s.provider_name?;
             Some(UnifiedStreamingService {
@@ -51,29 +33,21 @@ fn unified_services(list: Vec<WatchProviderService>) -> Vec<UnifiedStreamingServ
         .collect()
 }
 
-/// Parse a watch-provider response's `results` (one entry per country) into
+/// Convert a watch-provider response's per-country `results` map into
 /// unified entries keyed by country code; absent `results` read as no
 /// countries.
 ///
-/// The generated `results` types hold one field per country the spec lists,
-/// each with its own type, so they are read through their serialized
-/// per-country object rather than field by field.
-///
-/// # Errors
-///
-/// [`TmdbError`] when `results` does not have the per-country shape.
-pub(crate) fn parse_watch_provider_results<R: Serialize>(
-    results: Option<R>,
-) -> Result<HashMap<String, UnifiedWatchProviderEntry>, TmdbError> {
-    let Some(results) = results else {
-        return Ok(HashMap::new());
-    };
-    let by_country: HashMap<String, WatchProviderCountry> =
-        serde_json::from_value(serde_json::to_value(results)?)?;
-    Ok(by_country
+/// Every generated `*WatchProvidersResponseResults` type is a map of
+/// [`WatchProviderCountry`] keyed by ISO 3166-1 country code, so callers pass
+/// its `additional` field.
+pub(crate) fn parse_watch_provider_results(
+    results: Option<BTreeMap<String, WatchProviderCountry>>,
+) -> HashMap<String, UnifiedWatchProviderEntry> {
+    results
+        .unwrap_or_default()
         .into_iter()
         .map(|(country, entry)| (country, entry.into()))
-        .collect())
+        .collect()
 }
 
 #[cfg(test)]
@@ -97,12 +71,12 @@ mod tests {
                     ],
                     "rent": [{ "provider_name": "Apple TV" }]
                 },
-                "DE": { "buy": [{ "provider_name": "Amazon Video" }] }
+                "DE": { "buy": [{ "provider_name": "Amazon Video" }], "rent": null }
             }
         }))
         .expect("watch providers deserialize");
 
-        let results = parse_watch_provider_results(raw.results).expect("per-country shape");
+        let results = parse_watch_provider_results(raw.results.map(|r| r.additional));
 
         assert_eq!(results.len(), 2);
         let us = &results["US"];
@@ -116,16 +90,45 @@ mod tests {
         assert_eq!(us.rent[0].logo_url, None);
         assert!(us.buy.is_empty());
         assert_eq!(results["DE"].buy[0].name, "Amazon Video");
+        assert!(results["DE"].rent.is_empty());
     }
 
-    /// A response without `results` has no countries.
+    /// A country code the bundled spec never listed still reaches the
+    /// unified results, for movies and TV series alike.
+    #[test]
+    fn keeps_countries_the_spec_does_not_list() {
+        let body = json!({
+            "id": 1,
+            "results": { "ZZ": { "flatrate": [{ "provider_name": "Local" }] } }
+        });
+        let movie: types::MovieWatchProvidersResponse =
+            serde_json::from_value(body.clone()).expect("movie deserialize");
+        let tv: types::TvSeriesWatchProvidersResponse =
+            serde_json::from_value(body).expect("tv deserialize");
+
+        for results in [
+            parse_watch_provider_results(movie.results.map(|r| r.additional)),
+            parse_watch_provider_results(tv.results.map(|r| r.additional)),
+        ] {
+            assert_eq!(results.len(), 1);
+            assert_eq!(results["ZZ"].flatrate[0].name, "Local");
+        }
+    }
+
+    /// A response without `results`, or with `results: null`, has no
+    /// countries.
     #[test]
     fn absent_results_have_no_countries() {
-        let raw: types::TvSeriesWatchProvidersResponse =
-            serde_json::from_value(json!({ "id": 1399 })).expect("deserialize");
+        for body in [
+            json!({ "id": 1399 }),
+            json!({ "id": 1399, "results": null }),
+        ] {
+            let raw: types::TvSeriesWatchProvidersResponse =
+                serde_json::from_value(body).expect("deserialize");
 
-        let results = parse_watch_provider_results(raw.results).expect("no results");
+            let results = parse_watch_provider_results(raw.results.map(|r| r.additional));
 
-        assert!(results.is_empty());
+            assert!(results.is_empty());
+        }
     }
 }
