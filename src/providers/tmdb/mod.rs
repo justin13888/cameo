@@ -1,5 +1,3 @@
-//! TMDB (The Movie Database) provider.
-//!
 //! The leaf modules are private; every public item is re-exported here, which
 //! is its canonical path (the most common ones are also at the crate root).
 

@@ -1,6 +1,3 @@
-//! Shared core types: pagination, the discovery time window, and the
-//! provider-agnostic error.
-//!
 //! The leaf modules are private; every item is re-exported here and from the
 //! crate root, which is its canonical path.
 
