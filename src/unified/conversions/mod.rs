@@ -6,6 +6,10 @@ pub mod anilist;
 #[cfg(feature = "tmdb")]
 pub mod tmdb;
 
+/// Conversions from TheTVDB records to unified types.
+#[cfg(feature = "tvdb")]
+pub mod tvdb;
+
 /// A provider's native numeric id as a [`MediaId`](crate::unified::MediaId)
 /// number, or `None` when it is not a valid id.
 ///

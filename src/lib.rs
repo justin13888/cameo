@@ -49,17 +49,41 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! ## TheTVDB (series, movies, absolute episode numbers)
+//!
+//! ```no_run
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # #[cfg(feature = "tvdb")]
+//! # {
+//! use cameo::providers::tvdb::{TvdbClient, TvdbConfig};
+//! use cameo::unified::{CameoClient, MediaId};
+//!
+//! // Low-level client: episodes in default order, with absolute numbers
+//! let client = TvdbClient::new(TvdbConfig::new("your-tvdb-api-key"))?;
+//! let episodes = client.all_series_episodes(81189).await?;
+//!
+//! // High-level unified facade
+//! let cameo = CameoClient::builder()
+//!     .with_tvdb(TvdbConfig::new("your-tvdb-api-key"))
+//!     .build()?;
+//! let specials = cameo.season_details(&MediaId::tvdb(81189), 0).await?;
+//! # }
+//! # Ok(())
+//! # }
+//! ```
 
 // Enable `#[doc(cfg(...))]` feature badges on docs.rs (nightly-only; inert on
 // stable). docs.rs passes `--cfg docsrs` via the metadata below.
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 // cameo is useless without a provider to talk to, so require at least one. The
-// default `full` feature enables both `tmdb` and `anilist`.
-#[cfg(not(any(feature = "tmdb", feature = "anilist")))]
+// default `full` feature enables `tmdb`, `anilist` and `tvdb`.
+#[cfg(not(any(feature = "tmdb", feature = "anilist", feature = "tvdb")))]
 compile_error!(
-    "cameo needs at least one provider feature: enable `tmdb` and/or `anilist` \
-     (the default `full` feature enables both)."
+    "cameo needs at least one provider feature: enable `tmdb`, `anilist` and/or `tvdb` \
+     (the default `full` feature enables all three)."
 );
 
 /// Auto-generated low-level API client code (from spargen).
@@ -101,12 +125,14 @@ pub use cache::{CacheBackend, CacheError, CacheKey, CacheTtlConfig, MediaType, S
 pub use providers::anilist::error::{AniListErrorLocation, AniListGqlError};
 #[cfg(feature = "anilist")]
 pub use providers::anilist::{AniListClient, AniListConfig, AniListError};
-#[cfg(any(feature = "tmdb", feature = "anilist"))]
+#[cfg(any(feature = "tmdb", feature = "anilist", feature = "tvdb"))]
 pub use providers::rate_limit::RateLimit;
-#[cfg(any(feature = "tmdb", feature = "anilist"))]
+#[cfg(any(feature = "tmdb", feature = "anilist", feature = "tvdb"))]
 pub use providers::retry::RetryPolicy;
 #[cfg(feature = "tmdb")]
 pub use providers::tmdb::{TmdbAuth, TmdbClient, TmdbConfig, TmdbError};
+#[cfg(feature = "tvdb")]
+pub use providers::tvdb::{TvdbClient, TvdbConfig, TvdbError};
 pub use unified::{
     AlternativeTitle, CameoClient, CameoClientBuilder, CameoClientError, Capability, Collection,
     Company, Creator, CreditsProvider, DetailProvider, DiscoveryProvider, ExternalId,

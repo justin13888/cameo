@@ -5,12 +5,14 @@ use super::cache::Cache;
 use super::{CameoClient, CameoClientError};
 #[cfg(feature = "cache")]
 use crate::cache::{CacheBackend, CacheTtlConfig, SqliteCache};
-#[cfg(any(feature = "tmdb", feature = "anilist"))]
+#[cfg(any(feature = "tmdb", feature = "anilist", feature = "tvdb"))]
 use crate::core::error::ProviderError;
 #[cfg(feature = "anilist")]
 use crate::providers::anilist::AniListConfig;
 #[cfg(feature = "tmdb")]
 use crate::providers::tmdb::TmdbConfig;
+#[cfg(feature = "tvdb")]
+use crate::providers::tvdb::TvdbConfig;
 use crate::unified::traits::{
     CreditsProvider, DetailProvider, DiscoveryProvider, ExternalIdProvider, RecommendationProvider,
     SearchProvider, SeasonProvider, WatchAvailabilityProvider,
@@ -18,8 +20,9 @@ use crate::unified::traits::{
 
 /// Builder for constructing a [`CameoClient`].
 ///
-/// Built-in providers are configured with [`with_tmdb`](Self::with_tmdb) /
-/// [`with_anilist`](Self::with_anilist). Out-of-crate providers register
+/// Built-in providers are configured with [`with_tmdb`](Self::with_tmdb),
+/// [`with_anilist`](Self::with_anilist) and `with_tvdb` (with the `tvdb`
+/// feature). Out-of-crate providers register
 /// themselves with the `register_*_provider` methods (one per capability trait
 /// they implement) — adding a provider requires no facade changes.
 #[derive(Default)]
@@ -28,6 +31,8 @@ pub struct CameoClientBuilder {
     tmdb_config: Option<TmdbConfig>,
     #[cfg(feature = "anilist")]
     anilist_config: Option<AniListConfig>,
+    #[cfg(feature = "tvdb")]
+    tvdb_config: Option<TvdbConfig>,
 
     ext_search: Vec<Arc<dyn SearchProvider>>,
     ext_detail: Vec<Arc<dyn DetailProvider>>,
@@ -66,6 +71,18 @@ impl CameoClientBuilder {
     #[cfg(feature = "anilist")]
     pub fn with_anilist(mut self, config: AniListConfig) -> Self {
         self.anilist_config = Some(config);
+        self
+    }
+
+    /// Configure the TheTVDB provider, which answers search, details,
+    /// seasons and external ids for `tvdb:*` ids.
+    ///
+    /// It registers after TMDB and AniList, so it answers a search only when
+    /// selected by id (`search_*_with("tvdb", ..)`) or ranked first by
+    /// [`with_priority`](Self::with_priority).
+    #[cfg(feature = "tvdb")]
+    pub fn with_tvdb(mut self, config: TvdbConfig) -> Self {
+        self.tvdb_config = Some(config);
         self
     }
 
@@ -195,7 +212,7 @@ impl CameoClientBuilder {
             cache: None,
         };
 
-        // Built-in providers register first (TMDB, then AniList) so the default
+        // Built-in providers register first (TMDB, AniList, then TheTVDB) so the default
         // priority is preserved.
         #[cfg(feature = "tmdb")]
         if let Some(config) = self.tmdb_config {
@@ -223,6 +240,16 @@ impl CameoClientBuilder {
             client.recommendation.push(anilist.clone());
             client.external.push(anilist.clone());
             client.credits.push(anilist);
+        }
+        #[cfg(feature = "tvdb")]
+        if let Some(config) = self.tvdb_config {
+            let tvdb = Arc::new(
+                crate::providers::tvdb::TvdbClient::new(config).map_err(ProviderError::from)?,
+            );
+            client.search.push(tvdb.clone());
+            client.detail.push(tvdb.clone());
+            client.season.push(tvdb.clone());
+            client.external.push(tvdb);
         }
 
         // Out-of-crate providers register last.
