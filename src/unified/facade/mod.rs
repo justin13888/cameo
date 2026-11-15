@@ -442,11 +442,7 @@ impl CameoClient {
 
     /// Resolve the first provider in `list`, or the right "no provider" error.
     fn require<'a, T: ?Sized>(&self, list: &'a [Arc<T>]) -> Result<&'a Arc<T>, CameoClientError> {
-        match list.first() {
-            Some(provider) => Ok(provider),
-            None if self.any_provider() => Err(CameoClientError::Unsupported),
-            None => Err(CameoClientError::NotConfigured),
-        }
+        list.first().ok_or_else(|| self.no_provider_error())
     }
 
     /// Route to the provider in `list` matching a [`MediaId`]'s origin.
@@ -466,11 +462,7 @@ impl CameoClient {
         if let Some(provider) = list.iter().find(|p| p.id() == id.provider()) {
             return Ok(provider);
         }
-        if !self.any_provider() {
-            Err(CameoClientError::NotConfigured)
-        } else {
-            Err(CameoClientError::Unsupported)
-        }
+        Err(self.no_provider_error())
     }
 
     /// Select a provider in `list` by its id (per-call provider override), or
@@ -483,11 +475,7 @@ impl CameoClient {
         if let Some(provider) = list.iter().find(|p| p.id() == provider_id) {
             return Ok(provider);
         }
-        if !self.any_provider() {
-            Err(CameoClientError::NotConfigured)
-        } else {
-            Err(CameoClientError::Unsupported)
-        }
+        Err(self.no_provider_error())
     }
 
     // ── Cache helpers ─────────────────────────────────────────────────────────
