@@ -22,9 +22,11 @@ pub(crate) fn join_ids(ids: &[u64]) -> String {
 pub(crate) fn tmdb_date(date: Option<NaiveDate>) -> Result<Option<generated::Date>, TmdbError> {
     date.map(|d| {
         d.format("%Y-%m-%d").to_string().parse().map_err(|_| {
-            TmdbError::from_generated(generated::Error::<std::convert::Infallible>::request_message(
-                format!("date {d} is outside the RFC 3339 full-date range"),
-            ))
+            TmdbError::from_generated(
+                generated::Error::<std::convert::Infallible>::request_message(format!(
+                    "date {d} is outside the RFC 3339 full-date range"
+                )),
+            )
         })
     })
     .transpose()

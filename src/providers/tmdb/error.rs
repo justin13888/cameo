@@ -253,16 +253,33 @@ impl TmdbError {
 
 /// `err` and each of its sources, joined with `": "`, skipping a source whose
 /// text its parent already ends with.
+///
+/// A `reqwest::Error` in the chain prints its request URL; every such URL is
+/// written without its query string (where a v3 `api_key` travels).
 fn error_chain(err: &(dyn std::error::Error + 'static)) -> String {
     let mut out = err.to_string();
-    let mut source = err.source();
-    while let Some(e) = source {
-        let text = e.to_string();
-        if !out.ends_with(&text) {
-            out.push_str(": ");
-            out.push_str(&text);
+    let mut urls = Vec::new();
+    let mut current = Some(err);
+    while let Some(e) = current {
+        if let Some(url) = e
+            .downcast_ref::<reqwest::Error>()
+            .and_then(reqwest::Error::url)
+        {
+            urls.push(url.clone());
         }
-        source = e.source();
+        if !std::ptr::addr_eq(e, err) {
+            let text = e.to_string();
+            if !out.ends_with(&text) {
+                out.push_str(": ");
+                out.push_str(&text);
+            }
+        }
+        current = e.source();
+    }
+    for url in urls {
+        let mut bare = url.clone();
+        bare.set_query(None);
+        out = out.replace(url.as_str(), bare.as_str());
     }
     out
 }
@@ -329,7 +346,9 @@ mod tests {
     #[test]
     fn redact_api_key_replaces_every_value() {
         assert_eq!(
-            redact_api_key("error sending request for url (http://h/3/movie/1?api_key=SECRET&language=en)"),
+            redact_api_key(
+                "error sending request for url (http://h/3/movie/1?api_key=SECRET&language=en)"
+            ),
             "error sending request for url (http://h/3/movie/1?api_key=<redacted>&language=en)"
         );
         assert_eq!(

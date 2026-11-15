@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     core::{config::TimeWindow, pagination::Page},
-    generated::tmdb::{self, types, Credential, SecretString},
+    generated::tmdb::{self, Credential, SecretString, types},
     providers::rate_limit::RateLimiter,
     unified::{
         conversions::tmdb::TmdbListItem,
