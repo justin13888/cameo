@@ -20,9 +20,9 @@ use crate::unified::traits::{
 
 /// Builder for constructing a [`CameoClient`].
 ///
-/// Built-in providers are configured with [`with_tmdb`](Self::with_tmdb),
-/// [`with_anilist`](Self::with_anilist) and `with_tvdb` (with the `tvdb`
-/// feature). Out-of-crate providers register
+/// Built-in providers are configured with `with_tmdb`, `with_anilist` and
+/// `with_tvdb`, each available with the provider feature of the same name.
+/// Out-of-crate providers register
 /// themselves with the `register_*_provider` methods (one per capability trait
 /// they implement) — adding a provider requires no facade changes.
 #[derive(Default)]
