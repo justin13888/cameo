@@ -95,6 +95,44 @@ proptest! {
         let back: MediaId = serde_json::from_str(&json).expect("deserialize");
         prop_assert_eq!(back, id);
     }
+
+    /// Any parseable string displays back as itself, and re-parsing that
+    /// rendering yields the same id: parsing never normalises a native part.
+    #[test]
+    fn media_id_parse_display_round_trips(s in "[a-z]{1,4}:[+0-9a-z:]{1,12}") {
+        let id = MediaId::parse(&s).expect("provider and native are non-empty");
+        prop_assert_eq!(id.to_string(), s.clone());
+        prop_assert_eq!(MediaId::parse(&id.to_string()).unwrap(), id);
+    }
+
+    /// A media id's string form parses back to the same id for every
+    /// canonical id, including text natives that look like a non-canonical
+    /// number.
+    #[test]
+    fn media_id_canonical_display_parse_round_trips(id in canonical_media_id()) {
+        prop_assert_eq!(MediaId::parse(&id.to_string()).unwrap(), id);
+    }
+
+    /// `id == s` holds exactly when `id.to_string() == s`. The small alphabet
+    /// makes matches, sign and leading-zero near misses all common.
+    #[test]
+    fn media_id_eq_str_matches_display(
+        id in small_media_id(),
+        s in "[ab]{0,1}:{0,2}[+0-9a]{0,3}",
+    ) {
+        prop_assert_eq!(id == *s.as_str(), id.to_string() == s);
+        prop_assert!(id == *id.to_string().as_str());
+    }
+}
+
+/// Media ids over a deliberately tiny alphabet, so generated strings often
+/// equal or nearly equal their rendering.
+fn small_media_id() -> impl Strategy<Value = MediaId> {
+    prop_oneof![
+        ("[ab]", 0u64..12).prop_map(|(provider, n)| MediaId::new(provider, NativeId::Num(n))),
+        ("[ab]", "[+0-9a:]{1,3}")
+            .prop_map(|(provider, text)| MediaId::new(provider, NativeId::Text(text))),
+    ]
 }
 
 /// Every TMDB genre id `Genre::from_tmdb_id` recognises.
@@ -104,9 +142,12 @@ const KNOWN_TMDB_GENRE_IDS: [i64; 27] = [
 ];
 
 /// Media ids whose string form parses back to the same id: numeric natives,
-/// AniList staff ids, and text natives that do not read as a number.
+/// AniList staff ids, text natives that do not read as a number, and text
+/// natives that read as a non-canonical number (a sign or a leading zero).
 fn canonical_media_id() -> impl Strategy<Value = MediaId> {
     prop_oneof![
+        ("[a-z]{1,8}", "(\\+[0-9]{1,6}|0[0-9]{1,6})")
+            .prop_map(|(provider, text)| MediaId::new(provider, NativeId::Text(text))),
         any::<u64>().prop_map(MediaId::tmdb),
         any::<u64>().prop_map(MediaId::anilist),
         any::<u64>().prop_map(MediaId::anilist_staff),
