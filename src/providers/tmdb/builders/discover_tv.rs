@@ -12,7 +12,7 @@ use crate::{
 ///
 /// The ~15 filters shared with
 /// [`DiscoverMoviesBuilder`](super::DiscoverMoviesBuilder) come from the shared
-/// setter core in [`super::params`]; the setters below are
+/// setter core in the builders' `params` module; the setters below are
 /// TV-specific. Provider ID filters take `&[u64]` slices and coded filters take
 /// typed enums.
 ///
@@ -21,7 +21,7 @@ use crate::{
 /// ```no_run
 /// # async fn example(client: &cameo::providers::tmdb::TmdbClient) -> Result<(), cameo::providers::tmdb::TmdbError> {
 /// use cameo::Genre;
-/// use cameo::providers::tmdb::builders::TvSortBy;
+/// use cameo::providers::tmdb::TvSortBy;
 /// let results = client
 ///     .discover_tv()
 ///     .sort_by(TvSortBy::PopularityDesc)

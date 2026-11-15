@@ -3,8 +3,7 @@
 //! must have their URL stripped; config/client `Debug` must redact secrets.
 
 use cameo::{
-    RetryPolicy,
-    core::error::ProviderError,
+    ProviderError, RetryPolicy,
     providers::tmdb::{TmdbAuth, TmdbClient, TmdbConfig, TmdbError},
     unified::CameoClient,
 };

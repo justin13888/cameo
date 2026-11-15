@@ -10,7 +10,7 @@ use std::time::Duration;
 /// # Matching on variants
 ///
 /// ```
-/// use cameo::core::error::ProviderError;
+/// use cameo::ProviderError;
 ///
 /// fn handle(err: ProviderError) {
 ///     match err {

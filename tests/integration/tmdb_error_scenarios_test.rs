@@ -203,7 +203,7 @@ async fn connection_closed_without_response_is_transport_error() {
 /// `ProviderError::InvalidInput`.
 #[tokio::test]
 async fn unbuildable_request_is_invalid_request_error() {
-    use cameo::providers::tmdb::error::RequestErrorKind;
+    use cameo::providers::tmdb::RequestErrorKind;
 
     let (server, client) = setup_tmdb_client().await;
 

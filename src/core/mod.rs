@@ -1,6 +1,13 @@
+//! The leaf modules are private; every item is re-exported here and from the
+//! crate root, which is its canonical path.
+
 /// Shared configuration types.
-pub mod config;
+pub(crate) mod config;
 /// Provider-agnostic error type.
-pub mod error;
+pub(crate) mod error;
 /// Pagination helpers.
-pub mod pagination;
+pub(crate) mod pagination;
+
+pub use config::TimeWindow;
+pub use error::ProviderError;
+pub use pagination::{Page, PageToken, into_stream};

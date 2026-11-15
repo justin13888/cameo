@@ -5,10 +5,8 @@ use std::collections::BTreeMap;
 use cameo::{
     Genre, ProviderError, UnknownGenre,
     providers::tmdb::{
-        TmdbClient, TmdbConfig, TmdbError,
-        builders::{
-            MonetizationType, MovieReleaseType, MovieSortBy, TvShowType, TvSortBy, TvStatus,
-        },
+        MonetizationType, MovieReleaseType, MovieSortBy, TmdbClient, TmdbConfig, TmdbError,
+        TvShowType, TvSortBy, TvStatus,
     },
     unified::{CameoClient, CameoClientError},
 };

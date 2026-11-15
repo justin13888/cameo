@@ -125,7 +125,7 @@ fn tmdb_config_is_eq() {
 #[cfg(feature = "tmdb")]
 #[test]
 fn image_url_has_common_traits() {
-    use cameo::providers::tmdb::image_url::ImageUrl;
+    use cameo::providers::tmdb::ImageUrl;
     fn assert_copy_hash<T: Copy + std::hash::Hash>() {}
     assert_traits::<ImageUrl>();
     assert_copy_hash::<ImageUrl>();

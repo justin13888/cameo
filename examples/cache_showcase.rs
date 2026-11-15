@@ -11,8 +11,7 @@ use std::{
 };
 
 use cameo::{
-    CacheTtlConfig, CameoClient, MediaId, SqliteCache, core::config::TimeWindow,
-    providers::tmdb::TmdbConfig,
+    CacheTtlConfig, CameoClient, MediaId, SqliteCache, TimeWindow, providers::tmdb::TmdbConfig,
 };
 
 #[tokio::main]

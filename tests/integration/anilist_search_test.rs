@@ -1,7 +1,7 @@
 use cameo::{
     AlternativeTitle, SeriesStatus, TitleKind,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
-    unified::models::UnifiedSearchResult,
+    unified::UnifiedSearchResult,
 };
 use serde_json::{Value, json};
 use wiremock::{

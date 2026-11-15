@@ -5,11 +5,10 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use cameo::{
-    MediaId, Page,
-    core::error::ProviderError,
+    MediaId, Page, ProviderError,
     unified::{
-        CameoClient, CameoClientError, Capability, Provider, SearchProvider,
-        models::{UnifiedMovie, UnifiedPerson, UnifiedSearchResult, UnifiedTvShow},
+        CameoClient, CameoClientError, Capability, Provider, SearchProvider, UnifiedMovie,
+        UnifiedPerson, UnifiedSearchResult, UnifiedTvShow,
     },
 };
 

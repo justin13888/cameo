@@ -177,7 +177,7 @@ async fn live_trending_tv_returns_page() {
 #[cfg(feature = "live-tests")]
 #[tokio::test]
 async fn live_discover_tv_with_filters() {
-    use cameo::providers::tmdb::builders::TvSortBy;
+    use cameo::providers::tmdb::TvSortBy;
 
     let c = client();
     let resp = c
@@ -331,7 +331,7 @@ async fn tv_series_details_in_production_true_is_some_true() {
 async fn search_tv_with_body(
     body: serde_json::Value,
     page: Option<u32>,
-) -> cameo::core::pagination::Page<cameo::UnifiedTvShow> {
+) -> cameo::Page<cameo::UnifiedTvShow> {
     let (server, client) = setup_mock_client().await;
     Mock::given(method("GET"))
         .and(path("/3/search/tv"))

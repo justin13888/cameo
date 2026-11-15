@@ -1,10 +1,7 @@
 //! Every `MovieSortBy` / `TvSortBy` variant puts its own TMDB wire string in
 //! the discover request's `sort_by` parameter.
 
-use cameo::providers::tmdb::{
-    TmdbClient, TmdbConfig,
-    builders::{MovieSortBy, TvSortBy},
-};
+use cameo::providers::tmdb::{MovieSortBy, TmdbClient, TmdbConfig, TvSortBy};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},

@@ -9,9 +9,8 @@
 
 use cameo::{
     CameoClient, MediaId,
-    core::config::TimeWindow,
     providers::{anilist::AniListConfig, tmdb::TmdbConfig},
-    unified::{CameoClientError, models::UnifiedSearchResult},
+    unified::{CameoClientError, TimeWindow, UnifiedSearchResult},
 };
 
 #[tokio::main]

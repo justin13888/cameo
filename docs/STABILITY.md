@@ -17,6 +17,26 @@ marked otherwise is part of the stable API and follows [SemVer](https://semver.o
   hand-owned result types they return;
 - the cache contract (`CacheBackend`, `CacheKey`, `CacheError`).
 
+### Canonical paths
+
+Each public item is reachable through its area module, and the most common
+items also through the crate root. These are the only public paths:
+
+| Module | Holds |
+| --- | --- |
+| `cameo` (crate root) | the common items of every module below |
+| `cameo::unified` | models, `Genre`, `PartialDate`, `MediaId`, the provider traits, `CameoClient`, and `TimeWindow` |
+| `cameo::core` | `Page`, `PageToken`, `into_stream`, `ProviderError`, `TimeWindow` |
+| `cameo::providers` | `RateLimit`, `RetryPolicy` |
+| `cameo::providers::tmdb` | `TmdbClient`, its config, errors, discover builders, image URL helpers, and result types |
+| `cameo::providers::anilist` | `AniListClient`, its config, errors, and the anime discovery builder |
+| `cameo::providers::tvdb` | `TvdbClient`, its config, errors, and records |
+| `cameo::cache` | `CacheBackend`, `CacheKey`, `CacheError`, `CacheTtlConfig`, `SqliteCache` |
+
+The modules that hold the definitions (`unified::models`, `core::pagination`,
+`providers::tmdb::client`, `cache::key`, …) are private, so moving an item
+between files is never a public change.
+
 **Not** part of the stable API (may change in any release):
 
 - anything gated behind the `live-tests` feature or documented as internal;

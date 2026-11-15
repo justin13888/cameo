@@ -4,8 +4,7 @@
 use std::time::Duration;
 
 use cameo::{
-    RateLimit, RetryPolicy,
-    core::error::ProviderError,
+    ProviderError, RateLimit, RetryPolicy,
     providers::tvdb::{TvdbClient, TvdbConfig, TvdbError, TvdbSearchType},
     unified::{
         DetailProvider, ExternalIdProvider, Genre, MediaId, SearchProvider, SeasonProvider,

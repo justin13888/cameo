@@ -3,7 +3,7 @@ use std::sync::{
     atomic::{AtomicU32, Ordering},
 };
 
-use cameo::core::pagination::{Page, PageToken, into_stream};
+use cameo::{Page, PageToken, into_stream};
 use futures::StreamExt;
 use proptest::prelude::*;
 

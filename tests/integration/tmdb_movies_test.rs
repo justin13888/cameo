@@ -259,7 +259,7 @@ async fn movie_details_null_id_falls_back_to_requested_id() {
 async fn search_movies_with_body(
     body: serde_json::Value,
     page: Option<u32>,
-) -> cameo::core::pagination::Page<cameo::UnifiedMovie> {
+) -> cameo::Page<cameo::UnifiedMovie> {
     let (server, client) = setup_mock_client().await;
     Mock::given(method("GET"))
         .and(path("/3/search/movie"))

@@ -8,8 +8,7 @@
 
 use cameo::{
     AniListClient, AniListConfig,
-    core::config::TimeWindow,
-    unified::{CameoClient, models::UnifiedSearchResult},
+    unified::{CameoClient, TimeWindow, UnifiedSearchResult},
 };
 
 #[tokio::main]
