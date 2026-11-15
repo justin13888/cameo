@@ -49,6 +49,7 @@ fn build_movie_and_details() {
                 .with_poster_url("x"),
         );
     assert_eq!(details.runtime, Some(139));
+    assert_eq!(details.video, Some(false));
     assert_eq!(details.production_companies[0].name, "Fox");
 }
 
@@ -96,6 +97,7 @@ fn build_tv_show_and_details() {
                 .with_poster_url("s1.jpg"),
         ]);
     assert_eq!(details.number_of_seasons, Some(5));
+    assert_eq!(details.in_production, Some(false));
     assert_eq!(details.networks[0].name, "AMC");
     assert_eq!(details.seasons[0].season_number, 1);
 }

@@ -238,11 +238,12 @@ impl<'a> DiscoverTvBuilder<'a> {
             )
             .await?;
         let body = resp.into_inner();
-        Ok(Page::offset(
-            body.page as u32,
+        Ok(crate::providers::tmdb::client::offset_page(
+            self.page,
+            body.page,
             body.results,
-            body.total_pages as u32,
-            body.total_results as u32,
+            body.total_pages,
+            body.total_results,
         )
         .map(Into::into))
     }
