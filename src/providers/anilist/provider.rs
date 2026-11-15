@@ -1,8 +1,12 @@
 //! Unified provider-trait implementations for [`AniListClient`].
 //!
-//! AniList supports search, details, discovery, recommendations, and external
-//! ids.
+//! AniList supports search, details, discovery, recommendations, credits, and
+//! external ids.
 //!
+//! - **Credits:** [`CreditsProvider::movie_credits`] and
+//!   [`CreditsProvider::tv_show_credits`] share one query, built from the
+//!   anime's characters (with their Japanese voice actors) and staff; see
+//!   [`AniListClient::media_credits`].
 //! - **External ids:** MyAnimeList only, via
 //!   [`AniListClient::external_ids`] and [`AniListClient::find_by_mal_id`].
 //! - **Recommendations:** [`RecommendationProvider::movie_recommendations`] and
@@ -31,12 +35,12 @@ use crate::{
         external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         media_id::{MediaId, NativeId},
         models::{
-            UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
+            UnifiedCredits, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
             UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
         },
         traits::{
-            Capability, DetailProvider, DiscoveryProvider, ExternalIdProvider, Provider,
-            RecommendationProvider, SearchProvider,
+            Capability, CreditsProvider, DetailProvider, DiscoveryProvider, ExternalIdProvider,
+            Provider, RecommendationProvider, SearchProvider,
         },
     },
 };
@@ -47,6 +51,7 @@ const ANILIST_CAPABILITIES: &[Capability] = &[
     Capability::Discovery,
     Capability::Recommendations,
     Capability::ExternalIds,
+    Capability::Credits,
 ];
 
 /// External sources AniList can look anime up by.
@@ -176,6 +181,19 @@ impl DiscoveryProvider for AniListClient {
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
         Ok(AniListClient::top_rated_tv_shows(self, page).await?)
+    }
+}
+
+/// Credits are fetched per anime regardless of format, so the movie and TV
+/// variants share one query.
+#[async_trait]
+impl CreditsProvider for AniListClient {
+    async fn movie_credits(&self, id: &MediaId) -> Result<UnifiedCredits, ProviderError> {
+        Ok(AniListClient::media_credits(self, anilist_id(id)?).await?)
+    }
+
+    async fn tv_show_credits(&self, id: &MediaId) -> Result<UnifiedCredits, ProviderError> {
+        Ok(AniListClient::media_credits(self, anilist_id(id)?).await?)
     }
 }
 

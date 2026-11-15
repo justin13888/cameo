@@ -1,6 +1,8 @@
 #![allow(missing_docs)]
 mod integration {
     #[cfg(feature = "anilist")]
+    mod anilist_credits_test;
+    #[cfg(feature = "anilist")]
     mod anilist_details_test;
     #[cfg(feature = "anilist")]
     mod anilist_discover_test;

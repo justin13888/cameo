@@ -382,6 +382,64 @@ pub struct UnifiedPersonDetails {
     pub also_known_as: Vec<String>,
 }
 
+/// The cast and crew credited on a movie or TV show.
+///
+/// Returned by [`CameoClient::movie_credits`](crate::unified::CameoClient::movie_credits)
+/// and [`CameoClient::tv_show_credits`](crate::unified::CameoClient::tv_show_credits).
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct UnifiedCredits {
+    /// Provider-qualified id of the title these credits belong to (e.g. `tmdb:550`).
+    pub provider_id: MediaId,
+    /// Cast credits, in the provider's billing order.
+    pub cast: Vec<UnifiedCastCredit>,
+    /// Crew credits, in the provider's order.
+    pub crew: Vec<UnifiedCrewCredit>,
+}
+
+/// One cast credit: a person playing (or voicing) a character.
+///
+/// A person credited for several characters appears once per character.
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct UnifiedCastCredit {
+    /// Provider-qualified person id (e.g. `tmdb:287`, `anilist:staff:95061`),
+    /// usable with [`person_details`](crate::unified::CameoClient::person_details).
+    pub person_id: MediaId,
+    /// The person's name.
+    pub name: String,
+    /// Full profile image URL of the person.
+    pub profile_url: Option<String>,
+    /// The character played or voiced, if credited.
+    pub character: Option<String>,
+    /// Billing order (`0` = top-billed), if the provider reports one.
+    pub order: Option<u32>,
+    /// The person's gender, if the provider reports it.
+    pub gender: Option<Gender>,
+}
+
+/// One crew credit: a person in a production role.
+///
+/// A person credited for several jobs appears once per job.
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct UnifiedCrewCredit {
+    /// Provider-qualified person id (e.g. `tmdb:7467`, `anilist:staff:95061`),
+    /// usable with [`person_details`](crate::unified::CameoClient::person_details).
+    pub person_id: MediaId,
+    /// The person's name.
+    pub name: String,
+    /// Full profile image URL of the person.
+    pub profile_url: Option<String>,
+    /// The specific job (e.g. TMDB `"Director"`, AniList `"Key Animation (ep 5)"`).
+    pub job: Option<String>,
+    /// The department the job belongs to (e.g. `"Directing"`), if the
+    /// provider reports one. AniList reports none.
+    pub department: Option<String>,
+    /// The person's gender, if the provider reports it.
+    pub gender: Option<Gender>,
+}
+
 /// A search result that can be a movie, TV show, or person.
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -407,3 +407,70 @@ async fn find_by_external_id_unsupported_source() {
         "expected Unsupported, got {result:?}"
     );
 }
+
+// ── Credits: registration and routing (#58) ───────────────────────────────────
+
+/// A credits provider whose credits name the provider in the single cast
+/// entry, so tests can see which provider was routed to.
+struct CreditsStub(&'static str);
+
+impl Provider for CreditsStub {
+    fn id(&self) -> &str {
+        self.0
+    }
+    fn capabilities(&self) -> &[Capability] {
+        &[Capability::Credits]
+    }
+}
+
+#[async_trait]
+impl cameo::CreditsProvider for CreditsStub {
+    async fn movie_credits(&self, id: &MediaId) -> Result<cameo::UnifiedCredits, ProviderError> {
+        Ok(
+            cameo::UnifiedCredits::new(id.clone()).with_cast(vec![cameo::UnifiedCastCredit::new(
+                id.clone(),
+                format!("{}-movie", self.0),
+            )]),
+        )
+    }
+    async fn tv_show_credits(&self, id: &MediaId) -> Result<cameo::UnifiedCredits, ProviderError> {
+        Ok(
+            cameo::UnifiedCredits::new(id.clone()).with_crew(vec![cameo::UnifiedCrewCredit::new(
+                id.clone(),
+                format!("{}-tv", self.0),
+            )]),
+        )
+    }
+}
+
+/// A registered credits provider is a configured provider, and credits
+/// lookups route by id origin.
+#[tokio::test]
+async fn credits_provider_registers_and_routes_by_id_origin() {
+    use cameo::NativeId;
+    let client = CameoClient::builder()
+        .register_credits_provider(Arc::new(CreditsStub("alpha")))
+        .register_credits_provider(Arc::new(CreditsStub("beta")))
+        .build()
+        .expect("a registered credits provider is a configured provider");
+    assert_eq!(client.provider_ids(), vec!["alpha", "beta"]);
+
+    let beta = client
+        .movie_credits(&MediaId::new("beta", NativeId::Num(1)))
+        .await
+        .unwrap();
+    assert_eq!(beta.cast[0].name, "beta-movie");
+    let alpha = client
+        .tv_show_credits(&MediaId::new("alpha", NativeId::Num(1)))
+        .await
+        .unwrap();
+    assert_eq!(alpha.crew[0].name, "alpha-tv");
+
+    let gamma = client
+        .movie_credits(&MediaId::new("gamma", NativeId::Num(1)))
+        .await;
+    assert!(
+        matches!(gamma, Err(CameoClientError::Unsupported)),
+        "unknown-origin id should be Unsupported, got {gamma:?}"
+    );
+}

@@ -15,6 +15,7 @@
 //!   details requests fill in the requested id before converting, and list or
 //!   search items without an id are dropped (see [`TmdbListItem`]).
 
+pub mod credits;
 pub mod movie;
 pub mod person;
 pub mod tv;

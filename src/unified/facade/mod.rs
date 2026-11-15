@@ -16,12 +16,13 @@ use crate::{
     unified::{
         media_id::MediaId,
         traits::{
-            DetailProvider, DiscoveryProvider, ExternalIdProvider, Provider,
+            CreditsProvider, DetailProvider, DiscoveryProvider, ExternalIdProvider, Provider,
             RecommendationProvider, SearchProvider, SeasonProvider, WatchAvailabilityProvider,
         },
     },
 };
 
+mod credits;
 mod detail;
 mod discovery;
 mod external_ids;
@@ -144,6 +145,7 @@ pub struct CameoClientBuilder {
     ext_season: Vec<Arc<dyn SeasonProvider>>,
     ext_watch: Vec<Arc<dyn WatchAvailabilityProvider>>,
     ext_external: Vec<Arc<dyn ExternalIdProvider>>,
+    ext_credits: Vec<Arc<dyn CreditsProvider>>,
 
     /// Provider priority order (by id); providers not listed keep their default
     /// (registration) order after the prioritized ones.
@@ -234,6 +236,12 @@ impl CameoClientBuilder {
         self
     }
 
+    /// Register an out-of-crate credits (cast and crew) provider.
+    pub fn register_credits_provider(mut self, provider: Arc<dyn CreditsProvider>) -> Self {
+        self.ext_credits.push(provider);
+        self
+    }
+
     /// Enable caching with the default SQLite backend.
     #[cfg(feature = "cache")]
     pub fn with_cache(self) -> Self {
@@ -273,6 +281,7 @@ impl CameoClientBuilder {
             season: Vec::new(),
             watch: Vec::new(),
             external: Vec::new(),
+            credits: Vec::new(),
             #[cfg(feature = "cache")]
             cache: None,
         };
@@ -290,7 +299,8 @@ impl CameoClientBuilder {
             client.recommendation.push(tmdb.clone());
             client.season.push(tmdb.clone());
             client.watch.push(tmdb.clone());
-            client.external.push(tmdb);
+            client.external.push(tmdb.clone());
+            client.credits.push(tmdb);
         }
         #[cfg(feature = "anilist")]
         if let Some(config) = self.anilist_config {
@@ -302,7 +312,8 @@ impl CameoClientBuilder {
             client.detail.push(anilist.clone());
             client.discovery.push(anilist.clone());
             client.recommendation.push(anilist.clone());
-            client.external.push(anilist);
+            client.external.push(anilist.clone());
+            client.credits.push(anilist);
         }
 
         // Out-of-crate providers register last.
@@ -313,6 +324,7 @@ impl CameoClientBuilder {
         client.season.extend(self.ext_season);
         client.watch.extend(self.ext_watch);
         client.external.extend(self.ext_external);
+        client.credits.extend(self.ext_credits);
 
         client.apply_priority(&self.priority);
 
@@ -345,8 +357,8 @@ impl CameoClientBuilder {
 /// Results are **not merged** across providers. A search/discovery call is
 /// answered by a single provider — the highest-priority one supporting the
 /// capability (configurable via [`CameoClientBuilder::with_priority`], overridable
-/// per-call via the `*_with` methods). Detail/recommendation/season/watch and
-/// external-id lookups are **routed by [`MediaId`] origin**: an `anilist:*` id
+/// per-call via the `*_with` methods). Detail/recommendation/season/watch,
+/// credits, and external-id lookups are **routed by [`MediaId`] origin**: an `anilist:*` id
 /// is always answered by AniList and never sent to TMDB. The one exception is
 /// [`find_by_external_id`](CameoClient::find_by_external_id), which has no
 /// origin to route by: it queries every provider accepting the id's source and
@@ -360,6 +372,7 @@ pub struct CameoClient {
     season: Vec<Arc<dyn SeasonProvider>>,
     watch: Vec<Arc<dyn WatchAvailabilityProvider>>,
     external: Vec<Arc<dyn ExternalIdProvider>>,
+    credits: Vec<Arc<dyn CreditsProvider>>,
     #[cfg(feature = "cache")]
     cache: Option<Cache>,
 }
@@ -393,6 +406,7 @@ impl CameoClient {
             self.season.iter().map(|p| p.id()).collect(),
             self.watch.iter().map(|p| p.id()).collect(),
             self.external.iter().map(|p| p.id()).collect(),
+            self.credits.iter().map(|p| p.id()).collect(),
         ]
         .concat()
         {
@@ -417,6 +431,7 @@ impl CameoClient {
         self.season.sort_by_key(|p| rank(p.id()));
         self.watch.sort_by_key(|p| rank(p.id()));
         self.external.sort_by_key(|p| rank(p.id()));
+        self.credits.sort_by_key(|p| rank(p.id()));
     }
 
     /// Whether any provider is registered for any capability.
@@ -428,6 +443,7 @@ impl CameoClient {
             || !self.season.is_empty()
             || !self.watch.is_empty()
             || !self.external.is_empty()
+            || !self.credits.is_empty()
     }
 
     /// The "no provider" error for a capability with no eligible provider:

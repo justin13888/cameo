@@ -178,6 +178,45 @@ query MediaByMalId($idMal: Int!) {
 }
 "#;
 
+/// Fetch one page of an anime's characters (with their Japanese voice actors)
+/// and one page of its staff, by AniList ID.
+///
+/// Both connections are paged by their own variable so a caller can walk each
+/// until its `hasNextPage` is false. Characters sort main roles first
+/// (`ROLE`), then by relevance; staff sort by relevance.
+///
+/// Variables: `$id: Int!`, `$characterPage: Int`, `$staffPage: Int`,
+/// `$perPage: Int`.
+pub const MEDIA_CREDITS: &str = r#"
+query MediaCredits($id: Int!, $characterPage: Int, $staffPage: Int, $perPage: Int) {
+  Media(id: $id, type: ANIME) {
+    id
+    characters(page: $characterPage, perPage: $perPage, sort: [ROLE, RELEVANCE, ID]) {
+      pageInfo { hasNextPage }
+      edges {
+        node { name { full } }
+        voiceActors(language: JAPANESE, sort: [RELEVANCE, ID]) {
+          id
+          name { full }
+          image { large }
+        }
+      }
+    }
+    staff(page: $staffPage, perPage: $perPage, sort: [RELEVANCE, ID]) {
+      pageInfo { hasNextPage }
+      edges {
+        role
+        node {
+          id
+          name { full }
+          image { large }
+        }
+      }
+    }
+  }
+}
+"#;
+
 /// Search staff (real people) by name.
 ///
 /// Variables: `$query: String`, `$page: Int`, `$perPage: Int`.
@@ -229,6 +268,7 @@ mod tests {
         ("MEDIA_DETAILS", MEDIA_DETAILS),
         ("MEDIA_EXTERNAL_IDS", MEDIA_EXTERNAL_IDS),
         ("MEDIA_BY_MAL_ID", MEDIA_BY_MAL_ID),
+        ("MEDIA_CREDITS", MEDIA_CREDITS),
         ("SEARCH_STAFF", SEARCH_STAFF),
         ("STAFF_DETAILS", STAFF_DETAILS),
     ];
@@ -315,6 +355,18 @@ mod tests {
         for dead in ["endDate", "studios", "season"] {
             assert!(!MEDIA_RECOMMENDATIONS.contains(dead), "dead field {dead}");
         }
+    }
+
+    /// The credits query pages characters and staff independently and selects
+    /// exactly the fields the credits conversion reads.
+    #[test]
+    fn credits_query_pages_each_connection_and_selects_voice_actors() {
+        assert!(MEDIA_CREDITS.contains("characters(page: $characterPage, perPage: $perPage"));
+        assert!(MEDIA_CREDITS.contains("staff(page: $staffPage, perPage: $perPage"));
+        assert_eq!(MEDIA_CREDITS.matches("pageInfo { hasNextPage }").count(), 2);
+        assert!(MEDIA_CREDITS.contains("voiceActors(language: JAPANESE"));
+        assert!(MEDIA_CREDITS.contains("role"));
+        assert_eq!(MEDIA_CREDITS.matches("image { large }").count(), 2);
     }
 
     /// The discover query passes every filter as a variable — no filter value

@@ -13,9 +13,9 @@ use super::{
     external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
     media_id::MediaId,
     models::{
-        UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
-        UnifiedSearchResult, UnifiedSeasonDetails, UnifiedTvShow, UnifiedTvShowDetails,
-        UnifiedWatchProviders,
+        UnifiedCredits, UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson,
+        UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeasonDetails, UnifiedTvShow,
+        UnifiedTvShowDetails, UnifiedWatchProviders,
     },
 };
 use crate::core::{error::ProviderError, pagination::Page};
@@ -39,6 +39,8 @@ pub enum Capability {
     WatchAvailability,
     /// Map titles to and from third-party ids (IMDb, TVDB, MyAnimeList, …).
     ExternalIds,
+    /// Fetch the cast and crew of a title.
+    Credits,
 }
 
 /// The base trait every provider implements: its identity and capabilities.
@@ -242,6 +244,20 @@ pub trait ExternalIdProvider: Provider {
         &self,
         id: &ExternalId,
     ) -> Result<Vec<ExternalMatch>, ProviderError>;
+}
+
+/// Provider that can fetch the cast and crew of a title.
+///
+/// Like [`DetailProvider`], the lookup is split into movie and TV variants
+/// because a bare [`MediaId`] does not say which kind it names (TMDB movie and
+/// TV ids overlap).
+#[async_trait]
+pub trait CreditsProvider: Provider {
+    /// Get the cast and crew of a movie by [`MediaId`].
+    async fn movie_credits(&self, id: &MediaId) -> Result<UnifiedCredits, ProviderError>;
+
+    /// Get the cast and crew of a TV show by [`MediaId`].
+    async fn tv_show_credits(&self, id: &MediaId) -> Result<UnifiedCredits, ProviderError>;
 }
 
 /// A provider that supports search, detail, and discovery operations.
