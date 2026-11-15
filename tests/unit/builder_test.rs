@@ -1,96 +1,229 @@
-/// Tests for discover builder construction and parameter passing.
-/// These just verify that the builders can be created and chained without panicking.
-/// (Network calls are not made in unit tests.)
+//! Discover builders: the exact query string each one puts on the wire, plus
+//! TMDB config construction and client/facade construction errors.
+use std::collections::BTreeMap;
+
 use cameo::{
+    ProviderError,
     providers::tmdb::{
-        TmdbClient, TmdbConfig,
-        builders::{MovieSortBy, TvSortBy},
+        TmdbClient, TmdbConfig, TmdbError,
+        builders::{
+            MonetizationType, MovieReleaseType, MovieSortBy, TvShowType, TvSortBy, TvStatus,
+        },
     },
     unified::{CameoClient, CameoClientError},
 };
 use chrono::NaiveDate;
+use wiremock::{
+    Mock, MockServer, ResponseTemplate,
+    matchers::{method, path},
+};
 
-fn make_client() -> TmdbClient {
-    TmdbClient::new(TmdbConfig::new("fake-token-for-testing")).unwrap()
+/// Serve `fixture` at `route` and build a client against the mock server,
+/// letting `configure` adjust the config first.
+async fn serve(
+    route: &str,
+    fixture: &'static str,
+    configure: impl FnOnce(TmdbConfig) -> TmdbConfig,
+) -> (MockServer, TmdbClient) {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path(route))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(fixture, "application/json"))
+        .expect(1)
+        .mount(&server)
+        .await;
+    let config = configure(TmdbConfig::new_with_base_url("test-token", server.uri()));
+    let client = TmdbClient::new(config).expect("valid config");
+    (server, client)
 }
 
-#[test]
-fn discover_movies_builder_chains() {
-    let client = make_client();
-    // Just verify that builder creation and method chaining compiles and works
-    let _builder = client
+/// The query string of the single request `server` received, as a sorted map.
+async fn sent_query(server: &MockServer) -> BTreeMap<String, String> {
+    let requests = server
+        .received_requests()
+        .await
+        .expect("request recording is enabled");
+    assert_eq!(requests.len(), 1, "expected exactly one request");
+    requests[0]
+        .url
+        .query_pairs()
+        .map(|(k, v)| (k.into_owned(), v.into_owned()))
+        .collect()
+}
+
+/// Build the expected query map from `(key, value)` pairs.
+fn query(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
+    pairs
+        .iter()
+        .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+        .collect()
+}
+
+const DISCOVER_MOVIES: &str = include_str!("../fixtures/discover_movies_response.json");
+const DISCOVER_TV: &str = include_str!("../fixtures/discover_tv_response.json");
+
+fn date(y: i32, m: u32, d: u32) -> NaiveDate {
+    NaiveDate::from_ymd_opt(y, m, d).expect("valid date")
+}
+
+#[tokio::test]
+async fn discover_movies_sends_every_filter_encoded_on_the_wire() {
+    let (server, client) = serve("/3/discover/movie", DISCOVER_MOVIES, |c| c).await;
+
+    let page = client
         .discover_movies()
         .sort_by(MovieSortBy::PopularityDesc)
         .with_genres(&[28, 12])
         .without_genres(&[99])
+        .with_cast(&[287])
+        .with_people(&[1, 2, 3])
+        .with_release_type(MovieReleaseType::Theatrical)
+        .with_watch_monetization_types(&[MonetizationType::Flatrate, MonetizationType::Rent])
         .primary_release_year(2024)
-        .vote_average_gte(7.0)
+        .primary_release_date_gte(date(2024, 1, 1))
+        .primary_release_date_lte(date(2024, 12, 31))
+        .vote_average_gte(7.5)
         .vote_count_gte(100.0)
         .with_original_language("en")
         .with_runtime_gte(90)
         .with_runtime_lte(180)
-        .page(1)
-        .include_adult(false);
+        .include_adult(false)
+        .page(9999)
+        .execute()
+        .await
+        .expect("discover succeeds");
+
+    assert_eq!(
+        sent_query(&server).await,
+        query(&[
+            ("include_adult", "false"),
+            ("page", "500"),
+            ("primary_release_date.gte", "2024-01-01"),
+            ("primary_release_date.lte", "2024-12-31"),
+            ("primary_release_year", "2024"),
+            ("sort_by", "popularity.desc"),
+            ("vote_average.gte", "7.5"),
+            ("vote_count.gte", "100.0"),
+            ("with_cast", "287"),
+            ("with_genres", "28,12"),
+            ("with_original_language", "en"),
+            ("with_people", "1,2,3"),
+            ("with_release_type", "3"),
+            ("with_runtime.gte", "90"),
+            ("with_runtime.lte", "180"),
+            ("with_watch_monetization_types", "flatrate|rent"),
+            ("without_genres", "99"),
+        ])
+    );
+    assert_eq!(page.results[0].provider_id, "tmdb:550");
 }
 
-#[test]
-fn discover_movies_builder_with_dates() {
-    let client = make_client();
-    let _builder = client
+#[tokio::test]
+async fn discover_movies_defaults_language_region_and_adult_from_config() {
+    let (server, client) = serve("/3/discover/movie", DISCOVER_MOVIES, |c| {
+        c.with_language("fr-FR")
+            .with_region("FR")
+            .with_include_adult(true)
+    })
+    .await;
+
+    client
         .discover_movies()
-        .primary_release_date_gte(NaiveDate::from_ymd_opt(2024, 1, 1).unwrap())
-        .primary_release_date_lte(NaiveDate::from_ymd_opt(2024, 12, 31).unwrap());
+        .execute()
+        .await
+        .expect("discover succeeds");
+
+    assert_eq!(
+        sent_query(&server).await,
+        query(&[
+            ("include_adult", "true"),
+            ("language", "fr-FR"),
+            ("region", "FR"),
+        ])
+    );
 }
 
-#[test]
-fn discover_tv_builder_chains() {
-    let client = make_client();
-    let _builder = client
+#[tokio::test]
+async fn discover_movies_with_no_filters_sends_no_query() {
+    let (server, client) = serve("/3/discover/movie", DISCOVER_MOVIES, |c| c).await;
+
+    client
+        .discover_movies()
+        .execute()
+        .await
+        .expect("discover succeeds");
+
+    assert_eq!(sent_query(&server).await, query(&[]));
+}
+
+#[tokio::test]
+async fn discover_tv_sends_every_filter_encoded_on_the_wire() {
+    let (server, client) = serve("/3/discover/tv", DISCOVER_TV, |c| c).await;
+
+    client
         .discover_tv()
         .sort_by(TvSortBy::VoteAverageDesc)
         .with_genres(&[10765])
         .without_genres(&[99])
         .first_air_date_year(2024)
+        .first_air_date_gte(date(2020, 1, 1))
+        .first_air_date_lte(date(2024, 12, 31))
         .vote_average_gte(8.0)
         .vote_count_gte(500.0)
         .with_original_language("en")
         .with_runtime_gte(20)
         .with_runtime_lte(60)
-        .page(1);
-}
-
-#[test]
-fn discover_builders_accept_typed_params() {
-    use cameo::providers::tmdb::builders::{
-        MonetizationType, MovieReleaseType, TvShowType, TvStatus,
-    };
-    let client = make_client();
-    // Movie: ID slices, typed release type + monetization, page clamp.
-    let _m = client
-        .discover_movies()
-        .with_genres(&[28, 12])
-        .with_cast(&[287])
-        .with_people(&[1, 2, 3])
-        .with_release_type(MovieReleaseType::Theatrical)
-        .with_watch_monetization_types(&[MonetizationType::Flatrate, MonetizationType::Rent])
-        .with_runtime_gte(90)
-        .page(9999);
-    // TV: typed status + type + network.
-    let _t = client
-        .discover_tv()
         .with_status(TvStatus::ReturningSeries)
         .with_type(TvShowType::Scripted)
         .with_networks(213)
-        .with_watch_monetization_types(&[MonetizationType::Free]);
+        .with_watch_monetization_types(&[MonetizationType::Free])
+        .page(0)
+        .execute()
+        .await
+        .expect("discover succeeds");
+
+    assert_eq!(
+        sent_query(&server).await,
+        query(&[
+            ("first_air_date.gte", "2020-01-01"),
+            ("first_air_date.lte", "2024-12-31"),
+            ("first_air_date_year", "2024"),
+            ("page", "1"),
+            ("sort_by", "vote_average.desc"),
+            ("vote_average.gte", "8.0"),
+            ("vote_count.gte", "500.0"),
+            ("with_genres", "10765"),
+            ("with_networks", "213"),
+            ("with_original_language", "en"),
+            ("with_runtime.gte", "20"),
+            ("with_runtime.lte", "60"),
+            ("with_status", "0"),
+            ("with_type", "4"),
+            ("with_watch_monetization_types", "free"),
+            ("without_genres", "99"),
+        ])
+    );
 }
 
-#[test]
-fn discover_tv_builder_with_dates() {
-    let client = make_client();
-    let _builder = client
+#[tokio::test]
+async fn discover_tv_defaults_language_and_adult_but_not_region_from_config() {
+    let (server, client) = serve("/3/discover/tv", DISCOVER_TV, |c| {
+        c.with_language("fr-FR")
+            .with_region("FR")
+            .with_include_adult(true)
+    })
+    .await;
+
+    client
         .discover_tv()
-        .first_air_date_gte(NaiveDate::from_ymd_opt(2020, 1, 1).unwrap())
-        .first_air_date_lte(NaiveDate::from_ymd_opt(2024, 12, 31).unwrap());
+        .execute()
+        .await
+        .expect("discover succeeds");
+
+    assert_eq!(
+        sent_query(&server).await,
+        query(&[("include_adult", "true"), ("language", "fr-FR")])
+    );
 }
 
 #[test]
@@ -116,7 +249,10 @@ fn tmdb_config_builder() {
 #[test]
 fn tmdb_client_empty_token_fails() {
     let result = TmdbClient::new(TmdbConfig::new(""));
-    assert!(result.is_err());
+    assert!(
+        matches!(result, Err(TmdbError::InvalidConfig(_))),
+        "expected InvalidConfig, got {result:?}"
+    );
 }
 
 // ── CameoClientBuilder error cases ─────────────────────────────────────────
@@ -136,8 +272,12 @@ fn cameo_builder_empty_tmdb_token_fails() {
         .with_tmdb(TmdbConfig::new(""))
         .build();
     assert!(
-        result.is_err(),
-        "expected error for empty TMDB token, got Ok"
+        matches!(
+            result,
+            Err(CameoClientError::Provider(ProviderError::InvalidInput(_)))
+        ),
+        "expected Provider(InvalidInput) for empty TMDB token, got {:?}",
+        result.err()
     );
 }
 
@@ -166,5 +306,8 @@ fn tmdb_client_zero_rate_limit_is_construction_error() {
         max_requests: 0,
         per: Duration::from_secs(1),
     }));
-    assert!(result.is_err(), "expected zero rate limit to be rejected");
+    assert!(
+        matches!(result, Err(TmdbError::InvalidConfig(_))),
+        "expected zero rate limit to be rejected as InvalidConfig, got {result:?}"
+    );
 }
