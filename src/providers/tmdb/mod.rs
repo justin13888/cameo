@@ -4,6 +4,8 @@ pub mod builders;
 pub mod client;
 /// TMDB client configuration.
 pub mod config;
+/// Conversions from generated TMDB response types to cameo's own types.
+mod convert;
 /// TMDB-specific error types.
 pub mod error;
 /// Image URL construction helpers.

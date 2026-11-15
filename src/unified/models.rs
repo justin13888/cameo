@@ -25,8 +25,9 @@ impl Gender {
     /// Map a TMDB numeric gender code (`1` female, `2` male, `3` non-binary).
     ///
     /// Returns `None` for `0` (TMDB's "not set") or any unknown code, so an
-    /// unknown gender is absent rather than fabricated.
-    pub fn from_tmdb(code: i64) -> Option<Self> {
+    /// unknown or unset gender is absent rather than fabricated.
+    #[cfg(feature = "tmdb")]
+    pub(crate) fn from_tmdb(code: i64) -> Option<Self> {
         match code {
             1 => Some(Gender::Female),
             2 => Some(Gender::Male),
@@ -37,15 +38,54 @@ impl Gender {
 
     /// Map an AniList gender string (`"Female"`, `"Male"`, `"Non-binary"`).
     ///
-    /// A recognized-but-other string maps to [`Gender::NotSpecified`]; only an
-    /// absent value (handled by the caller) yields `None`.
-    pub fn from_anilist(value: &str) -> Self {
+    /// Returns `None` for any other string, so an unknown gender is absent
+    /// rather than fabricated, matching `Gender::from_tmdb`. An absent value
+    /// is handled by the caller and also yields `None`.
+    #[cfg(feature = "anilist")]
+    pub(crate) fn from_anilist(value: &str) -> Option<Self> {
         match value {
-            "Female" => Gender::Female,
-            "Male" => Gender::Male,
-            "Non-binary" => Gender::NonBinary,
-            _ => Gender::NotSpecified,
+            "Female" => Some(Gender::Female),
+            "Male" => Some(Gender::Male),
+            "Non-binary" => Some(Gender::NonBinary),
+            _ => None,
         }
+    }
+}
+
+#[cfg(all(test, any(feature = "tmdb", feature = "anilist")))]
+mod gender_tests {
+    use super::Gender;
+
+    #[test]
+    #[cfg(feature = "tmdb")]
+    fn from_tmdb_maps_known_codes() {
+        assert_eq!(Gender::from_tmdb(1), Some(Gender::Female));
+        assert_eq!(Gender::from_tmdb(2), Some(Gender::Male));
+        assert_eq!(Gender::from_tmdb(3), Some(Gender::NonBinary));
+    }
+
+    #[test]
+    #[cfg(feature = "tmdb")]
+    fn from_tmdb_unset_or_unknown_is_none() {
+        assert_eq!(Gender::from_tmdb(0), None);
+        assert_eq!(Gender::from_tmdb(4), None);
+        assert_eq!(Gender::from_tmdb(-1), None);
+    }
+
+    #[test]
+    #[cfg(feature = "anilist")]
+    fn from_anilist_maps_known_strings() {
+        assert_eq!(Gender::from_anilist("Female"), Some(Gender::Female));
+        assert_eq!(Gender::from_anilist("Male"), Some(Gender::Male));
+        assert_eq!(Gender::from_anilist("Non-binary"), Some(Gender::NonBinary));
+    }
+
+    #[test]
+    #[cfg(feature = "anilist")]
+    fn from_anilist_unknown_is_none() {
+        assert_eq!(Gender::from_anilist("Unknown"), None);
+        assert_eq!(Gender::from_anilist(""), None);
+        assert_eq!(Gender::from_anilist("female"), None);
     }
 }
 

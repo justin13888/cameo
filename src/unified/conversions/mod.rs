@@ -2,10 +2,6 @@
 #[cfg(feature = "anilist")]
 pub mod anilist;
 
-/// Conversions from TMDB generated types to unified types.
-#[cfg(feature = "tmdb")]
-pub mod tmdb;
-
 /// Conversions from TheTVDB records to unified types.
 #[cfg(feature = "tvdb")]
 pub mod tvdb;
