@@ -16,14 +16,15 @@ use crate::{
     unified::{
         media_id::MediaId,
         traits::{
-            DetailProvider, DiscoveryProvider, Provider, RecommendationProvider, SearchProvider,
-            SeasonProvider, WatchAvailabilityProvider,
+            DetailProvider, DiscoveryProvider, ExternalIdProvider, Provider,
+            RecommendationProvider, SearchProvider, SeasonProvider, WatchAvailabilityProvider,
         },
     },
 };
 
 mod detail;
 mod discovery;
+mod external_ids;
 mod recommendation;
 mod search;
 mod season;
@@ -142,6 +143,7 @@ pub struct CameoClientBuilder {
     ext_recommendation: Vec<Arc<dyn RecommendationProvider>>,
     ext_season: Vec<Arc<dyn SeasonProvider>>,
     ext_watch: Vec<Arc<dyn WatchAvailabilityProvider>>,
+    ext_external: Vec<Arc<dyn ExternalIdProvider>>,
 
     /// Provider priority order (by id); providers not listed keep their default
     /// (registration) order after the prioritized ones.
@@ -226,6 +228,12 @@ impl CameoClientBuilder {
         self
     }
 
+    /// Register an out-of-crate external-id provider.
+    pub fn register_external_id_provider(mut self, provider: Arc<dyn ExternalIdProvider>) -> Self {
+        self.ext_external.push(provider);
+        self
+    }
+
     /// Enable caching with the default SQLite backend.
     #[cfg(feature = "cache")]
     pub fn with_cache(self) -> Self {
@@ -264,6 +272,7 @@ impl CameoClientBuilder {
             recommendation: Vec::new(),
             season: Vec::new(),
             watch: Vec::new(),
+            external: Vec::new(),
             #[cfg(feature = "cache")]
             cache: None,
         };
@@ -280,7 +289,8 @@ impl CameoClientBuilder {
             client.discovery.push(tmdb.clone());
             client.recommendation.push(tmdb.clone());
             client.season.push(tmdb.clone());
-            client.watch.push(tmdb);
+            client.watch.push(tmdb.clone());
+            client.external.push(tmdb);
         }
         #[cfg(feature = "anilist")]
         if let Some(config) = self.anilist_config {
@@ -291,7 +301,8 @@ impl CameoClientBuilder {
             client.search.push(anilist.clone());
             client.detail.push(anilist.clone());
             client.discovery.push(anilist.clone());
-            client.recommendation.push(anilist);
+            client.recommendation.push(anilist.clone());
+            client.external.push(anilist);
         }
 
         // Out-of-crate providers register last.
@@ -301,6 +312,7 @@ impl CameoClientBuilder {
         client.recommendation.extend(self.ext_recommendation);
         client.season.extend(self.ext_season);
         client.watch.extend(self.ext_watch);
+        client.external.extend(self.ext_external);
 
         client.apply_priority(&self.priority);
 
@@ -333,10 +345,13 @@ impl CameoClientBuilder {
 /// Results are **not merged** across providers. A search/discovery call is
 /// answered by a single provider — the highest-priority one supporting the
 /// capability (configurable via [`CameoClientBuilder::with_priority`], overridable
-/// per-call via the `*_with` methods). Detail/recommendation/season/watch
-/// lookups are **routed by [`MediaId`] origin**: an `anilist:*` id is always
-/// answered by AniList and never sent to TMDB. Cross-provider result merging or
-/// de-duplication is out of scope for v1.
+/// per-call via the `*_with` methods). Detail/recommendation/season/watch and
+/// external-id lookups are **routed by [`MediaId`] origin**: an `anilist:*` id
+/// is always answered by AniList and never sent to TMDB. The one exception is
+/// [`find_by_external_id`](CameoClient::find_by_external_id), which has no
+/// origin to route by: it queries every provider accepting the id's source and
+/// merges the matches in priority order. Otherwise, cross-provider result
+/// merging or de-duplication is out of scope for v1.
 pub struct CameoClient {
     search: Vec<Arc<dyn SearchProvider>>,
     detail: Vec<Arc<dyn DetailProvider>>,
@@ -344,6 +359,7 @@ pub struct CameoClient {
     recommendation: Vec<Arc<dyn RecommendationProvider>>,
     season: Vec<Arc<dyn SeasonProvider>>,
     watch: Vec<Arc<dyn WatchAvailabilityProvider>>,
+    external: Vec<Arc<dyn ExternalIdProvider>>,
     #[cfg(feature = "cache")]
     cache: Option<Cache>,
 }
@@ -376,6 +392,7 @@ impl CameoClient {
             self.recommendation.iter().map(|p| p.id()).collect(),
             self.season.iter().map(|p| p.id()).collect(),
             self.watch.iter().map(|p| p.id()).collect(),
+            self.external.iter().map(|p| p.id()).collect(),
         ]
         .concat()
         {
@@ -399,6 +416,7 @@ impl CameoClient {
         self.recommendation.sort_by_key(|p| rank(p.id()));
         self.season.sort_by_key(|p| rank(p.id()));
         self.watch.sort_by_key(|p| rank(p.id()));
+        self.external.sort_by_key(|p| rank(p.id()));
     }
 
     /// Whether any provider is registered for any capability.
@@ -409,15 +427,23 @@ impl CameoClient {
             || !self.recommendation.is_empty()
             || !self.season.is_empty()
             || !self.watch.is_empty()
+            || !self.external.is_empty()
+    }
+
+    /// The "no provider" error for a capability with no eligible provider:
+    /// [`Unsupported`](CameoClientError::Unsupported) if anything is
+    /// registered, else [`NotConfigured`](CameoClientError::NotConfigured).
+    fn no_provider_error(&self) -> CameoClientError {
+        if self.any_provider() {
+            CameoClientError::Unsupported
+        } else {
+            CameoClientError::NotConfigured
+        }
     }
 
     /// Resolve the first provider in `list`, or the right "no provider" error.
     fn require<'a, T: ?Sized>(&self, list: &'a [Arc<T>]) -> Result<&'a Arc<T>, CameoClientError> {
-        match list.first() {
-            Some(provider) => Ok(provider),
-            None if self.any_provider() => Err(CameoClientError::Unsupported),
-            None => Err(CameoClientError::NotConfigured),
-        }
+        list.first().ok_or_else(|| self.no_provider_error())
     }
 
     /// Route to the provider in `list` matching a [`MediaId`]'s origin.
@@ -437,11 +463,7 @@ impl CameoClient {
         if let Some(provider) = list.iter().find(|p| p.id() == id.provider()) {
             return Ok(provider);
         }
-        if !self.any_provider() {
-            Err(CameoClientError::NotConfigured)
-        } else {
-            Err(CameoClientError::Unsupported)
-        }
+        Err(self.no_provider_error())
     }
 
     /// Select a provider in `list` by its id (per-call provider override), or
@@ -454,11 +476,7 @@ impl CameoClient {
         if let Some(provider) = list.iter().find(|p| p.id() == provider_id) {
             return Ok(provider);
         }
-        if !self.any_provider() {
-            Err(CameoClientError::NotConfigured)
-        } else {
-            Err(CameoClientError::Unsupported)
-        }
+        Err(self.no_provider_error())
     }
 
     // ── Cache helpers ─────────────────────────────────────────────────────────

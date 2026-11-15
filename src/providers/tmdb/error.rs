@@ -57,6 +57,11 @@ pub enum TmdbError {
     /// Invalid configuration (rejected at construction time).
     #[error("invalid configuration: {0}")]
     InvalidConfig(String),
+
+    /// TMDB cannot look titles up by ids from this external source (see
+    /// [`TmdbClient::find_by_external_id`](super::TmdbClient::find_by_external_id)).
+    #[error("TMDB cannot find titles by {0} id")]
+    UnsupportedSource(crate::unified::external_ids::ExternalSource),
 }
 
 /// Wrap a transport error, stripping its request URL so a v3 `api_key` query

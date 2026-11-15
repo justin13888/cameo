@@ -1,0 +1,25 @@
+{
+  "movie_results": [],
+  "person_results": [],
+  "tv_results": [
+    {
+      "backdrop_path": "/9faGSFi5jam6pDWGNd0p8JcJgXQ.jpg",
+      "id": 1396,
+      "name": "Breaking Bad",
+      "original_name": "Breaking Bad",
+      "overview": "Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live.",
+      "poster_path": "/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg",
+      "media_type": "tv",
+      "adult": false,
+      "original_language": "en",
+      "genre_ids": [18, 80],
+      "popularity": 300.149,
+      "first_air_date": "2008-01-20",
+      "vote_average": 8.9,
+      "vote_count": 14321,
+      "origin_country": ["US"]
+    }
+  ],
+  "tv_episode_results": [],
+  "tv_season_results": []
+}

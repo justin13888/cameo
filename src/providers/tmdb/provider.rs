@@ -11,6 +11,7 @@ use super::client::TmdbClient;
 use crate::{
     core::{config::TimeWindow, error::ProviderError, pagination::Page},
     unified::{
+        external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         media_id::MediaId,
         models::{
             UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
@@ -18,8 +19,8 @@ use crate::{
             UnifiedWatchProviders,
         },
         traits::{
-            Capability, DetailProvider, DiscoveryProvider, Provider, RecommendationProvider,
-            SearchProvider, SeasonProvider, WatchAvailabilityProvider,
+            Capability, DetailProvider, DiscoveryProvider, ExternalIdProvider, Provider,
+            RecommendationProvider, SearchProvider, SeasonProvider, WatchAvailabilityProvider,
         },
     },
 };
@@ -31,6 +32,14 @@ const TMDB_CAPABILITIES: &[Capability] = &[
     Capability::Recommendations,
     Capability::Seasons,
     Capability::WatchAvailability,
+    Capability::ExternalIds,
+];
+
+/// External sources TMDB's `/find` endpoint accepts.
+const TMDB_EXTERNAL_SOURCES: &[ExternalSource] = &[
+    ExternalSource::Imdb,
+    ExternalSource::Tvdb,
+    ExternalSource::Wikidata,
 ];
 
 impl Provider for TmdbClient {
@@ -222,5 +231,27 @@ impl WatchAvailabilityProvider for TmdbClient {
         id: &MediaId,
     ) -> Result<UnifiedWatchProviders, ProviderError> {
         Ok(TmdbClient::tv_watch_providers(self, tmdb_id(id)?).await?)
+    }
+}
+
+#[async_trait]
+impl ExternalIdProvider for TmdbClient {
+    fn external_sources(&self) -> &[ExternalSource] {
+        TMDB_EXTERNAL_SOURCES
+    }
+
+    async fn movie_external_ids(&self, id: &MediaId) -> Result<ExternalIds, ProviderError> {
+        Ok(TmdbClient::movie_external_ids(self, tmdb_id(id)?).await?)
+    }
+
+    async fn tv_external_ids(&self, id: &MediaId) -> Result<ExternalIds, ProviderError> {
+        Ok(TmdbClient::tv_external_ids(self, tmdb_id(id)?).await?)
+    }
+
+    async fn find_by_external_id(
+        &self,
+        id: &ExternalId,
+    ) -> Result<Vec<ExternalMatch>, ProviderError> {
+        Ok(TmdbClient::find_by_external_id(self, id).await?)
     }
 }

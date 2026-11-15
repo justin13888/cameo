@@ -38,7 +38,7 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 
 ## Coverage Matrix
 
-### TmdbClient (29 methods)
+### TmdbClient (32 methods)
 
 | Method | Unit | Wiremock | Facade | Live |
 |---|---|---|---|---|
@@ -66,13 +66,16 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `tv_episode_details` | — | ✓ | — | — |
 | `movie_watch_providers` | — | ✓ | ✓ (facade) | — |
 | `tv_watch_providers` | — | ✓ | — | — |
+| `movie_external_ids` | — | ✓ | — | — |
+| `tv_external_ids` | — | ✓ | ✓ (facade) | — |
+| `find_by_external_id` | — | ✓ | ✓ (facade) | — |
 | `movie_genres` | — | ✓ | — | — |
 | `tv_genres` | — | ✓ | — | — |
 | `movie_images` | — | ✓ | — | — |
 | `discover_movies` | — | ✓ | — | ✓ |
 | `discover_tv` | — | ✓ | — | ✓ |
 
-### AniListClient (16 methods)
+### AniListClient (18 methods)
 
 | Method | Unit | Wiremock |
 |---|---|---|
@@ -92,10 +95,12 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `discover_anime` (`execute_movies` / `execute_tv`) | ✓ | ✓ |
 | `movie_recommendations` | — | ✓ |
 | `tv_recommendations` | — | ✓ |
+| `external_ids` | — | ✓ |
+| `find_by_mal_id` | — | ✓ |
 
 AniList's `RecommendationProvider` impl (incl. `similar_*` → `Unsupported`) is covered in `anilist_recommendations_test.rs`.
 
-### CameoClient Facade (22 trait methods)
+### CameoClient Facade (24 trait methods)
 
 | Trait | Method | Wiremock | Cache |
 |---|---|---|---|
@@ -120,6 +125,9 @@ AniList's `RecommendationProvider` impl (incl. `similar_*` → `Unsupported`) is
 | `SeasonProvider` | `episode_details` | — | — |
 | `WatchProviderTrait` | `movie_watch_providers` | ✓ (facade) | — |
 | `WatchProviderTrait` | `tv_watch_providers` | — | — |
+| `ExternalIdProvider` | `movie_external_ids` | ✓ (registry stub) | — (not cached) |
+| `ExternalIdProvider` | `tv_external_ids` | ✓ (facade) | — (not cached) |
+| `ExternalIdProvider` | `find_by_external_id` | ✓ (facade, fan-out/merge via registry stubs) | — (not cached) |
 
 ### CameoClient Cache API (9 methods)
 
@@ -169,10 +177,14 @@ All fixtures live in `tests/fixtures/` and are trimmed to 1–2 results for spee
 | `tv_genres_response.json` | `/3/genre/tv/list` |
 | `tv_episode_details_response.json` | `/3/tv/{id}/season/{n}/episode/{n}` |
 | `tv_watch_providers_response.json` | `/3/tv/{id}/watch/providers` |
+| `movie_external_ids_response.json` | `/3/movie/{id}/external_ids` |
+| `tv_external_ids_response.json` | `/3/tv/{id}/external_ids` |
+| `find_by_imdb_id_response.json` | `/3/find/{id}?external_source=imdb_id` |
+| `find_by_tvdb_id_response.json` | `/3/find/{id}?external_source=tvdb_id` |
 | `trending_tv_response.json` | `/3/trending/tv/week` |
 | `discover_tv_response.json` | `/3/discover/tv` |
 
-AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture files (`anilist_media_details_response.json`, `anilist_staff_details_response.json`). Search, discovery, discover-builder (`anilist_discover_test.rs`), and recommendation (`anilist_recommendations_test.rs`) tests use inline JSON constructed via `serde_json::json!` helpers — no separate fixture files for those.
+AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture files (`anilist_media_details_response.json`, `anilist_staff_details_response.json`). Search, discovery, discover-builder (`anilist_discover_test.rs`), recommendation (`anilist_recommendations_test.rs`), and external-id (`anilist_external_ids_test.rs`) tests use inline JSON constructed via `serde_json::json!` helpers — no separate fixture files for those.
 
 ---
 
@@ -190,9 +202,9 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 
 | Layer | Count |
 |---|---|
-| Unit | 64 |
-| Wiremock (TMDB) | 33 |
-| Wiremock (AniList) | 39 |
-| Facade / Cache | 18 |
+| Unit | 69 |
+| Wiremock (TMDB) | 41 |
+| Wiremock (AniList) | 48 |
+| Facade / Cache | 26 |
 | Live (TMDB) | 8 |
-| **Total** | **~162** |
+| **Total** | **~192** |

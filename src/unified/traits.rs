@@ -10,6 +10,7 @@
 use async_trait::async_trait;
 
 use super::{
+    external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
     media_id::MediaId,
     models::{
         UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
@@ -36,6 +37,8 @@ pub enum Capability {
     Seasons,
     /// Fetch streaming availability.
     WatchAvailability,
+    /// Map titles to and from third-party ids (IMDb, TVDB, MyAnimeList, …).
+    ExternalIds,
 }
 
 /// The base trait every provider implements: its identity and capabilities.
@@ -209,6 +212,36 @@ pub trait WatchAvailabilityProvider: Provider {
         &self,
         id: &MediaId,
     ) -> Result<UnifiedWatchProviders, ProviderError>;
+}
+
+/// Provider that maps titles to and from third-party database ids (IMDb,
+/// TheTVDB, MyAnimeList, Wikidata).
+///
+/// Like [`DetailProvider`], the per-title lookups are split into movie and TV
+/// variants because a bare [`MediaId`] does not say which kind it names (TMDB
+/// movie and TV ids overlap).
+#[async_trait]
+pub trait ExternalIdProvider: Provider {
+    /// The sources [`find_by_external_id`](Self::find_by_external_id) accepts.
+    ///
+    /// The facade only sends a lookup to providers listing its source.
+    fn external_sources(&self) -> &[ExternalSource];
+
+    /// Get the external ids of a movie by [`MediaId`].
+    async fn movie_external_ids(&self, id: &MediaId) -> Result<ExternalIds, ProviderError>;
+
+    /// Get the external ids of a TV show by [`MediaId`].
+    async fn tv_external_ids(&self, id: &MediaId) -> Result<ExternalIds, ProviderError>;
+
+    /// Find this provider's titles matching a third-party id.
+    ///
+    /// Returns an empty `Vec` when nothing matches, and
+    /// [`ProviderError::Unsupported`] when `id.source` is not one of
+    /// [`external_sources`](Self::external_sources).
+    async fn find_by_external_id(
+        &self,
+        id: &ExternalId,
+    ) -> Result<Vec<ExternalMatch>, ProviderError>;
 }
 
 /// A provider that supports search, detail, and discovery operations.

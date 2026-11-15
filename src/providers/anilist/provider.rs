@@ -1,7 +1,10 @@
 //! Unified provider-trait implementations for [`AniListClient`].
 //!
-//! AniList supports search, details, discovery, and recommendations.
+//! AniList supports search, details, discovery, recommendations, and external
+//! ids.
 //!
+//! - **External ids:** MyAnimeList only, via
+//!   [`AniListClient::external_ids`] and [`AniListClient::find_by_mal_id`].
 //! - **Recommendations:** [`RecommendationProvider::movie_recommendations`] and
 //!   [`RecommendationProvider::tv_recommendations`] return AniList's community
 //!   recommendations filtered to movies / series (see
@@ -25,14 +28,15 @@ use super::client::AniListClient;
 use crate::{
     core::{config::TimeWindow, error::ProviderError, pagination::Page},
     unified::{
+        external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         media_id::{MediaId, NativeId},
         models::{
             UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
             UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
         },
         traits::{
-            Capability, DetailProvider, DiscoveryProvider, Provider, RecommendationProvider,
-            SearchProvider,
+            Capability, DetailProvider, DiscoveryProvider, ExternalIdProvider, Provider,
+            RecommendationProvider, SearchProvider,
         },
     },
 };
@@ -42,7 +46,11 @@ const ANILIST_CAPABILITIES: &[Capability] = &[
     Capability::Details,
     Capability::Discovery,
     Capability::Recommendations,
+    Capability::ExternalIds,
 ];
+
+/// External sources AniList can look anime up by.
+const ANILIST_EXTERNAL_SOURCES: &[ExternalSource] = &[ExternalSource::Mal];
 
 impl Provider for AniListClient {
     fn id(&self) -> &str {
@@ -168,6 +176,40 @@ impl DiscoveryProvider for AniListClient {
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
         Ok(AniListClient::top_rated_tv_shows(self, page).await?)
+    }
+}
+
+/// External ids are fetched per anime regardless of format, so the movie and
+/// TV variants share one query.
+#[async_trait]
+impl ExternalIdProvider for AniListClient {
+    fn external_sources(&self) -> &[ExternalSource] {
+        ANILIST_EXTERNAL_SOURCES
+    }
+
+    async fn movie_external_ids(&self, id: &MediaId) -> Result<ExternalIds, ProviderError> {
+        Ok(AniListClient::external_ids(self, anilist_id(id)?).await?)
+    }
+
+    async fn tv_external_ids(&self, id: &MediaId) -> Result<ExternalIds, ProviderError> {
+        Ok(AniListClient::external_ids(self, anilist_id(id)?).await?)
+    }
+
+    async fn find_by_external_id(
+        &self,
+        id: &ExternalId,
+    ) -> Result<Vec<ExternalMatch>, ProviderError> {
+        if id.source != ExternalSource::Mal {
+            return Err(ProviderError::Unsupported);
+        }
+        let mal_id = id
+            .id
+            .parse::<i32>()
+            .map_err(|_| ProviderError::InvalidInput(format!("not a valid MAL id: {id}")))?;
+        Ok(AniListClient::find_by_mal_id(self, mal_id)
+            .await?
+            .into_iter()
+            .collect())
     }
 }
 

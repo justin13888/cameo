@@ -231,3 +231,179 @@ async fn detail_lookup_routes_by_id_origin() {
         "unknown-origin id should be Unsupported, got {c:?}"
     );
 }
+
+// ── External ids: routing and fan-out (#69) ───────────────────────────────────
+
+/// An external-id provider with a fixed source list and a canned
+/// `find_by_external_id` outcome; `*_external_ids` echo its id as `wikidata`
+/// so tests can see which provider was routed to.
+struct ExternalStub {
+    id: &'static str,
+    sources: &'static [cameo::ExternalSource],
+    find: Result<Vec<cameo::ExternalMatch>, &'static str>,
+}
+
+impl Provider for ExternalStub {
+    fn id(&self) -> &str {
+        self.id
+    }
+    fn capabilities(&self) -> &[Capability] {
+        &[Capability::ExternalIds]
+    }
+}
+
+#[async_trait]
+impl cameo::ExternalIdProvider for ExternalStub {
+    fn external_sources(&self) -> &[cameo::ExternalSource] {
+        self.sources
+    }
+    async fn movie_external_ids(&self, _id: &MediaId) -> Result<cameo::ExternalIds, ProviderError> {
+        Ok(cameo::ExternalIds::new().with_wikidata(format!("{}-movie", self.id)))
+    }
+    async fn tv_external_ids(&self, _id: &MediaId) -> Result<cameo::ExternalIds, ProviderError> {
+        Ok(cameo::ExternalIds::new().with_wikidata(format!("{}-tv", self.id)))
+    }
+    async fn find_by_external_id(
+        &self,
+        _id: &cameo::ExternalId,
+    ) -> Result<Vec<cameo::ExternalMatch>, ProviderError> {
+        self.find
+            .clone()
+            .map_err(|msg| ProviderError::Other(msg.to_string()))
+    }
+}
+
+fn external_client(stubs: Vec<ExternalStub>, priority: Option<Vec<&str>>) -> CameoClient {
+    let mut builder = CameoClient::builder();
+    for stub in stubs {
+        builder = builder.register_external_id_provider(Arc::new(stub));
+    }
+    if let Some(order) = priority {
+        builder = builder.with_priority(order);
+    }
+    builder.build().unwrap()
+}
+
+fn imdb_stub(
+    id: &'static str,
+    find: Result<Vec<cameo::ExternalMatch>, &'static str>,
+) -> ExternalStub {
+    ExternalStub {
+        id,
+        sources: &[cameo::ExternalSource::Imdb],
+        find,
+    }
+}
+
+/// `movie_external_ids` / `tv_external_ids` route by id origin.
+#[tokio::test]
+async fn external_ids_route_by_id_origin() {
+    use cameo::NativeId;
+    let client = external_client(
+        vec![
+            imdb_stub("alpha", Ok(vec![])),
+            imdb_stub("beta", Ok(vec![])),
+        ],
+        None,
+    );
+
+    let beta = client
+        .movie_external_ids(&MediaId::new("beta", NativeId::Num(1)))
+        .await
+        .unwrap();
+    assert_eq!(beta.wikidata.as_deref(), Some("beta-movie"));
+    let alpha = client
+        .tv_external_ids(&MediaId::new("alpha", NativeId::Num(1)))
+        .await
+        .unwrap();
+    assert_eq!(alpha.wikidata.as_deref(), Some("alpha-tv"));
+
+    let gamma = client
+        .movie_external_ids(&MediaId::new("gamma", NativeId::Num(1)))
+        .await;
+    assert!(
+        matches!(gamma, Err(CameoClientError::Unsupported)),
+        "unknown-origin id should be Unsupported, got {gamma:?}"
+    );
+}
+
+/// `find_by_external_id` merges every eligible provider's matches in priority
+/// order, de-duplicated, and skips providers that do not accept the source.
+#[tokio::test]
+async fn find_by_external_id_merges_in_priority_order() {
+    use cameo::{ExternalId, ExternalMatch, ExternalSource, NativeId};
+    let a = ExternalMatch::movie(MediaId::new("alpha", NativeId::Num(1)));
+    let b = ExternalMatch::tv_show(MediaId::new("beta", NativeId::Num(2)));
+    let stubs = || {
+        vec![
+            imdb_stub("alpha", Ok(vec![a.clone(), a.clone()])),
+            imdb_stub("beta", Ok(vec![b.clone(), a.clone()])),
+            // Does not accept IMDb ids → never queried.
+            ExternalStub {
+                id: "mal-only",
+                sources: &[ExternalSource::Mal],
+                find: Err("must not be queried"),
+            },
+        ]
+    };
+
+    let id = ExternalId::imdb("tt0137523");
+    let merged = external_client(stubs(), None)
+        .find_by_external_id(&id)
+        .await
+        .unwrap();
+    assert_eq!(merged, vec![a.clone(), b.clone()]);
+
+    let reprioritized = external_client(stubs(), Some(vec!["beta"]))
+        .find_by_external_id(&id)
+        .await
+        .unwrap();
+    assert_eq!(reprioritized, vec![b, a]);
+}
+
+/// One failing provider does not sink the lookup; all failing does.
+#[tokio::test]
+async fn find_by_external_id_errors_only_when_all_providers_fail() {
+    use cameo::{ExternalId, ExternalMatch, NativeId};
+    let b = ExternalMatch::movie(MediaId::new("beta", NativeId::Num(2)));
+    let id = ExternalId::imdb("tt0137523");
+
+    let partial = external_client(
+        vec![
+            imdb_stub("alpha", Err("alpha down")),
+            imdb_stub("beta", Ok(vec![b.clone()])),
+        ],
+        None,
+    )
+    .find_by_external_id(&id)
+    .await
+    .unwrap();
+    assert_eq!(partial, vec![b]);
+
+    let all_failed = external_client(
+        vec![
+            imdb_stub("alpha", Err("alpha down")),
+            imdb_stub("beta", Err("beta down")),
+        ],
+        None,
+    )
+    .find_by_external_id(&id)
+    .await;
+    match all_failed {
+        Err(CameoClientError::Provider(ProviderError::Other(msg))) => {
+            assert_eq!(msg, "alpha down", "first provider's error is reported")
+        }
+        other => panic!("expected the first provider error, got {other:?}"),
+    }
+}
+
+/// No provider accepting the source → Unsupported.
+#[tokio::test]
+async fn find_by_external_id_unsupported_source() {
+    let client = external_client(vec![imdb_stub("alpha", Ok(vec![]))], None);
+    let result = client.find_by_external_id(&cameo::ExternalId::mal(1)).await;
+    assert!(
+        matches!(result, Err(CameoClientError::Unsupported)),
+        "expected Unsupported, got {result:?}"
+    );
+}
