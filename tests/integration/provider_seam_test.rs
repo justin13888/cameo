@@ -42,7 +42,8 @@ fn anilist_client_is_a_dyn_provider() {
     assert_eq!(search.id(), "anilist");
     assert!(search.supports(Capability::Search));
     assert!(search.supports(Capability::Discovery));
-    // AniList does not implement recommendations / seasons / watch availability.
+    assert!(search.supports(Capability::Recommendations));
+    // AniList does not implement seasons / watch availability.
     assert!(!search.supports(Capability::WatchAvailability));
     assert!(!search.supports(Capability::Seasons));
 
