@@ -24,16 +24,9 @@ impl CameoClient {
         let result = self.route(&self.detail, id)?.movie_details(id).await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_details_ttl()).await;
-            self.cache_put(
-                CacheKey::Item {
-                    media_type: MediaType::Movie,
-                    provider_id: result.movie.provider_id.to_string(),
-                },
-                &result.movie,
-                self.cache_items_ttl(),
-            )
-            .await;
+            self.cache_put(key, &result, self.cache_ttl(|t| t.details))
+                .await;
+            self.cache_item(&result.movie).await;
         }
         Ok(result)
     }
@@ -55,16 +48,9 @@ impl CameoClient {
         let result = self.route(&self.detail, id)?.tv_show_details(id).await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_details_ttl()).await;
-            self.cache_put(
-                CacheKey::Item {
-                    media_type: MediaType::TvShow,
-                    provider_id: result.show.provider_id.to_string(),
-                },
-                &result.show,
-                self.cache_items_ttl(),
-            )
-            .await;
+            self.cache_put(key, &result, self.cache_ttl(|t| t.details))
+                .await;
+            self.cache_item(&result.show).await;
         }
         Ok(result)
     }
@@ -86,16 +72,9 @@ impl CameoClient {
         let result = self.route(&self.detail, id)?.person_details(id).await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_details_ttl()).await;
-            self.cache_put(
-                CacheKey::Item {
-                    media_type: MediaType::Person,
-                    provider_id: result.person.provider_id.to_string(),
-                },
-                &result.person,
-                self.cache_items_ttl(),
-            )
-            .await;
+            self.cache_put(key, &result, self.cache_ttl(|t| t.details))
+                .await;
+            self.cache_item(&result.person).await;
         }
         Ok(result)
     }
