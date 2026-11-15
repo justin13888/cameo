@@ -4,6 +4,9 @@ use crate::providers::{rate_limit::RateLimit, retry::RetryPolicy};
 
 const DEFAULT_PER_PAGE: u32 = 20;
 
+/// AniList's maximum page size.
+const MAX_PER_PAGE: u32 = 50;
+
 /// AniList's documented limit: 90 requests per minute.
 const DEFAULT_RATE_LIMIT: RateLimit = RateLimit::Limited {
     max_requests: 90,
@@ -16,9 +19,16 @@ const DEFAULT_RATE_LIMIT: RateLimit = RateLimit::Limited {
 pub struct AniListConfig {
     /// Base URL for the AniList GraphQL endpoint.
     ///
-    /// Defaults to `https://graphql.anilist.co`.  Override for testing.
+    /// Defaults to `https://graphql.anilist.co`. Override for testing. Must be
+    /// an http(s) URL; anything else is rejected when the client is
+    /// constructed.
     pub base_url: String,
-    /// Number of results returned per page (default: 20, max: 50).
+    /// Number of results returned per page (default: 20).
+    ///
+    /// Must be within 1–50 (the AniList API limit).
+    /// [`with_per_page`](Self::with_per_page) clamps into that range; a value
+    /// set directly on the field outside it is rejected when the client is
+    /// constructed.
     pub per_page: u32,
     /// Client-side request-rate limit.
     ///
@@ -65,11 +75,18 @@ impl AniListConfig {
         }
     }
 
+    /// Override the GraphQL endpoint URL (useful for testing against a mock
+    /// server).
+    pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.base_url = base_url.into();
+        self
+    }
+
     /// Set the number of results per page.
     ///
     /// Valid range is 1–50 (AniList API limit); values outside this range are clamped.
     pub fn with_per_page(mut self, per_page: u32) -> Self {
-        self.per_page = per_page.clamp(1, 50);
+        self.per_page = per_page.clamp(1, MAX_PER_PAGE);
         self
     }
 
@@ -102,6 +119,35 @@ impl AniListConfig {
         self.request_timeout = Some(timeout);
         self
     }
+
+    /// Validate the configuration, returning a clear message on the first
+    /// problem found. Called by
+    /// [`AniListClient::new`](super::client::AniListClient::new).
+    pub(crate) fn validate(&self) -> Result<(), String> {
+        if !(1..=MAX_PER_PAGE).contains(&self.per_page) {
+            return Err(format!(
+                "per_page must be within 1..={MAX_PER_PAGE}, got {}",
+                self.per_page
+            ));
+        }
+        validate_base_url(&self.base_url)?;
+        self.rate_limit.validate()
+    }
+}
+
+/// Check that `base_url` is a non-empty, parseable http(s) URL.
+fn validate_base_url(base_url: &str) -> Result<(), String> {
+    if base_url.is_empty() {
+        return Err("base_url must not be empty".to_string());
+    }
+    let url =
+        reqwest::Url::parse(base_url).map_err(|e| format!("invalid base_url {base_url:?}: {e}"))?;
+    match url.scheme() {
+        "http" | "https" => Ok(()),
+        scheme => Err(format!(
+            "base_url must be an http(s) URL, got scheme {scheme:?} in {base_url:?}"
+        )),
+    }
 }
 
 #[cfg(test)]
@@ -130,5 +176,43 @@ mod tests {
     fn with_per_page_boundary_values() {
         assert_eq!(AniListConfig::new().with_per_page(1).per_page, 1);
         assert_eq!(AniListConfig::new().with_per_page(50).per_page, 50);
+    }
+
+    #[test]
+    fn with_base_url_overrides_default() {
+        let cfg = AniListConfig::new().with_base_url("http://localhost:1234");
+        assert_eq!(cfg.base_url, "http://localhost:1234");
+        assert_eq!(cfg.per_page, AniListConfig::default().per_page);
+    }
+
+    #[test]
+    fn validate_accepts_default_config() {
+        assert!(AniListConfig::new().validate().is_ok());
+    }
+
+    #[test]
+    fn validate_rejects_per_page_out_of_range() {
+        for per_page in [0, 51, u32::MAX] {
+            let mut cfg = AniListConfig::new();
+            cfg.per_page = per_page;
+            let err = cfg.validate().expect_err("out-of-range per_page");
+            assert!(err.contains("per_page"), "{err}");
+        }
+        for per_page in [1, 50] {
+            let mut cfg = AniListConfig::new();
+            cfg.per_page = per_page;
+            assert!(cfg.validate().is_ok(), "per_page {per_page}");
+        }
+    }
+
+    #[test]
+    fn validate_rejects_bad_base_url() {
+        for base_url in ["", "not a url", "ftp://graphql.anilist.co"] {
+            let err = AniListConfig::new()
+                .with_base_url(base_url)
+                .validate()
+                .expect_err("bad base_url");
+            assert!(err.contains("base_url"), "{base_url:?}: {err}");
+        }
     }
 }

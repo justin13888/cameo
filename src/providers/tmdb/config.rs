@@ -2,6 +2,9 @@ use std::time::Duration;
 
 use crate::providers::{rate_limit::RateLimit, retry::RetryPolicy};
 
+/// Default TMDB API base URL.
+pub(crate) const TMDB_BASE_URL: &str = "https://api.themoviedb.org";
+
 /// TMDB's documented limit: ~40 requests per 10 seconds per IP.
 const DEFAULT_RATE_LIMIT: RateLimit = RateLimit::Limited {
     max_requests: 40,
@@ -63,8 +66,11 @@ impl std::fmt::Debug for TmdbAuth {
 pub struct TmdbConfig {
     /// Authentication credential (v4 bearer token or v3 API key).
     pub auth: TmdbAuth,
-    /// Base URL override (defaults to `https://api.themoviedb.org`).
-    pub base_url: Option<String>,
+    /// Base URL of the TMDB API.
+    ///
+    /// Defaults to `https://api.themoviedb.org`. Override for testing against
+    /// a mock server. An unparseable URL is rejected at client construction.
+    pub base_url: String,
     /// Image CDN base URL override (defaults to `https://image.tmdb.org/t/p/`).
     /// Useful for pointing image URLs at a mock or proxy.
     pub image_base_url: Option<String>,
@@ -128,19 +134,19 @@ impl std::fmt::Debug for TmdbConfig {
 impl TmdbConfig {
     /// Create a new config authenticating with a TMDB v4 bearer token.
     pub fn new(api_token: impl Into<String>) -> Self {
-        Self::with_auth(TmdbAuth::V4Bearer(api_token.into()))
+        Self::from_auth(TmdbAuth::V4Bearer(api_token.into()))
     }
 
     /// Create a new config authenticating with a TMDB v3 API key.
     pub fn new_v3(api_key: impl Into<String>) -> Self {
-        Self::with_auth(TmdbAuth::V3ApiKey(api_key.into()))
+        Self::from_auth(TmdbAuth::V3ApiKey(api_key.into()))
     }
 
     /// Create a new config with an explicit [`TmdbAuth`].
-    pub fn with_auth(auth: TmdbAuth) -> Self {
+    pub fn from_auth(auth: TmdbAuth) -> Self {
         Self {
             auth,
-            base_url: None,
+            base_url: TMDB_BASE_URL.to_string(),
             image_base_url: None,
             language: None,
             region: None,
@@ -155,14 +161,14 @@ impl TmdbConfig {
     /// Create a new config (v4 bearer) with a custom base URL (useful for testing).
     pub fn new_with_base_url(api_token: impl Into<String>, base_url: impl Into<String>) -> Self {
         Self {
-            base_url: Some(base_url.into()),
+            base_url: base_url.into(),
             ..Self::new(api_token)
         }
     }
 
     /// Override the API base URL (useful for testing against a mock server).
     pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
-        self.base_url = Some(base_url.into());
+        self.base_url = base_url.into();
         self
     }
 
@@ -313,6 +319,33 @@ mod tests {
                 .with_region("US")
                 .validate()
                 .is_ok()
+        );
+    }
+
+    #[test]
+    fn base_url_defaults_to_tmdb_and_can_be_overridden() {
+        assert_eq!(TmdbConfig::new("t").base_url, "https://api.themoviedb.org");
+        assert_eq!(
+            TmdbConfig::new_v3("k")
+                .with_base_url("http://localhost:1")
+                .base_url,
+            "http://localhost:1"
+        );
+        assert_eq!(
+            TmdbConfig::new_with_base_url("t", "http://localhost:2").base_url,
+            "http://localhost:2"
+        );
+    }
+
+    #[test]
+    fn from_auth_matches_scheme_constructors() {
+        assert_eq!(
+            TmdbConfig::from_auth(TmdbAuth::V4Bearer("t".into())),
+            TmdbConfig::new("t")
+        );
+        assert_eq!(
+            TmdbConfig::from_auth(TmdbAuth::V3ApiKey("k".into())),
+            TmdbConfig::new_v3("k")
         );
     }
 }

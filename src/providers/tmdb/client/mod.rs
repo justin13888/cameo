@@ -19,8 +19,6 @@ use crate::{
     unified::conversions::native_id,
 };
 
-const TMDB_BASE_URL: &str = "https://api.themoviedb.org";
-
 /// The security scheme a v4 bearer token is registered under
 /// (`scripts/tmdb-spec-patch.jq` declares it).
 const V4_BEARER_SCHEME: &str = "v4_bearer";
@@ -79,7 +77,7 @@ impl TmdbClient {
         )
         .map_err(TmdbError::from)?;
 
-        let base_url = config.base_url.as_deref().unwrap_or(TMDB_BASE_URL);
+        let base_url = config.base_url.as_str();
         let inner = tmdb::Client::with_client(http_client, base_url)
             .map_err(|e| TmdbError::InvalidConfig(format!("invalid base URL: {e}")))?;
         // The spec patch declares both credentials as security schemes: a v4

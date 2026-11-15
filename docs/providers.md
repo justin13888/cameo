@@ -41,10 +41,12 @@ unified models and map errors. `TmdbClient` (inherent methods) +
 Take configuration as a `Config` struct with a `new(...)` constructor and
 `with_*` setters. Either reject invalid values with a clear error when the
 client is constructed (as `TmdbClient::new` does for the credential, rate limit,
-language, region, and URLs, and `AniListClient::new` does for the rate limit),
-or clamp them in the setter (as `AniListConfig::with_per_page` clamps
-`per_page` to 1..=50). Never require callers to build a `#[non_exhaustive]`
-struct literal.
+language, region, and URLs, and `AniListClient::new` does for `per_page`, the
+base URL, and the rate limit). A setter may also clamp a value into range (as
+`AniListConfig::with_per_page` clamps `per_page` to 1..=50), but public fields
+can be set directly, so validate at construction as well. Name constructors
+`new*` or `from_*` and keep `with_*` for chained setters. Never require callers
+to build a `#[non_exhaustive]` struct literal.
 
 ## 4. Implement the capability traits
 
