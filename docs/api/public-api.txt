@@ -599,8 +599,8 @@ pub fn cameo::core::error::ProviderError::clone(&self) -> cameo::core::error::Pr
 impl core::cmp::Eq for cameo::core::error::ProviderError
 impl core::cmp::PartialEq for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::eq(&self, &cameo::core::error::ProviderError) -> bool
-impl core::convert::From<cameo::core::error::ProviderError> for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::from(cameo::core::error::ProviderError) -> Self
+impl core::convert::From<cameo::core::error::ProviderError> for cameo::CameoClientError
+pub fn cameo::CameoClientError::from(cameo::core::error::ProviderError) -> Self
 impl core::convert::From<cameo::providers::anilist::error::AniListError> for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::from(cameo::providers::anilist::error::AniListError) -> Self
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
@@ -1217,6 +1217,9 @@ pub cameo::providers::anilist::error::AniListError::Http(reqwest::error::Error)
 pub cameo::providers::anilist::error::AniListError::InvalidConfig(alloc::string::String)
 pub cameo::providers::anilist::error::AniListError::NoData
 pub cameo::providers::anilist::error::AniListError::NotFound
+pub cameo::providers::anilist::error::AniListError::PageOutOfRange
+pub cameo::providers::anilist::error::AniListError::PageOutOfRange::field: &'static str
+pub cameo::providers::anilist::error::AniListError::PageOutOfRange::value: i64
 pub cameo::providers::anilist::error::AniListError::Status
 pub cameo::providers::anilist::error::AniListError::Status::message: alloc::string::String
 pub cameo::providers::anilist::error::AniListError::Status::retry_after: core::option::Option<core::time::Duration>
@@ -1363,6 +1366,9 @@ pub cameo::providers::anilist::AniListError::Http(reqwest::error::Error)
 pub cameo::providers::anilist::AniListError::InvalidConfig(alloc::string::String)
 pub cameo::providers::anilist::AniListError::NoData
 pub cameo::providers::anilist::AniListError::NotFound
+pub cameo::providers::anilist::AniListError::PageOutOfRange
+pub cameo::providers::anilist::AniListError::PageOutOfRange::field: &'static str
+pub cameo::providers::anilist::AniListError::PageOutOfRange::value: i64
 pub cameo::providers::anilist::AniListError::Status
 pub cameo::providers::anilist::AniListError::Status::message: alloc::string::String
 pub cameo::providers::anilist::AniListError::Status::retry_after: core::option::Option<core::time::Duration>
@@ -2977,6 +2983,7 @@ pub fn cameo::providers::tmdb::client::TmdbClient::config(&self) -> &cameo::prov
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_movies(&self) -> cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'_>
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_tv(&self) -> cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'_>
 pub async fn cameo::providers::tmdb::client::TmdbClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::movie_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
@@ -3004,6 +3011,7 @@ pub async fn cameo::providers::tmdb::client::TmdbClient::tv_external_ids(&self, 
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self, i32, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
@@ -3274,6 +3282,9 @@ pub cameo::providers::tmdb::error::TmdbError::Api::status_code: core::option::Op
 pub cameo::providers::tmdb::error::TmdbError::Deserialization(serde_json::error::Error)
 pub cameo::providers::tmdb::error::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::providers::tmdb::error::TmdbError::InvalidConfig(alloc::string::String)
+pub cameo::providers::tmdb::error::TmdbError::PageOutOfRange
+pub cameo::providers::tmdb::error::TmdbError::PageOutOfRange::field: &'static str
+pub cameo::providers::tmdb::error::TmdbError::PageOutOfRange::value: i64
 pub cameo::providers::tmdb::error::TmdbError::Request
 pub cameo::providers::tmdb::error::TmdbError::Request::kind: cameo::providers::tmdb::error::RequestErrorKind
 pub cameo::providers::tmdb::error::TmdbError::Request::message: alloc::string::String
@@ -3707,7 +3718,7 @@ pub cameo::providers::tmdb::models::CastMember::gender: core::option::Option<cam
 pub cameo::providers::tmdb::models::CastMember::id: u64
 pub cameo::providers::tmdb::models::CastMember::known_for_department: core::option::Option<alloc::string::String>
 pub cameo::providers::tmdb::models::CastMember::name: alloc::string::String
-pub cameo::providers::tmdb::models::CastMember::order: u32
+pub cameo::providers::tmdb::models::CastMember::order: core::option::Option<u32>
 pub cameo::providers::tmdb::models::CastMember::profile_url: core::option::Option<alloc::string::String>
 impl core::clone::Clone for cameo::providers::tmdb::models::CastMember
 pub fn cameo::providers::tmdb::models::CastMember::clone(&self) -> cameo::providers::tmdb::models::CastMember
@@ -3808,6 +3819,62 @@ pub fn cameo::providers::tmdb::models::CrewMember::and<P, B, E>(self, P) -> towe
 pub fn cameo::providers::tmdb::models::CrewMember::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::models::CrewMember
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::models::CrewMember
+#[non_exhaustive] pub struct cameo::providers::tmdb::models::TmdbCertification
+pub cameo::providers::tmdb::models::TmdbCertification::certification: alloc::string::String
+pub cameo::providers::tmdb::models::TmdbCertification::country: alloc::string::String
+impl core::clone::Clone for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::clone(&self) -> cameo::providers::tmdb::models::TmdbCertification
+impl core::cmp::Eq for cameo::providers::tmdb::models::TmdbCertification
+impl core::cmp::PartialEq for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::eq(&self, &cameo::providers::tmdb::models::TmdbCertification) -> bool
+impl core::fmt::Debug for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::models::TmdbCertification
+impl serde_core::ser::Serialize for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::providers::tmdb::models::TmdbCertification
+impl core::marker::Send for cameo::providers::tmdb::models::TmdbCertification
+impl core::marker::Sync for cameo::providers::tmdb::models::TmdbCertification
+impl core::marker::Unpin for cameo::providers::tmdb::models::TmdbCertification
+impl core::marker::UnsafeUnpin for cameo::providers::tmdb::models::TmdbCertification
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::models::TmdbCertification
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::models::TmdbCertification
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::models::TmdbCertification where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::models::TmdbCertification where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::models::TmdbCertification where U: core::convert::From<T>
+pub fn cameo::providers::tmdb::models::TmdbCertification::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::models::TmdbCertification where U: core::convert::Into<T>
+pub type cameo::providers::tmdb::models::TmdbCertification::Error = core::convert::Infallible
+pub fn cameo::providers::tmdb::models::TmdbCertification::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::tmdb::models::TmdbCertification where U: core::convert::TryFrom<T>
+pub type cameo::providers::tmdb::models::TmdbCertification::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::tmdb::models::TmdbCertification::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::tmdb::models::TmdbCertification where T: core::clone::Clone
+pub type cameo::providers::tmdb::models::TmdbCertification::Owned = T
+pub fn cameo::providers::tmdb::models::TmdbCertification::clone_into(&self, &mut T)
+pub fn cameo::providers::tmdb::models::TmdbCertification::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::tmdb::models::TmdbCertification where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::tmdb::models::TmdbCertification where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::tmdb::models::TmdbCertification where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::tmdb::models::TmdbCertification where T: core::clone::Clone
+pub unsafe fn cameo::providers::tmdb::models::TmdbCertification::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::providers::tmdb::models::TmdbCertification where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::tmdb::models::TmdbCertification where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::tmdb::models::TmdbCertification::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::models::TmdbCertification
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::models::TmdbCertification
 #[non_exhaustive] pub struct cameo::providers::tmdb::models::TmdbCredits
 pub cameo::providers::tmdb::models::TmdbCredits::cast: alloc::vec::Vec<cameo::providers::tmdb::models::CastMember>
 pub cameo::providers::tmdb::models::TmdbCredits::crew: alloc::vec::Vec<cameo::providers::tmdb::models::CrewMember>
@@ -3858,13 +3925,13 @@ pub fn cameo::providers::tmdb::models::TmdbCredits::or<P, B, E>(self, P) -> towe
 impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::models::TmdbCredits
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::models::TmdbCredits
 #[non_exhaustive] pub struct cameo::providers::tmdb::models::TmdbImage
-pub cameo::providers::tmdb::models::TmdbImage::aspect_ratio: f64
-pub cameo::providers::tmdb::models::TmdbImage::height: u32
+pub cameo::providers::tmdb::models::TmdbImage::aspect_ratio: core::option::Option<f64>
+pub cameo::providers::tmdb::models::TmdbImage::height: core::option::Option<u32>
 pub cameo::providers::tmdb::models::TmdbImage::language: core::option::Option<alloc::string::String>
 pub cameo::providers::tmdb::models::TmdbImage::url: core::option::Option<alloc::string::String>
-pub cameo::providers::tmdb::models::TmdbImage::vote_average: f64
-pub cameo::providers::tmdb::models::TmdbImage::vote_count: u64
-pub cameo::providers::tmdb::models::TmdbImage::width: u32
+pub cameo::providers::tmdb::models::TmdbImage::vote_average: core::option::Option<f64>
+pub cameo::providers::tmdb::models::TmdbImage::vote_count: core::option::Option<u64>
+pub cameo::providers::tmdb::models::TmdbImage::width: core::option::Option<u32>
 impl core::clone::Clone for cameo::providers::tmdb::models::TmdbImage
 pub fn cameo::providers::tmdb::models::TmdbImage::clone(&self) -> cameo::providers::tmdb::models::TmdbImage
 impl core::cmp::PartialEq for cameo::providers::tmdb::models::TmdbImage
@@ -4297,6 +4364,9 @@ pub cameo::providers::tmdb::TmdbError::Api::status_code: core::option::Option<i6
 pub cameo::providers::tmdb::TmdbError::Deserialization(serde_json::error::Error)
 pub cameo::providers::tmdb::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::providers::tmdb::TmdbError::InvalidConfig(alloc::string::String)
+pub cameo::providers::tmdb::TmdbError::PageOutOfRange
+pub cameo::providers::tmdb::TmdbError::PageOutOfRange::field: &'static str
+pub cameo::providers::tmdb::TmdbError::PageOutOfRange::value: i64
 pub cameo::providers::tmdb::TmdbError::Request
 pub cameo::providers::tmdb::TmdbError::Request::kind: cameo::providers::tmdb::error::RequestErrorKind
 pub cameo::providers::tmdb::TmdbError::Request::message: alloc::string::String
@@ -4349,7 +4419,7 @@ pub cameo::providers::tmdb::CastMember::gender: core::option::Option<cameo::unif
 pub cameo::providers::tmdb::CastMember::id: u64
 pub cameo::providers::tmdb::CastMember::known_for_department: core::option::Option<alloc::string::String>
 pub cameo::providers::tmdb::CastMember::name: alloc::string::String
-pub cameo::providers::tmdb::CastMember::order: u32
+pub cameo::providers::tmdb::CastMember::order: core::option::Option<u32>
 pub cameo::providers::tmdb::CastMember::profile_url: core::option::Option<alloc::string::String>
 impl core::clone::Clone for cameo::providers::tmdb::models::CastMember
 pub fn cameo::providers::tmdb::models::CastMember::clone(&self) -> cameo::providers::tmdb::models::CastMember
@@ -4506,12 +4576,69 @@ pub fn cameo::providers::tmdb::image_url::ImageUrl::and<P, B, E>(self, P) -> tow
 pub fn cameo::providers::tmdb::image_url::ImageUrl::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::image_url::ImageUrl
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::image_url::ImageUrl
+#[non_exhaustive] pub struct cameo::providers::tmdb::TmdbCertification
+pub cameo::providers::tmdb::TmdbCertification::certification: alloc::string::String
+pub cameo::providers::tmdb::TmdbCertification::country: alloc::string::String
+impl core::clone::Clone for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::clone(&self) -> cameo::providers::tmdb::models::TmdbCertification
+impl core::cmp::Eq for cameo::providers::tmdb::models::TmdbCertification
+impl core::cmp::PartialEq for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::eq(&self, &cameo::providers::tmdb::models::TmdbCertification) -> bool
+impl core::fmt::Debug for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::models::TmdbCertification
+impl serde_core::ser::Serialize for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::providers::tmdb::models::TmdbCertification
+impl core::marker::Send for cameo::providers::tmdb::models::TmdbCertification
+impl core::marker::Sync for cameo::providers::tmdb::models::TmdbCertification
+impl core::marker::Unpin for cameo::providers::tmdb::models::TmdbCertification
+impl core::marker::UnsafeUnpin for cameo::providers::tmdb::models::TmdbCertification
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::models::TmdbCertification
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::models::TmdbCertification
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::models::TmdbCertification where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::models::TmdbCertification where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::models::TmdbCertification where U: core::convert::From<T>
+pub fn cameo::providers::tmdb::models::TmdbCertification::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::models::TmdbCertification where U: core::convert::Into<T>
+pub type cameo::providers::tmdb::models::TmdbCertification::Error = core::convert::Infallible
+pub fn cameo::providers::tmdb::models::TmdbCertification::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::tmdb::models::TmdbCertification where U: core::convert::TryFrom<T>
+pub type cameo::providers::tmdb::models::TmdbCertification::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::tmdb::models::TmdbCertification::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::tmdb::models::TmdbCertification where T: core::clone::Clone
+pub type cameo::providers::tmdb::models::TmdbCertification::Owned = T
+pub fn cameo::providers::tmdb::models::TmdbCertification::clone_into(&self, &mut T)
+pub fn cameo::providers::tmdb::models::TmdbCertification::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::providers::tmdb::models::TmdbCertification where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::tmdb::models::TmdbCertification where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::tmdb::models::TmdbCertification where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::tmdb::models::TmdbCertification where T: core::clone::Clone
+pub unsafe fn cameo::providers::tmdb::models::TmdbCertification::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::tmdb::models::TmdbCertification
+pub fn cameo::providers::tmdb::models::TmdbCertification::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::providers::tmdb::models::TmdbCertification where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::tmdb::models::TmdbCertification where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::models::TmdbCertification::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::tmdb::models::TmdbCertification::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::models::TmdbCertification
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::models::TmdbCertification
 pub struct cameo::providers::tmdb::TmdbClient
 impl cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::config(&self) -> &cameo::providers::tmdb::config::TmdbConfig
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_movies(&self) -> cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'_>
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_tv(&self) -> cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'_>
 pub async fn cameo::providers::tmdb::client::TmdbClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::movie_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
@@ -4539,6 +4666,7 @@ pub async fn cameo::providers::tmdb::client::TmdbClient::tv_external_ids(&self, 
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self, i32, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
@@ -4741,13 +4869,13 @@ pub fn cameo::providers::tmdb::models::TmdbCredits::or<P, B, E>(self, P) -> towe
 impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::models::TmdbCredits
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::models::TmdbCredits
 #[non_exhaustive] pub struct cameo::providers::tmdb::TmdbImage
-pub cameo::providers::tmdb::TmdbImage::aspect_ratio: f64
-pub cameo::providers::tmdb::TmdbImage::height: u32
+pub cameo::providers::tmdb::TmdbImage::aspect_ratio: core::option::Option<f64>
+pub cameo::providers::tmdb::TmdbImage::height: core::option::Option<u32>
 pub cameo::providers::tmdb::TmdbImage::language: core::option::Option<alloc::string::String>
 pub cameo::providers::tmdb::TmdbImage::url: core::option::Option<alloc::string::String>
-pub cameo::providers::tmdb::TmdbImage::vote_average: f64
-pub cameo::providers::tmdb::TmdbImage::vote_count: u64
-pub cameo::providers::tmdb::TmdbImage::width: u32
+pub cameo::providers::tmdb::TmdbImage::vote_average: core::option::Option<f64>
+pub cameo::providers::tmdb::TmdbImage::vote_count: core::option::Option<u64>
+pub cameo::providers::tmdb::TmdbImage::width: core::option::Option<u32>
 impl core::clone::Clone for cameo::providers::tmdb::models::TmdbImage
 pub fn cameo::providers::tmdb::models::TmdbImage::clone(&self) -> cameo::providers::tmdb::models::TmdbImage
 impl core::cmp::PartialEq for cameo::providers::tmdb::models::TmdbImage
@@ -5357,95 +5485,96 @@ pub mod cameo::unified::facade
 pub cameo::unified::facade::CameoClientError::NotConfigured
 pub cameo::unified::facade::CameoClientError::Provider(cameo::core::error::ProviderError)
 pub cameo::unified::facade::CameoClientError::Unsupported
-impl core::convert::From<cameo::core::error::ProviderError> for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::from(cameo::core::error::ProviderError) -> Self
-impl core::error::Error for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
-impl core::fmt::Debug for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::fmt::Display for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::marker::Freeze for cameo::unified::facade::CameoClientError
-impl core::marker::Send for cameo::unified::facade::CameoClientError
-impl core::marker::Sync for cameo::unified::facade::CameoClientError
-impl core::marker::Unpin for cameo::unified::facade::CameoClientError
-impl core::marker::UnsafeUnpin for cameo::unified::facade::CameoClientError
-impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::facade::CameoClientError
-impl core::panic::unwind_safe::UnwindSafe for cameo::unified::facade::CameoClientError
-impl<T, U> core::convert::Into<U> for cameo::unified::facade::CameoClientError where U: core::convert::From<T>
-pub fn cameo::unified::facade::CameoClientError::into(self) -> U
-impl<T, U> core::convert::TryFrom<U> for cameo::unified::facade::CameoClientError where U: core::convert::Into<T>
-pub type cameo::unified::facade::CameoClientError::Error = core::convert::Infallible
-pub fn cameo::unified::facade::CameoClientError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
-impl<T, U> core::convert::TryInto<U> for cameo::unified::facade::CameoClientError where U: core::convert::TryFrom<T>
-pub type cameo::unified::facade::CameoClientError::Error = <U as core::convert::TryFrom<T>>::Error
-pub fn cameo::unified::facade::CameoClientError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
-impl<T> alloc::string::ToString for cameo::unified::facade::CameoClientError where T: core::fmt::Display + ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::to_string(&self) -> alloc::string::String
-impl<T> core::any::Any for cameo::unified::facade::CameoClientError where T: 'static + ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::type_id(&self) -> core::any::TypeId
-impl<T> core::borrow::Borrow<T> for cameo::unified::facade::CameoClientError where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::borrow(&self) -> &T
-impl<T> core::borrow::BorrowMut<T> for cameo::unified::facade::CameoClientError where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::borrow_mut(&mut self) -> &mut T
-impl<T> core::convert::From<T> for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::from(T) -> T
-impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::facade::CameoClientError where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-pub fn cameo::unified::facade::CameoClientError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClientError
-impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClientError
+impl core::convert::From<cameo::core::error::ProviderError> for cameo::CameoClientError
+pub fn cameo::CameoClientError::from(cameo::core::error::ProviderError) -> Self
+impl core::error::Error for cameo::CameoClientError
+pub fn cameo::CameoClientError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
+impl core::fmt::Debug for cameo::CameoClientError
+pub fn cameo::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::CameoClientError
+pub fn cameo::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::CameoClientError
+impl core::marker::Send for cameo::CameoClientError
+impl core::marker::Sync for cameo::CameoClientError
+impl core::marker::Unpin for cameo::CameoClientError
+impl core::marker::UnsafeUnpin for cameo::CameoClientError
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::CameoClientError
+impl core::panic::unwind_safe::UnwindSafe for cameo::CameoClientError
+impl<T, U> core::convert::Into<U> for cameo::CameoClientError where U: core::convert::From<T>
+pub fn cameo::CameoClientError::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::CameoClientError where U: core::convert::Into<T>
+pub type cameo::CameoClientError::Error = core::convert::Infallible
+pub fn cameo::CameoClientError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::CameoClientError where U: core::convert::TryFrom<T>
+pub type cameo::CameoClientError::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::CameoClientError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::string::ToString for cameo::CameoClientError where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::CameoClientError::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::CameoClientError where T: 'static + ?core::marker::Sized
+pub fn cameo::CameoClientError::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::CameoClientError where T: ?core::marker::Sized
+pub fn cameo::CameoClientError::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::CameoClientError where T: ?core::marker::Sized
+pub fn cameo::CameoClientError::borrow_mut(&mut self) -> &mut T
+impl<T> core::convert::From<T> for cameo::CameoClientError
+pub fn cameo::CameoClientError::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::CameoClientError where T: ?core::marker::Sized
+pub fn cameo::CameoClientError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::CameoClientError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::CameoClientError
+impl<T> tracing::instrument::WithSubscriber for cameo::CameoClientError
 pub struct cameo::unified::facade::CameoClient
 impl cameo::unified::facade::CameoClient
-pub fn cameo::unified::facade::CameoClient::builder() -> cameo::unified::facade::CameoClientBuilder
-pub async fn cameo::unified::facade::CameoClient::cached_movie(&self, &str) -> core::option::Option<cameo::unified::UnifiedMovie>
-pub async fn cameo::unified::facade::CameoClient::cached_movie_details(&self, &str) -> core::option::Option<cameo::unified::UnifiedMovieDetails>
-pub async fn cameo::unified::facade::CameoClient::cached_person(&self, &str) -> core::option::Option<cameo::unified::UnifiedPerson>
-pub async fn cameo::unified::facade::CameoClient::cached_person_details(&self, &str) -> core::option::Option<cameo::unified::UnifiedPersonDetails>
-pub async fn cameo::unified::facade::CameoClient::cached_tv_show(&self, &str) -> core::option::Option<cameo::unified::UnifiedTvShow>
-pub async fn cameo::unified::facade::CameoClient::cached_tv_show_details(&self, &str) -> core::option::Option<cameo::unified::UnifiedTvShowDetails>
-pub async fn cameo::unified::facade::CameoClient::clear_cache(&self)
-pub async fn cameo::unified::facade::CameoClient::invalidate_cached(&self, &str)
+pub fn cameo::unified::facade::CameoClient::builder() -> cameo::CameoClientBuilder
 pub fn cameo::unified::facade::CameoClient::provider_ids(&self) -> alloc::vec::Vec<&str>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::episode_details(&self, &cameo::unified::media_id::MediaId, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::season_details(&self, &cameo::unified::media_id::MediaId, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::cached_movie(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedMovie>
+pub async fn cameo::unified::facade::CameoClient::cached_movie_details(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedMovieDetails>
+pub async fn cameo::unified::facade::CameoClient::cached_person(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedPerson>
+pub async fn cameo::unified::facade::CameoClient::cached_person_details(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedPersonDetails>
+pub async fn cameo::unified::facade::CameoClient::cached_tv_show(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedTvShow>
+pub async fn cameo::unified::facade::CameoClient::cached_tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedTvShowDetails>
+pub async fn cameo::unified::facade::CameoClient::clear_cache(&self)
+pub async fn cameo::unified::facade::CameoClient::invalidate_cached(&self, &cameo::unified::media_id::MediaId)
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::episode_details(&self, &cameo::unified::media_id::MediaId, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::season_details(&self, &cameo::unified::media_id::MediaId, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_show_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_show_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::similar_movies(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::similar_tv_shows(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::similar_movies(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::similar_tv_shows(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::trending_movies(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::trending_tv_shows(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::trending_movies(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::trending_tv_shows(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::search_movies_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_multi_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_people_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_tv_shows_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::search_movies_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_multi_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_people_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_tv_shows_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
 impl core::clone::Clone for cameo::unified::facade::CameoClient
 pub fn cameo::unified::facade::CameoClient::clone(&self) -> cameo::unified::facade::CameoClient
 impl core::fmt::Debug for cameo::unified::facade::CameoClient
@@ -5485,54 +5614,54 @@ pub fn cameo::unified::facade::CameoClient::or<P, B, E>(self, P) -> tower_http::
 impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClient
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClient
 pub struct cameo::unified::facade::CameoClientBuilder
-impl cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::unified::facade::CameoClientError>
-pub fn cameo::unified::facade::CameoClientBuilder::register_credits_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::CreditsProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::RecommendationProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SearchProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SeasonProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_watch_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::WatchAvailabilityProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_anilist(self, cameo::providers::anilist::config::AniListConfig) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_cache(self) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_cache_backend(self, alloc::sync::Arc<dyn cameo::cache::backend::CacheBackend>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_cache_ttl(self, cameo::cache::CacheTtlConfig) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_priority<I, S>(self, I) -> Self where I: core::iter::traits::collect::IntoIterator<Item = S>, S: core::convert::Into<alloc::string::String>
-pub fn cameo::unified::facade::CameoClientBuilder::with_tmdb(self, cameo::providers::tmdb::config::TmdbConfig) -> Self
-impl core::default::Default for cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::default() -> cameo::unified::facade::CameoClientBuilder
-impl core::fmt::Debug for cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::marker::Freeze for cameo::unified::facade::CameoClientBuilder
-impl core::marker::Send for cameo::unified::facade::CameoClientBuilder
-impl core::marker::Sync for cameo::unified::facade::CameoClientBuilder
-impl core::marker::Unpin for cameo::unified::facade::CameoClientBuilder
-impl core::marker::UnsafeUnpin for cameo::unified::facade::CameoClientBuilder
-impl !core::panic::unwind_safe::RefUnwindSafe for cameo::unified::facade::CameoClientBuilder
-impl !core::panic::unwind_safe::UnwindSafe for cameo::unified::facade::CameoClientBuilder
-impl<T, U> core::convert::Into<U> for cameo::unified::facade::CameoClientBuilder where U: core::convert::From<T>
-pub fn cameo::unified::facade::CameoClientBuilder::into(self) -> U
-impl<T, U> core::convert::TryFrom<U> for cameo::unified::facade::CameoClientBuilder where U: core::convert::Into<T>
-pub type cameo::unified::facade::CameoClientBuilder::Error = core::convert::Infallible
-pub fn cameo::unified::facade::CameoClientBuilder::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
-impl<T, U> core::convert::TryInto<U> for cameo::unified::facade::CameoClientBuilder where U: core::convert::TryFrom<T>
-pub type cameo::unified::facade::CameoClientBuilder::Error = <U as core::convert::TryFrom<T>>::Error
-pub fn cameo::unified::facade::CameoClientBuilder::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
-impl<T> core::any::Any for cameo::unified::facade::CameoClientBuilder where T: 'static + ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::type_id(&self) -> core::any::TypeId
-impl<T> core::borrow::Borrow<T> for cameo::unified::facade::CameoClientBuilder where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::borrow(&self) -> &T
-impl<T> core::borrow::BorrowMut<T> for cameo::unified::facade::CameoClientBuilder where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::borrow_mut(&mut self) -> &mut T
-impl<T> core::convert::From<T> for cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::from(T) -> T
-impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::facade::CameoClientBuilder where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-pub fn cameo::unified::facade::CameoClientBuilder::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClientBuilder
-impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClientBuilder
+impl cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::CameoClientError>
+pub fn cameo::CameoClientBuilder::register_credits_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::CreditsProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::RecommendationProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SearchProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SeasonProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_watch_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::WatchAvailabilityProvider>) -> Self
+pub fn cameo::CameoClientBuilder::with_anilist(self, cameo::providers::anilist::config::AniListConfig) -> Self
+pub fn cameo::CameoClientBuilder::with_cache(self) -> Self
+pub fn cameo::CameoClientBuilder::with_cache_backend(self, alloc::sync::Arc<dyn cameo::cache::backend::CacheBackend>) -> Self
+pub fn cameo::CameoClientBuilder::with_cache_ttl(self, cameo::cache::CacheTtlConfig) -> Self
+pub fn cameo::CameoClientBuilder::with_priority<I, S>(self, I) -> Self where I: core::iter::traits::collect::IntoIterator<Item = S>, S: core::convert::Into<alloc::string::String>
+pub fn cameo::CameoClientBuilder::with_tmdb(self, cameo::providers::tmdb::config::TmdbConfig) -> Self
+impl core::default::Default for cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::default() -> cameo::CameoClientBuilder
+impl core::fmt::Debug for cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::CameoClientBuilder
+impl core::marker::Send for cameo::CameoClientBuilder
+impl core::marker::Sync for cameo::CameoClientBuilder
+impl core::marker::Unpin for cameo::CameoClientBuilder
+impl core::marker::UnsafeUnpin for cameo::CameoClientBuilder
+impl !core::panic::unwind_safe::RefUnwindSafe for cameo::CameoClientBuilder
+impl !core::panic::unwind_safe::UnwindSafe for cameo::CameoClientBuilder
+impl<T, U> core::convert::Into<U> for cameo::CameoClientBuilder where U: core::convert::From<T>
+pub fn cameo::CameoClientBuilder::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::CameoClientBuilder where U: core::convert::Into<T>
+pub type cameo::CameoClientBuilder::Error = core::convert::Infallible
+pub fn cameo::CameoClientBuilder::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::CameoClientBuilder where U: core::convert::TryFrom<T>
+pub type cameo::CameoClientBuilder::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::CameoClientBuilder::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> core::any::Any for cameo::CameoClientBuilder where T: 'static + ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::CameoClientBuilder where T: ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::CameoClientBuilder where T: ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::borrow_mut(&mut self) -> &mut T
+impl<T> core::convert::From<T> for cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::CameoClientBuilder where T: ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::CameoClientBuilder::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::CameoClientBuilder
+impl<T> tracing::instrument::WithSubscriber for cameo::CameoClientBuilder
 pub mod cameo::unified::genre
 #[non_exhaustive] pub enum cameo::unified::genre::Genre
 pub cameo::unified::genre::Genre::Action
@@ -7595,44 +7724,44 @@ pub fn cameo::providers::tmdb::client::TmdbClient::tv_watch_providers<'life0, 'l
 pub cameo::unified::CameoClientError::NotConfigured
 pub cameo::unified::CameoClientError::Provider(cameo::core::error::ProviderError)
 pub cameo::unified::CameoClientError::Unsupported
-impl core::convert::From<cameo::core::error::ProviderError> for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::from(cameo::core::error::ProviderError) -> Self
-impl core::error::Error for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
-impl core::fmt::Debug for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::fmt::Display for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::marker::Freeze for cameo::unified::facade::CameoClientError
-impl core::marker::Send for cameo::unified::facade::CameoClientError
-impl core::marker::Sync for cameo::unified::facade::CameoClientError
-impl core::marker::Unpin for cameo::unified::facade::CameoClientError
-impl core::marker::UnsafeUnpin for cameo::unified::facade::CameoClientError
-impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::facade::CameoClientError
-impl core::panic::unwind_safe::UnwindSafe for cameo::unified::facade::CameoClientError
-impl<T, U> core::convert::Into<U> for cameo::unified::facade::CameoClientError where U: core::convert::From<T>
-pub fn cameo::unified::facade::CameoClientError::into(self) -> U
-impl<T, U> core::convert::TryFrom<U> for cameo::unified::facade::CameoClientError where U: core::convert::Into<T>
-pub type cameo::unified::facade::CameoClientError::Error = core::convert::Infallible
-pub fn cameo::unified::facade::CameoClientError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
-impl<T, U> core::convert::TryInto<U> for cameo::unified::facade::CameoClientError where U: core::convert::TryFrom<T>
-pub type cameo::unified::facade::CameoClientError::Error = <U as core::convert::TryFrom<T>>::Error
-pub fn cameo::unified::facade::CameoClientError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
-impl<T> alloc::string::ToString for cameo::unified::facade::CameoClientError where T: core::fmt::Display + ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::to_string(&self) -> alloc::string::String
-impl<T> core::any::Any for cameo::unified::facade::CameoClientError where T: 'static + ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::type_id(&self) -> core::any::TypeId
-impl<T> core::borrow::Borrow<T> for cameo::unified::facade::CameoClientError where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::borrow(&self) -> &T
-impl<T> core::borrow::BorrowMut<T> for cameo::unified::facade::CameoClientError where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::borrow_mut(&mut self) -> &mut T
-impl<T> core::convert::From<T> for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::from(T) -> T
-impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::facade::CameoClientError where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-pub fn cameo::unified::facade::CameoClientError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClientError
-impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClientError
+impl core::convert::From<cameo::core::error::ProviderError> for cameo::CameoClientError
+pub fn cameo::CameoClientError::from(cameo::core::error::ProviderError) -> Self
+impl core::error::Error for cameo::CameoClientError
+pub fn cameo::CameoClientError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
+impl core::fmt::Debug for cameo::CameoClientError
+pub fn cameo::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::CameoClientError
+pub fn cameo::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::CameoClientError
+impl core::marker::Send for cameo::CameoClientError
+impl core::marker::Sync for cameo::CameoClientError
+impl core::marker::Unpin for cameo::CameoClientError
+impl core::marker::UnsafeUnpin for cameo::CameoClientError
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::CameoClientError
+impl core::panic::unwind_safe::UnwindSafe for cameo::CameoClientError
+impl<T, U> core::convert::Into<U> for cameo::CameoClientError where U: core::convert::From<T>
+pub fn cameo::CameoClientError::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::CameoClientError where U: core::convert::Into<T>
+pub type cameo::CameoClientError::Error = core::convert::Infallible
+pub fn cameo::CameoClientError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::CameoClientError where U: core::convert::TryFrom<T>
+pub type cameo::CameoClientError::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::CameoClientError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::string::ToString for cameo::CameoClientError where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::CameoClientError::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::CameoClientError where T: 'static + ?core::marker::Sized
+pub fn cameo::CameoClientError::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::CameoClientError where T: ?core::marker::Sized
+pub fn cameo::CameoClientError::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::CameoClientError where T: ?core::marker::Sized
+pub fn cameo::CameoClientError::borrow_mut(&mut self) -> &mut T
+impl<T> core::convert::From<T> for cameo::CameoClientError
+pub fn cameo::CameoClientError::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::CameoClientError where T: ?core::marker::Sized
+pub fn cameo::CameoClientError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::CameoClientError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::CameoClientError
+impl<T> tracing::instrument::WithSubscriber for cameo::CameoClientError
 #[non_exhaustive] pub enum cameo::unified::Capability
 pub cameo::unified::Capability::Credits
 pub cameo::unified::Capability::Details
@@ -8446,55 +8575,56 @@ impl<T> tracing::instrument::Instrument for cameo::unified::AlternativeTitle
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::AlternativeTitle
 pub struct cameo::unified::CameoClient
 impl cameo::unified::facade::CameoClient
-pub fn cameo::unified::facade::CameoClient::builder() -> cameo::unified::facade::CameoClientBuilder
-pub async fn cameo::unified::facade::CameoClient::cached_movie(&self, &str) -> core::option::Option<cameo::unified::UnifiedMovie>
-pub async fn cameo::unified::facade::CameoClient::cached_movie_details(&self, &str) -> core::option::Option<cameo::unified::UnifiedMovieDetails>
-pub async fn cameo::unified::facade::CameoClient::cached_person(&self, &str) -> core::option::Option<cameo::unified::UnifiedPerson>
-pub async fn cameo::unified::facade::CameoClient::cached_person_details(&self, &str) -> core::option::Option<cameo::unified::UnifiedPersonDetails>
-pub async fn cameo::unified::facade::CameoClient::cached_tv_show(&self, &str) -> core::option::Option<cameo::unified::UnifiedTvShow>
-pub async fn cameo::unified::facade::CameoClient::cached_tv_show_details(&self, &str) -> core::option::Option<cameo::unified::UnifiedTvShowDetails>
-pub async fn cameo::unified::facade::CameoClient::clear_cache(&self)
-pub async fn cameo::unified::facade::CameoClient::invalidate_cached(&self, &str)
+pub fn cameo::unified::facade::CameoClient::builder() -> cameo::CameoClientBuilder
 pub fn cameo::unified::facade::CameoClient::provider_ids(&self) -> alloc::vec::Vec<&str>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::episode_details(&self, &cameo::unified::media_id::MediaId, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::season_details(&self, &cameo::unified::media_id::MediaId, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::cached_movie(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedMovie>
+pub async fn cameo::unified::facade::CameoClient::cached_movie_details(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedMovieDetails>
+pub async fn cameo::unified::facade::CameoClient::cached_person(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedPerson>
+pub async fn cameo::unified::facade::CameoClient::cached_person_details(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedPersonDetails>
+pub async fn cameo::unified::facade::CameoClient::cached_tv_show(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedTvShow>
+pub async fn cameo::unified::facade::CameoClient::cached_tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedTvShowDetails>
+pub async fn cameo::unified::facade::CameoClient::clear_cache(&self)
+pub async fn cameo::unified::facade::CameoClient::invalidate_cached(&self, &cameo::unified::media_id::MediaId)
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::episode_details(&self, &cameo::unified::media_id::MediaId, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::season_details(&self, &cameo::unified::media_id::MediaId, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_show_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_show_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::similar_movies(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::similar_tv_shows(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::similar_movies(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::similar_tv_shows(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::trending_movies(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::trending_tv_shows(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::trending_movies(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::trending_tv_shows(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::search_movies_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_multi_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_people_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_tv_shows_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::search_movies_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_multi_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_people_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_tv_shows_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
 impl core::clone::Clone for cameo::unified::facade::CameoClient
 pub fn cameo::unified::facade::CameoClient::clone(&self) -> cameo::unified::facade::CameoClient
 impl core::fmt::Debug for cameo::unified::facade::CameoClient
@@ -8534,54 +8664,54 @@ pub fn cameo::unified::facade::CameoClient::or<P, B, E>(self, P) -> tower_http::
 impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClient
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClient
 pub struct cameo::unified::CameoClientBuilder
-impl cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::unified::facade::CameoClientError>
-pub fn cameo::unified::facade::CameoClientBuilder::register_credits_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::CreditsProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::RecommendationProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SearchProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SeasonProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_watch_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::WatchAvailabilityProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_anilist(self, cameo::providers::anilist::config::AniListConfig) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_cache(self) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_cache_backend(self, alloc::sync::Arc<dyn cameo::cache::backend::CacheBackend>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_cache_ttl(self, cameo::cache::CacheTtlConfig) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_priority<I, S>(self, I) -> Self where I: core::iter::traits::collect::IntoIterator<Item = S>, S: core::convert::Into<alloc::string::String>
-pub fn cameo::unified::facade::CameoClientBuilder::with_tmdb(self, cameo::providers::tmdb::config::TmdbConfig) -> Self
-impl core::default::Default for cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::default() -> cameo::unified::facade::CameoClientBuilder
-impl core::fmt::Debug for cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::marker::Freeze for cameo::unified::facade::CameoClientBuilder
-impl core::marker::Send for cameo::unified::facade::CameoClientBuilder
-impl core::marker::Sync for cameo::unified::facade::CameoClientBuilder
-impl core::marker::Unpin for cameo::unified::facade::CameoClientBuilder
-impl core::marker::UnsafeUnpin for cameo::unified::facade::CameoClientBuilder
-impl !core::panic::unwind_safe::RefUnwindSafe for cameo::unified::facade::CameoClientBuilder
-impl !core::panic::unwind_safe::UnwindSafe for cameo::unified::facade::CameoClientBuilder
-impl<T, U> core::convert::Into<U> for cameo::unified::facade::CameoClientBuilder where U: core::convert::From<T>
-pub fn cameo::unified::facade::CameoClientBuilder::into(self) -> U
-impl<T, U> core::convert::TryFrom<U> for cameo::unified::facade::CameoClientBuilder where U: core::convert::Into<T>
-pub type cameo::unified::facade::CameoClientBuilder::Error = core::convert::Infallible
-pub fn cameo::unified::facade::CameoClientBuilder::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
-impl<T, U> core::convert::TryInto<U> for cameo::unified::facade::CameoClientBuilder where U: core::convert::TryFrom<T>
-pub type cameo::unified::facade::CameoClientBuilder::Error = <U as core::convert::TryFrom<T>>::Error
-pub fn cameo::unified::facade::CameoClientBuilder::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
-impl<T> core::any::Any for cameo::unified::facade::CameoClientBuilder where T: 'static + ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::type_id(&self) -> core::any::TypeId
-impl<T> core::borrow::Borrow<T> for cameo::unified::facade::CameoClientBuilder where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::borrow(&self) -> &T
-impl<T> core::borrow::BorrowMut<T> for cameo::unified::facade::CameoClientBuilder where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::borrow_mut(&mut self) -> &mut T
-impl<T> core::convert::From<T> for cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::from(T) -> T
-impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::facade::CameoClientBuilder where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-pub fn cameo::unified::facade::CameoClientBuilder::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClientBuilder
-impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClientBuilder
+impl cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::CameoClientError>
+pub fn cameo::CameoClientBuilder::register_credits_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::CreditsProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::RecommendationProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SearchProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SeasonProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_watch_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::WatchAvailabilityProvider>) -> Self
+pub fn cameo::CameoClientBuilder::with_anilist(self, cameo::providers::anilist::config::AniListConfig) -> Self
+pub fn cameo::CameoClientBuilder::with_cache(self) -> Self
+pub fn cameo::CameoClientBuilder::with_cache_backend(self, alloc::sync::Arc<dyn cameo::cache::backend::CacheBackend>) -> Self
+pub fn cameo::CameoClientBuilder::with_cache_ttl(self, cameo::cache::CacheTtlConfig) -> Self
+pub fn cameo::CameoClientBuilder::with_priority<I, S>(self, I) -> Self where I: core::iter::traits::collect::IntoIterator<Item = S>, S: core::convert::Into<alloc::string::String>
+pub fn cameo::CameoClientBuilder::with_tmdb(self, cameo::providers::tmdb::config::TmdbConfig) -> Self
+impl core::default::Default for cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::default() -> cameo::CameoClientBuilder
+impl core::fmt::Debug for cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::CameoClientBuilder
+impl core::marker::Send for cameo::CameoClientBuilder
+impl core::marker::Sync for cameo::CameoClientBuilder
+impl core::marker::Unpin for cameo::CameoClientBuilder
+impl core::marker::UnsafeUnpin for cameo::CameoClientBuilder
+impl !core::panic::unwind_safe::RefUnwindSafe for cameo::CameoClientBuilder
+impl !core::panic::unwind_safe::UnwindSafe for cameo::CameoClientBuilder
+impl<T, U> core::convert::Into<U> for cameo::CameoClientBuilder where U: core::convert::From<T>
+pub fn cameo::CameoClientBuilder::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::CameoClientBuilder where U: core::convert::Into<T>
+pub type cameo::CameoClientBuilder::Error = core::convert::Infallible
+pub fn cameo::CameoClientBuilder::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::CameoClientBuilder where U: core::convert::TryFrom<T>
+pub type cameo::CameoClientBuilder::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::CameoClientBuilder::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> core::any::Any for cameo::CameoClientBuilder where T: 'static + ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::CameoClientBuilder where T: ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::CameoClientBuilder where T: ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::borrow_mut(&mut self) -> &mut T
+impl<T> core::convert::From<T> for cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::CameoClientBuilder where T: ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::CameoClientBuilder::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::CameoClientBuilder
+impl<T> tracing::instrument::WithSubscriber for cameo::CameoClientBuilder
 #[non_exhaustive] pub struct cameo::unified::Collection
 pub cameo::unified::Collection::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::unified::Collection::id: core::option::Option<u64>
@@ -10339,6 +10469,9 @@ pub cameo::AniListError::Http(reqwest::error::Error)
 pub cameo::AniListError::InvalidConfig(alloc::string::String)
 pub cameo::AniListError::NoData
 pub cameo::AniListError::NotFound
+pub cameo::AniListError::PageOutOfRange
+pub cameo::AniListError::PageOutOfRange::field: &'static str
+pub cameo::AniListError::PageOutOfRange::value: i64
 pub cameo::AniListError::Status
 pub cameo::AniListError::Status::message: alloc::string::String
 pub cameo::AniListError::Status::retry_after: core::option::Option<core::time::Duration>
@@ -10499,44 +10632,44 @@ impl<T> tracing::instrument::WithSubscriber for cameo::cache::key::CacheKey
 pub cameo::CameoClientError::NotConfigured
 pub cameo::CameoClientError::Provider(cameo::core::error::ProviderError)
 pub cameo::CameoClientError::Unsupported
-impl core::convert::From<cameo::core::error::ProviderError> for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::from(cameo::core::error::ProviderError) -> Self
-impl core::error::Error for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
-impl core::fmt::Debug for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::fmt::Display for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::marker::Freeze for cameo::unified::facade::CameoClientError
-impl core::marker::Send for cameo::unified::facade::CameoClientError
-impl core::marker::Sync for cameo::unified::facade::CameoClientError
-impl core::marker::Unpin for cameo::unified::facade::CameoClientError
-impl core::marker::UnsafeUnpin for cameo::unified::facade::CameoClientError
-impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::facade::CameoClientError
-impl core::panic::unwind_safe::UnwindSafe for cameo::unified::facade::CameoClientError
-impl<T, U> core::convert::Into<U> for cameo::unified::facade::CameoClientError where U: core::convert::From<T>
-pub fn cameo::unified::facade::CameoClientError::into(self) -> U
-impl<T, U> core::convert::TryFrom<U> for cameo::unified::facade::CameoClientError where U: core::convert::Into<T>
-pub type cameo::unified::facade::CameoClientError::Error = core::convert::Infallible
-pub fn cameo::unified::facade::CameoClientError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
-impl<T, U> core::convert::TryInto<U> for cameo::unified::facade::CameoClientError where U: core::convert::TryFrom<T>
-pub type cameo::unified::facade::CameoClientError::Error = <U as core::convert::TryFrom<T>>::Error
-pub fn cameo::unified::facade::CameoClientError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
-impl<T> alloc::string::ToString for cameo::unified::facade::CameoClientError where T: core::fmt::Display + ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::to_string(&self) -> alloc::string::String
-impl<T> core::any::Any for cameo::unified::facade::CameoClientError where T: 'static + ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::type_id(&self) -> core::any::TypeId
-impl<T> core::borrow::Borrow<T> for cameo::unified::facade::CameoClientError where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::borrow(&self) -> &T
-impl<T> core::borrow::BorrowMut<T> for cameo::unified::facade::CameoClientError where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::borrow_mut(&mut self) -> &mut T
-impl<T> core::convert::From<T> for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::from(T) -> T
-impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::facade::CameoClientError where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-pub fn cameo::unified::facade::CameoClientError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClientError
-impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClientError
+impl core::convert::From<cameo::core::error::ProviderError> for cameo::CameoClientError
+pub fn cameo::CameoClientError::from(cameo::core::error::ProviderError) -> Self
+impl core::error::Error for cameo::CameoClientError
+pub fn cameo::CameoClientError::source(&self) -> core::option::Option<&(dyn core::error::Error + 'static)>
+impl core::fmt::Debug for cameo::CameoClientError
+pub fn cameo::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::CameoClientError
+pub fn cameo::CameoClientError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::CameoClientError
+impl core::marker::Send for cameo::CameoClientError
+impl core::marker::Sync for cameo::CameoClientError
+impl core::marker::Unpin for cameo::CameoClientError
+impl core::marker::UnsafeUnpin for cameo::CameoClientError
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::CameoClientError
+impl core::panic::unwind_safe::UnwindSafe for cameo::CameoClientError
+impl<T, U> core::convert::Into<U> for cameo::CameoClientError where U: core::convert::From<T>
+pub fn cameo::CameoClientError::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::CameoClientError where U: core::convert::Into<T>
+pub type cameo::CameoClientError::Error = core::convert::Infallible
+pub fn cameo::CameoClientError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::CameoClientError where U: core::convert::TryFrom<T>
+pub type cameo::CameoClientError::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::CameoClientError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::string::ToString for cameo::CameoClientError where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::CameoClientError::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::CameoClientError where T: 'static + ?core::marker::Sized
+pub fn cameo::CameoClientError::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::CameoClientError where T: ?core::marker::Sized
+pub fn cameo::CameoClientError::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::CameoClientError where T: ?core::marker::Sized
+pub fn cameo::CameoClientError::borrow_mut(&mut self) -> &mut T
+impl<T> core::convert::From<T> for cameo::CameoClientError
+pub fn cameo::CameoClientError::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::CameoClientError where T: ?core::marker::Sized
+pub fn cameo::CameoClientError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::CameoClientError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::CameoClientError
+impl<T> tracing::instrument::WithSubscriber for cameo::CameoClientError
 #[non_exhaustive] pub enum cameo::Capability
 pub cameo::Capability::Credits
 pub cameo::Capability::Details
@@ -11070,8 +11203,8 @@ pub fn cameo::core::error::ProviderError::clone(&self) -> cameo::core::error::Pr
 impl core::cmp::Eq for cameo::core::error::ProviderError
 impl core::cmp::PartialEq for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::eq(&self, &cameo::core::error::ProviderError) -> bool
-impl core::convert::From<cameo::core::error::ProviderError> for cameo::unified::facade::CameoClientError
-pub fn cameo::unified::facade::CameoClientError::from(cameo::core::error::ProviderError) -> Self
+impl core::convert::From<cameo::core::error::ProviderError> for cameo::CameoClientError
+pub fn cameo::CameoClientError::from(cameo::core::error::ProviderError) -> Self
 impl core::convert::From<cameo::providers::anilist::error::AniListError> for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::from(cameo::providers::anilist::error::AniListError) -> Self
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
@@ -11481,6 +11614,9 @@ pub cameo::TmdbError::Api::status_code: core::option::Option<i64>
 pub cameo::TmdbError::Deserialization(serde_json::error::Error)
 pub cameo::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::TmdbError::InvalidConfig(alloc::string::String)
+pub cameo::TmdbError::PageOutOfRange
+pub cameo::TmdbError::PageOutOfRange::field: &'static str
+pub cameo::TmdbError::PageOutOfRange::value: i64
 pub cameo::TmdbError::Request
 pub cameo::TmdbError::Request::kind: cameo::providers::tmdb::error::RequestErrorKind
 pub cameo::TmdbError::Request::message: alloc::string::String
@@ -12009,55 +12145,56 @@ impl<T> tracing::instrument::Instrument for cameo::cache::CacheTtlConfig
 impl<T> tracing::instrument::WithSubscriber for cameo::cache::CacheTtlConfig
 pub struct cameo::CameoClient
 impl cameo::unified::facade::CameoClient
-pub fn cameo::unified::facade::CameoClient::builder() -> cameo::unified::facade::CameoClientBuilder
-pub async fn cameo::unified::facade::CameoClient::cached_movie(&self, &str) -> core::option::Option<cameo::unified::UnifiedMovie>
-pub async fn cameo::unified::facade::CameoClient::cached_movie_details(&self, &str) -> core::option::Option<cameo::unified::UnifiedMovieDetails>
-pub async fn cameo::unified::facade::CameoClient::cached_person(&self, &str) -> core::option::Option<cameo::unified::UnifiedPerson>
-pub async fn cameo::unified::facade::CameoClient::cached_person_details(&self, &str) -> core::option::Option<cameo::unified::UnifiedPersonDetails>
-pub async fn cameo::unified::facade::CameoClient::cached_tv_show(&self, &str) -> core::option::Option<cameo::unified::UnifiedTvShow>
-pub async fn cameo::unified::facade::CameoClient::cached_tv_show_details(&self, &str) -> core::option::Option<cameo::unified::UnifiedTvShowDetails>
-pub async fn cameo::unified::facade::CameoClient::clear_cache(&self)
-pub async fn cameo::unified::facade::CameoClient::invalidate_cached(&self, &str)
+pub fn cameo::unified::facade::CameoClient::builder() -> cameo::CameoClientBuilder
 pub fn cameo::unified::facade::CameoClient::provider_ids(&self) -> alloc::vec::Vec<&str>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::episode_details(&self, &cameo::unified::media_id::MediaId, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::season_details(&self, &cameo::unified::media_id::MediaId, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::cached_movie(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedMovie>
+pub async fn cameo::unified::facade::CameoClient::cached_movie_details(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedMovieDetails>
+pub async fn cameo::unified::facade::CameoClient::cached_person(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedPerson>
+pub async fn cameo::unified::facade::CameoClient::cached_person_details(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedPersonDetails>
+pub async fn cameo::unified::facade::CameoClient::cached_tv_show(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedTvShow>
+pub async fn cameo::unified::facade::CameoClient::cached_tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::option::Option<cameo::unified::UnifiedTvShowDetails>
+pub async fn cameo::unified::facade::CameoClient::clear_cache(&self)
+pub async fn cameo::unified::facade::CameoClient::invalidate_cached(&self, &cameo::unified::media_id::MediaId)
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::episode_details(&self, &cameo::unified::media_id::MediaId, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::season_details(&self, &cameo::unified::media_id::MediaId, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_show_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_show_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::similar_movies(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::similar_tv_shows(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::similar_movies(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::similar_tv_shows(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_recommendations(&self, &cameo::unified::media_id::MediaId, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::trending_movies(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::trending_tv_shows(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::movie_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_watch_providers(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::trending_movies(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::trending_tv_shows(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
 impl cameo::unified::facade::CameoClient
-pub async fn cameo::unified::facade::CameoClient::search_movies_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_multi_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_people_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::unified::facade::CameoClientError>
-pub async fn cameo::unified::facade::CameoClient::search_tv_shows_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
+impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::search_movies_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_multi_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_people_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::search_tv_shows_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::CameoClientError>
 impl core::clone::Clone for cameo::unified::facade::CameoClient
 pub fn cameo::unified::facade::CameoClient::clone(&self) -> cameo::unified::facade::CameoClient
 impl core::fmt::Debug for cameo::unified::facade::CameoClient
@@ -12097,54 +12234,54 @@ pub fn cameo::unified::facade::CameoClient::or<P, B, E>(self, P) -> tower_http::
 impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClient
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClient
 pub struct cameo::CameoClientBuilder
-impl cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::unified::facade::CameoClientError>
-pub fn cameo::unified::facade::CameoClientBuilder::register_credits_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::CreditsProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::RecommendationProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SearchProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SeasonProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::register_watch_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::WatchAvailabilityProvider>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_anilist(self, cameo::providers::anilist::config::AniListConfig) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_cache(self) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_cache_backend(self, alloc::sync::Arc<dyn cameo::cache::backend::CacheBackend>) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_cache_ttl(self, cameo::cache::CacheTtlConfig) -> Self
-pub fn cameo::unified::facade::CameoClientBuilder::with_priority<I, S>(self, I) -> Self where I: core::iter::traits::collect::IntoIterator<Item = S>, S: core::convert::Into<alloc::string::String>
-pub fn cameo::unified::facade::CameoClientBuilder::with_tmdb(self, cameo::providers::tmdb::config::TmdbConfig) -> Self
-impl core::default::Default for cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::default() -> cameo::unified::facade::CameoClientBuilder
-impl core::fmt::Debug for cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl core::marker::Freeze for cameo::unified::facade::CameoClientBuilder
-impl core::marker::Send for cameo::unified::facade::CameoClientBuilder
-impl core::marker::Sync for cameo::unified::facade::CameoClientBuilder
-impl core::marker::Unpin for cameo::unified::facade::CameoClientBuilder
-impl core::marker::UnsafeUnpin for cameo::unified::facade::CameoClientBuilder
-impl !core::panic::unwind_safe::RefUnwindSafe for cameo::unified::facade::CameoClientBuilder
-impl !core::panic::unwind_safe::UnwindSafe for cameo::unified::facade::CameoClientBuilder
-impl<T, U> core::convert::Into<U> for cameo::unified::facade::CameoClientBuilder where U: core::convert::From<T>
-pub fn cameo::unified::facade::CameoClientBuilder::into(self) -> U
-impl<T, U> core::convert::TryFrom<U> for cameo::unified::facade::CameoClientBuilder where U: core::convert::Into<T>
-pub type cameo::unified::facade::CameoClientBuilder::Error = core::convert::Infallible
-pub fn cameo::unified::facade::CameoClientBuilder::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
-impl<T, U> core::convert::TryInto<U> for cameo::unified::facade::CameoClientBuilder where U: core::convert::TryFrom<T>
-pub type cameo::unified::facade::CameoClientBuilder::Error = <U as core::convert::TryFrom<T>>::Error
-pub fn cameo::unified::facade::CameoClientBuilder::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
-impl<T> core::any::Any for cameo::unified::facade::CameoClientBuilder where T: 'static + ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::type_id(&self) -> core::any::TypeId
-impl<T> core::borrow::Borrow<T> for cameo::unified::facade::CameoClientBuilder where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::borrow(&self) -> &T
-impl<T> core::borrow::BorrowMut<T> for cameo::unified::facade::CameoClientBuilder where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::borrow_mut(&mut self) -> &mut T
-impl<T> core::convert::From<T> for cameo::unified::facade::CameoClientBuilder
-pub fn cameo::unified::facade::CameoClientBuilder::from(T) -> T
-impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::facade::CameoClientBuilder where T: ?core::marker::Sized
-pub fn cameo::unified::facade::CameoClientBuilder::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-pub fn cameo::unified::facade::CameoClientBuilder::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
-impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClientBuilder
-impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClientBuilder
+impl cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::CameoClientError>
+pub fn cameo::CameoClientBuilder::register_credits_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::CreditsProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::RecommendationProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SearchProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::SeasonProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_watch_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::WatchAvailabilityProvider>) -> Self
+pub fn cameo::CameoClientBuilder::with_anilist(self, cameo::providers::anilist::config::AniListConfig) -> Self
+pub fn cameo::CameoClientBuilder::with_cache(self) -> Self
+pub fn cameo::CameoClientBuilder::with_cache_backend(self, alloc::sync::Arc<dyn cameo::cache::backend::CacheBackend>) -> Self
+pub fn cameo::CameoClientBuilder::with_cache_ttl(self, cameo::cache::CacheTtlConfig) -> Self
+pub fn cameo::CameoClientBuilder::with_priority<I, S>(self, I) -> Self where I: core::iter::traits::collect::IntoIterator<Item = S>, S: core::convert::Into<alloc::string::String>
+pub fn cameo::CameoClientBuilder::with_tmdb(self, cameo::providers::tmdb::config::TmdbConfig) -> Self
+impl core::default::Default for cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::default() -> cameo::CameoClientBuilder
+impl core::fmt::Debug for cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::CameoClientBuilder
+impl core::marker::Send for cameo::CameoClientBuilder
+impl core::marker::Sync for cameo::CameoClientBuilder
+impl core::marker::Unpin for cameo::CameoClientBuilder
+impl core::marker::UnsafeUnpin for cameo::CameoClientBuilder
+impl !core::panic::unwind_safe::RefUnwindSafe for cameo::CameoClientBuilder
+impl !core::panic::unwind_safe::UnwindSafe for cameo::CameoClientBuilder
+impl<T, U> core::convert::Into<U> for cameo::CameoClientBuilder where U: core::convert::From<T>
+pub fn cameo::CameoClientBuilder::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::CameoClientBuilder where U: core::convert::Into<T>
+pub type cameo::CameoClientBuilder::Error = core::convert::Infallible
+pub fn cameo::CameoClientBuilder::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::CameoClientBuilder where U: core::convert::TryFrom<T>
+pub type cameo::CameoClientBuilder::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::CameoClientBuilder::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> core::any::Any for cameo::CameoClientBuilder where T: 'static + ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::CameoClientBuilder where T: ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::CameoClientBuilder where T: ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::borrow_mut(&mut self) -> &mut T
+impl<T> core::convert::From<T> for cameo::CameoClientBuilder
+pub fn cameo::CameoClientBuilder::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::CameoClientBuilder where T: ?core::marker::Sized
+pub fn cameo::CameoClientBuilder::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::CameoClientBuilder::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::CameoClientBuilder
+impl<T> tracing::instrument::WithSubscriber for cameo::CameoClientBuilder
 #[non_exhaustive] pub struct cameo::Collection
 pub cameo::Collection::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::Collection::id: core::option::Option<u64>
@@ -12939,6 +13076,7 @@ pub fn cameo::providers::tmdb::client::TmdbClient::config(&self) -> &cameo::prov
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_movies(&self) -> cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'_>
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_tv(&self) -> cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'_>
 pub async fn cameo::providers::tmdb::client::TmdbClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::movie_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
@@ -12966,6 +13104,7 @@ pub async fn cameo::providers::tmdb::client::TmdbClient::tv_external_ids(&self, 
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self, i32, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
