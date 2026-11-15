@@ -189,7 +189,7 @@ impl DiscoveryProvider for AniListClient {
         time_window: TimeWindow,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(AniListClient::trending_tv(self, time_window, page).await?)
+        Ok(AniListClient::trending_tv_shows(self, time_window, page).await?)
     }
 
     async fn popular_movies(&self, page: Option<u32>) -> Result<Page<UnifiedMovie>, ProviderError> {

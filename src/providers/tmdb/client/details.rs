@@ -59,10 +59,7 @@ impl TmdbClient {
 
     /// Get detailed information about a TV series.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_series_details(
-        &self,
-        series_id: i32,
-    ) -> Result<UnifiedTvShowDetails, TmdbError> {
+    pub async fn tv_show_details(&self, series_id: i32) -> Result<UnifiedTvShowDetails, TmdbError> {
         let params = tmdb::TvSeriesDetailsParams {
             language: self.language(),
             ..Default::default()
@@ -79,10 +76,10 @@ impl TmdbClient {
     /// `append` is TMDB's comma-separated `append_to_response` list. Including
     /// `content_ratings` fills [`UnifiedTvShowDetails::certifications`] with
     /// the series' content ratings, kept as
-    /// [`tv_series_certifications`](Self::tv_series_certifications) keeps them;
+    /// [`tv_show_certifications`](Self::tv_show_certifications) keeps them;
     /// without it that field stays empty. Other appended blocks are not read.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_series_details_with_append(
+    pub async fn tv_show_details_with_append(
         &self,
         series_id: i32,
         append: &str,
@@ -126,7 +123,7 @@ impl TmdbClient {
     /// [`TmdbCredits`] keeps one entry per person, holding only the first of
     /// their characters and the first of their jobs.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_series_credits(&self, series_id: i32) -> Result<TmdbCredits, TmdbError> {
+    pub async fn tv_show_credits(&self, series_id: i32) -> Result<TmdbCredits, TmdbError> {
         self.tv_series_aggregate_credits_response(series_id)
             .await
             .map(Into::into)
@@ -198,7 +195,7 @@ impl TmdbClient {
     /// [`TmdbError::Request`] when `series_id` is zero or negative (nothing is
     /// sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_series_certifications(
+    pub async fn tv_show_certifications(
         &self,
         series_id: i32,
     ) -> Result<Vec<TmdbCertification>, TmdbError> {
@@ -230,7 +227,7 @@ impl TmdbClient {
 
     /// Get the list of official TV show genres.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_genres(&self) -> Result<Vec<Genre>, TmdbError> {
+    pub async fn tv_show_genres(&self) -> Result<Vec<Genre>, TmdbError> {
         let params = tmdb::GenreTvListParams {
             language: self.language(),
         };

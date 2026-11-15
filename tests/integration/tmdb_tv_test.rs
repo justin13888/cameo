@@ -59,7 +59,7 @@ async fn tv_series_details_deserializes_response() {
         .mount(&server)
         .await;
 
-    let details = client.tv_series_details(1396).await.unwrap();
+    let details = client.tv_show_details(1396).await.unwrap();
 
     assert!(details.show.provider_id == "tmdb:1396");
     assert_eq!(details.show.name, "Breaking Bad");
@@ -88,7 +88,7 @@ async fn tv_genres_deserializes_response() {
         .mount(&server)
         .await;
 
-    let genres = client.tv_genres().await.unwrap();
+    let genres = client.tv_show_genres().await.unwrap();
 
     assert_eq!(
         genres,
@@ -121,7 +121,7 @@ async fn tv_genres_drops_genres_without_id() {
         .mount(&server)
         .await;
 
-    let genres = client.tv_genres().await.unwrap();
+    let genres = client.tv_show_genres().await.unwrap();
 
     assert_eq!(genres, vec![cameo::Genre::Drama]);
 }
@@ -139,7 +139,10 @@ async fn trending_tv_deserializes_response() {
         .mount(&server)
         .await;
 
-    let page = client.trending_tv(cameo::TimeWindow::Week).await.unwrap();
+    let page = client
+        .trending_tv_shows(cameo::TimeWindow::Week)
+        .await
+        .unwrap();
 
     assert_eq!(page.page, 1);
     assert_eq!(page.total_results, 1);
@@ -158,7 +161,7 @@ fn client() -> TmdbClient {
 #[tokio::test]
 async fn live_tv_series_details_breaking_bad() {
     let c = client();
-    let details = c.tv_series_details(1396).await.unwrap(); // Breaking Bad
+    let details = c.tv_show_details(1396).await.unwrap(); // Breaking Bad
 
     assert!(details.show.provider_id == "tmdb:1396");
     assert_eq!(details.show.name, "Breaking Bad");
@@ -170,7 +173,7 @@ async fn live_tv_series_details_breaking_bad() {
 #[tokio::test]
 async fn live_trending_tv_returns_page() {
     let c = client();
-    let resp = c.trending_tv(cameo::TimeWindow::Week).await.unwrap();
+    let resp = c.trending_tv_shows(cameo::TimeWindow::Week).await.unwrap();
     assert!(!resp.results.is_empty());
 }
 
@@ -199,7 +202,7 @@ async fn tv_details_with_body(body: serde_json::Value) -> cameo::UnifiedTvShowDe
         .respond_with(ResponseTemplate::new(200).set_body_json(body))
         .mount(&server)
         .await;
-    client.tv_series_details(1396).await.unwrap()
+    client.tv_show_details(1396).await.unwrap()
 }
 
 fn tv_details_json() -> serde_json::Map<String, serde_json::Value> {

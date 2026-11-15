@@ -48,12 +48,12 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `search_multi` | — | ✓ | ✓ (facade) | ✓ |
 | `movie_details` | — | ✓ | ✓ (cache) | ✓ |
 | `movie_details_with_append` | — | — | — | — |
-| `tv_series_details` | — | ✓ | — | ✓ |
+| `tv_show_details` | — | ✓ | — | ✓ |
 | `person_details` | — | ✓ | — | ✓ |
 | `movie_credits` | — | ✓ | — | — |
-| `tv_series_credits` | — | ✓ | — | — |
+| `tv_show_credits` | — | ✓ | — | — |
 | `trending_movies` | — | ✓ | ✓ (facade) | ✓ |
-| `trending_tv` | — | ✓ | — | ✓ |
+| `trending_tv_shows` | — | ✓ | — | ✓ |
 | `popular_movies` | — | ✓ | ✓ (facade) | — |
 | `popular_tv_shows` | — | ✓ | — | — |
 | `top_rated_movies` | — | ✓ | — | — |
@@ -62,15 +62,15 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `tv_recommendations` | — | ✓ | — | — |
 | `similar_movies` | — | ✓ | — | — |
 | `similar_tv_shows` | — | ✓ | — | — |
-| `tv_season_details` | — | ✓ | ✓ (facade) | — |
-| `tv_episode_details` | — | ✓ | — | — |
+| `season_details` | — | ✓ | ✓ (facade) | — |
+| `episode_details` | — | ✓ | — | — |
 | `movie_watch_providers` | — | ✓ | ✓ (facade) | — |
 | `tv_watch_providers` | — | ✓ | — | — |
 | `movie_external_ids` | — | ✓ | — | — |
 | `tv_external_ids` | — | ✓ | ✓ (facade) | — |
 | `find_by_external_id` | — | ✓ | ✓ (facade) | — |
 | `movie_genres` | — | ✓ | — | — |
-| `tv_genres` | — | ✓ | — | — |
+| `tv_show_genres` | — | ✓ | — | — |
 | `movie_images` | — | ✓ | — | — |
 | `discover_movies` | — | ✓ | — | ✓ |
 | `discover_tv` | — | ✓ | — | ✓ |
@@ -87,7 +87,7 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `tv_show_details` | — | ✓ |
 | `person_details` | — | ✓ |
 | `trending_movies` | — | ✓ |
-| `trending_tv` | — | ✓ |
+| `trending_tv_shows` | — | ✓ |
 | `popular_movies` | — | ✓ |
 | `popular_tv_shows` | — | ✓ |
 | `top_rated_movies` | — | ✓ |

@@ -75,7 +75,7 @@ async fn tv_series_certifications_reads_content_ratings() {
         .mount(&server)
         .await;
 
-    let certs = client.tv_series_certifications(1396).await.unwrap();
+    let certs = client.tv_show_certifications(1396).await.unwrap();
 
     assert_eq!(
         pairs(certs),
@@ -103,7 +103,7 @@ async fn certifications_without_results_are_empty() {
         .await;
 
     assert!(client.movie_certifications(1).await.unwrap().is_empty());
-    assert!(client.tv_series_certifications(1).await.unwrap().is_empty());
+    assert!(client.tv_show_certifications(1).await.unwrap().is_empty());
 }
 
 /// A non-positive id is rejected before any request is sent.
@@ -116,7 +116,7 @@ async fn certifications_reject_non_positive_ids() {
         Err(TmdbError::Request { .. })
     ));
     assert!(matches!(
-        client.tv_series_certifications(-5).await,
+        client.tv_show_certifications(-5).await,
         Err(TmdbError::Request { .. })
     ));
     let received = server.received_requests().await.unwrap_or_default();
@@ -169,7 +169,7 @@ async fn movie_details_with_release_dates_append_fills_certifications() {
     );
 }
 
-/// `tv_series_details_with_append` sends the append, and the
+/// `tv_show_details_with_append` sends the append, and the
 /// `content_ratings` block fills the unified TV details' certifications.
 #[tokio::test]
 async fn tv_series_details_with_content_ratings_append_fills_certifications() {
@@ -192,7 +192,7 @@ async fn tv_series_details_with_content_ratings_append_fills_certifications() {
         .await;
 
     let details = client
-        .tv_series_details_with_append(1396, "content_ratings")
+        .tv_show_details_with_append(1396, "content_ratings")
         .await
         .unwrap();
 
@@ -228,7 +228,7 @@ async fn details_without_certification_append_have_no_certifications() {
     let movie = client.movie_details(1).await.unwrap();
     assert!(movie.certifications.is_empty());
     let tv = client
-        .tv_series_details_with_append(1, "credits")
+        .tv_show_details_with_append(1, "credits")
         .await
         .unwrap();
     assert!(tv.certifications.is_empty());

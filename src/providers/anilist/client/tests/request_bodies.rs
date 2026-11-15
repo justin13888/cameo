@@ -69,7 +69,7 @@ async fn list_requests_send_page_per_page_and_formats() {
     );
     assert_sends!(
         media_page(vec![]),
-        |c| c.trending_tv(TimeWindow::Day, Some(4)),
+        |c| c.trending_tv_shows(TimeWindow::Day, Some(4)),
         query::LIST_TRENDING_ANIME,
         tv.clone(),
     );

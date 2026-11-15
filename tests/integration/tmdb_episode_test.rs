@@ -24,7 +24,7 @@ async fn tv_episode_details_deserializes_response() {
         .mount(&server)
         .await;
 
-    let ep = client.tv_episode_details(1396, 1, 1).await.unwrap();
+    let ep = client.episode_details(1396, 1, 1).await.unwrap();
 
     assert_eq!(ep.episode_number, 1);
     assert_eq!(ep.name.as_deref(), Some("Pilot"));
@@ -46,7 +46,7 @@ async fn tv_episode_details_null_episode_number_falls_back_to_requested() {
         .mount(&server)
         .await;
 
-    let ep = client.tv_episode_details(1396, 1, 4).await.unwrap();
+    let ep = client.episode_details(1396, 1, 4).await.unwrap();
 
     assert_eq!(ep.episode_number, 4);
     assert_eq!(ep.vote_average, None);

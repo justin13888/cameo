@@ -309,7 +309,7 @@ pub struct UnifiedTvShowDetails {
     ///
     /// Empty unless the provider returned them with the details. TMDB returns
     /// them only when the `content_ratings` append is requested (see
-    /// `TmdbClient::tv_series_details_with_append`).
+    /// `TmdbClient::tv_show_details_with_append`).
     pub certifications: Vec<Certification>,
 }
 

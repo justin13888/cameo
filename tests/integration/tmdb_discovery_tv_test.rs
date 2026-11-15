@@ -58,7 +58,10 @@ async fn trending_tv_is_a_single_page_and_its_stream_terminates() {
         .mount(&server)
         .await;
 
-    let page = client.trending_tv(cameo::TimeWindow::Week).await.unwrap();
+    let page = client
+        .trending_tv_shows(cameo::TimeWindow::Week)
+        .await
+        .unwrap();
     assert!(!page.has_next);
     assert_eq!(page.next, None);
     assert_eq!(page.total_pages, 1);
@@ -66,7 +69,7 @@ async fn trending_tv_is_a_single_page_and_its_stream_terminates() {
 
     let stream = into_stream(move |_page| {
         let client = client.clone();
-        async move { client.trending_tv(cameo::TimeWindow::Week).await }
+        async move { client.trending_tv_shows(cameo::TimeWindow::Week).await }
     });
     let items: Vec<_> = tokio::time::timeout(Duration::from_secs(60), stream.collect::<Vec<_>>())
         .await

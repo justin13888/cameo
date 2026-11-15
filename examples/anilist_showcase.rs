@@ -110,8 +110,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         println!("  {}  ★ {score}", m.title);
     }
 
-    println!("\n=== trending_tv (week) ===");
-    let trending_tv = client.trending_tv(TimeWindow::Week, None).await?;
+    println!("\n=== trending_tv_shows (week) ===");
+    let trending_tv = client.trending_tv_shows(TimeWindow::Week, None).await?;
     println!("  {} trending anime series", trending_tv.total_results);
     for t in trending_tv.results.iter().take(5) {
         let score = t
