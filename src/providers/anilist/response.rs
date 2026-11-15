@@ -4,6 +4,18 @@ use serde::Deserialize;
 
 use super::error::AniListGqlError;
 
+/// Deserialize a GraphQL `[String]` list, dropping `null` entries.
+///
+/// AniList's schema allows null items in string lists such as `synonyms`; one
+/// null must not fail the whole response.
+fn strings_skipping_nulls<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let items: Option<Vec<Option<String>>> = Option::deserialize(deserializer)?;
+    Ok(items.map(|v| v.into_iter().flatten().collect()))
+}
+
 // ── GraphQL envelope ──────────────────────────────────────────────────────────
 
 /// Top-level GraphQL response wrapper.
@@ -82,6 +94,9 @@ pub struct AniListStudios {
 pub struct AniListMedia {
     pub id: i32,
     pub title: Option<AniListTitle>,
+    /// Alternative titles / aliases (abbreviations, other-language titles).
+    #[serde(default, deserialize_with = "strings_skipping_nulls")]
+    pub synonyms: Option<Vec<String>>,
     /// Synopsis (HTML stripped if `asHtml: false` in query).
     pub description: Option<String>,
     #[serde(rename = "startDate")]
@@ -109,6 +124,9 @@ pub struct AniListMedia {
 pub struct AniListMediaDetail {
     pub id: i32,
     pub title: Option<AniListTitle>,
+    /// Alternative titles / aliases (abbreviations, other-language titles).
+    #[serde(default, deserialize_with = "strings_skipping_nulls")]
+    pub synonyms: Option<Vec<String>>,
     pub description: Option<String>,
     #[serde(rename = "startDate")]
     pub start_date: Option<AniListDate>,
@@ -176,6 +194,37 @@ pub(crate) struct AniListMediaIds {
 pub(crate) struct MediaIdsResponse {
     #[serde(rename = "Media")]
     pub media: Option<AniListMediaIds>,
+}
+
+/// `data` object for the media-recommendations query.
+#[derive(Debug, Deserialize)]
+pub(crate) struct MediaRecommendationsResponse {
+    /// `null` when the media does not exist.
+    #[serde(rename = "Media")]
+    pub media: Option<MediaRecommendationsData>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct MediaRecommendationsData {
+    pub recommendations: Option<RecommendationConnection>,
+}
+
+/// A page of recommendations (`Media.recommendations`).
+#[derive(Debug, Deserialize)]
+pub(crate) struct RecommendationConnection {
+    #[serde(rename = "pageInfo")]
+    pub page_info: PageInfo,
+    /// Nodes may themselves be `null` in the AniList schema.
+    #[serde(default)]
+    pub nodes: Vec<Option<RecommendationNode>>,
+}
+
+/// A single recommendation edge.
+#[derive(Debug, Deserialize)]
+pub(crate) struct RecommendationNode {
+    /// The recommended media; `null` when it was deleted or is hidden.
+    #[serde(rename = "mediaRecommendation")]
+    pub media_recommendation: Option<AniListMedia>,
 }
 
 // ── Staff types ───────────────────────────────────────────────────────────────

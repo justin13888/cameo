@@ -301,6 +301,7 @@ impl CameoClientBuilder {
             client.search.push(anilist.clone());
             client.detail.push(anilist.clone());
             client.discovery.push(anilist.clone());
+            client.recommendation.push(anilist.clone());
             client.external.push(anilist);
         }
 

@@ -108,12 +108,12 @@ pub use providers::retry::RetryPolicy;
 #[cfg(feature = "tmdb")]
 pub use providers::tmdb::{TmdbAuth, TmdbClient, TmdbConfig, TmdbError};
 pub use unified::{
-    CameoClient, CameoClientBuilder, CameoClientError, Capability, Collection, Company, Creator,
-    DetailProvider, DiscoveryProvider, ExternalId, ExternalIdProvider, ExternalIds, ExternalMatch,
-    ExternalSource, Gender, Genre, MatchKind, MediaId, MediaProvider, NativeId, Network,
-    ParseDateError, PartialDate, Provider, RecommendationProvider, SearchProvider, SeasonProvider,
-    UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
-    UnifiedSearchResult, UnifiedSeason, UnifiedSeasonDetails, UnifiedStreamingService,
-    UnifiedTvShow, UnifiedTvShowDetails, UnifiedWatchProviderEntry, UnifiedWatchProviders,
-    UnknownExternalSource, UnknownGenre, WatchAvailabilityProvider,
+    AlternativeTitle, CameoClient, CameoClientBuilder, CameoClientError, Capability, Collection,
+    Company, Creator, DetailProvider, DiscoveryProvider, ExternalId, ExternalIdProvider,
+    ExternalIds, ExternalMatch, ExternalSource, Gender, Genre, MatchKind, MediaId, MediaProvider,
+    NativeId, Network, ParseDateError, PartialDate, Provider, RecommendationProvider,
+    SearchProvider, SeasonProvider, TitleKind, UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails,
+    UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeason, UnifiedSeasonDetails,
+    UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails, UnifiedWatchProviderEntry,
+    UnifiedWatchProviders, UnknownExternalSource, UnknownGenre, WatchAvailabilityProvider,
 };

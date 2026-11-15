@@ -136,6 +136,27 @@ async fn movie_genres_deserializes_response() {
 }
 
 #[tokio::test]
+async fn movie_genres_drops_genres_without_id() {
+    let (server, client) = setup_mock_client().await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/genre/movie/list"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "genres": [
+                { "id": null, "name": "Null id" },
+                { "name": "Missing id" },
+                { "id": 28, "name": "Action" }
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    let genres = client.movie_genres().await.unwrap();
+
+    assert_eq!(genres, vec![cameo::Genre::Action]);
+}
+
+#[tokio::test]
 async fn movie_images_deserializes_response() {
     let (server, client) = setup_mock_client().await;
 

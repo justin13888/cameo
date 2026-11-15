@@ -75,7 +75,7 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `discover_movies` | — | ✓ | — | ✓ |
 | `discover_tv` | — | ✓ | — | ✓ |
 
-### AniListClient (15 methods)
+### AniListClient (18 methods)
 
 | Method | Unit | Wiremock |
 |---|---|---|
@@ -92,8 +92,13 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `popular_tv_shows` | — | ✓ |
 | `top_rated_movies` | — | ✓ |
 | `top_rated_tv_shows` | — | ✓ |
+| `discover_anime` (`execute_movies` / `execute_tv`) | ✓ | ✓ |
+| `movie_recommendations` | — | ✓ |
+| `tv_recommendations` | — | ✓ |
 | `external_ids` | — | ✓ |
 | `find_by_mal_id` | — | ✓ |
+
+AniList's `RecommendationProvider` impl (incl. `similar_*` → `Unsupported`) is covered in `anilist_recommendations_test.rs`.
 
 ### CameoClient Facade (24 trait methods)
 
@@ -112,10 +117,10 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `DiscoveryProvider` | `top_rated_movies` | — | — |
 | `DiscoveryProvider` | `popular_tv_shows` | — | — |
 | `DiscoveryProvider` | `top_rated_tv_shows` | — | — |
-| `RecommendationProvider` | `movie_recommendations` | — | — |
-| `RecommendationProvider` | `tv_recommendations` | — | — |
+| `RecommendationProvider` | `movie_recommendations` | ✓ (facade, AniList) | — |
+| `RecommendationProvider` | `tv_recommendations` | ✓ (facade, AniList) | — |
 | `RecommendationProvider` | `similar_movies` | — | — |
-| `RecommendationProvider` | `similar_tv_shows` | — | — |
+| `RecommendationProvider` | `similar_tv_shows` | ✓ (facade, AniList `Unsupported`) | — |
 | `SeasonProvider` | `season_details` | ✓ (facade) | — |
 | `SeasonProvider` | `episode_details` | — | — |
 | `WatchProviderTrait` | `movie_watch_providers` | ✓ (facade) | — |
@@ -179,7 +184,7 @@ All fixtures live in `tests/fixtures/` and are trimmed to 1–2 results for spee
 | `trending_tv_response.json` | `/3/trending/tv/week` |
 | `discover_tv_response.json` | `/3/discover/tv` |
 
-AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture files (`anilist_media_details_response.json`, `anilist_staff_details_response.json`). Search, discovery, and external-id tests (`anilist_external_ids_test.rs`) use inline JSON constructed via `serde_json::json!` helpers — no separate fixture files for those.
+AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture files (`anilist_media_details_response.json`, `anilist_staff_details_response.json`). Search, discovery, discover-builder (`anilist_discover_test.rs`), recommendation (`anilist_recommendations_test.rs`), and external-id (`anilist_external_ids_test.rs`) tests use inline JSON constructed via `serde_json::json!` helpers — no separate fixture files for those.
 
 ---
 
@@ -199,7 +204,7 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 |---|---|
 | Unit | 69 |
 | Wiremock (TMDB) | 41 |
-| Wiremock (AniList) | 34 |
-| Facade / Cache | 24 |
+| Wiremock (AniList) | 48 |
+| Facade / Cache | 26 |
 | Live (TMDB) | 8 |
-| **Total** | **~176** |
+| **Total** | **~192** |

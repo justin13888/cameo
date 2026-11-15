@@ -16,6 +16,7 @@ macro_rules! impl_tv_from {
                     provider_id: MediaId::tmdb(t.id.unwrap_or_default() as u64),
                     name: t.name.unwrap_or_default(),
                     original_name: t.original_name,
+                    alternative_titles: Vec::new(),
                     overview: t.overview,
                     first_air_date: resolve_date(&t.first_air_date),
                     poster_url: resolve_poster(&t.poster_path),
@@ -52,6 +53,7 @@ macro_rules! impl_tv_from_no_adult {
                     provider_id: MediaId::tmdb(t.id.unwrap_or_default() as u64),
                     name: t.name.unwrap_or_default(),
                     original_name: t.original_name,
+                    alternative_titles: Vec::new(),
                     overview: t.overview,
                     first_air_date: resolve_date(&t.first_air_date),
                     poster_url: resolve_poster(&t.poster_path),
@@ -163,6 +165,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 provider_id: MediaId::tmdb(t.id.unwrap_or_default() as u64),
                 name: t.name.unwrap_or_default(),
                 original_name: t.original_name,
+                alternative_titles: Vec::new(),
                 overview: t.overview,
                 first_air_date: resolve_date(&t.first_air_date),
                 poster_url: resolve_poster(&t.poster_path),
@@ -211,7 +214,14 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 .iter()
                 .filter_map(|c| c.name.clone())
                 .collect(),
-            seasons: t.seasons.into_iter().map(UnifiedSeason::from).collect(),
+            // A season with no number cannot be addressed; defaulting it to 0
+            // would pass it off as the Specials season, so it is dropped.
+            seasons: t
+                .seasons
+                .into_iter()
+                .filter(|s| s.season_number.is_some())
+                .map(UnifiedSeason::from)
+                .collect(),
         }
     }
 }
@@ -232,7 +242,14 @@ pub(crate) fn season_details_from(
         overview: t.overview,
         air_date: resolve_date(&t.air_date),
         poster_url: resolve_poster(&t.poster_path),
-        episodes: t.episodes.into_iter().map(Into::into).collect(),
+        // An episode with no number cannot be addressed; defaulting it to 0
+        // would invent a phantom episode 0, so it is dropped.
+        episodes: t
+            .episodes
+            .into_iter()
+            .filter(|e| e.episode_number.is_some())
+            .map(Into::into)
+            .collect(),
     }
 }
 
@@ -263,6 +280,8 @@ mod tests {
         };
         let unified: UnifiedTvShow = raw.into();
         assert_eq!(unified.provider_id, "tmdb:1396");
+        // TMDB exposes no title variants beyond name/original_name.
+        assert!(unified.alternative_titles.is_empty());
         assert_eq!(unified.name, "Breaking Bad");
         assert_eq!(
             unified.first_air_date.map(|d| d.to_string()).as_deref(),

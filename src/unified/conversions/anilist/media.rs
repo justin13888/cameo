@@ -2,35 +2,76 @@
 
 use super::resolve_date;
 use crate::{
-    providers::anilist::response::{AniListMedia, AniListMediaDetail},
+    providers::anilist::response::{AniListMedia, AniListMediaDetail, AniListTitle},
     unified::{
         genre::Genre,
         media_id::MediaId,
         models::{
-            Company, UnifiedMovie, UnifiedMovieDetails, UnifiedSearchResult, UnifiedTvShow,
-            UnifiedTvShowDetails,
+            AlternativeTitle, Company, TitleKind, UnifiedMovie, UnifiedMovieDetails,
+            UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
         },
     },
 };
 
 // ── Private helpers ───────────────────────────────────────────────────────────
 
-/// Resolve the best English title from an AniList media entry.
-fn resolve_title(media: &AniListMedia) -> String {
-    media
-        .title
-        .as_ref()
+/// Resolve the headline title: English if present, else romaji.
+fn resolve_title(title: Option<&AniListTitle>) -> String {
+    title
         .and_then(|t| t.english.clone().or_else(|| t.romaji.clone()))
         .unwrap_or_default()
 }
 
-/// Resolve the best English title from an AniList detail entry.
-fn resolve_detail_title(media: &AniListMediaDetail) -> String {
-    media
-        .title
-        .as_ref()
-        .and_then(|t| t.english.clone().or_else(|| t.romaji.clone()))
-        .unwrap_or_default()
+/// Collect every title variant AniList reports into [`AlternativeTitle`]s.
+///
+/// Order: English, romanized (romaji), native, then synonyms in AniList
+/// order. Absent, empty, or whitespace-only strings are skipped.
+///
+/// - English carries language `"en"`.
+/// - Romaji carries no language: it is a Latin-script transliteration whose
+///   source language is not reliably known (it is *usually* Japanese).
+/// - Native carries the language mapped from `countryOfOrigin` when the
+///   mapping is known (`JP`→`ja`, `CN`/`TW`→`zh`, `KR`→`ko`), else none.
+/// - Synonyms carry no language (AniList mixes languages in that list).
+///
+/// The same text under *different* kinds is kept (e.g. an English title equal
+/// to the romaji one yields both an English and a Romanized entry), since the
+/// kind itself is information. Exact duplicates are dropped: a synonym whose
+/// text already appears as an earlier entry (a title variant or an earlier
+/// synonym) is skipped.
+fn alternative_titles(
+    title: Option<&AniListTitle>,
+    synonyms: Option<&[String]>,
+    country_of_origin: Option<&str>,
+) -> Vec<AlternativeTitle> {
+    let native_lang = country_of_origin.and_then(country_to_language);
+
+    let mut out: Vec<AlternativeTitle> = Vec::new();
+    if let Some(t) = title {
+        if let Some(english) = non_empty(&t.english) {
+            out.push(AlternativeTitle::new(english, TitleKind::English).with_language("en"));
+        }
+        if let Some(romaji) = non_empty(&t.romaji) {
+            out.push(AlternativeTitle::new(romaji, TitleKind::Romanized));
+        }
+        if let Some(native) = non_empty(&t.native) {
+            let mut alt = AlternativeTitle::new(native, TitleKind::Native);
+            alt.language = native_lang.map(String::from);
+            out.push(alt);
+        }
+    }
+    for synonym in synonyms.unwrap_or_default() {
+        if synonym.trim().is_empty() || out.iter().any(|a| a.title == *synonym) {
+            continue;
+        }
+        out.push(AlternativeTitle::new(synonym.as_str(), TitleKind::Synonym));
+    }
+    out
+}
+
+/// Borrow a string only if it is present and not empty/whitespace-only.
+fn non_empty(value: &Option<String>) -> Option<&str> {
+    value.as_deref().filter(|v| !v.trim().is_empty())
 }
 
 /// Resolve the cover image URL (prefer extra-large).
@@ -55,16 +96,17 @@ fn score_to_vote_average(score: Option<i32>) -> Option<f64> {
 
 /// Convert an ISO 3166-1 alpha-2 country code to a rough ISO 639-1 language code.
 ///
-/// This is a best-effort mapping for common anime origins.
-fn country_to_language(country: &str) -> String {
+/// This is a best-effort mapping for common anime origins. Returns `None` for
+/// countries without a known mapping rather than leaking the country code into
+/// a language field.
+fn country_to_language(country: &str) -> Option<&'static str> {
     match country {
-        "JP" => "ja",
-        "CN" => "zh",
-        "KR" => "ko",
-        "TW" => "zh",
-        _ => country,
+        "JP" => Some("ja"),
+        "CN" => Some("zh"),
+        "KR" => Some("ko"),
+        "TW" => Some("zh"),
+        _ => None,
     }
-    .to_string()
 }
 
 fn map_genres(genres: &Option<Vec<String>>) -> Vec<Genre> {
@@ -82,8 +124,13 @@ fn map_genres(genres: &Option<Vec<String>>) -> Vec<Genre> {
 pub fn anilist_media_to_movie(m: AniListMedia) -> UnifiedMovie {
     UnifiedMovie {
         provider_id: MediaId::anilist(m.id as u64),
-        title: resolve_title(&m),
+        title: resolve_title(m.title.as_ref()),
         original_title: m.title.as_ref().and_then(|t| t.native.clone()),
+        alternative_titles: alternative_titles(
+            m.title.as_ref(),
+            m.synonyms.as_deref(),
+            m.country_of_origin.as_deref(),
+        ),
         overview: m.description.clone(),
         release_date: m.start_date.as_ref().and_then(resolve_date),
         poster_url: resolve_cover(&m),
@@ -93,7 +140,11 @@ pub fn anilist_media_to_movie(m: AniListMedia) -> UnifiedMovie {
         vote_average: score_to_vote_average(m.average_score),
         // AniList exposes an average score but no vote count.
         vote_count: None,
-        original_language: m.country_of_origin.as_deref().map(country_to_language),
+        original_language: m
+            .country_of_origin
+            .as_deref()
+            .and_then(country_to_language)
+            .map(str::to_owned),
         adult: m.is_adult,
     }
 }
@@ -107,12 +158,21 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
         .as_deref()
         .map(|c| vec![c.to_string()])
         .unwrap_or_default();
-    let lang = m.country_of_origin.as_deref().map(country_to_language);
+    let lang = m
+        .country_of_origin
+        .as_deref()
+        .and_then(country_to_language)
+        .map(str::to_owned);
 
     UnifiedTvShow {
         provider_id: MediaId::anilist(m.id as u64),
-        name: resolve_title(&m),
+        name: resolve_title(m.title.as_ref()),
         original_name: m.title.as_ref().and_then(|t| t.native.clone()),
+        alternative_titles: alternative_titles(
+            m.title.as_ref(),
+            m.synonyms.as_deref(),
+            m.country_of_origin.as_deref(),
+        ),
         overview: m.description.clone(),
         first_air_date: m.start_date.as_ref().and_then(resolve_date),
         poster_url: resolve_cover(&m),
@@ -166,7 +226,11 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
         })
         .unwrap_or_default();
 
-    let origin_lang = m.country_of_origin.as_deref().map(country_to_language);
+    let origin_lang = m
+        .country_of_origin
+        .as_deref()
+        .and_then(country_to_language)
+        .map(str::to_owned);
     let origin_country = m
         .country_of_origin
         .as_deref()
@@ -184,8 +248,13 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
     UnifiedMovieDetails {
         movie: UnifiedMovie {
             provider_id: MediaId::anilist(m.id as u64),
-            title: resolve_detail_title(&m),
+            title: resolve_title(m.title.as_ref()),
             original_title: m.title.as_ref().and_then(|t| t.native.clone()),
+            alternative_titles: alternative_titles(
+                m.title.as_ref(),
+                m.synonyms.as_deref(),
+                m.country_of_origin.as_deref(),
+            ),
             overview: m.description.clone(),
             release_date: m.start_date.as_ref().and_then(resolve_date),
             poster_url: resolve_cover_detail(&m),
@@ -234,7 +303,11 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         })
         .unwrap_or_default();
 
-    let origin_lang = m.country_of_origin.as_deref().map(country_to_language);
+    let origin_lang = m
+        .country_of_origin
+        .as_deref()
+        .and_then(country_to_language)
+        .map(str::to_owned);
     let origin_country = m
         .country_of_origin
         .as_deref()
@@ -262,8 +335,13 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
     UnifiedTvShowDetails {
         show: UnifiedTvShow {
             provider_id: MediaId::anilist(m.id as u64),
-            name: resolve_detail_title(&m),
+            name: resolve_title(m.title.as_ref()),
             original_name: m.title.as_ref().and_then(|t| t.native.clone()),
+            alternative_titles: alternative_titles(
+                m.title.as_ref(),
+                m.synonyms.as_deref(),
+                m.country_of_origin.as_deref(),
+            ),
             overview: m.description.clone(),
             first_air_date: m.start_date.as_ref().and_then(resolve_date),
             poster_url: resolve_cover_detail(&m),
@@ -302,12 +380,52 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::providers::anilist::response::AniListMedia;
+    use crate::providers::anilist::response::{AniListMedia, AniListMediaDetail};
+
+    fn title(english: Option<&str>, romaji: Option<&str>, native: Option<&str>) -> AniListTitle {
+        AniListTitle {
+            english: english.map(String::from),
+            romaji: romaji.map(String::from),
+            native: native.map(String::from),
+        }
+    }
+
+    fn alt(text: &str, kind: TitleKind, language: Option<&str>) -> AlternativeTitle {
+        let a = AlternativeTitle::new(text, kind);
+        match language {
+            Some(l) => a.with_language(l),
+            None => a,
+        }
+    }
+
+    fn make_detail(t: Option<AniListTitle>, synonyms: Option<Vec<String>>) -> AniListMediaDetail {
+        AniListMediaDetail {
+            id: 7,
+            title: t,
+            synonyms,
+            description: None,
+            start_date: None,
+            end_date: None,
+            cover_image: None,
+            banner_image: None,
+            genres: None,
+            popularity: None,
+            average_score: None,
+            episodes: None,
+            duration: None,
+            status: None,
+            format: Some("MOVIE".to_string()),
+            country_of_origin: Some("JP".to_string()),
+            is_adult: None,
+            studios: None,
+        }
+    }
 
     fn make_media(id: i32, format: Option<&str>) -> AniListMedia {
         AniListMedia {
             id,
             title: None,
+            synonyms: None,
             description: None,
             start_date: None,
             cover_image: None,
@@ -319,6 +437,19 @@ mod tests {
             country_of_origin: None,
             is_adult: None,
         }
+    }
+
+    #[test]
+    fn country_to_language_maps_known_origins() {
+        assert_eq!(country_to_language("JP"), Some("ja"));
+        assert_eq!(country_to_language("CN"), Some("zh"));
+        assert_eq!(country_to_language("KR"), Some("ko"));
+        assert_eq!(country_to_language("TW"), Some("zh"));
+    }
+
+    #[test]
+    fn country_to_language_unmapped_country_is_none() {
+        assert_eq!(country_to_language("US"), None);
     }
 
     #[test]
@@ -352,5 +483,119 @@ mod tests {
         // Shared unknown-media policy: no format -> omitted, not coerced.
         let result = anilist_media_to_search_result(make_media(4, None));
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn romaji_is_kept_when_english_exists() {
+        let mut m = make_media(10, Some("MOVIE"));
+        m.title = Some(title(
+            Some("Your Name."),
+            Some("Kimi no Na wa."),
+            Some("君の名は。"),
+        ));
+        m.country_of_origin = Some("JP".to_string());
+        let movie = anilist_media_to_movie(m);
+        assert_eq!(movie.title, "Your Name.");
+        assert_eq!(movie.original_title.as_deref(), Some("君の名は。"));
+        assert_eq!(
+            movie.alternative_titles,
+            vec![
+                alt("Your Name.", TitleKind::English, Some("en")),
+                alt("Kimi no Na wa.", TitleKind::Romanized, None),
+                alt("君の名は。", TitleKind::Native, Some("ja")),
+            ]
+        );
+    }
+
+    #[test]
+    fn romaji_only_falls_back_for_title_and_is_listed() {
+        let mut m = make_media(11, Some("TV"));
+        m.title = Some(title(None, Some("Shingeki no Kyojin"), None));
+        let show = anilist_media_to_tv(m);
+        assert_eq!(show.name, "Shingeki no Kyojin");
+        assert_eq!(show.original_name, None);
+        assert_eq!(
+            show.alternative_titles,
+            vec![alt("Shingeki no Kyojin", TitleKind::Romanized, None)]
+        );
+    }
+
+    #[test]
+    fn synonyms_are_mapped_after_title_variants() {
+        let mut m = make_media(12, Some("TV"));
+        m.title = Some(title(Some("Attack on Titan"), None, Some("進撃の巨人")));
+        m.synonyms = Some(vec!["AoT".to_string(), "SnK".to_string()]);
+        // Unknown origin country: native title carries no language.
+        m.country_of_origin = Some("US".to_string());
+        let show = anilist_media_to_tv(m);
+        assert_eq!(
+            show.alternative_titles,
+            vec![
+                alt("Attack on Titan", TitleKind::English, Some("en")),
+                alt("進撃の巨人", TitleKind::Native, None),
+                alt("AoT", TitleKind::Synonym, None),
+                alt("SnK", TitleKind::Synonym, None),
+            ]
+        );
+    }
+
+    #[test]
+    fn null_and_empty_variants_are_skipped_and_duplicates_dropped() {
+        let mut m = make_media(13, Some("MOVIE"));
+        m.title = Some(title(Some(""), Some("Same"), None));
+        m.synonyms = Some(vec![
+            "  ".to_string(),
+            "Same".to_string(),
+            "Alias".to_string(),
+            "Alias".to_string(),
+        ]);
+        let movie = anilist_media_to_movie(m);
+        assert_eq!(
+            movie.alternative_titles,
+            vec![
+                alt("Same", TitleKind::Romanized, None),
+                alt("Alias", TitleKind::Synonym, None),
+            ]
+        );
+    }
+
+    #[test]
+    fn identical_text_under_different_kinds_is_kept() {
+        let titles = alternative_titles(Some(&title(Some("Mob"), Some("Mob"), None)), None, None);
+        assert_eq!(
+            titles,
+            vec![
+                alt("Mob", TitleKind::English, Some("en")),
+                alt("Mob", TitleKind::Romanized, None),
+            ]
+        );
+    }
+
+    #[test]
+    fn absent_title_and_synonyms_yield_no_alternatives() {
+        let movie = anilist_media_to_movie(make_media(14, Some("MOVIE")));
+        assert!(movie.alternative_titles.is_empty());
+    }
+
+    #[test]
+    fn detail_conversions_carry_alternative_titles() {
+        let expected = vec![
+            alt("English", TitleKind::English, Some("en")),
+            alt("Romaji", TitleKind::Romanized, None),
+            alt("ネイティブ", TitleKind::Native, Some("ja")),
+            alt("Alias", TitleKind::Synonym, None),
+        ];
+        let make = || {
+            make_detail(
+                Some(title(Some("English"), Some("Romaji"), Some("ネイティブ"))),
+                Some(vec!["Alias".to_string()]),
+            )
+        };
+        let movie = anilist_media_detail_to_movie_details(make());
+        assert_eq!(movie.movie.title, "English");
+        assert_eq!(movie.movie.alternative_titles, expected);
+        let show = anilist_media_detail_to_tv_details(make());
+        assert_eq!(show.show.name, "English");
+        assert_eq!(show.show.alternative_titles, expected);
     }
 }

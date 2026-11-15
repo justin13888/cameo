@@ -89,6 +89,27 @@ async fn tv_genres_deserializes_response() {
 }
 
 #[tokio::test]
+async fn tv_genres_drops_genres_without_id() {
+    let (server, client) = setup_mock_client().await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/genre/tv/list"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "genres": [
+                { "id": null, "name": "Null id" },
+                { "name": "Missing id" },
+                { "id": 18, "name": "Drama" }
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    let genres = client.tv_genres().await.unwrap();
+
+    assert_eq!(genres, vec![cameo::Genre::Drama]);
+}
+
+#[tokio::test]
 async fn trending_tv_deserializes_response() {
     let (server, client) = setup_mock_client().await;
 
@@ -239,6 +260,26 @@ async fn tv_series_details_null_nested_ids_are_none() {
     assert_eq!(details.production_companies[0].id, None);
     assert_eq!(details.created_by[0].id, None);
     assert_eq!(details.seasons[0].episode_count, None);
+}
+
+#[tokio::test]
+async fn tv_series_details_drops_seasons_without_number() {
+    let mut body = tv_details_json();
+    body.insert(
+        "seasons".to_string(),
+        serde_json::json!([
+            { "id": 1, "season_number": null, "name": "Null number" },
+            { "id": 2, "name": "Missing number" },
+            { "id": 3, "season_number": 0, "name": "Specials" },
+            { "id": 4, "season_number": 1, "name": "Season 1" }
+        ]),
+    );
+
+    let details = tv_details_with_body(body.into()).await;
+
+    let numbers: Vec<u32> = details.seasons.iter().map(|s| s.season_number).collect();
+    assert_eq!(numbers, vec![0, 1]);
+    assert_eq!(details.seasons[0].name.as_deref(), Some("Specials"));
 }
 
 #[tokio::test]
