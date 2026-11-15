@@ -14,6 +14,54 @@ use cameo::{
 };
 
 #[test]
+fn build_credits() {
+    use cameo::{UnifiedCastCredit, UnifiedCredits, UnifiedCrewCredit};
+
+    let cast = UnifiedCastCredit::new(MediaId::tmdb(819), "Edward Norton")
+        .with_character("The Narrator")
+        .with_order(0)
+        .with_gender(Gender::Male)
+        .with_profile_url("https://img/819.jpg");
+    let crew = UnifiedCrewCredit::new(MediaId::tmdb(7467), "David Fincher")
+        .with_job("Director")
+        .with_department("Directing")
+        .with_gender(Gender::Male)
+        .with_profile_url("https://img/7467.jpg");
+    let credits = UnifiedCredits::new(MediaId::tmdb(550))
+        .with_cast(vec![cast])
+        .with_crew(vec![crew]);
+
+    assert_eq!(credits.provider_id, MediaId::tmdb(550));
+    let c = &credits.cast[0];
+    assert_eq!(c.person_id, MediaId::tmdb(819));
+    assert_eq!(c.name, "Edward Norton");
+    assert_eq!(c.character.as_deref(), Some("The Narrator"));
+    assert_eq!(c.order, Some(0));
+    assert_eq!(c.gender, Some(Gender::Male));
+    assert_eq!(c.profile_url.as_deref(), Some("https://img/819.jpg"));
+    let d = &credits.crew[0];
+    assert_eq!(d.person_id, MediaId::tmdb(7467));
+    assert_eq!(d.job.as_deref(), Some("Director"));
+    assert_eq!(d.department.as_deref(), Some("Directing"));
+    assert_eq!(d.gender, Some(Gender::Male));
+    assert_eq!(d.profile_url.as_deref(), Some("https://img/7467.jpg"));
+
+    let empty = UnifiedCastCredit::new(MediaId::anilist_staff(1), "Someone");
+    assert_eq!(
+        (
+            empty.character,
+            empty.order,
+            empty.gender,
+            empty.profile_url
+        ),
+        (None, None, None, None)
+    );
+    let empty = UnifiedCrewCredit::new(MediaId::anilist_staff(1), "Someone");
+    assert_eq!((empty.job, empty.department), (None, None));
+    assert!(UnifiedCredits::new(MediaId::anilist(1)).cast.is_empty());
+}
+
+#[test]
 fn build_movie_and_details() {
     let movie = UnifiedMovie::new(MediaId::tmdb(550), "Fight Club")
         .with_original_title("Fight Club")

@@ -282,6 +282,88 @@ pub struct AniListStaffDetail {
     pub site_url: Option<String>,
 }
 
+// ── Credits types ─────────────────────────────────────────────────────────────
+
+/// `data` object for the media-credits query.
+#[derive(Debug, Deserialize)]
+pub(crate) struct MediaCreditsResponse {
+    /// `null` when the media does not exist.
+    #[serde(rename = "Media")]
+    pub media: Option<MediaCreditsData>,
+}
+
+/// One page each of a media entry's characters and staff.
+#[derive(Debug, Deserialize)]
+pub(crate) struct MediaCreditsData {
+    #[serde(default)]
+    pub characters: Option<CharacterConnection>,
+    #[serde(default)]
+    pub staff: Option<StaffConnection>,
+}
+
+/// The `hasNextPage`-only page info the credits query selects.
+#[derive(Debug, Deserialize)]
+pub(crate) struct ConnectionPageInfo {
+    #[serde(rename = "hasNextPage", default)]
+    pub has_next_page: bool,
+}
+
+/// A page of `Media.characters`.
+#[derive(Debug, Deserialize)]
+pub(crate) struct CharacterConnection {
+    #[serde(rename = "pageInfo")]
+    pub page_info: Option<ConnectionPageInfo>,
+    /// Edges may themselves be `null` in the AniList schema.
+    #[serde(default)]
+    pub edges: Vec<Option<CharacterEdge>>,
+}
+
+/// A character credited on a media entry, with its voice actors.
+#[derive(Debug, Deserialize)]
+pub(crate) struct CharacterEdge {
+    pub node: Option<AniListCharacter>,
+    #[serde(rename = "voiceActors", default)]
+    pub voice_actors: Option<Vec<Option<AniListCreditStaff>>>,
+}
+
+/// The character selection of the credits query.
+#[derive(Debug, Deserialize)]
+pub(crate) struct AniListCharacter {
+    pub name: Option<AniListCharacterName>,
+}
+
+/// A character's name.
+#[derive(Debug, Deserialize)]
+pub(crate) struct AniListCharacterName {
+    pub full: Option<String>,
+}
+
+/// A page of `Media.staff`.
+#[derive(Debug, Deserialize)]
+pub(crate) struct StaffConnection {
+    #[serde(rename = "pageInfo")]
+    pub page_info: Option<ConnectionPageInfo>,
+    /// Edges may themselves be `null` in the AniList schema.
+    #[serde(default)]
+    pub edges: Vec<Option<StaffEdge>>,
+}
+
+/// A staff member credited on a media entry, with their role.
+#[derive(Debug, Deserialize)]
+pub(crate) struct StaffEdge {
+    /// The staff member's role on this media (e.g. `"Director"`).
+    pub role: Option<String>,
+    pub node: Option<AniListCreditStaff>,
+}
+
+/// The staff selection of the credits query (voice actors and crew).
+#[derive(Debug, Deserialize)]
+pub(crate) struct AniListCreditStaff {
+    pub id: i32,
+    pub name: Option<AniListStaffName>,
+    pub image: Option<AniListStaffImage>,
+}
+
 /// `data` object for staff list queries.
 #[derive(Debug, Deserialize)]
 pub(crate) struct StaffPageResponse {

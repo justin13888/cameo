@@ -542,6 +542,98 @@ impl UnifiedPersonDetails {
     }
 }
 
+impl UnifiedCredits {
+    /// Create an empty credits list for the title `provider_id`.
+    pub fn new(provider_id: MediaId) -> Self {
+        Self {
+            provider_id,
+            cast: Vec::new(),
+            crew: Vec::new(),
+        }
+    }
+
+    /// Set the cast credits.
+    pub fn with_cast(mut self, value: Vec<UnifiedCastCredit>) -> Self {
+        self.cast = value;
+        self
+    }
+    /// Set the crew credits.
+    pub fn with_crew(mut self, value: Vec<UnifiedCrewCredit>) -> Self {
+        self.crew = value;
+        self
+    }
+}
+
+impl UnifiedCastCredit {
+    /// Create a cast credit for the person `person_id`.
+    pub fn new(person_id: MediaId, name: impl Into<String>) -> Self {
+        Self {
+            person_id,
+            name: name.into(),
+            profile_url: None,
+            character: None,
+            order: None,
+            gender: None,
+        }
+    }
+
+    /// Set the profile image URL.
+    pub fn with_profile_url(mut self, value: impl Into<String>) -> Self {
+        self.profile_url = Some(value.into());
+        self
+    }
+    /// Set the character played or voiced.
+    pub fn with_character(mut self, value: impl Into<String>) -> Self {
+        self.character = Some(value.into());
+        self
+    }
+    /// Set the billing order (`0` = top-billed).
+    pub fn with_order(mut self, value: u32) -> Self {
+        self.order = Some(value);
+        self
+    }
+    /// Set the gender.
+    pub fn with_gender(mut self, value: Gender) -> Self {
+        self.gender = Some(value);
+        self
+    }
+}
+
+impl UnifiedCrewCredit {
+    /// Create a crew credit for the person `person_id`.
+    pub fn new(person_id: MediaId, name: impl Into<String>) -> Self {
+        Self {
+            person_id,
+            name: name.into(),
+            profile_url: None,
+            job: None,
+            department: None,
+            gender: None,
+        }
+    }
+
+    /// Set the profile image URL.
+    pub fn with_profile_url(mut self, value: impl Into<String>) -> Self {
+        self.profile_url = Some(value.into());
+        self
+    }
+    /// Set the job.
+    pub fn with_job(mut self, value: impl Into<String>) -> Self {
+        self.job = Some(value.into());
+        self
+    }
+    /// Set the department.
+    pub fn with_department(mut self, value: impl Into<String>) -> Self {
+        self.department = Some(value.into());
+        self
+    }
+    /// Set the gender.
+    pub fn with_gender(mut self, value: Gender) -> Self {
+        self.gender = Some(value);
+        self
+    }
+}
+
 impl UnifiedSeasonDetails {
     /// Create season details for the given show and season number.
     pub fn new(show_id: MediaId, season_number: u32) -> Self {

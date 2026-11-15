@@ -26,6 +26,10 @@ fn tmdb_client_is_a_dyn_provider() {
     assert!(search.supports(Capability::Search));
     assert!(search.supports(Capability::WatchAvailability));
     assert!(search.supports(Capability::ExternalIds));
+    assert!(search.supports(Capability::Credits));
+    let _credits: Arc<dyn cameo::CreditsProvider> =
+        Arc::new(TmdbClient::new(TmdbConfig::new("token")).unwrap());
+    assert_send_sync::<Arc<dyn cameo::CreditsProvider>>();
 
     let external: Arc<dyn cameo::ExternalIdProvider> =
         Arc::new(TmdbClient::new(TmdbConfig::new("token")).unwrap());
@@ -51,6 +55,7 @@ fn anilist_client_is_a_dyn_provider() {
 
     let client = AniListClient::new(AniListConfig::new()).unwrap();
     let search: Arc<dyn SearchProvider> = Arc::new(client.clone());
+    let _credits: Arc<dyn cameo::CreditsProvider> = Arc::new(client.clone());
     let external: Arc<dyn cameo::ExternalIdProvider> = Arc::new(client);
 
     assert_eq!(search.id(), "anilist");
@@ -59,6 +64,7 @@ fn anilist_client_is_a_dyn_provider() {
     assert!(search.supports(Capability::Search));
     assert!(search.supports(Capability::Discovery));
     assert!(search.supports(Capability::Recommendations));
+    assert!(search.supports(Capability::Credits));
     // AniList does not implement seasons / watch availability.
     assert!(!search.supports(Capability::WatchAvailability));
     assert!(!search.supports(Capability::Seasons));

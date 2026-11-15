@@ -176,6 +176,77 @@ async fn facade_tv_external_ids_dispatches_to_tmdb() {
 }
 
 #[tokio::test]
+async fn facade_movie_credits_dispatches_to_tmdb() {
+    let server = MockServer::start().await;
+    let client = setup(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/movie/550/credits"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../fixtures/movie_credits_response.json"),
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let credits = client.movie_credits(&MediaId::tmdb(550)).await.unwrap();
+
+    assert_eq!(credits.provider_id, MediaId::tmdb(550));
+    assert_eq!(credits.cast.len(), 1);
+    let cast = &credits.cast[0];
+    assert_eq!(cast.person_id, MediaId::tmdb(819));
+    assert_eq!(cast.name, "Edward Norton");
+    assert_eq!(cast.character.as_deref(), Some("The Narrator"));
+    assert_eq!(cast.order, Some(0));
+    assert_eq!(cast.gender, Some(cameo::Gender::Male));
+    assert!(
+        cast.profile_url
+            .as_deref()
+            .is_some_and(|u| u.ends_with("/5XBzD5WuTyVQZeS4VI25z2moMeY.jpg"))
+    );
+    assert_eq!(credits.crew.len(), 1);
+    let crew = &credits.crew[0];
+    assert_eq!(crew.person_id, MediaId::tmdb(7467));
+    assert_eq!(crew.job.as_deref(), Some("Director"));
+    assert_eq!(crew.department.as_deref(), Some("Directing"));
+}
+
+#[tokio::test]
+async fn facade_tv_show_credits_dispatches_to_tmdb_aggregate_credits() {
+    let server = MockServer::start().await;
+    let client = setup(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/tv/1396/aggregate_credits"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../fixtures/tv_credits_response.json"),
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let credits = client.tv_show_credits(&MediaId::tmdb(1396)).await.unwrap();
+
+    assert_eq!(credits.provider_id, MediaId::tmdb(1396));
+    assert_eq!(credits.cast[0].person_id, MediaId::tmdb(17419));
+    assert_eq!(credits.cast[0].character.as_deref(), Some("Walter White"));
+    assert_eq!(credits.crew[0].name, "Vince Gilligan");
+}
+
+#[tokio::test]
+async fn facade_credits_for_an_unconfigured_provider_is_unsupported() {
+    let server = MockServer::start().await;
+    let client = setup(&server).await;
+
+    let result = client.movie_credits(&MediaId::anilist(5114)).await;
+
+    assert!(
+        matches!(result, Err(cameo::CameoClientError::Unsupported)),
+        "expected Unsupported, got: {result:?}"
+    );
+}
+
+#[tokio::test]
 async fn facade_find_by_external_id_dispatches_to_tmdb() {
     let server = MockServer::start().await;
     let client = setup(&server).await;

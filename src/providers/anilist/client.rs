@@ -9,9 +9,9 @@ use super::{
     error::AniListError,
     query,
     response::{
-        GraphQlResponse, MediaDetailResponse, MediaIdsResponse, MediaPageData, MediaPageResponse,
-        MediaRecommendationsResponse, RecommendationConnection, StaffDetailResponse,
-        StaffPageResponse,
+        GraphQlResponse, MediaCreditsResponse, MediaDetailResponse, MediaIdsResponse,
+        MediaPageData, MediaPageResponse, MediaRecommendationsResponse, RecommendationConnection,
+        StaffDetailResponse, StaffPageResponse,
     },
 };
 use crate::{
@@ -19,11 +19,12 @@ use crate::{
     unified::{
         conversions::anilist::{
             anilist_media_to_movie, anilist_media_to_search_result, anilist_media_to_tv,
+            credits::anilist_credits_to_unified,
         },
         external_ids::{ExternalIds, ExternalMatch},
         media_id::MediaId,
         models::{
-            UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
+            UnifiedCredits, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
             UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
         },
     },
@@ -34,6 +35,16 @@ const MOVIE_FORMATS: &[AnimeFormat] = AnimeFormat::MOVIES;
 
 /// AniList formats for anime that map to the "TV show" media type.
 const TV_FORMATS: &[AnimeFormat] = AnimeFormat::TV;
+
+/// Characters and staff fetched per [`AniListClient::media_credits`] request.
+///
+/// Below AniList's 50-item maximum because each character also nests its
+/// voice actors, which counts against AniList's per-query complexity limit.
+const CREDITS_PER_PAGE: u32 = 25;
+
+/// The most requests [`AniListClient::media_credits`] makes for one anime
+/// (at [`CREDITS_PER_PAGE`], up to 500 characters and 500 staff).
+const CREDITS_MAX_PAGES: u32 = 20;
 
 // ── Client ─────────────────────────────────────────────────────────────────────
 
@@ -432,6 +443,76 @@ impl AniListClient {
             .await?
             .ok_or(AniListError::NotFound)?;
         Ok(crate::unified::conversions::anilist::staff_detail_to_person_details(staff))
+    }
+
+    // ── Credits ────────────────────────────────────────────────────────────────
+
+    /// Get the cast and crew of an anime by AniList ID.
+    ///
+    /// The cast is built from `Media.characters`: one credit per Japanese
+    /// voice actor of each character, ordered main characters first, with the
+    /// character's position as its billing `order`. The crew is built from
+    /// `Media.staff`, with each staff edge's role as the `job`. Person ids are
+    /// staff ids (`anilist:staff:<id>`), usable with
+    /// [`person_details`](Self::person_details).
+    ///
+    /// Both connections are paged 25 entries at a time and walked until
+    /// AniList reports no next page, up to 20 requests (500 characters and
+    /// 500 staff); past that cap the remaining credits are dropped and a
+    /// warning is logged. Movies and series share this query.
+    ///
+    /// # Errors
+    ///
+    /// [`AniListError::NotFound`] when no anime has this id (a negative id
+    /// never names one, so it fails without a request).
+    pub async fn media_credits(&self, id: i32) -> Result<UnifiedCredits, AniListError> {
+        let title = MediaId::anilist(u64::try_from(id).map_err(|_| AniListError::NotFound)?);
+        let mut characters = Vec::new();
+        let mut staff = Vec::new();
+        let mut more_characters = true;
+        let mut more_staff = true;
+        let mut page: u32 = 1;
+        while more_characters || more_staff {
+            if page > CREDITS_MAX_PAGES {
+                tracing::warn!(
+                    id,
+                    max_pages = CREDITS_MAX_PAGES,
+                    "anilist: credits truncated at the page cap"
+                );
+                break;
+            }
+            let vars = json!({
+                "id": id,
+                "characterPage": page,
+                "staffPage": page,
+                "perPage": CREDITS_PER_PAGE,
+            });
+            tracing::debug!(id, page, "anilist: graphql MEDIA_CREDITS");
+            let media = self
+                .graphql(query::MEDIA_CREDITS, vars, |r: MediaCreditsResponse| {
+                    r.media
+                })
+                .await?
+                .ok_or(AniListError::NotFound)?;
+            if more_characters {
+                let conn = media.characters;
+                more_characters = conn
+                    .as_ref()
+                    .and_then(|c| c.page_info.as_ref())
+                    .is_some_and(|p| p.has_next_page);
+                characters.extend(conn.into_iter().flat_map(|c| c.edges).flatten());
+            }
+            if more_staff {
+                let conn = media.staff;
+                more_staff = conn
+                    .as_ref()
+                    .and_then(|c| c.page_info.as_ref())
+                    .is_some_and(|p| p.has_next_page);
+                staff.extend(conn.into_iter().flat_map(|c| c.edges).flatten());
+            }
+            page += 1;
+        }
+        Ok(anilist_credits_to_unified(title, characters, staff))
     }
 
     // ── External IDs ───────────────────────────────────────────────────────────

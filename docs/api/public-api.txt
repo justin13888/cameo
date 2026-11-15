@@ -742,6 +742,7 @@ pub fn cameo::providers::anilist::client::AniListClient::config(&self) -> &cameo
 pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
 pub async fn cameo::providers::anilist::client::AniListClient::external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::find_by_mal_id(&self, i32) -> core::result::Result<core::option::Option<cameo::unified::external_ids::ExternalMatch>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::media_credits(&self, i32) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub fn cameo::providers::anilist::client::AniListClient::new(cameo::providers::anilist::config::AniListConfig) -> core::result::Result<Self, cameo::providers::anilist::error::AniListError>
@@ -758,6 +759,9 @@ pub async fn cameo::providers::anilist::client::AniListClient::trending_movies(&
 pub async fn cameo::providers::anilist::client::AniListClient::trending_tv(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_show_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::anilist::error::AniListError>
+impl cameo::unified::traits::CreditsProvider for cameo::providers::anilist::client::AniListClient
+pub fn cameo::providers::anilist::client::AniListClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::anilist::client::AniListClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 impl cameo::unified::traits::DetailProvider for cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::movie_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::anilist::client::AniListClient::person_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -1594,6 +1598,7 @@ pub fn cameo::providers::anilist::client::AniListClient::config(&self) -> &cameo
 pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
 pub async fn cameo::providers::anilist::client::AniListClient::external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::find_by_mal_id(&self, i32) -> core::result::Result<core::option::Option<cameo::unified::external_ids::ExternalMatch>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::media_credits(&self, i32) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub fn cameo::providers::anilist::client::AniListClient::new(cameo::providers::anilist::config::AniListConfig) -> core::result::Result<Self, cameo::providers::anilist::error::AniListError>
@@ -1610,6 +1615,9 @@ pub async fn cameo::providers::anilist::client::AniListClient::trending_movies(&
 pub async fn cameo::providers::anilist::client::AniListClient::trending_tv(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_show_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::anilist::error::AniListError>
+impl cameo::unified::traits::CreditsProvider for cameo::providers::anilist::client::AniListClient
+pub fn cameo::providers::anilist::client::AniListClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::anilist::client::AniListClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 impl cameo::unified::traits::DetailProvider for cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::movie_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::anilist::client::AniListClient::person_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -2941,6 +2949,9 @@ pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
+impl cameo::unified::traits::CreditsProvider for cameo::providers::tmdb::client::TmdbClient
+pub fn cameo::providers::tmdb::client::TmdbClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::tmdb::client::TmdbClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 impl cameo::unified::traits::DetailProvider for cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::movie_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::person_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -4345,6 +4356,9 @@ pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
+impl cameo::unified::traits::CreditsProvider for cameo::providers::tmdb::client::TmdbClient
+pub fn cameo::providers::tmdb::client::TmdbClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::tmdb::client::TmdbClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 impl cameo::unified::traits::DetailProvider for cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::movie_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::person_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -5207,6 +5221,9 @@ pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &ca
 pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::movie_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_show_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
+impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::unified::facade::CameoClientError>
@@ -5268,6 +5285,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoCli
 pub struct cameo::unified::facade::CameoClientBuilder
 impl cameo::unified::facade::CameoClientBuilder
 pub fn cameo::unified::facade::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::unified::facade::CameoClientError>
+pub fn cameo::unified::facade::CameoClientBuilder::register_credits_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::CreditsProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
@@ -6110,6 +6128,178 @@ pub fn cameo::unified::Network::and<P, B, E>(self, P) -> tower_http::follow_redi
 pub fn cameo::unified::Network::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::Network
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::Network
+#[non_exhaustive] pub struct cameo::unified::models::UnifiedCastCredit
+pub cameo::unified::models::UnifiedCastCredit::character: core::option::Option<alloc::string::String>
+pub cameo::unified::models::UnifiedCastCredit::gender: core::option::Option<cameo::unified::Gender>
+pub cameo::unified::models::UnifiedCastCredit::name: alloc::string::String
+pub cameo::unified::models::UnifiedCastCredit::order: core::option::Option<u32>
+pub cameo::unified::models::UnifiedCastCredit::person_id: cameo::unified::media_id::MediaId
+pub cameo::unified::models::UnifiedCastCredit::profile_url: core::option::Option<alloc::string::String>
+impl cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_character(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_gender(self, cameo::unified::Gender) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_order(self, u32) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_profile_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::clone(&self) -> cameo::unified::UnifiedCastCredit
+impl core::cmp::PartialEq for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::eq(&self, &cameo::unified::UnifiedCastCredit) -> bool
+impl core::fmt::Debug for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::UnifiedCastCredit
+impl serde_core::ser::Serialize for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::UnifiedCastCredit
+impl core::marker::Send for cameo::unified::UnifiedCastCredit
+impl core::marker::Sync for cameo::unified::UnifiedCastCredit
+impl core::marker::Unpin for cameo::unified::UnifiedCastCredit
+impl core::marker::UnsafeUnpin for cameo::unified::UnifiedCastCredit
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::UnifiedCastCredit
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::UnifiedCastCredit
+impl<T, U> core::convert::Into<U> for cameo::unified::UnifiedCastCredit where U: core::convert::From<T>
+pub fn cameo::unified::UnifiedCastCredit::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::UnifiedCastCredit where U: core::convert::Into<T>
+pub type cameo::unified::UnifiedCastCredit::Error = core::convert::Infallible
+pub fn cameo::unified::UnifiedCastCredit::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::UnifiedCastCredit where U: core::convert::TryFrom<T>
+pub type cameo::unified::UnifiedCastCredit::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::UnifiedCastCredit::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::UnifiedCastCredit where T: core::clone::Clone
+pub type cameo::unified::UnifiedCastCredit::Owned = T
+pub fn cameo::unified::UnifiedCastCredit::clone_into(&self, &mut T)
+pub fn cameo::unified::UnifiedCastCredit::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::UnifiedCastCredit where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::UnifiedCastCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::UnifiedCastCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::UnifiedCastCredit where T: core::clone::Clone
+pub unsafe fn cameo::unified::UnifiedCastCredit::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::UnifiedCastCredit where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::UnifiedCastCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::UnifiedCastCredit::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedCastCredit
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedCastCredit
+#[non_exhaustive] pub struct cameo::unified::models::UnifiedCredits
+pub cameo::unified::models::UnifiedCredits::cast: alloc::vec::Vec<cameo::unified::UnifiedCastCredit>
+pub cameo::unified::models::UnifiedCredits::crew: alloc::vec::Vec<cameo::unified::UnifiedCrewCredit>
+pub cameo::unified::models::UnifiedCredits::provider_id: cameo::unified::media_id::MediaId
+impl cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::new(cameo::unified::media_id::MediaId) -> Self
+pub fn cameo::unified::UnifiedCredits::with_cast(self, alloc::vec::Vec<cameo::unified::UnifiedCastCredit>) -> Self
+pub fn cameo::unified::UnifiedCredits::with_crew(self, alloc::vec::Vec<cameo::unified::UnifiedCrewCredit>) -> Self
+impl core::clone::Clone for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::clone(&self) -> cameo::unified::UnifiedCredits
+impl core::cmp::PartialEq for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::eq(&self, &cameo::unified::UnifiedCredits) -> bool
+impl core::fmt::Debug for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::UnifiedCredits
+impl serde_core::ser::Serialize for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::UnifiedCredits
+impl core::marker::Send for cameo::unified::UnifiedCredits
+impl core::marker::Sync for cameo::unified::UnifiedCredits
+impl core::marker::Unpin for cameo::unified::UnifiedCredits
+impl core::marker::UnsafeUnpin for cameo::unified::UnifiedCredits
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::UnifiedCredits
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::UnifiedCredits
+impl<T, U> core::convert::Into<U> for cameo::unified::UnifiedCredits where U: core::convert::From<T>
+pub fn cameo::unified::UnifiedCredits::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::UnifiedCredits where U: core::convert::Into<T>
+pub type cameo::unified::UnifiedCredits::Error = core::convert::Infallible
+pub fn cameo::unified::UnifiedCredits::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::UnifiedCredits where U: core::convert::TryFrom<T>
+pub type cameo::unified::UnifiedCredits::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::UnifiedCredits::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::UnifiedCredits where T: core::clone::Clone
+pub type cameo::unified::UnifiedCredits::Owned = T
+pub fn cameo::unified::UnifiedCredits::clone_into(&self, &mut T)
+pub fn cameo::unified::UnifiedCredits::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::UnifiedCredits where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::UnifiedCredits where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::UnifiedCredits where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::UnifiedCredits where T: core::clone::Clone
+pub unsafe fn cameo::unified::UnifiedCredits::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::UnifiedCredits where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::UnifiedCredits where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::UnifiedCredits::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedCredits
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedCredits
+#[non_exhaustive] pub struct cameo::unified::models::UnifiedCrewCredit
+pub cameo::unified::models::UnifiedCrewCredit::department: core::option::Option<alloc::string::String>
+pub cameo::unified::models::UnifiedCrewCredit::gender: core::option::Option<cameo::unified::Gender>
+pub cameo::unified::models::UnifiedCrewCredit::job: core::option::Option<alloc::string::String>
+pub cameo::unified::models::UnifiedCrewCredit::name: alloc::string::String
+pub cameo::unified::models::UnifiedCrewCredit::person_id: cameo::unified::media_id::MediaId
+pub cameo::unified::models::UnifiedCrewCredit::profile_url: core::option::Option<alloc::string::String>
+impl cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_department(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_gender(self, cameo::unified::Gender) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_job(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_profile_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::clone(&self) -> cameo::unified::UnifiedCrewCredit
+impl core::cmp::PartialEq for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::eq(&self, &cameo::unified::UnifiedCrewCredit) -> bool
+impl core::fmt::Debug for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::UnifiedCrewCredit
+impl serde_core::ser::Serialize for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::UnifiedCrewCredit
+impl core::marker::Send for cameo::unified::UnifiedCrewCredit
+impl core::marker::Sync for cameo::unified::UnifiedCrewCredit
+impl core::marker::Unpin for cameo::unified::UnifiedCrewCredit
+impl core::marker::UnsafeUnpin for cameo::unified::UnifiedCrewCredit
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::UnifiedCrewCredit
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::UnifiedCrewCredit
+impl<T, U> core::convert::Into<U> for cameo::unified::UnifiedCrewCredit where U: core::convert::From<T>
+pub fn cameo::unified::UnifiedCrewCredit::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::UnifiedCrewCredit where U: core::convert::Into<T>
+pub type cameo::unified::UnifiedCrewCredit::Error = core::convert::Infallible
+pub fn cameo::unified::UnifiedCrewCredit::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::UnifiedCrewCredit where U: core::convert::TryFrom<T>
+pub type cameo::unified::UnifiedCrewCredit::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::UnifiedCrewCredit::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::UnifiedCrewCredit where T: core::clone::Clone
+pub type cameo::unified::UnifiedCrewCredit::Owned = T
+pub fn cameo::unified::UnifiedCrewCredit::clone_into(&self, &mut T)
+pub fn cameo::unified::UnifiedCrewCredit::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::UnifiedCrewCredit where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::UnifiedCrewCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::UnifiedCrewCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::UnifiedCrewCredit where T: core::clone::Clone
+pub unsafe fn cameo::unified::UnifiedCrewCredit::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::UnifiedCrewCredit where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::UnifiedCrewCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::UnifiedCrewCredit::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedCrewCredit
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedCrewCredit
 #[non_exhaustive] pub struct cameo::unified::models::UnifiedEpisode
 pub cameo::unified::models::UnifiedEpisode::air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::unified::models::UnifiedEpisode::episode_number: u32
@@ -6899,6 +7089,7 @@ impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedWatchProvider
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedWatchProviders
 pub mod cameo::unified::traits
 #[non_exhaustive] pub enum cameo::unified::traits::Capability
+pub cameo::unified::traits::Capability::Credits
 pub cameo::unified::traits::Capability::Details
 pub cameo::unified::traits::Capability::Discovery
 pub cameo::unified::traits::Capability::ExternalIds
@@ -6955,6 +7146,15 @@ pub fn cameo::unified::traits::Capability::and<P, B, E>(self, P) -> tower_http::
 pub fn cameo::unified::traits::Capability::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::traits::Capability
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::traits::Capability
+pub trait cameo::unified::traits::CreditsProvider: cameo::unified::traits::Provider
+pub fn cameo::unified::traits::CreditsProvider::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::unified::traits::CreditsProvider::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+impl cameo::unified::traits::CreditsProvider for cameo::providers::anilist::client::AniListClient
+pub fn cameo::providers::anilist::client::AniListClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::anilist::client::AniListClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+impl cameo::unified::traits::CreditsProvider for cameo::providers::tmdb::client::TmdbClient
+pub fn cameo::providers::tmdb::client::TmdbClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::tmdb::client::TmdbClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub trait cameo::unified::traits::DetailProvider: cameo::unified::traits::Provider
 pub fn cameo::unified::traits::DetailProvider::movie_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::unified::traits::DetailProvider::person_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -7102,6 +7302,7 @@ pub fn cameo::unified::facade::CameoClientError::or<P, B, E>(self, P) -> tower_h
 impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClientError
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClientError
 #[non_exhaustive] pub enum cameo::unified::Capability
+pub cameo::unified::Capability::Credits
 pub cameo::unified::Capability::Details
 pub cameo::unified::Capability::Discovery
 pub cameo::unified::Capability::ExternalIds
@@ -7801,6 +8002,9 @@ pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &ca
 pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::movie_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_show_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
+impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::unified::facade::CameoClientError>
@@ -7862,6 +8066,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoCli
 pub struct cameo::unified::CameoClientBuilder
 impl cameo::unified::facade::CameoClientBuilder
 pub fn cameo::unified::facade::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::unified::facade::CameoClientError>
+pub fn cameo::unified::facade::CameoClientBuilder::register_credits_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::CreditsProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
@@ -8531,6 +8736,178 @@ pub fn cameo::unified::date::PartialDate::and<P, B, E>(self, P) -> tower_http::f
 pub fn cameo::unified::date::PartialDate::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::date::PartialDate
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::date::PartialDate
+#[non_exhaustive] pub struct cameo::unified::UnifiedCastCredit
+pub cameo::unified::UnifiedCastCredit::character: core::option::Option<alloc::string::String>
+pub cameo::unified::UnifiedCastCredit::gender: core::option::Option<cameo::unified::Gender>
+pub cameo::unified::UnifiedCastCredit::name: alloc::string::String
+pub cameo::unified::UnifiedCastCredit::order: core::option::Option<u32>
+pub cameo::unified::UnifiedCastCredit::person_id: cameo::unified::media_id::MediaId
+pub cameo::unified::UnifiedCastCredit::profile_url: core::option::Option<alloc::string::String>
+impl cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_character(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_gender(self, cameo::unified::Gender) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_order(self, u32) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_profile_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::clone(&self) -> cameo::unified::UnifiedCastCredit
+impl core::cmp::PartialEq for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::eq(&self, &cameo::unified::UnifiedCastCredit) -> bool
+impl core::fmt::Debug for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::UnifiedCastCredit
+impl serde_core::ser::Serialize for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::UnifiedCastCredit
+impl core::marker::Send for cameo::unified::UnifiedCastCredit
+impl core::marker::Sync for cameo::unified::UnifiedCastCredit
+impl core::marker::Unpin for cameo::unified::UnifiedCastCredit
+impl core::marker::UnsafeUnpin for cameo::unified::UnifiedCastCredit
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::UnifiedCastCredit
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::UnifiedCastCredit
+impl<T, U> core::convert::Into<U> for cameo::unified::UnifiedCastCredit where U: core::convert::From<T>
+pub fn cameo::unified::UnifiedCastCredit::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::UnifiedCastCredit where U: core::convert::Into<T>
+pub type cameo::unified::UnifiedCastCredit::Error = core::convert::Infallible
+pub fn cameo::unified::UnifiedCastCredit::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::UnifiedCastCredit where U: core::convert::TryFrom<T>
+pub type cameo::unified::UnifiedCastCredit::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::UnifiedCastCredit::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::UnifiedCastCredit where T: core::clone::Clone
+pub type cameo::unified::UnifiedCastCredit::Owned = T
+pub fn cameo::unified::UnifiedCastCredit::clone_into(&self, &mut T)
+pub fn cameo::unified::UnifiedCastCredit::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::UnifiedCastCredit where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::UnifiedCastCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::UnifiedCastCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::UnifiedCastCredit where T: core::clone::Clone
+pub unsafe fn cameo::unified::UnifiedCastCredit::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::UnifiedCastCredit where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::UnifiedCastCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::UnifiedCastCredit::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedCastCredit
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedCastCredit
+#[non_exhaustive] pub struct cameo::unified::UnifiedCredits
+pub cameo::unified::UnifiedCredits::cast: alloc::vec::Vec<cameo::unified::UnifiedCastCredit>
+pub cameo::unified::UnifiedCredits::crew: alloc::vec::Vec<cameo::unified::UnifiedCrewCredit>
+pub cameo::unified::UnifiedCredits::provider_id: cameo::unified::media_id::MediaId
+impl cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::new(cameo::unified::media_id::MediaId) -> Self
+pub fn cameo::unified::UnifiedCredits::with_cast(self, alloc::vec::Vec<cameo::unified::UnifiedCastCredit>) -> Self
+pub fn cameo::unified::UnifiedCredits::with_crew(self, alloc::vec::Vec<cameo::unified::UnifiedCrewCredit>) -> Self
+impl core::clone::Clone for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::clone(&self) -> cameo::unified::UnifiedCredits
+impl core::cmp::PartialEq for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::eq(&self, &cameo::unified::UnifiedCredits) -> bool
+impl core::fmt::Debug for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::UnifiedCredits
+impl serde_core::ser::Serialize for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::UnifiedCredits
+impl core::marker::Send for cameo::unified::UnifiedCredits
+impl core::marker::Sync for cameo::unified::UnifiedCredits
+impl core::marker::Unpin for cameo::unified::UnifiedCredits
+impl core::marker::UnsafeUnpin for cameo::unified::UnifiedCredits
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::UnifiedCredits
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::UnifiedCredits
+impl<T, U> core::convert::Into<U> for cameo::unified::UnifiedCredits where U: core::convert::From<T>
+pub fn cameo::unified::UnifiedCredits::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::UnifiedCredits where U: core::convert::Into<T>
+pub type cameo::unified::UnifiedCredits::Error = core::convert::Infallible
+pub fn cameo::unified::UnifiedCredits::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::UnifiedCredits where U: core::convert::TryFrom<T>
+pub type cameo::unified::UnifiedCredits::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::UnifiedCredits::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::UnifiedCredits where T: core::clone::Clone
+pub type cameo::unified::UnifiedCredits::Owned = T
+pub fn cameo::unified::UnifiedCredits::clone_into(&self, &mut T)
+pub fn cameo::unified::UnifiedCredits::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::UnifiedCredits where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::UnifiedCredits where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::UnifiedCredits where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::UnifiedCredits where T: core::clone::Clone
+pub unsafe fn cameo::unified::UnifiedCredits::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::UnifiedCredits where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::UnifiedCredits where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::UnifiedCredits::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedCredits
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedCredits
+#[non_exhaustive] pub struct cameo::unified::UnifiedCrewCredit
+pub cameo::unified::UnifiedCrewCredit::department: core::option::Option<alloc::string::String>
+pub cameo::unified::UnifiedCrewCredit::gender: core::option::Option<cameo::unified::Gender>
+pub cameo::unified::UnifiedCrewCredit::job: core::option::Option<alloc::string::String>
+pub cameo::unified::UnifiedCrewCredit::name: alloc::string::String
+pub cameo::unified::UnifiedCrewCredit::person_id: cameo::unified::media_id::MediaId
+pub cameo::unified::UnifiedCrewCredit::profile_url: core::option::Option<alloc::string::String>
+impl cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_department(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_gender(self, cameo::unified::Gender) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_job(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_profile_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::clone(&self) -> cameo::unified::UnifiedCrewCredit
+impl core::cmp::PartialEq for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::eq(&self, &cameo::unified::UnifiedCrewCredit) -> bool
+impl core::fmt::Debug for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::UnifiedCrewCredit
+impl serde_core::ser::Serialize for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::UnifiedCrewCredit
+impl core::marker::Send for cameo::unified::UnifiedCrewCredit
+impl core::marker::Sync for cameo::unified::UnifiedCrewCredit
+impl core::marker::Unpin for cameo::unified::UnifiedCrewCredit
+impl core::marker::UnsafeUnpin for cameo::unified::UnifiedCrewCredit
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::UnifiedCrewCredit
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::UnifiedCrewCredit
+impl<T, U> core::convert::Into<U> for cameo::unified::UnifiedCrewCredit where U: core::convert::From<T>
+pub fn cameo::unified::UnifiedCrewCredit::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::UnifiedCrewCredit where U: core::convert::Into<T>
+pub type cameo::unified::UnifiedCrewCredit::Error = core::convert::Infallible
+pub fn cameo::unified::UnifiedCrewCredit::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::UnifiedCrewCredit where U: core::convert::TryFrom<T>
+pub type cameo::unified::UnifiedCrewCredit::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::UnifiedCrewCredit::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::UnifiedCrewCredit where T: core::clone::Clone
+pub type cameo::unified::UnifiedCrewCredit::Owned = T
+pub fn cameo::unified::UnifiedCrewCredit::clone_into(&self, &mut T)
+pub fn cameo::unified::UnifiedCrewCredit::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::UnifiedCrewCredit where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::UnifiedCrewCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::UnifiedCrewCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::UnifiedCrewCredit where T: core::clone::Clone
+pub unsafe fn cameo::unified::UnifiedCrewCredit::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::UnifiedCrewCredit where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::UnifiedCrewCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::UnifiedCrewCredit::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedCrewCredit
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedCrewCredit
 #[non_exhaustive] pub struct cameo::unified::UnifiedEpisode
 pub cameo::unified::UnifiedEpisode::air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::unified::UnifiedEpisode::episode_number: u32
@@ -9370,6 +9747,15 @@ pub fn cameo::unified::external_ids::UnknownExternalSource::and<P, B, E>(self, P
 pub fn cameo::unified::external_ids::UnknownExternalSource::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::UnknownExternalSource
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::UnknownExternalSource
+pub trait cameo::unified::CreditsProvider: cameo::unified::traits::Provider
+pub fn cameo::unified::CreditsProvider::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::unified::CreditsProvider::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+impl cameo::unified::traits::CreditsProvider for cameo::providers::anilist::client::AniListClient
+pub fn cameo::providers::anilist::client::AniListClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::anilist::client::AniListClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+impl cameo::unified::traits::CreditsProvider for cameo::providers::tmdb::client::TmdbClient
+pub fn cameo::providers::tmdb::client::TmdbClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::tmdb::client::TmdbClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub trait cameo::unified::DetailProvider: cameo::unified::traits::Provider
 pub fn cameo::unified::DetailProvider::movie_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::unified::DetailProvider::person_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -9682,6 +10068,7 @@ pub fn cameo::unified::facade::CameoClientError::or<P, B, E>(self, P) -> tower_h
 impl<T> tracing::instrument::Instrument for cameo::unified::facade::CameoClientError
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoClientError
 #[non_exhaustive] pub enum cameo::Capability
+pub cameo::Capability::Credits
 pub cameo::Capability::Details
 pub cameo::Capability::Discovery
 pub cameo::Capability::ExternalIds
@@ -10684,6 +11071,7 @@ pub fn cameo::providers::anilist::client::AniListClient::config(&self) -> &cameo
 pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
 pub async fn cameo::providers::anilist::client::AniListClient::external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::find_by_mal_id(&self, i32) -> core::result::Result<core::option::Option<cameo::unified::external_ids::ExternalMatch>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::media_credits(&self, i32) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub fn cameo::providers::anilist::client::AniListClient::new(cameo::providers::anilist::config::AniListConfig) -> core::result::Result<Self, cameo::providers::anilist::error::AniListError>
@@ -10700,6 +11088,9 @@ pub async fn cameo::providers::anilist::client::AniListClient::trending_movies(&
 pub async fn cameo::providers::anilist::client::AniListClient::trending_tv(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_show_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::anilist::error::AniListError>
+impl cameo::unified::traits::CreditsProvider for cameo::providers::anilist::client::AniListClient
+pub fn cameo::providers::anilist::client::AniListClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::anilist::client::AniListClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 impl cameo::unified::traits::DetailProvider for cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::movie_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::anilist::client::AniListClient::person_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -10988,6 +11379,9 @@ pub async fn cameo::unified::facade::CameoClient::find_by_external_id(&self, &ca
 pub async fn cameo::unified::facade::CameoClient::movie_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_external_ids(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::unified::facade::CameoClientError>
 impl cameo::unified::facade::CameoClient
+pub async fn cameo::unified::facade::CameoClient::movie_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
+pub async fn cameo::unified::facade::CameoClient::tv_show_credits(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::unified::facade::CameoClientError>
+impl cameo::unified::facade::CameoClient
 pub async fn cameo::unified::facade::CameoClient::movie_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::person_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::tv_show_details(&self, &cameo::unified::media_id::MediaId) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::unified::facade::CameoClientError>
@@ -11049,6 +11443,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::facade::CameoCli
 pub struct cameo::CameoClientBuilder
 impl cameo::unified::facade::CameoClientBuilder
 pub fn cameo::unified::facade::CameoClientBuilder::build(self) -> core::result::Result<cameo::unified::facade::CameoClient, cameo::unified::facade::CameoClientError>
+pub fn cameo::unified::facade::CameoClientBuilder::register_credits_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::CreditsProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_detail_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DetailProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_discovery_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::DiscoveryProvider>) -> Self
 pub fn cameo::unified::facade::CameoClientBuilder::register_external_id_provider(self, alloc::sync::Arc<dyn cameo::unified::traits::ExternalIdProvider>) -> Self
@@ -11918,6 +12313,9 @@ pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
+impl cameo::unified::traits::CreditsProvider for cameo::providers::tmdb::client::TmdbClient
+pub fn cameo::providers::tmdb::client::TmdbClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::tmdb::client::TmdbClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 impl cameo::unified::traits::DetailProvider for cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::movie_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::person_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -12056,6 +12454,178 @@ pub fn cameo::providers::tmdb::config::TmdbConfig::and<P, B, E>(self, P) -> towe
 pub fn cameo::providers::tmdb::config::TmdbConfig::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::config::TmdbConfig
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::config::TmdbConfig
+#[non_exhaustive] pub struct cameo::UnifiedCastCredit
+pub cameo::UnifiedCastCredit::character: core::option::Option<alloc::string::String>
+pub cameo::UnifiedCastCredit::gender: core::option::Option<cameo::unified::Gender>
+pub cameo::UnifiedCastCredit::name: alloc::string::String
+pub cameo::UnifiedCastCredit::order: core::option::Option<u32>
+pub cameo::UnifiedCastCredit::person_id: cameo::unified::media_id::MediaId
+pub cameo::UnifiedCastCredit::profile_url: core::option::Option<alloc::string::String>
+impl cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_character(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_gender(self, cameo::unified::Gender) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_order(self, u32) -> Self
+pub fn cameo::unified::UnifiedCastCredit::with_profile_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::clone(&self) -> cameo::unified::UnifiedCastCredit
+impl core::cmp::PartialEq for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::eq(&self, &cameo::unified::UnifiedCastCredit) -> bool
+impl core::fmt::Debug for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::UnifiedCastCredit
+impl serde_core::ser::Serialize for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::UnifiedCastCredit
+impl core::marker::Send for cameo::unified::UnifiedCastCredit
+impl core::marker::Sync for cameo::unified::UnifiedCastCredit
+impl core::marker::Unpin for cameo::unified::UnifiedCastCredit
+impl core::marker::UnsafeUnpin for cameo::unified::UnifiedCastCredit
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::UnifiedCastCredit
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::UnifiedCastCredit
+impl<T, U> core::convert::Into<U> for cameo::unified::UnifiedCastCredit where U: core::convert::From<T>
+pub fn cameo::unified::UnifiedCastCredit::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::UnifiedCastCredit where U: core::convert::Into<T>
+pub type cameo::unified::UnifiedCastCredit::Error = core::convert::Infallible
+pub fn cameo::unified::UnifiedCastCredit::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::UnifiedCastCredit where U: core::convert::TryFrom<T>
+pub type cameo::unified::UnifiedCastCredit::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::UnifiedCastCredit::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::UnifiedCastCredit where T: core::clone::Clone
+pub type cameo::unified::UnifiedCastCredit::Owned = T
+pub fn cameo::unified::UnifiedCastCredit::clone_into(&self, &mut T)
+pub fn cameo::unified::UnifiedCastCredit::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::UnifiedCastCredit where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::UnifiedCastCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::UnifiedCastCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::UnifiedCastCredit where T: core::clone::Clone
+pub unsafe fn cameo::unified::UnifiedCastCredit::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::UnifiedCastCredit
+pub fn cameo::unified::UnifiedCastCredit::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::UnifiedCastCredit where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::UnifiedCastCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCastCredit::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::UnifiedCastCredit::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedCastCredit
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedCastCredit
+#[non_exhaustive] pub struct cameo::UnifiedCredits
+pub cameo::UnifiedCredits::cast: alloc::vec::Vec<cameo::unified::UnifiedCastCredit>
+pub cameo::UnifiedCredits::crew: alloc::vec::Vec<cameo::unified::UnifiedCrewCredit>
+pub cameo::UnifiedCredits::provider_id: cameo::unified::media_id::MediaId
+impl cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::new(cameo::unified::media_id::MediaId) -> Self
+pub fn cameo::unified::UnifiedCredits::with_cast(self, alloc::vec::Vec<cameo::unified::UnifiedCastCredit>) -> Self
+pub fn cameo::unified::UnifiedCredits::with_crew(self, alloc::vec::Vec<cameo::unified::UnifiedCrewCredit>) -> Self
+impl core::clone::Clone for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::clone(&self) -> cameo::unified::UnifiedCredits
+impl core::cmp::PartialEq for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::eq(&self, &cameo::unified::UnifiedCredits) -> bool
+impl core::fmt::Debug for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::UnifiedCredits
+impl serde_core::ser::Serialize for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::UnifiedCredits
+impl core::marker::Send for cameo::unified::UnifiedCredits
+impl core::marker::Sync for cameo::unified::UnifiedCredits
+impl core::marker::Unpin for cameo::unified::UnifiedCredits
+impl core::marker::UnsafeUnpin for cameo::unified::UnifiedCredits
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::UnifiedCredits
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::UnifiedCredits
+impl<T, U> core::convert::Into<U> for cameo::unified::UnifiedCredits where U: core::convert::From<T>
+pub fn cameo::unified::UnifiedCredits::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::UnifiedCredits where U: core::convert::Into<T>
+pub type cameo::unified::UnifiedCredits::Error = core::convert::Infallible
+pub fn cameo::unified::UnifiedCredits::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::UnifiedCredits where U: core::convert::TryFrom<T>
+pub type cameo::unified::UnifiedCredits::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::UnifiedCredits::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::UnifiedCredits where T: core::clone::Clone
+pub type cameo::unified::UnifiedCredits::Owned = T
+pub fn cameo::unified::UnifiedCredits::clone_into(&self, &mut T)
+pub fn cameo::unified::UnifiedCredits::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::UnifiedCredits where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::UnifiedCredits where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::UnifiedCredits where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::UnifiedCredits where T: core::clone::Clone
+pub unsafe fn cameo::unified::UnifiedCredits::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::UnifiedCredits
+pub fn cameo::unified::UnifiedCredits::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::UnifiedCredits where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::UnifiedCredits where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCredits::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::UnifiedCredits::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedCredits
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedCredits
+#[non_exhaustive] pub struct cameo::UnifiedCrewCredit
+pub cameo::UnifiedCrewCredit::department: core::option::Option<alloc::string::String>
+pub cameo::UnifiedCrewCredit::gender: core::option::Option<cameo::unified::Gender>
+pub cameo::UnifiedCrewCredit::job: core::option::Option<alloc::string::String>
+pub cameo::UnifiedCrewCredit::name: alloc::string::String
+pub cameo::UnifiedCrewCredit::person_id: cameo::unified::media_id::MediaId
+pub cameo::UnifiedCrewCredit::profile_url: core::option::Option<alloc::string::String>
+impl cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::new(cameo::unified::media_id::MediaId, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_department(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_gender(self, cameo::unified::Gender) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_job(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedCrewCredit::with_profile_url(self, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::clone(&self) -> cameo::unified::UnifiedCrewCredit
+impl core::cmp::PartialEq for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::eq(&self, &cameo::unified::UnifiedCrewCredit) -> bool
+impl core::fmt::Debug for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::unified::UnifiedCrewCredit
+impl serde_core::ser::Serialize for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::UnifiedCrewCredit
+impl core::marker::Send for cameo::unified::UnifiedCrewCredit
+impl core::marker::Sync for cameo::unified::UnifiedCrewCredit
+impl core::marker::Unpin for cameo::unified::UnifiedCrewCredit
+impl core::marker::UnsafeUnpin for cameo::unified::UnifiedCrewCredit
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::UnifiedCrewCredit
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::UnifiedCrewCredit
+impl<T, U> core::convert::Into<U> for cameo::unified::UnifiedCrewCredit where U: core::convert::From<T>
+pub fn cameo::unified::UnifiedCrewCredit::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::UnifiedCrewCredit where U: core::convert::Into<T>
+pub type cameo::unified::UnifiedCrewCredit::Error = core::convert::Infallible
+pub fn cameo::unified::UnifiedCrewCredit::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::UnifiedCrewCredit where U: core::convert::TryFrom<T>
+pub type cameo::unified::UnifiedCrewCredit::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::UnifiedCrewCredit::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::UnifiedCrewCredit where T: core::clone::Clone
+pub type cameo::unified::UnifiedCrewCredit::Owned = T
+pub fn cameo::unified::UnifiedCrewCredit::clone_into(&self, &mut T)
+pub fn cameo::unified::UnifiedCrewCredit::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::UnifiedCrewCredit where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::UnifiedCrewCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::UnifiedCrewCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::UnifiedCrewCredit where T: core::clone::Clone
+pub unsafe fn cameo::unified::UnifiedCrewCredit::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::UnifiedCrewCredit
+pub fn cameo::unified::UnifiedCrewCredit::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::UnifiedCrewCredit where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::UnifiedCrewCredit where T: ?core::marker::Sized
+pub fn cameo::unified::UnifiedCrewCredit::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::UnifiedCrewCredit::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedCrewCredit
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedCrewCredit
 #[non_exhaustive] pub struct cameo::UnifiedEpisode
 pub cameo::UnifiedEpisode::air_date: core::option::Option<cameo::unified::date::PartialDate>
 pub cameo::UnifiedEpisode::episode_number: u32
@@ -12905,6 +13475,15 @@ pub fn cameo::cache::sqlite::SqliteCache::clear<'life0, 'async_trait>(&'life0 se
 pub fn cameo::cache::sqlite::SqliteCache::get<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::cache::key::CacheKey) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<core::option::Option<serde_json::value::Value>, cameo::cache::backend::CacheError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::cache::sqlite::SqliteCache::invalidate<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::cache::key::CacheKey) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<(), cameo::cache::backend::CacheError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::cache::sqlite::SqliteCache::set<'life0, 'async_trait>(&'life0 self, cameo::cache::key::CacheKey, serde_json::value::Value, core::time::Duration) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<(), cameo::cache::backend::CacheError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait
+pub trait cameo::CreditsProvider: cameo::unified::traits::Provider
+pub fn cameo::CreditsProvider::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::CreditsProvider::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+impl cameo::unified::traits::CreditsProvider for cameo::providers::anilist::client::AniListClient
+pub fn cameo::providers::anilist::client::AniListClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::anilist::client::AniListClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+impl cameo::unified::traits::CreditsProvider for cameo::providers::tmdb::client::TmdbClient
+pub fn cameo::providers::tmdb::client::TmdbClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
+pub fn cameo::providers::tmdb::client::TmdbClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub trait cameo::DetailProvider: cameo::unified::traits::Provider
 pub fn cameo::DetailProvider::movie_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::DetailProvider::person_details<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
