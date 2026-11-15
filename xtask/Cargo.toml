@@ -12,9 +12,4 @@ description = "Repository automation for cameo (TMDB client codegen)."
 [workspace]
 
 [dependencies]
-# Pinned so `cargo xtask codegen` reproduces src/generated/tmdb.rs byte-for-byte.
-progenitor = "=0.13.0"
-typify = "=0.6.2"
-syn = "=2.0.117"
-prettyplease = "=0.2.37"
-serde_json = "1"
+spargen = "=0.7.0"
