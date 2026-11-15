@@ -42,6 +42,7 @@ mod tests {
                 english: Some("English Title".to_string()),
                 native: Some("ネイティブ".to_string()),
             }),
+            synonyms: Some(vec!["Synonym".to_string()]),
             description: Some("A description.".to_string()),
             start_date: Some(AniListDate {
                 year: Some(2022),

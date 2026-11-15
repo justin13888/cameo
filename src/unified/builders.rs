@@ -26,6 +26,7 @@ impl UnifiedMovie {
             provider_id,
             title: title.into(),
             original_title: None,
+            alternative_titles: Vec::new(),
             overview: None,
             release_date: None,
             poster_url: None,
@@ -42,6 +43,11 @@ impl UnifiedMovie {
     /// Set the original-language title.
     pub fn with_original_title(mut self, value: impl Into<String>) -> Self {
         self.original_title = Some(value.into());
+        self
+    }
+    /// Set the alternative title variants.
+    pub fn with_alternative_titles(mut self, value: Vec<AlternativeTitle>) -> Self {
+        self.alternative_titles = value;
         self
     }
     /// Set the overview / synopsis.
@@ -185,6 +191,7 @@ impl UnifiedTvShow {
             provider_id,
             name: name.into(),
             original_name: None,
+            alternative_titles: Vec::new(),
             overview: None,
             first_air_date: None,
             poster_url: None,
@@ -202,6 +209,11 @@ impl UnifiedTvShow {
     /// Set the original-language name.
     pub fn with_original_name(mut self, value: impl Into<String>) -> Self {
         self.original_name = Some(value.into());
+        self
+    }
+    /// Set the alternative title variants.
+    pub fn with_alternative_titles(mut self, value: Vec<AlternativeTitle>) -> Self {
+        self.alternative_titles = value;
         self
     }
     /// Set the overview / synopsis.
@@ -670,6 +682,23 @@ impl Collection {
     /// Set the backdrop image URL.
     pub fn with_backdrop_url(mut self, value: impl Into<String>) -> Self {
         self.backdrop_url = Some(value.into());
+        self
+    }
+}
+
+impl AlternativeTitle {
+    /// Create an alternative title of the given kind with no language.
+    pub fn new(title: impl Into<String>, kind: TitleKind) -> Self {
+        Self {
+            title: title.into(),
+            kind,
+            language: None,
+        }
+    }
+
+    /// Set the language (ISO 639-1).
+    pub fn with_language(mut self, value: impl Into<String>) -> Self {
+        self.language = Some(value.into());
         self
     }
 }

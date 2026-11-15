@@ -16,6 +16,7 @@ macro_rules! anime_media_selection {
         concat!(
             "      id\n",
             "      title { romaji english native }\n",
+            "      synonyms\n",
             "      description(asHtml: false)\n",
             "      startDate { year month day }\n",
             "      coverImage { large extraLarge }\n",
@@ -126,6 +127,7 @@ query MediaDetails($id: Int!) {
   Media(id: $id, type: ANIME) {
     id
     title { romaji english native }
+    synonyms
     description(asHtml: false)
     startDate { year month day }
     endDate { year month day }
@@ -240,8 +242,29 @@ mod tests {
             assert_eq!(selection(q), first, "list media selections diverged");
         }
         // The shared selection requests exactly the fields the conversions use.
-        for field in ["id", "title", "startDate", "coverImage", "genres", "format"] {
+        for field in [
+            "id",
+            "title",
+            "synonyms",
+            "startDate",
+            "coverImage",
+            "genres",
+            "format",
+        ] {
             assert!(first.contains(field), "missing {field}");
+        }
+    }
+
+    /// Every media query requests all title variants plus `synonyms`, which
+    /// the conversions map into `alternative_titles`.
+    #[test]
+    fn media_queries_request_all_title_variants() {
+        for q in LIST_QUERIES
+            .iter()
+            .chain([&MEDIA_RECOMMENDATIONS, &MEDIA_DETAILS])
+        {
+            assert!(q.contains("title { romaji english native }"));
+            assert!(q.contains("synonyms"), "media query must request synonyms");
         }
     }
 
