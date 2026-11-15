@@ -103,6 +103,40 @@ pub struct Creator {
     pub profile_url: Option<String>,
 }
 
+/// The kind of an [`AlternativeTitle`] — which variant of a work's title it is.
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum TitleKind {
+    /// An official English-language title.
+    English,
+    /// A romanization (Latin-script transliteration) of the native title,
+    /// e.g. AniList's romaji title.
+    Romanized,
+    /// The title in its original script (e.g. Japanese kanji/kana).
+    Native,
+    /// A synonym, abbreviation, or other alias reported by the provider.
+    Synonym,
+    /// Any other title variant that fits none of the kinds above.
+    Other,
+}
+
+/// One variant of a movie or show title (English, romanized, native, synonym, ...).
+///
+/// The headline `title`/`name` and `original_title`/`original_name` fields on
+/// [`UnifiedMovie`] / [`UnifiedTvShow`] keep their single-value semantics;
+/// `alternative_titles` lists *every* variant the provider reports so none is
+/// discarded (e.g. AniList's romaji title when an English title also exists).
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct AlternativeTitle {
+    /// The title text.
+    pub title: String,
+    /// Which variant of the title this is.
+    pub kind: TitleKind,
+    /// Language of the title (ISO 639-1, e.g. `"en"`), when known.
+    pub language: Option<String>,
+}
+
 /// A movie in the unified model.
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -113,6 +147,10 @@ pub struct UnifiedMovie {
     pub title: String,
     /// Original title in the original language.
     pub original_title: Option<String>,
+    /// Every title variant the provider reports (English, romanized, native,
+    /// synonyms); order is provider-defined. Empty when the provider exposes none
+    /// beyond `title`/`original_title` (e.g. TMDB).
+    pub alternative_titles: Vec<AlternativeTitle>,
     /// Plot overview / synopsis.
     pub overview: Option<String>,
     /// Release date (may be partial, e.g. year-only from some providers).
@@ -129,7 +167,7 @@ pub struct UnifiedMovie {
     pub vote_average: Option<f64>,
     /// Total vote count, if the provider reports one.
     pub vote_count: Option<u64>,
-    /// Original language (ISO 639-1).
+    /// Original language (ISO 639-1), or `None` when unknown.
     pub original_language: Option<String>,
     /// Whether this is adult content, if the provider reports it.
     pub adult: Option<bool>,
@@ -161,8 +199,11 @@ pub struct UnifiedMovieDetails {
     pub production_countries: Vec<String>,
     /// Spoken languages.
     pub spoken_languages: Vec<String>,
-    /// Whether the movie has a video.
-    pub video: bool,
+    /// Whether the movie has a video entry, if the provider reports it.
+    ///
+    /// `None` means unknown: the provider did not report the flag (the key was
+    /// absent or `null`) or has no such concept.
+    pub video: Option<bool>,
     /// The collection (franchise) this movie belongs to, if any.
     pub belongs_to_collection: Option<Collection>,
 }
@@ -177,6 +218,10 @@ pub struct UnifiedTvShow {
     pub name: String,
     /// Original name in the original language.
     pub original_name: Option<String>,
+    /// Every title variant the provider reports (English, romanized, native,
+    /// synonyms); order is provider-defined. Empty when the provider exposes none
+    /// beyond `name`/`original_name` (e.g. TMDB).
+    pub alternative_titles: Vec<AlternativeTitle>,
     /// Plot overview / synopsis.
     pub overview: Option<String>,
     /// First air date (may be partial, e.g. year-only from some providers).
@@ -193,7 +238,7 @@ pub struct UnifiedTvShow {
     pub vote_average: Option<f64>,
     /// Total vote count, if the provider reports one.
     pub vote_count: Option<u64>,
-    /// Original language (ISO 639-1).
+    /// Original language (ISO 639-1), or `None` when unknown.
     pub original_language: Option<String>,
     /// Origin countries.
     pub origin_country: Vec<String>,
@@ -213,8 +258,11 @@ pub struct UnifiedTvShowDetails {
     pub number_of_seasons: Option<u32>,
     /// Number of episodes, if the provider reports one.
     pub number_of_episodes: Option<u32>,
-    /// Whether the show is still in production.
-    pub in_production: bool,
+    /// Whether the show is still in production, if known.
+    ///
+    /// `None` means unknown: the provider did not report the flag (the key was
+    /// absent or `null`) or reported no status to derive it from.
+    pub in_production: Option<bool>,
     /// Release status.
     pub status: Option<String>,
     /// Homepage URL.

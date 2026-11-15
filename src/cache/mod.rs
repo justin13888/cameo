@@ -133,6 +133,10 @@ impl CacheTtlConfig {
     ///    [`recent_content_threshold_days`](CacheTtlConfig::recent_content_threshold_days)
     ///    → [`recent_content_details_ttl`](CacheTtlConfig::recent_content_details_ttl)
     /// 4. Fallback → [`details`](CacheTtlConfig::details)
+    ///
+    /// [`UnifiedTvShowDetails::in_production`](crate::unified::models::UnifiedTvShowDetails::in_production)
+    /// is an `Option<bool>`; pass `in_production.unwrap_or(false)` so an unknown
+    /// production state falls through to the date- and status-based rules.
     pub fn tv_show_details_ttl(
         &self,
         first_air_date: Option<&str>,

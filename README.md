@@ -76,7 +76,7 @@ CameoClient (unified facade)
 |--------|---------|
 | `cameo::unified` | `CameoClient` facade, traits, unified model types, `Genre` |
 | `cameo::providers::tmdb` | `TmdbClient`, `TmdbConfig`, `ImageUrl`, discover builders |
-| `cameo::providers::anilist` | `AniListClient`, `AniListConfig`, `AniListError` |
+| `cameo::providers::anilist` | `AniListClient`, `AniListConfig`, `AniListError`, `DiscoverAnimeBuilder` (filtered discover) |
 | `cameo::cache` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig` |
 | `cameo::core` | `PaginatedResponse`, `into_stream`, `TimeWindow`, `CameoError` |
 | `cameo::generated` | Progenitor-generated low-level TMDB client (do not use directly) |
@@ -109,7 +109,7 @@ breaking change, and the deprecation cadence.
 
 ## MSRV
 
-The minimum supported Rust version is **1.89**. This crate uses [let-chains](https://blog.rust-lang.org/2025/06/26/Rust-1.88.0.html) (`if let A = x && let B = y`), which were stabilized in Rust 1.88, and the `cache` feature's `rusqlite` 0.41 dependency requires Rust 1.89. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
+The minimum supported Rust version is **1.89**, the version `rusqlite` 0.41 (the `cache` feature's SQLite backend) declares. This crate also uses [let-chains](https://blog.rust-lang.org/2025/06/26/Rust-1.88.0.html) (`if let A = x && let B = y`), which were stabilized in Rust 1.88. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
 
 ## License
 

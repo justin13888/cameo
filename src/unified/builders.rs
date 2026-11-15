@@ -26,6 +26,7 @@ impl UnifiedMovie {
             provider_id,
             title: title.into(),
             original_title: None,
+            alternative_titles: Vec::new(),
             overview: None,
             release_date: None,
             poster_url: None,
@@ -42,6 +43,11 @@ impl UnifiedMovie {
     /// Set the original-language title.
     pub fn with_original_title(mut self, value: impl Into<String>) -> Self {
         self.original_title = Some(value.into());
+        self
+    }
+    /// Set the alternative title variants.
+    pub fn with_alternative_titles(mut self, value: Vec<AlternativeTitle>) -> Self {
+        self.alternative_titles = value;
         self
     }
     /// Set the overview / synopsis.
@@ -111,7 +117,7 @@ impl UnifiedMovieDetails {
             production_companies: Vec::new(),
             production_countries: Vec::new(),
             spoken_languages: Vec::new(),
-            video: false,
+            video: None,
             belongs_to_collection: None,
         }
     }
@@ -166,9 +172,9 @@ impl UnifiedMovieDetails {
         self.spoken_languages = value;
         self
     }
-    /// Set whether the movie has a video.
+    /// Set whether the movie has a video entry (stored as `Some(value)`).
     pub fn with_video(mut self, value: bool) -> Self {
-        self.video = value;
+        self.video = Some(value);
         self
     }
     /// Set the collection this movie belongs to.
@@ -185,6 +191,7 @@ impl UnifiedTvShow {
             provider_id,
             name: name.into(),
             original_name: None,
+            alternative_titles: Vec::new(),
             overview: None,
             first_air_date: None,
             poster_url: None,
@@ -202,6 +209,11 @@ impl UnifiedTvShow {
     /// Set the original-language name.
     pub fn with_original_name(mut self, value: impl Into<String>) -> Self {
         self.original_name = Some(value.into());
+        self
+    }
+    /// Set the alternative title variants.
+    pub fn with_alternative_titles(mut self, value: Vec<AlternativeTitle>) -> Self {
+        self.alternative_titles = value;
         self
     }
     /// Set the overview / synopsis.
@@ -269,7 +281,7 @@ impl UnifiedTvShowDetails {
             tagline: None,
             number_of_seasons: None,
             number_of_episodes: None,
-            in_production: false,
+            in_production: None,
             status: None,
             homepage: None,
             networks: Vec::new(),
@@ -300,9 +312,9 @@ impl UnifiedTvShowDetails {
         self.number_of_episodes = Some(value);
         self
     }
-    /// Set whether the show is still in production.
+    /// Set whether the show is still in production (stored as `Some(value)`).
     pub fn with_in_production(mut self, value: bool) -> Self {
-        self.in_production = value;
+        self.in_production = Some(value);
         self
     }
     /// Set the release status.
@@ -670,6 +682,23 @@ impl Collection {
     /// Set the backdrop image URL.
     pub fn with_backdrop_url(mut self, value: impl Into<String>) -> Self {
         self.backdrop_url = Some(value.into());
+        self
+    }
+}
+
+impl AlternativeTitle {
+    /// Create an alternative title of the given kind with no language.
+    pub fn new(title: impl Into<String>, kind: TitleKind) -> Self {
+        Self {
+            title: title.into(),
+            kind,
+            language: None,
+        }
+    }
+
+    /// Set the language (ISO 639-1).
+    pub fn with_language(mut self, value: impl Into<String>) -> Self {
+        self.language = Some(value.into());
         self
     }
 }

@@ -1,4 +1,5 @@
 use cameo::{
+    AlternativeTitle, TitleKind,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
     unified::genre::Genre,
 };
@@ -39,6 +40,7 @@ async fn movie_details_returns_correct_fields() {
     // Provider ID and title
     assert_eq!(result.movie.provider_id, "anilist:1535");
     assert_eq!(result.movie.title, "Your Name.");
+    assert_eq!(result.video, None);
     // Overview / description
     assert!(
         result
@@ -76,6 +78,19 @@ async fn movie_details_returns_correct_fields() {
     assert!(result.movie.genres.contains(&Genre::Drama));
     assert!(result.movie.genres.contains(&Genre::Romance));
     assert!(result.movie.genres.contains(&Genre::Supernatural));
+    // Every title variant is kept: English and romaji share the same text but
+    // are distinct kinds, the native title carries the origin language, and
+    // synonyms follow.
+    assert_eq!(result.movie.original_title.as_deref(), Some("君の名は。"));
+    assert_eq!(
+        result.movie.alternative_titles,
+        vec![
+            AlternativeTitle::new("Your Name.", TitleKind::English).with_language("en"),
+            AlternativeTitle::new("Your Name.", TitleKind::Romanized),
+            AlternativeTitle::new("君の名は。", TitleKind::Native).with_language("ja"),
+            AlternativeTitle::new("Kimi no Na wa.", TitleKind::Synonym),
+        ]
+    );
 }
 
 #[tokio::test]
@@ -131,6 +146,7 @@ async fn tv_show_details_returns_correct_fields() {
             "Media": {
                 "id": 16498,
                 "title": { "romaji": "Shingeki no Kyojin", "english": "Attack on Titan", "native": "進撃の巨人" },
+                "synonyms": ["AoT", "SnK", ""],
                 "description": "Humanity fights giants.",
                 "startDate": { "year": 2013, "month": 4, "day": 7 },
                 "endDate": { "year": 2013, "month": 9, "day": 29 },
@@ -158,6 +174,51 @@ async fn tv_show_details_returns_correct_fields() {
     assert_eq!(result.show.provider_id, "anilist:16498");
     assert_eq!(result.show.name, "Attack on Titan");
     assert_eq!(result.show.vote_average, Some(8.4));
+    // Romaji is kept alongside the English headline name; empty synonyms are
+    // skipped.
+    assert_eq!(
+        result.show.alternative_titles,
+        vec![
+            AlternativeTitle::new("Attack on Titan", TitleKind::English).with_language("en"),
+            AlternativeTitle::new("Shingeki no Kyojin", TitleKind::Romanized),
+            AlternativeTitle::new("進撃の巨人", TitleKind::Native).with_language("ja"),
+            AlternativeTitle::new("AoT", TitleKind::Synonym),
+            AlternativeTitle::new("SnK", TitleKind::Synonym),
+        ]
+    );
+    assert_eq!(result.in_production, Some(false));
+}
+
+/// Minimal AniList TV details body with the given `status`.
+fn tv_details_body_with_status(status: serde_json::Value) -> serde_json::Value {
+    json!({
+        "data": {
+            "Media": {
+                "id": 16498,
+                "title": { "romaji": "Shingeki no Kyojin" },
+                "status": status,
+                "format": "TV"
+            }
+        }
+    })
+}
+
+#[tokio::test]
+async fn tv_show_details_releasing_is_in_production() {
+    let (_server, client) = mock_client(tv_details_body_with_status(json!("RELEASING"))).await;
+
+    let result = client.tv_show_details(16498).await.unwrap();
+
+    assert_eq!(result.in_production, Some(true));
+}
+
+#[tokio::test]
+async fn tv_show_details_unknown_status_leaves_in_production_unknown() {
+    let (_server, client) = mock_client(tv_details_body_with_status(json!(null))).await;
+
+    let result = client.tv_show_details(16498).await.unwrap();
+
+    assert_eq!(result.in_production, None);
 }
 
 #[tokio::test]
