@@ -2,7 +2,10 @@
 
 use super::resolve_date;
 use crate::{
-    providers::anilist::response::{AniListMedia, AniListMediaDetail, AniListTitle},
+    providers::anilist::{
+        client::{Kind, classify},
+        response::{AniListMedia, AniListMediaDetail, AniListTitle},
+    },
     unified::{
         genre::Genre,
         media_id::MediaId,
@@ -211,13 +214,14 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
 ///
 /// Shared unknown-media policy: an entry whose `format` is absent is **omitted**
 /// (`None`) rather than coerced to an arbitrary type — the same rule TMDB
-/// applies to an unrecognized `media_type`. Any present non-`MOVIE` AniList
-/// format is a show.
+/// applies to an unrecognized `media_type`. A present format is classified
+/// exactly as the movie and TV list queries filter: `MOVIE` is a movie; `TV`,
+/// `TV_SHORT`, `ONA`, `OVA`, and `SPECIAL` are shows; any other format (e.g.
+/// `MUSIC`) is omitted too, since no movie or TV list would ever return it.
 pub fn anilist_media_to_search_result(m: AniListMedia) -> Option<UnifiedSearchResult> {
-    match m.format.as_deref() {
-        Some("MOVIE") => Some(UnifiedSearchResult::Movie(anilist_media_to_movie(m))),
-        Some(_) => Some(UnifiedSearchResult::TvShow(anilist_media_to_tv(m))),
-        None => None,
+    match m.format.as_deref().and_then(classify)? {
+        Kind::Movie => Some(UnifiedSearchResult::Movie(anilist_media_to_movie(m))),
+        Kind::Tv => Some(UnifiedSearchResult::TvShow(anilist_media_to_tv(m))),
     }
 }
 
@@ -550,10 +554,22 @@ mod tests {
     }
 
     #[test]
-    fn search_result_other_present_format_is_a_show() {
-        // Any present non-MOVIE format classifies as a show.
-        let result = anilist_media_to_search_result(make_media(3, Some("OVA")));
-        assert!(matches!(result, Some(UnifiedSearchResult::TvShow(_))));
+    fn search_result_every_tv_format_is_a_show() {
+        for format in ["TV", "TV_SHORT", "ONA", "OVA", "SPECIAL"] {
+            let result = anilist_media_to_search_result(make_media(3, Some(format)));
+            assert!(
+                matches!(result, Some(UnifiedSearchResult::TvShow(_))),
+                "{format} should classify as a show"
+            );
+        }
+    }
+
+    #[test]
+    fn search_result_format_outside_movie_and_tv_lists_is_dropped() {
+        // MUSIC is in neither formatIn list, so no movie or TV list returns it.
+        assert!(anilist_media_to_search_result(make_media(5, Some("MUSIC"))).is_none());
+        // An unrecognized future format is omitted, not coerced to a show.
+        assert!(anilist_media_to_search_result(make_media(6, Some("HOLOGRAM"))).is_none());
     }
 
     #[test]
