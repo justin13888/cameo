@@ -37,7 +37,7 @@ mod tmdb_credits;
 pub(crate) mod tv;
 pub(crate) mod watch_providers;
 
-pub(crate) use page::TmdbPaged;
+pub(crate) use page::{MAX_PAGE, TmdbPaged, single_page};
 
 use crate::{
     providers::tmdb::image_url::{
