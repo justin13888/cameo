@@ -179,7 +179,7 @@ impl TvdbClient {
     }
 
     /// A series with its translations, artwork, genres, remote ids, content
-    /// ratings and seasons (`GET /series/{id}/extended?meta=translations&short=true`).
+    /// ratings and seasons (`GET /series/{id}/extended?meta=translations`).
     ///
     /// # Errors
     ///
@@ -191,7 +191,7 @@ impl TvdbClient {
     }
 
     /// A movie with its translations, artwork, genres, remote ids, content
-    /// ratings and companies (`GET /movies/{id}/extended?meta=translations&short=true`).
+    /// ratings and companies (`GET /movies/{id}/extended?meta=translations`).
     ///
     /// # Errors
     ///
@@ -352,11 +352,12 @@ impl TvdbClient {
 }
 
 /// The query `…/extended` endpoints are sent with.
-fn extended_query() -> [(&'static str, String); 2] {
-    [
-        ("meta", "translations".to_string()),
-        ("short", "true".to_string()),
-    ]
+///
+/// `short=true` is deliberately not sent: TheTVDB omits `artworks` (and
+/// `characters`, `trailers`) from a short record, and the unified details
+/// take their backdrop from `artworks`.
+fn extended_query() -> [(&'static str, String); 1] {
+    [("meta", "translations".to_string())]
 }
 
 /// Read a response: a 2xx body is the envelope; `404` is

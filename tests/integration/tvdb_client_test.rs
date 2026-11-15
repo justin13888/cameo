@@ -15,7 +15,7 @@ use cameo::{
 use serde_json::{Value, json};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
-    matchers::{body_json, header, method, path, query_param},
+    matchers::{body_json, header, method, path, query_param, query_param_is_missing},
 };
 
 const SECRET: &str = "SECRETKEY123";
@@ -157,7 +157,8 @@ async fn logs_in_once_and_reuses_the_bearer_token() {
     Mock::given(method("GET"))
         .and(path("/series/81189/extended"))
         .and(query_param("meta", "translations"))
-        .and(query_param("short", "true"))
+        // `short=true` would drop the artworks the backdrop comes from.
+        .and(query_param_is_missing("short"))
         .and(header("authorization", "Bearer T1"))
         .respond_with(ok(series_json()))
         .expect(2)
@@ -500,6 +501,8 @@ async fn movie_details_use_the_configured_language() {
     mount_login(&server, "T", 1).await;
     Mock::given(method("GET"))
         .and(path("/movies/12/extended"))
+        .and(query_param("meta", "translations"))
+        .and(query_param_is_missing("short"))
         .respond_with(ok(movie_json()))
         .mount(&server)
         .await;

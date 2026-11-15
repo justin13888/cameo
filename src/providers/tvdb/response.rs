@@ -380,7 +380,7 @@ pub struct TvdbSeason {
     pub year: Option<String>,
 }
 
-/// A series, as `GET /series/{id}/extended?meta=translations&short=true`
+/// A series, as `GET /series/{id}/extended?meta=translations`
 /// returns it.
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -503,7 +503,7 @@ pub struct TvdbProductionCountry {
     pub name: String,
 }
 
-/// A movie, as `GET /movies/{id}/extended?meta=translations&short=true`
+/// A movie, as `GET /movies/{id}/extended?meta=translations`
 /// returns it.
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
