@@ -30,6 +30,24 @@ jobs:
       - name: Format check
         run: cargo fmt --all -- --check
 
+  file-length:
+    name: File length
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The base branch's baseline is what this pull request's may not grow
+      # past; on a push to master there is no base, and the growth check is
+      # skipped.
+      - name: Fetch base branch
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: git fetch --no-tags --depth=1 origin "${BASE_REF}"
+      - name: Check file length
+        env:
+          FILE_LENGTH_BASE_REF: ${{ github.event_name == 'pull_request' && 'FETCH_HEAD' || '' }}
+        run: ./scripts/check-file-length.sh
+
   check:
     name: Check (${{ matrix.features }})
     runs-on: ubuntu-latest
