@@ -15,8 +15,9 @@ Run `just` to list all available recipes. Key ones:
 ```bash
 just fmt          # format all code
 just clippy       # run clippy lints
-just test         # run tests (default features)
-just test-all     # run tests including AniList
+just test         # run tests (default features = `full`: tmdb + anilist + cache)
+just test-all     # run tests with `--features full` (same set, stated explicitly)
+just test-all-features  # run tests across every CI feature combination
 just test-live    # run live tests (requires TMDB_API_TOKEN in .env)
 just doc          # build and open docs
 just build        # build with default features
@@ -56,12 +57,20 @@ User call → CameoClient (src/unified/facade/)
 | `src/generated/` | Vendored spargen output (`tmdb.rs`, runtime support code embedded), committed; regenerate with `cargo xtask codegen`, do not edit directly |
 | `src/core/` | `CameoError`, `TimeWindow`, `PaginatedResponse`, `into_stream` |
 | `src/cache/` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig`, `CacheKey`, `MediaType` |
+| `src/providers/http.rs` | Shared HTTP client construction (timeouts, `User-Agent`) for both built-in providers |
+| `src/providers/rate_limit.rs` | Per-provider request-rate limiting |
+| `src/providers/retry.rs` | Retry policy for transient provider failures |
 | `src/providers/tmdb/` | `TmdbClient` (rate-limited), `TmdbConfig`, `ImageUrl`, discover builders, `TmdbError` |
 | `src/providers/anilist/` | `AniListClient` (GraphQL/reqwest), `AniListConfig`, `AniListError` |
-| `src/unified/traits.rs` | Six provider traits: `SearchProvider`, `DetailProvider`, `DiscoveryProvider`, `RecommendationProvider`, `SeasonProvider`, `WatchProviderTrait` |
-| `src/unified/models.rs` | `UnifiedMovie`, `UnifiedTvShow`, `UnifiedPerson`, detail variants, `UnifiedSearchResult` |
-| `src/unified/conversions/` | `Into` impls from provider types to unified types (tmdb/, anilist/ submodules) |
-| `src/unified/facade/` | `CameoClient`, `CameoClientBuilder`, `CameoClientError`; dispatch across providers |
+| `src/unified/traits.rs` | `Provider` (id + capabilities), the capability traits `SearchProvider`, `DetailProvider`, `DiscoveryProvider`, `RecommendationProvider`, `SeasonProvider`, `WatchAvailabilityProvider`, `ExternalIdProvider`, `CreditsProvider`, and the `MediaProvider` bundle; all return `ProviderError` |
+| `src/unified/models.rs` | `UnifiedMovie`, `UnifiedTvShow`, `UnifiedPerson`, detail variants, `UnifiedSearchResult`, credits |
+| `src/unified/builders.rs` | Constructors and builder-style setters for the unified models |
+| `src/unified/date.rs` | `PartialDate` for release/air dates |
+| `src/unified/genre.rs` | `Genre` and its provider mappings |
+| `src/unified/media_id.rs` | `MediaId`, `NativeId`: provider-qualified ids |
+| `src/unified/external_ids.rs` | `ExternalIds`, `ExternalSource`, `ExternalMatch` (IMDb, TVDB, MyAnimeList, Wikidata) |
+| `src/unified/conversions/` | Conversions from provider types to unified types (tmdb/, anilist/ submodules) |
+| `src/unified/facade/` | `CameoClient`, `CameoClientBuilder`, `CameoClientError`; capability registry and per-capability dispatch modules |
 | `xtask/` | Standalone codegen tool (`cargo xtask codegen`) with pinned deps + committed lockfile; regenerates `src/generated/tmdb.rs` from the spec |
 
 For feature flags, see README.md. For test commands, see TESTING.md.
@@ -106,36 +115,24 @@ This reads `openapi/tmdb-api.json`, runs spargen (pinned in `xtask/Cargo.toml`),
 
 ## Adding a New Provider
 
-1. Create `src/providers/<name>/` with:
-   - `mod.rs` — re-export submodules
-   - `client.rs` — `<Name>Client` struct with `new(config)` constructor
-   - `config.rs` — `<Name>Config` struct
-   - `error.rs` — `<Name>Error` implementing `std::error::Error` (use `thiserror`)
+A provider implements `Provider` plus whichever capability traits it supports and
+is registered with `CameoClient::builder().register_*_provider(...)`; this needs
+no changes to cameo. [docs/providers.md](docs/providers.md) is the guide for that
+(traits, `ProviderError` mapping, registration, priority).
 
-2. Implement traits from `src/unified/traits.rs` on `<Name>Client`:
-   - Required: `SearchProvider`, `DetailProvider`, `DiscoveryProvider`
-   - Optional: `RecommendationProvider`, `SeasonProvider`, `WatchProviderTrait`
-   - Each trait has an associated `Error` type — use `<Name>Error`
+Only a provider that ships **inside** this crate as a built-in (like TMDB and
+AniList) needs the in-crate steps below, on top of that guide:
 
-3. Add conversions in `src/unified/conversions/<name>/`:
-   - `Into<UnifiedMovie>`, `Into<UnifiedTvShow>`, `Into<UnifiedPerson>` for provider response types
-
-4. Add feature flag in `Cargo.toml`:
-   ```toml
-   [features]
-   <name> = []  # add any required deps as optional
-   ```
-
-5. Wire the builder in `src/unified/facade/mod.rs`:
-   - Add `#[cfg(feature = "<name>")] <name>_config: Option<<Name>Config>` to `CameoClientBuilder`
-   - Add `pub fn with_<name>(mut self, config: <Name>Config) -> Self` method
-   - Add `#[cfg(feature = "<name>")] <name>: Option<<Name>Client>` to `CameoClient`
-   - Add a `<Name>` variant to `CameoClientError`
-
-6. Plumb the client through each facade dispatch module (`search.rs`, `detail.rs`, `discovery.rs`, etc.):
-   - Provider priority: TMDB first, then AniList, then new provider (or make priority configurable)
-
-7. Add `#[cfg(feature = "<name>")]`-gated tests in `tests/integration/` and a `[[example]]` entry with `required-features = ["<name>"]`
+1. Add a feature flag in `Cargo.toml` (`<name> = [...]`, deps optional) and gate
+   `src/providers/<name>/` on it.
+2. Add `From<<Name>Error> for ProviderError` in `src/core/error.rs`.
+3. Add conversions to the unified models in `src/unified/conversions/<name>/`.
+4. Add `with_<name>(config)` to `CameoClientBuilder` (`src/unified/facade/mod.rs`)
+   and, in `build()`, push the client into each capability list it implements.
+   Built-ins register before out-of-crate providers; callers reorder with
+   `with_priority`.
+5. Add feature-gated tests in `tests/integration/` and any `[[example]]` with
+   `required-features = ["<name>"]`.
 
 ---
 
@@ -172,7 +169,7 @@ release-plz derives the next version from commit types:
 |---|---|
 | `fix:` | patch (0.1.x) |
 | `feat:` | minor (0.x.0) |
-| Any `!` breaking change | major (x.0.0) |
+| Any `!` breaking change | major (x.0.0); pre-1.0: minor (0.x.0) |
 
 ### Skipping a release
 
