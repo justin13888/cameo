@@ -3,6 +3,7 @@ use chrono::NaiveDate;
 use super::params::{self, TvShowType, TvStatus};
 use crate::{
     core::pagination::Page,
+    generated::tmdb as generated,
     providers::tmdb::{TmdbClient, builders::TvSortBy, error::TmdbError},
     unified::models::UnifiedTvShow,
 };
@@ -197,49 +198,52 @@ impl<'a> DiscoverTvBuilder<'a> {
     /// Returns [`TmdbError::Api`] on non-2xx HTTP responses and
     /// [`TmdbError::Http`] on network failures.
     pub async fn execute(self) -> Result<Page<UnifiedTvShow>, TmdbError> {
+        let page = self.page;
+        let query = generated::DiscoverTvParams {
+            air_date_gte: params::tmdb_date(self.air_date_gte)?,
+            air_date_lte: params::tmdb_date(self.air_date_lte)?,
+            first_air_date_year: self.first_air_date_year,
+            first_air_date_gte: params::tmdb_date(self.first_air_date_gte)?,
+            first_air_date_lte: params::tmdb_date(self.first_air_date_lte)?,
+            include_adult: self.include_adult,
+            include_null_first_air_dates: self.include_null_first_air_dates,
+            language: self.language,
+            page: self.page,
+            screened_theatrically: self.screened_theatrically,
+            sort_by: self.sort_by.map(TvSortBy::to_generated),
+            timezone: self.timezone,
+            vote_average_gte: self.vote_average_gte.map(f64::from),
+            vote_average_lte: self.vote_average_lte.map(f64::from),
+            vote_count_gte: self.vote_count_gte.map(f64::from),
+            vote_count_lte: self.vote_count_lte.map(f64::from),
+            watch_region: self.watch_region,
+            with_companies: self.with_companies,
+            with_genres: self.with_genres,
+            with_keywords: self.with_keywords,
+            with_networks: self.with_networks,
+            with_origin_country: self.with_origin_country,
+            with_original_language: self.with_original_language,
+            with_runtime_gte: self.with_runtime_gte,
+            with_runtime_lte: self.with_runtime_lte,
+            with_status: self.with_status,
+            with_watch_monetization_types: self.with_watch_monetization_types,
+            with_watch_providers: self.with_watch_providers,
+            without_companies: self.without_companies,
+            without_genres: self.without_genres,
+            without_keywords: self.without_keywords,
+            without_watch_providers: self.without_watch_providers,
+            with_type: self.with_type,
+        };
         self.client.acquire_rate_limit().await;
-        let resp = self
+        let body = self
             .client
             .inner()
-            .discover_tv(
-                self.air_date_gte.as_ref(),
-                self.air_date_lte.as_ref(),
-                self.first_air_date_gte.as_ref(),
-                self.first_air_date_lte.as_ref(),
-                self.first_air_date_year,
-                self.include_adult,
-                self.include_null_first_air_dates,
-                self.language.as_deref(),
-                self.page,
-                self.screened_theatrically,
-                self.sort_by.map(TvSortBy::to_generated),
-                self.timezone.as_deref(),
-                self.vote_average_gte,
-                self.vote_average_lte,
-                self.vote_count_gte,
-                self.vote_count_lte,
-                self.watch_region.as_deref(),
-                self.with_companies.as_deref(),
-                self.with_genres.as_deref(),
-                self.with_keywords.as_deref(),
-                self.with_networks,
-                self.with_origin_country.as_deref(),
-                self.with_original_language.as_deref(),
-                self.with_runtime_gte,
-                self.with_runtime_lte,
-                self.with_status.as_deref(),
-                self.with_type.as_deref(),
-                self.with_watch_monetization_types.as_deref(),
-                self.with_watch_providers.as_deref(),
-                self.without_companies.as_deref(),
-                self.without_genres.as_deref(),
-                self.without_keywords.as_deref(),
-                self.without_watch_providers.as_deref(),
-            )
-            .await?;
-        let body = resp.into_inner();
+            .discover_tv(query)
+            .await
+            .map_err(TmdbError::from_generated)?
+            .into_inner();
         Ok(crate::providers::tmdb::client::offset_page(
-            self.page,
+            page,
             body.page,
             body.results,
             body.total_pages,

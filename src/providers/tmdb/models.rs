@@ -128,8 +128,8 @@ impl From<types::MovieCreditsResponseCrewItem> for CrewMember {
 impl From<types::MovieCreditsResponse> for TmdbCredits {
     fn from(c: types::MovieCreditsResponse) -> Self {
         TmdbCredits {
-            cast: c.cast.into_iter().map(CastMember::from).collect(),
-            crew: c.crew.into_iter().map(CrewMember::from).collect(),
+            cast: c.cast.into_iter().flatten().map(CastMember::from).collect(),
+            crew: c.crew.into_iter().flatten().map(CrewMember::from).collect(),
         }
     }
 }
@@ -141,10 +141,16 @@ impl From<types::TvSeriesAggregateCreditsResponse> for TmdbCredits {
         let cast = c
             .cast
             .into_iter()
+            .flatten()
             .map(|c| CastMember {
                 id: c.id.and_then(|id| u64::try_from(id).ok()).unwrap_or(0),
                 name: c.name.unwrap_or_default(),
-                character: c.roles.first().and_then(|r| r.character.clone()),
+                character: c
+                    .roles
+                    .iter()
+                    .flatten()
+                    .next()
+                    .and_then(|r| r.character.clone()),
                 order: c.order.and_then(|o| u32::try_from(o).ok()).unwrap_or(0),
                 known_for_department: c.known_for_department,
                 gender: c.gender.and_then(Gender::from_tmdb),
@@ -157,10 +163,11 @@ impl From<types::TvSeriesAggregateCreditsResponse> for TmdbCredits {
         let crew = c
             .crew
             .into_iter()
+            .flatten()
             .map(|c| CrewMember {
                 id: c.id.and_then(|id| u64::try_from(id).ok()).unwrap_or(0),
                 name: c.name.unwrap_or_default(),
-                job: c.jobs.first().and_then(|j| j.job.clone()),
+                job: c.jobs.iter().flatten().next().and_then(|j| j.job.clone()),
                 department: c.department,
                 gender: c.gender.and_then(Gender::from_tmdb),
                 profile_url: c
@@ -179,6 +186,7 @@ impl From<types::MovieImagesResponse> for TmdbImages {
             backdrops: i
                 .backdrops
                 .into_iter()
+                .flatten()
                 .map(|b| {
                     image_from(
                         b.file_path,
@@ -194,6 +202,7 @@ impl From<types::MovieImagesResponse> for TmdbImages {
             posters: i
                 .posters
                 .into_iter()
+                .flatten()
                 .map(|p| {
                     image_from(
                         p.file_path,
@@ -209,6 +218,7 @@ impl From<types::MovieImagesResponse> for TmdbImages {
             logos: i
                 .logos
                 .into_iter()
+                .flatten()
                 .map(|l| {
                     image_from(
                         l.file_path,

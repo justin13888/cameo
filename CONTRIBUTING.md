@@ -33,7 +33,7 @@ it by hand. To regenerate after a spec change:
 
 ```sh
 ./scripts/fetch-openapi.sh        # refresh + patch the vendored OpenAPI spec
-cargo xtask codegen               # regenerate src/generated/tmdb.rs (+ v3-auth patch)
+cargo xtask codegen               # regenerate src/generated/tmdb.rs (spargen)
 ```
 
 `cargo xtask codegen` is deterministic (pinned via `xtask/Cargo.lock`); the

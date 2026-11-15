@@ -3,6 +3,7 @@ use chrono::NaiveDate;
 use super::params::{self, MovieReleaseType};
 use crate::{
     core::pagination::Page,
+    generated::tmdb as generated,
     providers::tmdb::{TmdbClient, builders::MovieSortBy, error::TmdbError},
     unified::models::UnifiedMovie,
 };
@@ -232,54 +233,57 @@ impl<'a> DiscoverMoviesBuilder<'a> {
     /// Returns [`TmdbError::Api`] on non-2xx HTTP responses and
     /// [`TmdbError::Http`] on network failures.
     pub async fn execute(self) -> Result<Page<UnifiedMovie>, TmdbError> {
+        let page = self.page;
+        let query = generated::DiscoverMovieParams {
+            certification: self.certification,
+            certification_gte: self.certification_gte,
+            certification_lte: self.certification_lte,
+            certification_country: self.certification_country,
+            include_adult: self.include_adult,
+            include_video: self.include_video,
+            language: self.language,
+            page: self.page,
+            primary_release_year: self.primary_release_year,
+            primary_release_date_gte: params::tmdb_date(self.primary_release_date_gte)?,
+            primary_release_date_lte: params::tmdb_date(self.primary_release_date_lte)?,
+            region: self.region,
+            release_date_gte: params::tmdb_date(self.release_date_gte)?,
+            release_date_lte: params::tmdb_date(self.release_date_lte)?,
+            sort_by: self.sort_by.map(MovieSortBy::to_generated),
+            vote_average_gte: self.vote_average_gte.map(f64::from),
+            vote_average_lte: self.vote_average_lte.map(f64::from),
+            vote_count_gte: self.vote_count_gte.map(f64::from),
+            vote_count_lte: self.vote_count_lte.map(f64::from),
+            watch_region: self.watch_region,
+            with_cast: self.with_cast,
+            with_companies: self.with_companies,
+            with_crew: self.with_crew,
+            with_genres: self.with_genres,
+            with_keywords: self.with_keywords,
+            with_origin_country: self.with_origin_country,
+            with_original_language: self.with_original_language,
+            with_people: self.with_people,
+            with_release_type: self.with_release_type,
+            with_runtime_gte: self.with_runtime_gte,
+            with_runtime_lte: self.with_runtime_lte,
+            with_watch_monetization_types: self.with_watch_monetization_types,
+            with_watch_providers: self.with_watch_providers,
+            without_companies: self.without_companies,
+            without_genres: self.without_genres,
+            without_keywords: self.without_keywords,
+            without_watch_providers: self.without_watch_providers,
+            year: self.year,
+        };
         self.client.acquire_rate_limit().await;
-        let resp = self
+        let body = self
             .client
             .inner()
-            .discover_movie(
-                self.certification.as_deref(),
-                self.certification_gte.as_deref(),
-                self.certification_lte.as_deref(),
-                self.certification_country.as_deref(),
-                self.include_adult,
-                self.include_video,
-                self.language.as_deref(),
-                self.page,
-                self.primary_release_date_gte.as_ref(),
-                self.primary_release_date_lte.as_ref(),
-                self.primary_release_year,
-                self.region.as_deref(),
-                self.release_date_gte.as_ref(),
-                self.release_date_lte.as_ref(),
-                self.sort_by.map(MovieSortBy::to_generated),
-                self.vote_average_gte,
-                self.vote_average_lte,
-                self.vote_count_gte,
-                self.vote_count_lte,
-                self.watch_region.as_deref(),
-                self.with_cast.as_deref(),
-                self.with_companies.as_deref(),
-                self.with_crew.as_deref(),
-                self.with_genres.as_deref(),
-                self.with_keywords.as_deref(),
-                self.with_origin_country.as_deref(),
-                self.with_original_language.as_deref(),
-                self.with_people.as_deref(),
-                self.with_release_type,
-                self.with_runtime_gte,
-                self.with_runtime_lte,
-                self.with_watch_monetization_types.as_deref(),
-                self.with_watch_providers.as_deref(),
-                self.without_companies.as_deref(),
-                self.without_genres.as_deref(),
-                self.without_keywords.as_deref(),
-                self.without_watch_providers.as_deref(),
-                self.year,
-            )
-            .await?;
-        let body = resp.into_inner();
+            .discover_movie(query)
+            .await
+            .map_err(TmdbError::from_generated)?
+            .into_inner();
         Ok(crate::providers::tmdb::client::offset_page(
-            self.page,
+            page,
             body.page,
             body.results,
             body.total_pages,
