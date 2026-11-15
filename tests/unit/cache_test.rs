@@ -8,6 +8,11 @@ fn make_cache() -> SqliteCache {
     SqliteCache::in_memory().expect("in-memory SQLite cache")
 }
 
+#[test]
+fn debug_names_the_cache_without_exposing_its_connections() {
+    assert_eq!(format!("{:?}", make_cache()), "SqliteCache { .. }");
+}
+
 #[tokio::test]
 async fn get_returns_none_for_missing_key() {
     let cache = make_cache();
