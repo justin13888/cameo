@@ -123,7 +123,7 @@ impl UnifiedMovieDetails {
             production_companies: Vec::new(),
             production_countries: Vec::new(),
             spoken_languages: Vec::new(),
-            video: false,
+            video: None,
             belongs_to_collection: None,
         }
     }
@@ -178,9 +178,9 @@ impl UnifiedMovieDetails {
         self.spoken_languages = value;
         self
     }
-    /// Set whether the movie has a video.
+    /// Set whether the movie has a video entry (stored as `Some(value)`).
     pub fn with_video(mut self, value: bool) -> Self {
-        self.video = value;
+        self.video = Some(value);
         self
     }
     /// Set the collection this movie belongs to.
@@ -299,7 +299,7 @@ impl UnifiedTvShowDetails {
             tagline: None,
             number_of_seasons: None,
             number_of_episodes: None,
-            in_production: false,
+            in_production: None,
             status: None,
             homepage: None,
             networks: Vec::new(),
@@ -330,9 +330,9 @@ impl UnifiedTvShowDetails {
         self.number_of_episodes = Some(value);
         self
     }
-    /// Set whether the show is still in production.
+    /// Set whether the show is still in production (stored as `Some(value)`).
     pub fn with_in_production(mut self, value: bool) -> Self {
-        self.in_production = value;
+        self.in_production = Some(value);
         self
     }
     /// Set the release status.

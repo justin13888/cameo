@@ -240,7 +240,8 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
         production_companies,
         production_countries: origin_country,
         spoken_languages: Vec::new(),
-        video: false,
+        // AniList has no "video entry" concept.
+        video: None,
         belongs_to_collection: None,
     }
 }
@@ -285,10 +286,11 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         .map(|g| Genre::from_anilist_genre(g))
         .collect();
 
-    let in_production = matches!(
-        m.status.as_deref(),
-        Some("RELEASING") | Some("NOT_YET_RELEASED")
-    );
+    // Unknown status -> unknown production state, rather than `false`.
+    let in_production = m
+        .status
+        .as_deref()
+        .map(|s| matches!(s, "RELEASING" | "NOT_YET_RELEASED"));
     let run_time = non_negative(m.duration);
     let number_of_episodes = non_negative(m.episodes);
 
