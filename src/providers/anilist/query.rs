@@ -24,6 +24,9 @@ macro_rules! anime_media_selection {
             "      genres\n",
             "      popularity\n",
             "      averageScore\n",
+            "      episodes\n",
+            "      duration\n",
+            "      status\n",
             "      format\n",
             "      countryOfOrigin\n",
             "      isAdult\n",
@@ -277,6 +280,9 @@ mod tests {
             "startDate",
             "coverImage",
             "genres",
+            "episodes",
+            "duration",
+            "status",
             "format",
         ] {
             assert!(first.contains(field), "missing {field}");
@@ -306,7 +312,7 @@ mod tests {
             "recommendations selection diverged from the list selection"
         );
         assert!(MEDIA_RECOMMENDATIONS.contains("sort: [RATING_DESC]"));
-        for dead in ["episodes", "duration", "status"] {
+        for dead in ["endDate", "studios", "season"] {
             assert!(!MEDIA_RECOMMENDATIONS.contains(dead), "dead field {dead}");
         }
     }
@@ -338,14 +344,18 @@ mod tests {
     /// No query requests fields the conversions never read.
     #[test]
     fn no_dead_queried_fields() {
+        // The list selection requests exactly the fields `AniListMedia`
+        // deserializes and the list conversions map — `episodes`, `duration`
+        // and `status` are now live (#67), while detail-only fields
+        // (`endDate`, `studios`) stay out of list queries.
         for q in LIST_QUERIES {
-            // Inspect only the field selection: `status` is a legitimate
+            // Inspect only the field selection: `season` is a legitimate
             // *filter argument* of the discover query.
             let fields = selection(q);
-            for dead in ["episodes", "duration", "status"] {
+            for dead in ["endDate", "studios", "season"] {
                 assert!(
                     !fields.contains(dead),
-                    "list query still requests dead field {dead}"
+                    "list query requests dead field {dead}"
                 );
             }
         }

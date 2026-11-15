@@ -94,6 +94,19 @@ async fn trending_tv_day_returns_results() {
 }
 
 #[tokio::test]
+async fn trending_tv_maps_episode_fields_and_status() {
+    let (_server, client) =
+        mock_client(page_response(vec![media_item(10, "Trending TV", "TV")], 1)).await;
+
+    let result = client.trending_tv(TimeWindow::Day, None).await.unwrap();
+
+    let show = &result.results[0];
+    assert_eq!(show.number_of_episodes, Some(12));
+    assert_eq!(show.episode_run_time, Some(24));
+    assert_eq!(show.status.as_deref(), Some("FINISHED"));
+}
+
+#[tokio::test]
 async fn trending_tv_week_returns_results() {
     let body = page_response(vec![media_item(11, "Weekly TV", "TV")], 1);
     let (_server, client) = mock_client(body).await;
