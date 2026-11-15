@@ -576,10 +576,15 @@ impl AniListClient {
 
     /// Find the anime with the given MyAnimeList ID.
     ///
-    /// Returns `Ok(None)` when AniList has no anime with that MAL id. The match
-    /// is a [`MatchKind::Movie`](crate::unified::MatchKind::Movie) for the
-    /// `MOVIE` format and a [`MatchKind::TvShow`](crate::unified::MatchKind::TvShow)
-    /// for every other format (TV, OVA, ONA, special, …).
+    /// The match uses the same classification as
+    /// [`search_multi`](Self::search_multi): a
+    /// [`MatchKind::Movie`](crate::unified::MatchKind::Movie) for the movie
+    /// formats (`MOVIE`) and a
+    /// [`MatchKind::TvShow`](crate::unified::MatchKind::TvShow) for the TV
+    /// formats (`TV`, `TV_SHORT`, `ONA`, `OVA`, `SPECIAL`).
+    ///
+    /// Returns `Ok(None)` when AniList has no anime with that MAL id, and when
+    /// the anime's format is absent or in neither list (e.g. `MUSIC`).
     pub async fn find_by_mal_id(&self, mal_id: i32) -> Result<Option<ExternalMatch>, AniListError> {
         let vars = json!({ "idMal": mal_id });
         tracing::debug!(mal_id, "anilist: graphql MEDIA_BY_MAL_ID");
@@ -593,9 +598,9 @@ impl AniListClient {
         };
         Ok(media.and_then(|media| {
             let id = MediaId::anilist(u64::try_from(media.id).ok()?);
-            Some(match media.format.as_deref() {
-                Some("MOVIE") => ExternalMatch::movie(id),
-                _ => ExternalMatch::tv_show(id),
+            Some(match media.format.as_deref().and_then(classify)? {
+                Kind::Movie => ExternalMatch::movie(id),
+                Kind::Tv => ExternalMatch::tv_show(id),
             })
         }))
     }
@@ -885,7 +890,8 @@ fn media_page_root(resp: MediaPageResponse) -> Option<MediaPageData> {
 }
 
 /// Convert a recommendation connection to a page of classified media,
-/// skipping null nodes, null recommended media, and entries with no format.
+/// skipping null nodes, null recommended media, and entries whose format is
+/// absent or that [`classify`] places in neither list (e.g. `MUSIC`).
 /// A missing connection is an empty first page.
 fn recommendations_page(conn: Option<RecommendationConnection>) -> Page<UnifiedSearchResult> {
     let Some(conn) = conn else {
@@ -1678,11 +1684,19 @@ mod tests {
         let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
         assert_eq!(found, Some(ExternalMatch::movie(movie.clone())));
 
-        for format in [json!("OVA"), Value::Null] {
-            let body = json!({ "data": { "Media": { "id": 5, "format": format } } });
+        for format in TV_FORMATS {
+            let body = json!({ "data": { "Media": { "id": 5, "format": format.as_str() } } });
             let server = serve(json_response(200, body), 1).await;
             let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
             assert_eq!(found, Some(ExternalMatch::tv_show(movie.clone())));
+        }
+
+        // A format `classify` places in neither list is not a match.
+        for format in [json!("MUSIC"), json!("NOT_A_FORMAT"), Value::Null] {
+            let body = json!({ "data": { "Media": { "id": 5, "format": format } } });
+            let server = serve(json_response(200, body), 1).await;
+            let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
+            assert_eq!(found, None, "format {format}");
         }
 
         let not_found = json!({ "errors": [{ "message": "Not Found.", "status": 404 }] });
