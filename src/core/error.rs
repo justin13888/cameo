@@ -127,11 +127,11 @@ pub(crate) enum TransportKind {
     Other,
 }
 
-#[cfg_attr(not(any(feature = "tmdb", feature = "anilist")), allow(dead_code))]
 impl TransportError {
     /// A transport error of `kind` described by `message`, with no source.
     ///
     /// The caller redacts `message`: it is printed as given.
+    #[cfg_attr(not(feature = "tmdb"), allow(dead_code))]
     pub(crate) fn new(kind: TransportKind, message: String) -> Self {
         Self {
             kind,
@@ -143,6 +143,7 @@ impl TransportError {
     /// A transport error wrapping `err`, classified from it and described by
     /// `describe`. The request URL is stripped from `err` before `describe`
     /// sees it and before it is kept as the [`source`](std::error::Error::source).
+    #[cfg_attr(not(any(feature = "tmdb", feature = "anilist")), allow(dead_code))]
     pub(crate) fn from_reqwest(
         err: reqwest::Error,
         describe: impl FnOnce(&reqwest::Error) -> String,
@@ -204,12 +205,9 @@ pub struct DecodeError {
     source: Option<Source>,
 }
 
-#[cfg_attr(
-    not(any(feature = "tmdb", feature = "anilist", feature = "cache")),
-    allow(dead_code)
-)]
 impl DecodeError {
     /// A decode error described by `message`, with no source.
+    #[cfg_attr(not(feature = "tmdb"), allow(dead_code))]
     pub(crate) fn new(message: String) -> Self {
         Self {
             message,
@@ -219,6 +217,7 @@ impl DecodeError {
 
     /// A decode error wrapping a JSON parser error, which becomes its
     /// [`source`](std::error::Error::source).
+    #[cfg_attr(not(any(feature = "anilist", feature = "cache")), allow(dead_code))]
     pub(crate) fn json(err: serde_json::Error) -> Self {
         Self {
             message: err.to_string(),

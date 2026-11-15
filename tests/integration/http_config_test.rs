@@ -123,6 +123,9 @@ mod anilist {
         let original = std::error::Error::source(transport)
             .and_then(|e| e.downcast_ref::<reqwest::Error>())
             .unwrap_or_else(|| panic!("no reqwest source: {transport:?}"));
-        assert!(original.is_timeout() && original.url().is_none(), "{original:?}");
+        assert!(
+            original.is_timeout() && original.url().is_none(),
+            "{original:?}"
+        );
     }
 }
