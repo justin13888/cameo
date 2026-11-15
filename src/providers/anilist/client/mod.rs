@@ -60,14 +60,12 @@ impl AniListClient {
     ///
     /// # Errors
     ///
-    /// Returns [`AniListError::InvalidConfig`] if the rate-limit configuration
-    /// is invalid, or [`AniListError::Http`] if the underlying HTTP client
-    /// cannot be built (e.g. invalid TLS configuration).
+    /// Returns [`AniListError::InvalidConfig`] if `per_page` is outside 1..=50,
+    /// `base_url` is empty or not a parseable http(s) URL, or the rate-limit
+    /// configuration is invalid, or [`AniListError::Http`] if the underlying
+    /// HTTP client cannot be built (e.g. invalid TLS configuration).
     pub fn new(config: AniListConfig) -> Result<Self, AniListError> {
-        config
-            .rate_limit
-            .validate()
-            .map_err(AniListError::InvalidConfig)?;
+        config.validate().map_err(AniListError::InvalidConfig)?;
         let http = http::build_client(
             config.connect_timeout,
             config.request_timeout,
