@@ -2244,6 +2244,8 @@ pub fn cameo::providers::tmdb::TmdbCertification::clone(&self) -> cameo::provide
 impl core::cmp::Eq for cameo::providers::tmdb::TmdbCertification
 impl core::cmp::PartialEq for cameo::providers::tmdb::TmdbCertification
 pub fn cameo::providers::tmdb::TmdbCertification::eq(&self, &cameo::providers::tmdb::TmdbCertification) -> bool
+impl core::convert::From<cameo::providers::tmdb::TmdbCertification> for cameo::unified::Certification
+pub fn cameo::unified::Certification::from(cameo::providers::tmdb::TmdbCertification) -> Self
 impl core::fmt::Debug for cameo::providers::tmdb::TmdbCertification
 pub fn cameo::providers::tmdb::TmdbCertification::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::hash::Hash for cameo::providers::tmdb::TmdbCertification
@@ -2321,6 +2323,7 @@ pub async fn cameo::TmdbClient::tv_genres(&self) -> core::result::Result<alloc::
 pub async fn cameo::TmdbClient::tv_series_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::TmdbCertification>, cameo::TmdbError>
 pub async fn cameo::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::TmdbCredits, cameo::TmdbError>
 pub async fn cameo::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::TmdbError>
+pub async fn cameo::TmdbClient::tv_series_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::TmdbError>
 impl cameo::TmdbClient
 pub async fn cameo::TmdbClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::Page<cameo::unified::UnifiedMovie>, cameo::TmdbError>
 pub async fn cameo::TmdbClient::similar_movies(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::Page<cameo::unified::UnifiedMovie>, cameo::TmdbError>
@@ -2419,7 +2422,6 @@ impl<T> tracing::instrument::WithSubscriber for cameo::TmdbClient
 pub cameo::providers::tmdb::TmdbConfig::auth: cameo::TmdbAuth
 pub cameo::providers::tmdb::TmdbConfig::base_url: alloc::string::String
 pub cameo::providers::tmdb::TmdbConfig::connect_timeout: core::option::Option<core::time::Duration>
-pub cameo::providers::tmdb::TmdbConfig::image_base_url: core::option::Option<alloc::string::String>
 pub cameo::providers::tmdb::TmdbConfig::include_adult: core::option::Option<bool>
 pub cameo::providers::tmdb::TmdbConfig::language: core::option::Option<alloc::string::String>
 pub cameo::providers::tmdb::TmdbConfig::rate_limit: cameo::RateLimit
@@ -2433,7 +2435,6 @@ pub fn cameo::TmdbConfig::new_v3(impl core::convert::Into<alloc::string::String>
 pub fn cameo::TmdbConfig::new_with_base_url(impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::TmdbConfig::with_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::TmdbConfig::with_connect_timeout(self, core::time::Duration) -> Self
-pub fn cameo::TmdbConfig::with_image_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::TmdbConfig::with_include_adult(self, bool) -> Self
 pub fn cameo::TmdbConfig::with_language(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::TmdbConfig::with_rate_limit(self, cameo::RateLimit) -> Self
@@ -5146,6 +5147,66 @@ pub fn cameo::CameoClientBuilder::and<P, B, E>(self, P) -> tower_http::follow_re
 pub fn cameo::CameoClientBuilder::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::CameoClientBuilder
 impl<T> tracing::instrument::WithSubscriber for cameo::CameoClientBuilder
+#[non_exhaustive] pub struct cameo::unified::Certification
+pub cameo::unified::Certification::country: alloc::string::String
+pub cameo::unified::Certification::rating: alloc::string::String
+impl cameo::unified::Certification
+pub fn cameo::unified::Certification::new(impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::Certification
+pub fn cameo::unified::Certification::clone(&self) -> cameo::unified::Certification
+impl core::cmp::Eq for cameo::unified::Certification
+impl core::cmp::PartialEq for cameo::unified::Certification
+pub fn cameo::unified::Certification::eq(&self, &cameo::unified::Certification) -> bool
+impl core::convert::From<cameo::providers::tmdb::TmdbCertification> for cameo::unified::Certification
+pub fn cameo::unified::Certification::from(cameo::providers::tmdb::TmdbCertification) -> Self
+impl core::fmt::Debug for cameo::unified::Certification
+pub fn cameo::unified::Certification::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::Certification
+pub fn cameo::unified::Certification::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::Certification
+impl serde_core::ser::Serialize for cameo::unified::Certification
+pub fn cameo::unified::Certification::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::Certification
+pub fn cameo::unified::Certification::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::Certification
+impl core::marker::Send for cameo::unified::Certification
+impl core::marker::Sync for cameo::unified::Certification
+impl core::marker::Unpin for cameo::unified::Certification
+impl core::marker::UnsafeUnpin for cameo::unified::Certification
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::Certification
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::Certification
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::Certification where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::Certification::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::Certification where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::Certification::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::Certification where U: core::convert::From<T>
+pub fn cameo::unified::Certification::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::Certification where U: core::convert::Into<T>
+pub type cameo::unified::Certification::Error = core::convert::Infallible
+pub fn cameo::unified::Certification::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::Certification where U: core::convert::TryFrom<T>
+pub type cameo::unified::Certification::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::Certification::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::Certification where T: core::clone::Clone
+pub type cameo::unified::Certification::Owned = T
+pub fn cameo::unified::Certification::clone_into(&self, &mut T)
+pub fn cameo::unified::Certification::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::Certification where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::Certification::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::Certification where T: ?core::marker::Sized
+pub fn cameo::unified::Certification::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::Certification where T: ?core::marker::Sized
+pub fn cameo::unified::Certification::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::Certification where T: core::clone::Clone
+pub unsafe fn cameo::unified::Certification::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::Certification
+pub fn cameo::unified::Certification::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::Certification where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::Certification where T: ?core::marker::Sized
+pub fn cameo::unified::Certification::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::Certification::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::Certification
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::Certification
 #[non_exhaustive] pub struct cameo::unified::Collection
 pub cameo::unified::Collection::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::unified::Collection::id: core::option::Option<u64>
@@ -6087,6 +6148,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedMovie
 #[non_exhaustive] pub struct cameo::unified::UnifiedMovieDetails
 pub cameo::unified::UnifiedMovieDetails::belongs_to_collection: core::option::Option<cameo::unified::Collection>
 pub cameo::unified::UnifiedMovieDetails::budget: core::option::Option<u64>
+pub cameo::unified::UnifiedMovieDetails::certifications: alloc::vec::Vec<cameo::unified::Certification>
 pub cameo::unified::UnifiedMovieDetails::homepage: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedMovieDetails::imdb_id: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedMovieDetails::movie: cameo::unified::UnifiedMovie
@@ -6101,6 +6163,7 @@ pub cameo::unified::UnifiedMovieDetails::video: core::option::Option<bool>
 impl cameo::unified::UnifiedMovieDetails
 pub fn cameo::unified::UnifiedMovieDetails::new(cameo::unified::UnifiedMovie) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_budget(self, u64) -> Self
+pub fn cameo::unified::UnifiedMovieDetails::with_certifications(self, alloc::vec::Vec<cameo::unified::Certification>) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_collection(self, cameo::unified::Collection) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_homepage(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_imdb_id(self, impl core::convert::Into<alloc::string::String>) -> Self
@@ -6540,6 +6603,7 @@ pub fn cameo::unified::UnifiedTvShow::or<P, B, E>(self, P) -> tower_http::follow
 impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedTvShow
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedTvShow
 #[non_exhaustive] pub struct cameo::unified::UnifiedTvShowDetails
+pub cameo::unified::UnifiedTvShowDetails::certifications: alloc::vec::Vec<cameo::unified::Certification>
 pub cameo::unified::UnifiedTvShowDetails::created_by: alloc::vec::Vec<cameo::unified::Creator>
 pub cameo::unified::UnifiedTvShowDetails::episode_run_time: alloc::vec::Vec<u32>
 pub cameo::unified::UnifiedTvShowDetails::homepage: core::option::Option<alloc::string::String>
@@ -6559,6 +6623,7 @@ pub cameo::unified::UnifiedTvShowDetails::tagline: core::option::Option<alloc::s
 pub cameo::unified::UnifiedTvShowDetails::type_: core::option::Option<cameo::SeriesType>
 impl cameo::unified::UnifiedTvShowDetails
 pub fn cameo::unified::UnifiedTvShowDetails::new(cameo::unified::UnifiedTvShow) -> Self
+pub fn cameo::unified::UnifiedTvShowDetails::with_certifications(self, alloc::vec::Vec<cameo::unified::Certification>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_created_by(self, alloc::vec::Vec<cameo::unified::Creator>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_episode_run_time(self, alloc::vec::Vec<u32>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_homepage(self, impl core::convert::Into<alloc::string::String>) -> Self
@@ -8794,6 +8859,66 @@ pub fn cameo::CameoClientBuilder::and<P, B, E>(self, P) -> tower_http::follow_re
 pub fn cameo::CameoClientBuilder::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::CameoClientBuilder
 impl<T> tracing::instrument::WithSubscriber for cameo::CameoClientBuilder
+#[non_exhaustive] pub struct cameo::Certification
+pub cameo::Certification::country: alloc::string::String
+pub cameo::Certification::rating: alloc::string::String
+impl cameo::unified::Certification
+pub fn cameo::unified::Certification::new(impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> Self
+impl core::clone::Clone for cameo::unified::Certification
+pub fn cameo::unified::Certification::clone(&self) -> cameo::unified::Certification
+impl core::cmp::Eq for cameo::unified::Certification
+impl core::cmp::PartialEq for cameo::unified::Certification
+pub fn cameo::unified::Certification::eq(&self, &cameo::unified::Certification) -> bool
+impl core::convert::From<cameo::providers::tmdb::TmdbCertification> for cameo::unified::Certification
+pub fn cameo::unified::Certification::from(cameo::providers::tmdb::TmdbCertification) -> Self
+impl core::fmt::Debug for cameo::unified::Certification
+pub fn cameo::unified::Certification::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::Certification
+pub fn cameo::unified::Certification::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::Certification
+impl serde_core::ser::Serialize for cameo::unified::Certification
+pub fn cameo::unified::Certification::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::Certification
+pub fn cameo::unified::Certification::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::Certification
+impl core::marker::Send for cameo::unified::Certification
+impl core::marker::Sync for cameo::unified::Certification
+impl core::marker::Unpin for cameo::unified::Certification
+impl core::marker::UnsafeUnpin for cameo::unified::Certification
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::Certification
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::Certification
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::Certification where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::Certification::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::Certification where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::Certification::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::Certification where U: core::convert::From<T>
+pub fn cameo::unified::Certification::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::Certification where U: core::convert::Into<T>
+pub type cameo::unified::Certification::Error = core::convert::Infallible
+pub fn cameo::unified::Certification::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::Certification where U: core::convert::TryFrom<T>
+pub type cameo::unified::Certification::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::Certification::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::Certification where T: core::clone::Clone
+pub type cameo::unified::Certification::Owned = T
+pub fn cameo::unified::Certification::clone_into(&self, &mut T)
+pub fn cameo::unified::Certification::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::Certification where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::Certification::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::Certification where T: ?core::marker::Sized
+pub fn cameo::unified::Certification::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::Certification where T: ?core::marker::Sized
+pub fn cameo::unified::Certification::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::Certification where T: core::clone::Clone
+pub unsafe fn cameo::unified::Certification::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::Certification
+pub fn cameo::unified::Certification::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::Certification where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::Certification where T: ?core::marker::Sized
+pub fn cameo::unified::Certification::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::Certification::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::Certification
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::Certification
 #[non_exhaustive] pub struct cameo::Collection
 pub cameo::Collection::backdrop_url: core::option::Option<alloc::string::String>
 pub cameo::Collection::id: core::option::Option<u64>
@@ -9612,6 +9737,7 @@ pub async fn cameo::TmdbClient::tv_genres(&self) -> core::result::Result<alloc::
 pub async fn cameo::TmdbClient::tv_series_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::TmdbCertification>, cameo::TmdbError>
 pub async fn cameo::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::TmdbCredits, cameo::TmdbError>
 pub async fn cameo::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::TmdbError>
+pub async fn cameo::TmdbClient::tv_series_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::TmdbError>
 impl cameo::TmdbClient
 pub async fn cameo::TmdbClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::Page<cameo::unified::UnifiedMovie>, cameo::TmdbError>
 pub async fn cameo::TmdbClient::similar_movies(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::Page<cameo::unified::UnifiedMovie>, cameo::TmdbError>
@@ -9710,7 +9836,6 @@ impl<T> tracing::instrument::WithSubscriber for cameo::TmdbClient
 pub cameo::TmdbConfig::auth: cameo::TmdbAuth
 pub cameo::TmdbConfig::base_url: alloc::string::String
 pub cameo::TmdbConfig::connect_timeout: core::option::Option<core::time::Duration>
-pub cameo::TmdbConfig::image_base_url: core::option::Option<alloc::string::String>
 pub cameo::TmdbConfig::include_adult: core::option::Option<bool>
 pub cameo::TmdbConfig::language: core::option::Option<alloc::string::String>
 pub cameo::TmdbConfig::rate_limit: cameo::RateLimit
@@ -9724,7 +9849,6 @@ pub fn cameo::TmdbConfig::new_v3(impl core::convert::Into<alloc::string::String>
 pub fn cameo::TmdbConfig::new_with_base_url(impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::TmdbConfig::with_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::TmdbConfig::with_connect_timeout(self, core::time::Duration) -> Self
-pub fn cameo::TmdbConfig::with_image_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::TmdbConfig::with_include_adult(self, bool) -> Self
 pub fn cameo::TmdbConfig::with_language(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::TmdbConfig::with_rate_limit(self, cameo::RateLimit) -> Self
@@ -10226,6 +10350,7 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedMovie
 #[non_exhaustive] pub struct cameo::UnifiedMovieDetails
 pub cameo::UnifiedMovieDetails::belongs_to_collection: core::option::Option<cameo::unified::Collection>
 pub cameo::UnifiedMovieDetails::budget: core::option::Option<u64>
+pub cameo::UnifiedMovieDetails::certifications: alloc::vec::Vec<cameo::unified::Certification>
 pub cameo::UnifiedMovieDetails::homepage: core::option::Option<alloc::string::String>
 pub cameo::UnifiedMovieDetails::imdb_id: core::option::Option<alloc::string::String>
 pub cameo::UnifiedMovieDetails::movie: cameo::unified::UnifiedMovie
@@ -10240,6 +10365,7 @@ pub cameo::UnifiedMovieDetails::video: core::option::Option<bool>
 impl cameo::unified::UnifiedMovieDetails
 pub fn cameo::unified::UnifiedMovieDetails::new(cameo::unified::UnifiedMovie) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_budget(self, u64) -> Self
+pub fn cameo::unified::UnifiedMovieDetails::with_certifications(self, alloc::vec::Vec<cameo::unified::Certification>) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_collection(self, cameo::unified::Collection) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_homepage(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedMovieDetails::with_imdb_id(self, impl core::convert::Into<alloc::string::String>) -> Self
@@ -10679,6 +10805,7 @@ pub fn cameo::unified::UnifiedTvShow::or<P, B, E>(self, P) -> tower_http::follow
 impl<T> tracing::instrument::Instrument for cameo::unified::UnifiedTvShow
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::UnifiedTvShow
 #[non_exhaustive] pub struct cameo::UnifiedTvShowDetails
+pub cameo::UnifiedTvShowDetails::certifications: alloc::vec::Vec<cameo::unified::Certification>
 pub cameo::UnifiedTvShowDetails::created_by: alloc::vec::Vec<cameo::unified::Creator>
 pub cameo::UnifiedTvShowDetails::episode_run_time: alloc::vec::Vec<u32>
 pub cameo::UnifiedTvShowDetails::homepage: core::option::Option<alloc::string::String>
@@ -10698,6 +10825,7 @@ pub cameo::UnifiedTvShowDetails::tagline: core::option::Option<alloc::string::St
 pub cameo::UnifiedTvShowDetails::type_: core::option::Option<cameo::SeriesType>
 impl cameo::unified::UnifiedTvShowDetails
 pub fn cameo::unified::UnifiedTvShowDetails::new(cameo::unified::UnifiedTvShow) -> Self
+pub fn cameo::unified::UnifiedTvShowDetails::with_certifications(self, alloc::vec::Vec<cameo::unified::Certification>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_created_by(self, alloc::vec::Vec<cameo::unified::Creator>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_episode_run_time(self, alloc::vec::Vec<u32>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_homepage(self, impl core::convert::Into<alloc::string::String>) -> Self
