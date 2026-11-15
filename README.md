@@ -67,7 +67,7 @@ CameoClient (unified facade)
 ├── SearchProvider / DetailProvider / DiscoveryProvider / ExternalIdProvider / … traits
 ├── Cache layer (optional — SqliteCache or custom CacheBackend)
 ├── TmdbClient
-│   └── Generated progenitor client (152 TMDB API operations)
+│   └── Generated spargen client (152 TMDB API operations)
 └── AniListClient
     └── GraphQL client (reqwest POST to graphql.anilist.co)
 ```
