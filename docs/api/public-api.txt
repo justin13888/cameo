@@ -5106,7 +5106,7 @@ pub fn cameo::CameoClientBuilder::register_external_id_provider(self, alloc::syn
 pub fn cameo::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::RecommendationProvider>) -> Self
 pub fn cameo::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::SearchProvider>) -> Self
 pub fn cameo::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::SeasonProvider>) -> Self
-pub fn cameo::CameoClientBuilder::register_watch_provider(self, alloc::sync::Arc<dyn cameo::WatchAvailabilityProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_watch_availability_provider(self, alloc::sync::Arc<dyn cameo::WatchAvailabilityProvider>) -> Self
 pub fn cameo::CameoClientBuilder::with_anilist(self, cameo::AniListConfig) -> Self
 pub fn cameo::CameoClientBuilder::with_cache(self) -> Self
 pub fn cameo::CameoClientBuilder::with_cache_backend(self, alloc::sync::Arc<dyn cameo::CacheBackend>) -> Self
@@ -8754,7 +8754,7 @@ pub fn cameo::CameoClientBuilder::register_external_id_provider(self, alloc::syn
 pub fn cameo::CameoClientBuilder::register_recommendation_provider(self, alloc::sync::Arc<dyn cameo::RecommendationProvider>) -> Self
 pub fn cameo::CameoClientBuilder::register_search_provider(self, alloc::sync::Arc<dyn cameo::SearchProvider>) -> Self
 pub fn cameo::CameoClientBuilder::register_season_provider(self, alloc::sync::Arc<dyn cameo::SeasonProvider>) -> Self
-pub fn cameo::CameoClientBuilder::register_watch_provider(self, alloc::sync::Arc<dyn cameo::WatchAvailabilityProvider>) -> Self
+pub fn cameo::CameoClientBuilder::register_watch_availability_provider(self, alloc::sync::Arc<dyn cameo::WatchAvailabilityProvider>) -> Self
 pub fn cameo::CameoClientBuilder::with_anilist(self, cameo::AniListConfig) -> Self
 pub fn cameo::CameoClientBuilder::with_cache(self) -> Self
 pub fn cameo::CameoClientBuilder::with_cache_backend(self, alloc::sync::Arc<dyn cameo::CacheBackend>) -> Self
