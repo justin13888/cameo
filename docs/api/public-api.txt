@@ -3143,6 +3143,62 @@ pub fn cameo::providers::tmdb::config::TmdbConfig::or<P, B, E>(self, P) -> tower
 impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::config::TmdbConfig
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::config::TmdbConfig
 pub mod cameo::providers::tmdb::error
+#[non_exhaustive] pub enum cameo::providers::tmdb::error::RequestErrorKind
+pub cameo::providers::tmdb::error::RequestErrorKind::InvalidRequest
+pub cameo::providers::tmdb::error::RequestErrorKind::PaginationCycle
+impl core::clone::Clone for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::clone(&self) -> cameo::providers::tmdb::error::RequestErrorKind
+impl core::cmp::Eq for cameo::providers::tmdb::error::RequestErrorKind
+impl core::cmp::PartialEq for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::eq(&self, &cameo::providers::tmdb::error::RequestErrorKind) -> bool
+impl core::fmt::Debug for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::Freeze for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::Send for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::Sync for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::Unpin for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::UnsafeUnpin for cameo::providers::tmdb::error::RequestErrorKind
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::error::RequestErrorKind
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::error::RequestErrorKind
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::error::RequestErrorKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::error::RequestErrorKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::error::RequestErrorKind where U: core::convert::From<T>
+pub fn cameo::providers::tmdb::error::RequestErrorKind::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::error::RequestErrorKind where U: core::convert::Into<T>
+pub type cameo::providers::tmdb::error::RequestErrorKind::Error = core::convert::Infallible
+pub fn cameo::providers::tmdb::error::RequestErrorKind::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::tmdb::error::RequestErrorKind where U: core::convert::TryFrom<T>
+pub type cameo::providers::tmdb::error::RequestErrorKind::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::tmdb::error::RequestErrorKind::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::tmdb::error::RequestErrorKind where T: core::clone::Clone
+pub type cameo::providers::tmdb::error::RequestErrorKind::Owned = T
+pub fn cameo::providers::tmdb::error::RequestErrorKind::clone_into(&self, &mut T)
+pub fn cameo::providers::tmdb::error::RequestErrorKind::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::providers::tmdb::error::RequestErrorKind where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::providers::tmdb::error::RequestErrorKind where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::tmdb::error::RequestErrorKind where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::tmdb::error::RequestErrorKind where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::tmdb::error::RequestErrorKind where T: core::clone::Clone
+pub unsafe fn cameo::providers::tmdb::error::RequestErrorKind::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::tmdb::error::RequestErrorKind where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::tmdb::error::RequestErrorKind::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::error::RequestErrorKind
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::error::RequestErrorKind
 #[non_exhaustive] pub enum cameo::providers::tmdb::error::TmdbError
 pub cameo::providers::tmdb::error::TmdbError::Api
 pub cameo::providers::tmdb::error::TmdbError::Api::message: alloc::string::String
@@ -3152,6 +3208,9 @@ pub cameo::providers::tmdb::error::TmdbError::Api::status_code: core::option::Op
 pub cameo::providers::tmdb::error::TmdbError::Deserialization(serde_json::error::Error)
 pub cameo::providers::tmdb::error::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::providers::tmdb::error::TmdbError::InvalidConfig(alloc::string::String)
+pub cameo::providers::tmdb::error::TmdbError::Request
+pub cameo::providers::tmdb::error::TmdbError::Request::kind: cameo::providers::tmdb::error::RequestErrorKind
+pub cameo::providers::tmdb::error::TmdbError::Request::message: alloc::string::String
 pub cameo::providers::tmdb::error::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::from(cameo::providers::tmdb::error::TmdbError) -> Self
@@ -4143,6 +4202,9 @@ pub cameo::providers::tmdb::TmdbError::Api::status_code: core::option::Option<i6
 pub cameo::providers::tmdb::TmdbError::Deserialization(serde_json::error::Error)
 pub cameo::providers::tmdb::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::providers::tmdb::TmdbError::InvalidConfig(alloc::string::String)
+pub cameo::providers::tmdb::TmdbError::Request
+pub cameo::providers::tmdb::TmdbError::Request::kind: cameo::providers::tmdb::error::RequestErrorKind
+pub cameo::providers::tmdb::TmdbError::Request::message: alloc::string::String
 pub cameo::providers::tmdb::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::from(cameo::providers::tmdb::error::TmdbError) -> Self
@@ -5684,9 +5746,6 @@ pub cameo::unified::models::Gender::Female
 pub cameo::unified::models::Gender::Male
 pub cameo::unified::models::Gender::NonBinary
 pub cameo::unified::models::Gender::NotSpecified
-impl cameo::unified::Gender
-pub fn cameo::unified::Gender::from_anilist(&str) -> Self
-pub fn cameo::unified::Gender::from_tmdb(i64) -> core::option::Option<Self>
 impl core::clone::Clone for cameo::unified::Gender
 pub fn cameo::unified::Gender::clone(&self) -> cameo::unified::Gender
 impl core::cmp::Eq for cameo::unified::Gender
@@ -7565,9 +7624,6 @@ pub cameo::unified::Gender::Female
 pub cameo::unified::Gender::Male
 pub cameo::unified::Gender::NonBinary
 pub cameo::unified::Gender::NotSpecified
-impl cameo::unified::Gender
-pub fn cameo::unified::Gender::from_anilist(&str) -> Self
-pub fn cameo::unified::Gender::from_tmdb(i64) -> core::option::Option<Self>
 impl core::clone::Clone for cameo::unified::Gender
 pub fn cameo::unified::Gender::clone(&self) -> cameo::unified::Gender
 impl core::cmp::Eq for cameo::unified::Gender
@@ -10456,9 +10512,6 @@ pub cameo::Gender::Female
 pub cameo::Gender::Male
 pub cameo::Gender::NonBinary
 pub cameo::Gender::NotSpecified
-impl cameo::unified::Gender
-pub fn cameo::unified::Gender::from_anilist(&str) -> Self
-pub fn cameo::unified::Gender::from_tmdb(i64) -> core::option::Option<Self>
 impl core::clone::Clone for cameo::unified::Gender
 pub fn cameo::unified::Gender::clone(&self) -> cameo::unified::Gender
 impl core::cmp::Eq for cameo::unified::Gender
@@ -11235,6 +11288,9 @@ pub cameo::TmdbError::Api::status_code: core::option::Option<i64>
 pub cameo::TmdbError::Deserialization(serde_json::error::Error)
 pub cameo::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::TmdbError::InvalidConfig(alloc::string::String)
+pub cameo::TmdbError::Request
+pub cameo::TmdbError::Request::kind: cameo::providers::tmdb::error::RequestErrorKind
+pub cameo::TmdbError::Request::message: alloc::string::String
 pub cameo::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::from(cameo::providers::tmdb::error::TmdbError) -> Self
