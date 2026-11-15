@@ -24,7 +24,7 @@ impl TmdbClient {
             .await?;
         Ok(UnifiedWatchProviders {
             provider_id,
-            results: parse_watch_provider_results(body.results)?,
+            results: parse_watch_provider_results(body.results.map(|r| r.additional)),
         })
     }
 
@@ -45,7 +45,7 @@ impl TmdbClient {
             .await?;
         Ok(UnifiedWatchProviders {
             provider_id,
-            results: parse_watch_provider_results(body.results)?,
+            results: parse_watch_provider_results(body.results.map(|r| r.additional)),
         })
     }
 }
