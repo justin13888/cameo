@@ -25,7 +25,7 @@ async fn trending_movies_deserializes_response() {
         .await;
 
     let page = client
-        .trending_movies(cameo::TimeWindow::Week, None)
+        .trending_movies(cameo::TimeWindow::Week)
         .await
         .unwrap();
 

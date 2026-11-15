@@ -12,7 +12,7 @@ use std::{
 };
 
 use cameo::{
-    RateLimit, RetryPolicy, TimeWindow, UnifiedSearchResult,
+    DiscoveryProvider, RateLimit, RetryPolicy, TimeWindow, UnifiedSearchResult,
     providers::tmdb::{TmdbClient, TmdbConfig, TmdbError},
 };
 use wiremock::{
@@ -205,12 +205,41 @@ async fn trending_day_hits_day_window_and_sends_no_page() {
     .await;
     let client = client(&server, |c| c);
 
-    // The page argument is ignored: TMDB trending is not paginated.
-    let movies = client
-        .trending_movies(TimeWindow::Day, Some(3))
+    // TMDB trending is not paginated: the inherent methods take no page.
+    let movies = client.trending_movies(TimeWindow::Day).await.unwrap();
+    let shows = client.trending_tv(TimeWindow::Day).await.unwrap();
+
+    assert_eq!(movies.page, 1);
+    assert_eq!(shows.page, 1);
+    assert_eq!(sent_queries(&server).await, vec![query(&[]), query(&[])]);
+}
+
+#[tokio::test]
+async fn trending_trait_impl_ignores_page_and_sends_no_page() {
+    let server = MockServer::start().await;
+    mount(
+        &server,
+        "/3/trending/movie/day",
+        json(include_str!("../fixtures/trending_movies_response.json")),
+        1,
+    )
+    .await;
+    mount(
+        &server,
+        "/3/trending/tv/day",
+        json(include_str!("../fixtures/trending_tv_response.json")),
+        1,
+    )
+    .await;
+    let client = client(&server, |c| c);
+
+    // The trait keeps `page` for other providers; TMDB ignores it.
+    let movies = DiscoveryProvider::trending_movies(&client, TimeWindow::Day, Some(3))
         .await
         .unwrap();
-    let shows = client.trending_tv(TimeWindow::Day, Some(3)).await.unwrap();
+    let shows = DiscoveryProvider::trending_tv_shows(&client, TimeWindow::Day, Some(3))
+        .await
+        .unwrap();
 
     assert_eq!(movies.page, 1);
     assert_eq!(shows.page, 1);

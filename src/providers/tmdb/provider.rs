@@ -120,20 +120,24 @@ impl DetailProvider for TmdbClient {
 
 #[async_trait]
 impl DiscoveryProvider for TmdbClient {
+    /// TMDB trending is not paginated: `page` is ignored and the first
+    /// (and only) page is returned.
     async fn trending_movies(
         &self,
         time_window: TimeWindow,
-        page: Option<u32>,
+        _page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, ProviderError> {
-        Ok(TmdbClient::trending_movies(self, time_window, page).await?)
+        Ok(TmdbClient::trending_movies(self, time_window).await?)
     }
 
+    /// TMDB trending is not paginated: `page` is ignored and the first
+    /// (and only) page is returned.
     async fn trending_tv_shows(
         &self,
         time_window: TimeWindow,
-        page: Option<u32>,
+        _page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(TmdbClient::trending_tv(self, time_window, page).await?)
+        Ok(TmdbClient::trending_tv(self, time_window).await?)
     }
 
     async fn popular_movies(&self, page: Option<u32>) -> Result<Page<UnifiedMovie>, ProviderError> {

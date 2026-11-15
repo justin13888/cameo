@@ -139,10 +139,7 @@ async fn trending_tv_deserializes_response() {
         .mount(&server)
         .await;
 
-    let page = client
-        .trending_tv(cameo::TimeWindow::Week, None)
-        .await
-        .unwrap();
+    let page = client.trending_tv(cameo::TimeWindow::Week).await.unwrap();
 
     assert_eq!(page.page, 1);
     assert_eq!(page.total_results, 1);
@@ -173,7 +170,7 @@ async fn live_tv_series_details_breaking_bad() {
 #[tokio::test]
 async fn live_trending_tv_returns_page() {
     let c = client();
-    let resp = c.trending_tv(cameo::TimeWindow::Week, None).await.unwrap();
+    let resp = c.trending_tv(cameo::TimeWindow::Week).await.unwrap();
     assert!(!resp.results.is_empty());
 }
 
