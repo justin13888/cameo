@@ -138,9 +138,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Compares the public API against the last published release and fails on
-      # SemVer violations not permitted by the version bump. Breaking changes are
-      # allowed only alongside a major (pre-1.0: minor) version bump.
+        with:
+          # The release tags and the commit messages since the last one decide
+          # the release type below.
+          fetch-depth: 0
+      # Pull requests never bump the version: release-plz's release pull request
+      # does, from the Conventional Commits merged since the last release. So the
+      # check takes its release type from those same commits instead of from
+      # Cargo.toml. A breaking marker (`type!:` or a `BREAKING CHANGE:` footer)
+      # in any commit since the last `v*` tag, or in this pull request's title
+      # (the squash-merge subject), allows breaking changes; otherwise only
+      # additive changes pass.
+      - name: Derive release type from commits
+        id: release-type
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          last_tag=$(git describe --tags --abbrev=0 --match 'v*' HEAD)
+          breaking='^[[:alpha:]]+(\([^)]*\))?!:|^BREAKING[ -]CHANGE:'
+          if { git log --format=%B "${last_tag}..HEAD"; printf '%s\n' "${PR_TITLE}"; } \
+              | grep -Eq "${breaking}"; then
+            type=major
+          else
+            type=minor
+          fi
+          echo "Release type for the changes since ${last_tag}: ${type}"
+          echo "type=${type}" >> "${GITHUB_OUTPUT}"
       - uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
           feature-group: all-features
+          release-type: ${{ steps.release-type.outputs.type }}
