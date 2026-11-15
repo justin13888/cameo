@@ -27,6 +27,10 @@ clippy-all:
 clippy-fix:
     cargo clippy --fix --allow-dirty --allow-staged --all-targets -- -D warnings
 
+# Check that hand-written sources under src/ stay within the file-length limit
+file-length:
+    ./scripts/check-file-length.sh
+
 # Build (default features)
 build:
     cargo build
