@@ -21,16 +21,16 @@ impl TmdbClient {
     ///
     /// # Errors
     ///
-    /// [`TmdbError::Request`] when `movie_id` is zero or negative (nothing is
-    /// sent), plus the usual request errors.
+    /// [`TmdbError::Request`] when `movie_id` is zero or above `i32::MAX`
+    /// (nothing is sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
-    pub async fn movie_external_ids(&self, movie_id: i32) -> Result<ExternalIds, TmdbError> {
+    pub async fn movie_external_ids(&self, movie_id: u64) -> Result<ExternalIds, TmdbError> {
         // The requested id, not the body's (TMDB may send a null `id`).
-        let tmdb_id = requested_id(movie_id)?;
+        let wire_id = requested_id(movie_id)?;
         let body = self
-            .execute(|| self.inner.movie_external_ids(movie_id))
+            .execute(|| self.inner.movie_external_ids(wire_id))
             .await?;
-        let mut ids = ExternalIds::new().with_tmdb(tmdb_id);
+        let mut ids = ExternalIds::new().with_tmdb(movie_id);
         ids.imdb = non_empty(body.imdb_id);
         // The spec leaves the movie `wikidata_id` untyped; it is a string or null.
         ids.wikidata = non_empty(
@@ -49,16 +49,16 @@ impl TmdbClient {
     ///
     /// # Errors
     ///
-    /// [`TmdbError::Request`] when `series_id` is zero or negative (nothing is
-    /// sent), plus the usual request errors.
+    /// [`TmdbError::Request`] when `series_id` is zero or above `i32::MAX`
+    /// (nothing is sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_external_ids(&self, series_id: i32) -> Result<ExternalIds, TmdbError> {
+    pub async fn tv_external_ids(&self, series_id: u64) -> Result<ExternalIds, TmdbError> {
         // The requested id, not the body's (TMDB may send a null `id`).
-        let tmdb_id = requested_id(series_id)?;
+        let wire_id = requested_id(series_id)?;
         let body = self
-            .execute(|| self.inner.tv_series_external_ids(series_id))
+            .execute(|| self.inner.tv_series_external_ids(wire_id))
             .await?;
-        let mut ids = ExternalIds::new().with_tmdb(tmdb_id);
+        let mut ids = ExternalIds::new().with_tmdb(series_id);
         ids.imdb = non_empty(body.imdb_id);
         ids.tvdb = body.tvdb_id.and_then(native_id);
         ids.wikidata = non_empty(body.wikidata_id);

@@ -1,7 +1,7 @@
 //! Details endpoints: movie, TV series, and person details, credits, images,
 //! genres, and certifications.
 
-use super::{TmdbClient, details_id, requested_id};
+use super::{TmdbClient, details_id, requested_id, wire_int};
 use crate::{
     generated::tmdb::{self, types},
     providers::tmdb::{
@@ -20,7 +20,8 @@ impl TmdbClient {
 
     /// Get detailed information about a movie.
     #[tracing::instrument(skip(self))]
-    pub async fn movie_details(&self, movie_id: i32) -> Result<UnifiedMovieDetails, TmdbError> {
+    pub async fn movie_details(&self, movie_id: u64) -> Result<UnifiedMovieDetails, TmdbError> {
+        let movie_id = wire_int(movie_id, "id")?;
         let params = tmdb::MovieDetailsParams {
             language: self.language(),
             ..Default::default()
@@ -43,9 +44,10 @@ impl TmdbClient {
     #[tracing::instrument(skip(self))]
     pub async fn movie_details_with_append(
         &self,
-        movie_id: i32,
+        movie_id: u64,
         append: &str,
     ) -> Result<UnifiedMovieDetails, TmdbError> {
+        let movie_id = wire_int(movie_id, "id")?;
         let params = tmdb::MovieDetailsParams {
             append_to_response: Some(append.to_owned()),
             language: self.language(),
@@ -59,7 +61,8 @@ impl TmdbClient {
 
     /// Get detailed information about a TV series.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_show_details(&self, series_id: i32) -> Result<UnifiedTvShowDetails, TmdbError> {
+    pub async fn tv_show_details(&self, series_id: u64) -> Result<UnifiedTvShowDetails, TmdbError> {
+        let series_id = wire_int(series_id, "id")?;
         let params = tmdb::TvSeriesDetailsParams {
             language: self.language(),
             ..Default::default()
@@ -81,9 +84,10 @@ impl TmdbClient {
     #[tracing::instrument(skip(self))]
     pub async fn tv_show_details_with_append(
         &self,
-        series_id: i32,
+        series_id: u64,
         append: &str,
     ) -> Result<UnifiedTvShowDetails, TmdbError> {
+        let series_id = wire_int(series_id, "id")?;
         let params = tmdb::TvSeriesDetailsParams {
             append_to_response: Some(append.to_owned()),
             language: self.language(),
@@ -97,7 +101,8 @@ impl TmdbClient {
 
     /// Get detailed information about a person.
     #[tracing::instrument(skip(self))]
-    pub async fn person_details(&self, person_id: i32) -> Result<UnifiedPersonDetails, TmdbError> {
+    pub async fn person_details(&self, person_id: u64) -> Result<UnifiedPersonDetails, TmdbError> {
+        let person_id = wire_int(person_id, "id")?;
         let params = tmdb::PersonDetailsParams {
             language: self.language(),
             ..Default::default()
@@ -113,7 +118,7 @@ impl TmdbClient {
 
     /// Get the cast and crew for a movie.
     #[tracing::instrument(skip(self))]
-    pub async fn movie_credits(&self, movie_id: i32) -> Result<TmdbCredits, TmdbError> {
+    pub async fn movie_credits(&self, movie_id: u64) -> Result<TmdbCredits, TmdbError> {
         self.movie_credits_response(movie_id).await.map(Into::into)
     }
 
@@ -123,7 +128,7 @@ impl TmdbClient {
     /// [`TmdbCredits`] keeps one entry per person, holding only the first of
     /// their characters and the first of their jobs.
     #[tracing::instrument(skip(self))]
-    pub async fn tv_show_credits(&self, series_id: i32) -> Result<TmdbCredits, TmdbError> {
+    pub async fn tv_show_credits(&self, series_id: u64) -> Result<TmdbCredits, TmdbError> {
         self.tv_series_aggregate_credits_response(series_id)
             .await
             .map(Into::into)
@@ -132,8 +137,9 @@ impl TmdbClient {
     /// Fetch `/movie/{id}/credits` as TMDB returned it.
     pub(crate) async fn movie_credits_response(
         &self,
-        movie_id: i32,
+        movie_id: u64,
     ) -> Result<types::MovieCreditsResponse, TmdbError> {
+        let movie_id = wire_int(movie_id, "id")?;
         let params = tmdb::MovieCreditsParams {
             language: self.language(),
         };
@@ -145,8 +151,9 @@ impl TmdbClient {
     /// character and job of each person.
     pub(crate) async fn tv_series_aggregate_credits_response(
         &self,
-        series_id: i32,
+        series_id: u64,
     ) -> Result<types::TvSeriesAggregateCreditsResponse, TmdbError> {
+        let series_id = wire_int(series_id, "id")?;
         let params = tmdb::TvSeriesAggregateCreditsParams {
             language: self.language(),
         };
@@ -170,14 +177,14 @@ impl TmdbClient {
     ///
     /// # Errors
     ///
-    /// [`TmdbError::Request`] when `movie_id` is zero or negative (nothing is
-    /// sent), plus the usual request errors.
+    /// [`TmdbError::Request`] when `movie_id` is zero or above `i32::MAX`
+    /// (nothing is sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
     pub async fn movie_certifications(
         &self,
-        movie_id: i32,
+        movie_id: u64,
     ) -> Result<Vec<TmdbCertification>, TmdbError> {
-        requested_id(movie_id)?;
+        let movie_id = requested_id(movie_id)?;
         let body = self
             .execute(|| self.inner.movie_release_dates(movie_id))
             .await?;
@@ -192,14 +199,14 @@ impl TmdbClient {
     ///
     /// # Errors
     ///
-    /// [`TmdbError::Request`] when `series_id` is zero or negative (nothing is
-    /// sent), plus the usual request errors.
+    /// [`TmdbError::Request`] when `series_id` is zero or above `i32::MAX`
+    /// (nothing is sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
     pub async fn tv_show_certifications(
         &self,
-        series_id: i32,
+        series_id: u64,
     ) -> Result<Vec<TmdbCertification>, TmdbError> {
-        requested_id(series_id)?;
+        let series_id = requested_id(series_id)?;
         let body = self
             .execute(|| self.inner.tv_series_content_ratings(series_id))
             .await?;
@@ -246,7 +253,8 @@ impl TmdbClient {
 
     /// Get images for a movie.
     #[tracing::instrument(skip(self))]
-    pub async fn movie_images(&self, movie_id: i32) -> Result<TmdbImages, TmdbError> {
+    pub async fn movie_images(&self, movie_id: u64) -> Result<TmdbImages, TmdbError> {
+        let movie_id = wire_int(movie_id, "id")?;
         let params = tmdb::MovieImagesParams {
             language: self.language(),
             ..Default::default()

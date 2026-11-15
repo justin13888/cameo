@@ -11,16 +11,17 @@ impl TmdbClient {
     ///
     /// # Errors
     ///
-    /// [`TmdbError::Request`] when `movie_id` is zero or negative (nothing is
-    /// sent), plus the usual request errors.
+    /// [`TmdbError::Request`] when `movie_id` is zero or above `i32::MAX`
+    /// (nothing is sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
     pub async fn movie_watch_providers(
         &self,
-        movie_id: i32,
+        movie_id: u64,
     ) -> Result<UnifiedWatchProviders, TmdbError> {
-        let provider_id = MediaId::tmdb(requested_id(movie_id)?);
+        let wire_id = requested_id(movie_id)?;
+        let provider_id = MediaId::tmdb(movie_id);
         let body = self
-            .execute(|| self.inner.movie_watch_providers(movie_id))
+            .execute(|| self.inner.movie_watch_providers(wire_id))
             .await?;
         Ok(UnifiedWatchProviders {
             provider_id,
@@ -32,16 +33,17 @@ impl TmdbClient {
     ///
     /// # Errors
     ///
-    /// [`TmdbError::Request`] when `series_id` is zero or negative (nothing is
-    /// sent), plus the usual request errors.
+    /// [`TmdbError::Request`] when `series_id` is zero or above `i32::MAX`
+    /// (nothing is sent), plus the usual request errors.
     #[tracing::instrument(skip(self))]
     pub async fn tv_watch_providers(
         &self,
-        series_id: i32,
+        series_id: u64,
     ) -> Result<UnifiedWatchProviders, TmdbError> {
-        let provider_id = MediaId::tmdb(requested_id(series_id)?);
+        let wire_id = requested_id(series_id)?;
+        let provider_id = MediaId::tmdb(series_id);
         let body = self
-            .execute(|| self.inner.tv_series_watch_providers(series_id))
+            .execute(|| self.inner.tv_series_watch_providers(wire_id))
             .await?;
         Ok(UnifiedWatchProviders {
             provider_id,

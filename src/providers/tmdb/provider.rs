@@ -59,14 +59,17 @@ impl Provider for TmdbClient {
 
 /// Extract the numeric TMDB id from a [`MediaId`], rejecting non-TMDB or
 /// non-numeric ids as [`ProviderError::InvalidInput`].
-fn tmdb_id(id: &MediaId) -> Result<i32, ProviderError> {
+///
+/// The range TMDB can carry is checked by the inherent method the id is passed
+/// to, whose [`TmdbError::Request`](super::error::TmdbError::Request) maps to
+/// [`ProviderError::InvalidInput`] as well.
+fn tmdb_id(id: &MediaId) -> Result<u64, ProviderError> {
     if id.provider() != "tmdb" {
         return Err(ProviderError::InvalidInput(format!(
             "expected a tmdb id, got {id}"
         )));
     }
     id.as_u64()
-        .and_then(|n| i32::try_from(n).ok())
         .ok_or_else(|| ProviderError::InvalidInput(format!("not a valid TMDB numeric id: {id}")))
 }
 

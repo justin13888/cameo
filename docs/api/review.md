@@ -46,9 +46,12 @@ rationale). Nothing is left open.
   third-party providers *must* be able to implement them (see
   [providers.md](../providers.md)). Evolution is handled by `#[non_exhaustive]`
   models and additive default methods, not sealing.
-- **`i32`/`i64` id widths in some `Unknown*`/TMDB-native spots.** These mirror the
-  upstream TMDB wire types deliberately; normalizing to `u64` everywhere would
+- **`i32`/`i64` id widths in some `Unknown*` spots.** These mirror the
+  upstream wire types deliberately; normalizing to `u64` everywhere would
   lose fidelity for the raw-id escape hatches. Unified ids use `MediaId` (wrapping `NativeId`).
+  `TmdbClient`'s id parameters are the exception: they take `u64`, the type its
+  results and discover filters carry, and reject an id above `i32::MAX` (TMDB's
+  wire width) with `TmdbError::Request` instead of wrapping or clamping it.
 - **`PartialDate` is not `chrono::NaiveDate`.** Providers routinely return
   year-only or year-month dates; a full `NaiveDate` cannot represent them. Lossy
   conversion is offered explicitly instead of imposed.

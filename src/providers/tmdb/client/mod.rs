@@ -32,6 +32,15 @@ const V3_API_KEY_SCHEME: &str = "v3_api_key";
 ///
 /// Adds bearer token authentication, rate limiting, and ergonomic pagination.
 ///
+/// # Ids
+///
+/// Id parameters are `u64`, the type TMDB ids carry in every result (e.g.
+/// [`CastMember::id`](super::models::CastMember::id)). TMDB's wire format holds
+/// ids, season numbers, and episode numbers as `i32`, so any of them above
+/// `i32::MAX` fails with [`TmdbError::Request`]
+/// ([`RequestErrorKind::InvalidRequest`]) before anything is sent, rather than
+/// being wrapped or clamped onto a different record.
+///
 /// # Cloning
 ///
 /// `TmdbClient` is cheaply cloneable — the underlying HTTP client,
@@ -162,17 +171,37 @@ fn details_id(reported: &mut Option<i64>, requested: i32) {
     }
 }
 
-/// A requested TMDB id as a [`MediaId`](crate::unified::MediaId) number.
+/// Convert a caller's id or number to the `i32` TMDB's wire format carries,
+/// without wrapping or clamping.
+///
+/// `what` names the parameter in the error message (e.g. `"id"`).
+///
+/// # Errors
+///
+/// [`TmdbError::Request`] ([`RequestErrorKind::InvalidRequest`]) when `value`
+/// is above `i32::MAX`: TMDB cannot represent it, so nothing is sent.
+pub(crate) fn wire_int(value: u64, what: &str) -> Result<i32, TmdbError> {
+    i32::try_from(value).map_err(|_| TmdbError::Request {
+        kind: RequestErrorKind::InvalidRequest,
+        message: format!("TMDB {what} must be at most {}, got {value}", i32::MAX),
+    })
+}
+
+/// A requested TMDB id as the `i32` the generated client sends.
 ///
 /// # Errors
 ///
 /// [`TmdbError::Request`] ([`RequestErrorKind::InvalidRequest`]) when `id` is
-/// zero or negative: no TMDB record has such an id, so nothing is sent.
-fn requested_id(id: i32) -> Result<u64, TmdbError> {
-    native_id(i64::from(id)).ok_or_else(|| TmdbError::Request {
-        kind: RequestErrorKind::InvalidRequest,
-        message: format!("TMDB ids are positive integers, got {id}"),
-    })
+/// zero (no TMDB record has such an id) or above `i32::MAX` (TMDB cannot
+/// represent it), so nothing is sent.
+fn requested_id(id: u64) -> Result<i32, TmdbError> {
+    if id == 0 {
+        return Err(TmdbError::Request {
+            kind: RequestErrorKind::InvalidRequest,
+            message: "TMDB ids are positive integers, got 0".to_owned(),
+        });
+    }
+    wire_int(id, "id")
 }
 
 #[cfg(test)]
@@ -227,11 +256,36 @@ mod tests {
         assert_eq!(id, Some(603));
     }
 
-    /// A zero or negative requested id is rejected before anything is sent.
+    /// A value TMDB can carry converts unchanged; one above `i32::MAX` is
+    /// rejected rather than wrapped or clamped.
     #[test]
-    fn requested_id_rejects_non_positive_ids() {
+    fn wire_int_rejects_values_above_i32_max() {
+        let max = u64::try_from(i32::MAX).expect("positive");
+        assert_eq!(wire_int(0, "id").expect("in range"), 0);
+        assert_eq!(wire_int(max, "id").expect("in range"), i32::MAX);
+        for value in [max + 1, u64::MAX] {
+            let err = wire_int(value, "season number").expect_err("out of range");
+            assert!(
+                matches!(
+                    &err,
+                    TmdbError::Request {
+                        kind: RequestErrorKind::InvalidRequest,
+                        message,
+                    } if message.contains("season number") && message.contains(&value.to_string())
+                ),
+                "got {err:?}"
+            );
+        }
+    }
+
+    /// A zero or out-of-range requested id is rejected before anything is
+    /// sent.
+    #[test]
+    fn requested_id_rejects_zero_and_out_of_range_ids() {
         assert_eq!(requested_id(550).expect("valid id"), 550);
-        for id in [0, -1, i32::MIN] {
+        let max = u64::try_from(i32::MAX).expect("positive");
+        assert_eq!(requested_id(max).expect("valid id"), i32::MAX);
+        for id in [0, max + 1, u64::MAX] {
             let err = requested_id(id).expect_err("invalid id");
             assert!(
                 matches!(
