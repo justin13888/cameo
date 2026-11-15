@@ -2,10 +2,6 @@
 #[cfg(feature = "anilist")]
 pub mod anilist;
 
-/// Conversions from TMDB generated types to unified types.
-#[cfg(feature = "tmdb")]
-pub mod tmdb;
-
 /// A provider's native numeric id as a [`MediaId`](crate::unified::MediaId)
 /// number, or `None` when it is not a valid id.
 ///

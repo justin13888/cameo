@@ -23,10 +23,10 @@
 //!   search items without a valid id are dropped and logged (see
 //!   [`TmdbListItem`]).
 
-pub mod credits;
-pub mod movie;
-pub mod person;
-pub mod tv;
+pub(crate) mod credits;
+pub(crate) mod movie;
+pub(crate) mod person;
+pub(crate) mod tv;
 
 use crate::{
     generated::tmdb::types,

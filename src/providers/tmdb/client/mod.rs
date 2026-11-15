@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use super::{
     config::{TmdbAuth, TmdbConfig},
+    convert::TmdbListItem,
     error::{RequestErrorKind, TmdbError},
     models::{self, TmdbCertification, TmdbCredits, TmdbImages},
 };
@@ -10,7 +11,7 @@ use crate::{
     generated::tmdb::{self, Credential, SecretString, types},
     providers::{rate_limit::RateLimiter, retry},
     unified::{
-        conversions::{native_id, tmdb::TmdbListItem},
+        conversions::native_id,
         external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         genre::Genre,
         media_id::MediaId,
@@ -273,7 +274,7 @@ impl TmdbClient {
             body.total_pages,
             body.total_results,
         )?
-        .filter_map(crate::unified::conversions::tmdb::person::multi_search_result))
+        .filter_map(super::convert::person::multi_search_result))
     }
 
     // ── Details ──
@@ -688,9 +689,7 @@ impl TmdbClient {
             })
             .await?;
         body.season_number.get_or_insert(i64::from(season_number));
-        Ok(crate::unified::conversions::tmdb::tv::season_details_from(
-            body, show_id,
-        ))
+        Ok(super::convert::tv::season_details_from(body, show_id))
     }
 
     /// Get episode details for a TV show.

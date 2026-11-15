@@ -7,11 +7,13 @@
 
 use async_trait::async_trait;
 
-use super::client::TmdbClient;
+use super::{
+    client::TmdbClient,
+    convert::credits::{tmdb_movie_credits_to_unified, tmdb_tv_credits_to_unified},
+};
 use crate::{
     core::{config::TimeWindow, error::ProviderError, pagination::Page},
     unified::{
-        conversions::tmdb::credits::{tmdb_movie_credits_to_unified, tmdb_tv_credits_to_unified},
         external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         media_id::MediaId,
         models::{
