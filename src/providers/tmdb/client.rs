@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use super::{
     config::{TmdbAuth, TmdbConfig},
     error::{RequestErrorKind, TmdbError},
-    models::{TmdbCredits, TmdbImages},
+    models::{self, TmdbCertification, TmdbCredits, TmdbImages},
 };
 use crate::{
     core::{config::TimeWindow, pagination::Page},
@@ -788,6 +788,55 @@ impl TmdbClient {
             provider_id,
             results,
         })
+    }
+
+    // ── Certifications ──
+
+    /// Get a movie's certification (content rating) per country, from TMDB's
+    /// `/movie/{id}/release_dates`.
+    ///
+    /// A country lists one release per type (premiere, theatrical, digital,
+    /// ...). Each country appears at most once: its theatrical release's
+    /// certification when that is non-empty, otherwise the first non-empty
+    /// one. Countries with no certification are left out, so a title nobody
+    /// rated yields an empty `Vec`.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `movie_id` is zero or negative (nothing is
+    /// sent), plus the usual request errors.
+    #[tracing::instrument(skip(self))]
+    pub async fn movie_certifications(
+        &self,
+        movie_id: i32,
+    ) -> Result<Vec<TmdbCertification>, TmdbError> {
+        requested_id(movie_id)?;
+        let body = self
+            .execute(|| self.inner.movie_release_dates(movie_id))
+            .await?;
+        Ok(models::movie_certifications(body))
+    }
+
+    /// Get a TV series' certification (content rating) per country, from
+    /// TMDB's `/tv/{id}/content_ratings`.
+    ///
+    /// Entries with no country code or an empty rating are left out, so a
+    /// series nobody rated yields an empty `Vec`.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `series_id` is zero or negative (nothing is
+    /// sent), plus the usual request errors.
+    #[tracing::instrument(skip(self))]
+    pub async fn tv_series_certifications(
+        &self,
+        series_id: i32,
+    ) -> Result<Vec<TmdbCertification>, TmdbError> {
+        requested_id(series_id)?;
+        let body = self
+            .execute(|| self.inner.tv_series_content_ratings(series_id))
+            .await?;
+        Ok(models::tv_series_certifications(body))
     }
 
     // ── External IDs ──
