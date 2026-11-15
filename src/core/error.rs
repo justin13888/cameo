@@ -71,101 +71,23 @@ pub enum ProviderError {
     Other(String),
 }
 
-#[cfg(feature = "tmdb")]
-impl From<crate::providers::tmdb::TmdbError> for ProviderError {
-    fn from(err: crate::providers::tmdb::TmdbError) -> Self {
-        use crate::providers::tmdb::{TmdbError, error::RequestErrorKind};
-        match err {
-            // The `TransportError` description is already redacted: it never
-            // carries the request URL's `api_key`.
-            TmdbError::Http(e) => ProviderError::Transport(e.to_string()),
-            TmdbError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
-            e @ TmdbError::PageOutOfRange { .. } => ProviderError::Deserialization(e.to_string()),
-            TmdbError::InvalidConfig(s) => ProviderError::InvalidInput(s),
-            TmdbError::UnsupportedSource(_) => ProviderError::Unsupported,
-            TmdbError::Request { kind, message } => match kind {
-                RequestErrorKind::InvalidRequest => ProviderError::InvalidInput(message),
-                RequestErrorKind::PaginationCycle => {
-                    ProviderError::Other(format!("{kind}: {message}"))
-                }
-            },
-            TmdbError::Api {
-                status,
-                message,
-                retry_after,
-                ..
-            } => match status {
-                401 | 403 => ProviderError::Auth(message),
-                404 => ProviderError::NotFound,
-                429 => ProviderError::RateLimited { retry_after },
-                _ => ProviderError::Api { status, message },
-            },
+impl ProviderError {
+    /// Classify an HTTP error `status`: `401`/`403` is [`Auth`](Self::Auth)
+    /// carrying `message`, `404` is [`NotFound`](Self::NotFound), `429` is
+    /// [`RateLimited`](Self::RateLimited) carrying `retry_after`, and any
+    /// other status is [`Api`](Self::Api).
+    pub(crate) fn from_http_status(
+        status: u16,
+        message: String,
+        retry_after: Option<Duration>,
+    ) -> Self {
+        match status {
+            401 | 403 => ProviderError::Auth(message),
+            404 => ProviderError::NotFound,
+            429 => ProviderError::RateLimited { retry_after },
+            _ => ProviderError::Api { status, message },
         }
     }
-}
-
-#[cfg(feature = "anilist")]
-impl From<crate::providers::anilist::AniListError> for ProviderError {
-    fn from(err: crate::providers::anilist::AniListError) -> Self {
-        use crate::providers::anilist::AniListError;
-        match err {
-            AniListError::Http(e) => ProviderError::Transport(e.without_url().to_string()),
-            AniListError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
-            AniListError::InvalidConfig(s) => ProviderError::InvalidInput(s),
-            AniListError::NotFound => ProviderError::NotFound,
-            AniListError::NoData => ProviderError::Other("no data returned".to_string()),
-            e @ AniListError::PageOutOfRange { .. } => {
-                ProviderError::Deserialization(e.to_string())
-            }
-            AniListError::Status {
-                status,
-                retry_after,
-                message,
-            } => match status {
-                401 | 403 => ProviderError::Auth(message),
-                404 => ProviderError::NotFound,
-                429 => ProviderError::RateLimited { retry_after },
-                _ => ProviderError::Api { status, message },
-            },
-            AniListError::GraphQL {
-                ref errors,
-                retry_after,
-            } => {
-                if errors.iter().any(|e| e.status == Some(429)) {
-                    ProviderError::RateLimited { retry_after }
-                } else if errors.iter().any(|e| e.status == Some(404)) {
-                    ProviderError::NotFound
-                } else if let Some(status) = most_severe_gql_status(errors) {
-                    let message = errors
-                        .iter()
-                        .map(|e| e.message.as_str())
-                        .collect::<Vec<_>>()
-                        .join("; ");
-                    match status {
-                        401 | 403 => ProviderError::Auth(message),
-                        _ => ProviderError::Api { status, message },
-                    }
-                } else {
-                    ProviderError::Other(err.to_string())
-                }
-            }
-        }
-    }
-}
-
-/// The most severe HTTP-error status among AniList GraphQL errors: the
-/// highest `4xx`/`5xx` value (so `5xx` outranks `4xx`). Statuses outside that
-/// range (e.g. the `200` AniList attaches to non-fatal errors) are ignored.
-#[cfg(feature = "anilist")]
-fn most_severe_gql_status(
-    errors: &[crate::providers::anilist::error::AniListGqlError],
-) -> Option<u16> {
-    errors
-        .iter()
-        .filter_map(|e| e.status)
-        .filter_map(|s| u16::try_from(s).ok())
-        .filter(|s| (400..=599).contains(s))
-        .max()
 }
 
 #[cfg(test)]
@@ -195,46 +117,6 @@ mod tests {
         for v in &variants {
             assert!(!v.to_string().is_empty());
         }
-    }
-
-    #[cfg(feature = "tmdb")]
-    #[test]
-    fn maps_tmdb_error() {
-        use crate::providers::tmdb::TmdbError;
-        let api = |status| TmdbError::Api {
-            status,
-            status_code: None,
-            message: "x".into(),
-            retry_after: Some(Duration::from_secs(3)),
-        };
-        assert!(matches!(
-            ProviderError::from(api(404)),
-            ProviderError::NotFound
-        ));
-        assert!(matches!(
-            ProviderError::from(api(401)),
-            ProviderError::Auth(_)
-        ));
-        assert!(matches!(
-            ProviderError::from(api(429)),
-            ProviderError::RateLimited {
-                retry_after: Some(_)
-            }
-        ));
-        assert!(matches!(
-            ProviderError::from(api(500)),
-            ProviderError::Api { status: 500, .. }
-        ));
-        assert!(matches!(
-            ProviderError::from(TmdbError::InvalidConfig("x".into())),
-            ProviderError::InvalidInput(_)
-        ));
-        assert!(matches!(
-            ProviderError::from(TmdbError::UnsupportedSource(
-                crate::unified::external_ids::ExternalSource::Mal
-            )),
-            ProviderError::Unsupported
-        ));
     }
 
     /// Every `ProviderError` variant renders its own exact message.
@@ -286,317 +168,26 @@ mod tests {
         }
     }
 
-    /// A `reqwest::Error` built synchronously (an unparseable URL), so the
-    /// transport branches can be exercised without a network.
-    #[cfg(any(feature = "tmdb", feature = "anilist"))]
-    fn reqwest_builder_error() -> reqwest::Error {
-        match reqwest::Client::new().get("not a url").build() {
-            Ok(request) => panic!("expected a builder error, built {request:?}"),
-            Err(e) => e,
-        }
-    }
-
-    #[cfg(any(feature = "tmdb", feature = "anilist"))]
-    fn json_error() -> serde_json::Error {
-        match serde_json::from_str::<u32>("not json") {
-            Ok(v) => panic!("expected a JSON error, parsed {v}"),
-            Err(e) => e,
-        }
-    }
-
-    /// Table-driven: every `TmdbError` variant and every status branch maps to
-    /// the pinned `ProviderError`, carrying its message or `retry_after`.
-    #[cfg(feature = "tmdb")]
+    /// `from_http_status` classifies every status branch, carrying the
+    /// message or `retry_after`.
     #[test]
-    fn maps_every_tmdb_error_branch() {
-        use crate::providers::tmdb::{TmdbError, error::RequestErrorKind};
-        let retry = Some(Duration::from_secs(3));
-        let api = |status| TmdbError::Api {
-            status,
-            status_code: Some(7),
-            message: "msg".into(),
-            retry_after: retry,
-        };
+    fn from_http_status_classifies_each_branch() {
+        let retry = Some(Duration::from_secs(4));
+        let map = |status| ProviderError::from_http_status(status, "msg".into(), retry);
         for status in [401, 403] {
-            match ProviderError::from(api(status)) {
-                ProviderError::Auth(m) => assert_eq!(m, "msg", "status {status}"),
-                other => panic!("status {status}: expected Auth, got {other:?}"),
-            }
+            assert_eq!(map(status), ProviderError::Auth("msg".into()), "{status}");
         }
-        assert!(matches!(
-            ProviderError::from(api(404)),
-            ProviderError::NotFound
-        ));
-        match ProviderError::from(api(429)) {
-            ProviderError::RateLimited { retry_after } => assert_eq!(retry_after, retry),
-            other => panic!("expected RateLimited, got {other:?}"),
-        }
+        assert_eq!(map(404), ProviderError::NotFound);
+        assert_eq!(map(429), ProviderError::RateLimited { retry_after: retry });
         for status in [400, 418, 500, 503] {
-            match ProviderError::from(api(status)) {
-                ProviderError::Api { status: s, message } => {
-                    assert_eq!((s, message.as_str()), (status, "msg"));
-                }
-                other => panic!("status {status}: expected Api, got {other:?}"),
-            }
+            assert_eq!(
+                map(status),
+                ProviderError::Api {
+                    status,
+                    message: "msg".into()
+                },
+                "{status}"
+            );
         }
-
-        let http = TmdbError::from(reqwest_builder_error());
-        let http_text = http.to_string();
-        match ProviderError::from(http) {
-            ProviderError::Transport(m) => {
-                assert!(!m.is_empty());
-                assert!(
-                    http_text.ends_with(&m),
-                    "Transport carries the transport description: {m:?} vs {http_text:?}"
-                );
-            }
-            other => panic!("expected Transport, got {other:?}"),
-        }
-
-        let json = json_error();
-        let json_text = json.to_string();
-        match ProviderError::from(TmdbError::Deserialization(json)) {
-            ProviderError::Deserialization(m) => assert_eq!(m, json_text),
-            other => panic!("expected Deserialization, got {other:?}"),
-        }
-
-        match ProviderError::from(TmdbError::PageOutOfRange {
-            field: "total_pages",
-            value: -1,
-        }) {
-            ProviderError::Deserialization(m) => {
-                assert_eq!(m, "TMDB reported an out-of-range `total_pages`: -1");
-            }
-            other => panic!("expected Deserialization, got {other:?}"),
-        }
-
-        match ProviderError::from(TmdbError::InvalidConfig("empty token".into())) {
-            ProviderError::InvalidInput(m) => assert_eq!(m, "empty token"),
-            other => panic!("expected InvalidInput, got {other:?}"),
-        }
-        assert!(matches!(
-            ProviderError::from(TmdbError::UnsupportedSource(
-                crate::unified::external_ids::ExternalSource::Mal
-            )),
-            ProviderError::Unsupported
-        ));
-        assert!(matches!(
-            ProviderError::from(TmdbError::Request {
-                kind: RequestErrorKind::InvalidRequest,
-                message: "m".into(),
-            }),
-            ProviderError::InvalidInput(ref m) if m == "m"
-        ));
-    }
-
-    /// Table-driven: every `AniListError` variant maps to the pinned
-    /// `ProviderError`.
-    #[cfg(feature = "anilist")]
-    #[test]
-    fn maps_every_anilist_error_branch() {
-        use crate::providers::anilist::AniListError;
-        let retry = Some(Duration::from_secs(5));
-        let status = |status| AniListError::Status {
-            status,
-            retry_after: retry,
-            message: "msg".into(),
-        };
-        for code in [401, 403] {
-            match ProviderError::from(status(code)) {
-                ProviderError::Auth(m) => assert_eq!(m, "msg", "status {code}"),
-                other => panic!("status {code}: expected Auth, got {other:?}"),
-            }
-        }
-        assert!(matches!(
-            ProviderError::from(status(404)),
-            ProviderError::NotFound
-        ));
-        match ProviderError::from(status(429)) {
-            ProviderError::RateLimited { retry_after } => assert_eq!(retry_after, retry),
-            other => panic!("expected RateLimited, got {other:?}"),
-        }
-        for code in [400, 500, 502] {
-            match ProviderError::from(status(code)) {
-                ProviderError::Api { status: s, message } => {
-                    assert_eq!((s, message.as_str()), (code, "msg"));
-                }
-                other => panic!("status {code}: expected Api, got {other:?}"),
-            }
-        }
-
-        let http = reqwest_builder_error();
-        let http_text = http.to_string();
-        match ProviderError::from(AniListError::Http(http)) {
-            ProviderError::Transport(m) => assert_eq!(m, http_text),
-            other => panic!("expected Transport, got {other:?}"),
-        }
-
-        let json = json_error();
-        let json_text = json.to_string();
-        match ProviderError::from(AniListError::Deserialization(json)) {
-            ProviderError::Deserialization(m) => assert_eq!(m, json_text),
-            other => panic!("expected Deserialization, got {other:?}"),
-        }
-
-        match ProviderError::from(AniListError::InvalidConfig("per_page".into())) {
-            ProviderError::InvalidInput(m) => assert_eq!(m, "per_page"),
-            other => panic!("expected InvalidInput, got {other:?}"),
-        }
-        assert!(matches!(
-            ProviderError::from(AniListError::NotFound),
-            ProviderError::NotFound
-        ));
-        match ProviderError::from(AniListError::NoData) {
-            ProviderError::Other(m) => assert_eq!(m, "no data returned"),
-            other => panic!("expected Other, got {other:?}"),
-        }
-        match ProviderError::from(AniListError::PageOutOfRange {
-            field: "total",
-            value: -1,
-        }) {
-            ProviderError::Deserialization(m) => {
-                assert_eq!(m, "AniList reported an out-of-range `total`: -1");
-            }
-            other => panic!("expected Deserialization, got {other:?}"),
-        }
-    }
-
-    /// A GraphQL 429 keeps the response's `retry_after`; an unclassified
-    /// GraphQL error keeps the joined messages in `Other`.
-    #[cfg(feature = "anilist")]
-    #[test]
-    fn maps_anilist_graphql_retry_after_and_other_message() {
-        use crate::providers::anilist::AniListError;
-        let errors = |v| serde_json::from_value(v).expect("valid GraphQL error fixture");
-        let limited = AniListError::GraphQL {
-            errors: errors(serde_json::json!([{ "message": "slow down", "status": 429 }])),
-            retry_after: Some(Duration::from_secs(9)),
-        };
-        match ProviderError::from(limited) {
-            ProviderError::RateLimited { retry_after } => {
-                assert_eq!(retry_after, Some(Duration::from_secs(9)));
-            }
-            other => panic!("expected RateLimited, got {other:?}"),
-        }
-        let unclassified = AniListError::GraphQL {
-            errors: errors(serde_json::json!([{ "message": "a" }, { "message": "b" }])),
-            retry_after: None,
-        };
-        match ProviderError::from(unclassified) {
-            ProviderError::Other(m) => assert_eq!(m, "GraphQL errors: a; b"),
-            other => panic!("expected Other, got {other:?}"),
-        }
-    }
-
-    #[cfg(feature = "tmdb")]
-    #[test]
-    fn maps_tmdb_request_error_by_kind() {
-        use crate::providers::tmdb::{TmdbError, error::RequestErrorKind};
-        let request = |kind| TmdbError::Request {
-            kind,
-            message: "boom".into(),
-        };
-        assert!(matches!(
-            ProviderError::from(request(RequestErrorKind::InvalidRequest)),
-            ProviderError::InvalidInput(ref m) if m == "boom"
-        ));
-        assert!(matches!(
-            ProviderError::from(request(RequestErrorKind::PaginationCycle)),
-            ProviderError::Other(ref m) if m == "pagination cycle: boom"
-        ));
-    }
-
-    #[cfg(feature = "anilist")]
-    #[test]
-    fn maps_anilist_error() {
-        use crate::providers::anilist::AniListError;
-        assert!(matches!(
-            ProviderError::from(AniListError::NotFound),
-            ProviderError::NotFound
-        ));
-        assert!(matches!(
-            ProviderError::from(AniListError::Status {
-                status: 429,
-                retry_after: Some(Duration::from_secs(5)),
-                message: "x".into(),
-            }),
-            ProviderError::RateLimited {
-                retry_after: Some(_)
-            }
-        ));
-        assert!(matches!(
-            ProviderError::from(AniListError::InvalidConfig("x".into())),
-            ProviderError::InvalidInput(_)
-        ));
-    }
-
-    #[cfg(feature = "anilist")]
-    fn gql(errors: serde_json::Value) -> crate::providers::anilist::AniListError {
-        crate::providers::anilist::AniListError::GraphQL {
-            errors: serde_json::from_value(errors).expect("valid GraphQL error fixture"),
-            retry_after: None,
-        }
-    }
-
-    #[cfg(feature = "anilist")]
-    #[test]
-    fn maps_anilist_graphql_5xx_to_api() {
-        let err = ProviderError::from(gql(serde_json::json!([
-            { "message": "Bad input", "status": 400 },
-            { "message": "Internal", "status": 500 }
-        ])));
-        match err {
-            ProviderError::Api { status, message } => {
-                assert_eq!(status, 500, "5xx outranks 4xx");
-                assert_eq!(message, "Bad input; Internal");
-            }
-            other => panic!("expected Api, got {other:?}"),
-        }
-    }
-
-    #[cfg(feature = "anilist")]
-    #[test]
-    fn maps_anilist_graphql_special_statuses() {
-        assert!(matches!(
-            ProviderError::from(gql(serde_json::json!([
-                { "message": "Internal", "status": 500 },
-                { "message": "Too Many Requests.", "status": 429 }
-            ]))),
-            ProviderError::RateLimited { .. }
-        ));
-        assert!(matches!(
-            ProviderError::from(gql(serde_json::json!([
-                { "message": "Not Found.", "status": 404 }
-            ]))),
-            ProviderError::NotFound
-        ));
-        assert!(matches!(
-            ProviderError::from(gql(serde_json::json!([
-                { "message": "Invalid token", "status": 401 }
-            ]))),
-            ProviderError::Auth(_)
-        ));
-        assert!(matches!(
-            ProviderError::from(gql(serde_json::json!([
-                { "message": "Forbidden", "status": 403 }
-            ]))),
-            ProviderError::Auth(_)
-        ));
-        // A 5xx outranks an auth status.
-        assert!(matches!(
-            ProviderError::from(gql(serde_json::json!([
-                { "message": "Forbidden", "status": 403 },
-                { "message": "Internal", "status": 502 }
-            ]))),
-            ProviderError::Api { status: 502, .. }
-        ));
-        // No HTTP-error status at all stays `Other`.
-        assert!(matches!(
-            ProviderError::from(gql(serde_json::json!([
-                { "message": "no status" },
-                { "message": "non-fatal", "status": 200 }
-            ]))),
-            ProviderError::Other(_)
-        ));
     }
 }

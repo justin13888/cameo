@@ -2,7 +2,14 @@ use std::{fmt, time::Duration};
 
 use reqwest::header::HeaderMap;
 
-use crate::generated::tmdb as generated;
+use crate::{
+    core::error::ProviderError,
+    generated::tmdb as generated,
+    providers::{
+        http::{is_retryable_status, parse_retry_after},
+        retry::Retryable,
+    },
+};
 
 /// Error type for the TMDB provider.
 ///
@@ -199,25 +206,53 @@ struct TmdbErrorBody {
     status_message: Option<String>,
 }
 
-impl TmdbError {
+impl Retryable for TmdbError {
     /// Whether this failure is transient and worth retrying: a 429/5xx API
     /// status, or a connect/timeout transport error.
-    pub(crate) fn is_retryable(&self) -> bool {
+    fn is_retryable(&self) -> bool {
         match self {
-            TmdbError::Api { status, .. } => *status == 429 || (500..=599).contains(status),
+            TmdbError::Api { status, .. } => is_retryable_status(*status),
             TmdbError::Http(e) => e.is_timeout() || e.is_connect(),
             _ => false,
         }
     }
 
     /// The server-supplied `Retry-After` delay, if any.
-    pub(crate) fn retry_after(&self) -> Option<Duration> {
+    fn retry_after(&self) -> Option<Duration> {
         match self {
             TmdbError::Api { retry_after, .. } => *retry_after,
             _ => None,
         }
     }
+}
 
+impl From<TmdbError> for ProviderError {
+    fn from(err: TmdbError) -> Self {
+        match err {
+            // The `TransportError` description is already redacted: it never
+            // carries the request URL's `api_key`.
+            TmdbError::Http(e) => ProviderError::Transport(e.to_string()),
+            TmdbError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
+            e @ TmdbError::PageOutOfRange { .. } => ProviderError::Deserialization(e.to_string()),
+            TmdbError::InvalidConfig(s) => ProviderError::InvalidInput(s),
+            TmdbError::UnsupportedSource(_) => ProviderError::Unsupported,
+            TmdbError::Request { kind, message } => match kind {
+                RequestErrorKind::InvalidRequest => ProviderError::InvalidInput(message),
+                RequestErrorKind::PaginationCycle => {
+                    ProviderError::Other(format!("{kind}: {message}"))
+                }
+            },
+            TmdbError::Api {
+                status,
+                message,
+                retry_after,
+                ..
+            } => ProviderError::from_http_status(status, message, retry_after),
+        }
+    }
+}
+
+impl TmdbError {
     /// Map a generated-client error into a structured [`TmdbError`], decoding
     /// the TMDB error body and `Retry-After` header for error responses.
     ///
@@ -379,15 +414,6 @@ fn redact_api_key(text: &str) -> String {
     out
 }
 
-/// Parse a `Retry-After` header (integer seconds) into a [`Duration`].
-///
-/// TMDB and AniList both send an integer number of seconds. HTTP-date form is
-/// not parsed (returns `None`).
-fn parse_retry_after(headers: &HeaderMap) -> Option<Duration> {
-    let raw = headers.get(reqwest::header::RETRY_AFTER)?.to_str().ok()?;
-    raw.trim().parse::<u64>().ok().map(Duration::from_secs)
-}
-
 /// Decode TMDB's `{status_code, status_message}` error body, falling back to the
 /// raw body (or a generic message) when it is absent or malformed.
 fn decode_tmdb_error_body(body: &str, status: u16) -> (Option<i64>, String) {
@@ -518,5 +544,143 @@ mod tests {
             other => panic!("expected Http, got {other:?}"),
         }
         assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn maps_tmdb_error() {
+        let api = |status| TmdbError::Api {
+            status,
+            status_code: None,
+            message: "x".into(),
+            retry_after: Some(Duration::from_secs(3)),
+        };
+        assert!(matches!(
+            ProviderError::from(api(404)),
+            ProviderError::NotFound
+        ));
+        assert!(matches!(
+            ProviderError::from(api(401)),
+            ProviderError::Auth(_)
+        ));
+        assert!(matches!(
+            ProviderError::from(api(429)),
+            ProviderError::RateLimited {
+                retry_after: Some(_)
+            }
+        ));
+        assert!(matches!(
+            ProviderError::from(api(500)),
+            ProviderError::Api { status: 500, .. }
+        ));
+        assert!(matches!(
+            ProviderError::from(TmdbError::InvalidConfig("x".into())),
+            ProviderError::InvalidInput(_)
+        ));
+        assert!(matches!(
+            ProviderError::from(TmdbError::UnsupportedSource(
+                crate::unified::external_ids::ExternalSource::Mal
+            )),
+            ProviderError::Unsupported
+        ));
+    }
+
+    /// Table-driven: every `TmdbError` variant and every status branch maps to
+    /// the pinned `ProviderError`, carrying its message or `retry_after`.
+    #[test]
+    fn maps_every_tmdb_error_branch() {
+        use crate::providers::http::test_support::{json_error, reqwest_builder_error};
+        let retry = Some(Duration::from_secs(3));
+        let api = |status| TmdbError::Api {
+            status,
+            status_code: Some(7),
+            message: "msg".into(),
+            retry_after: retry,
+        };
+        for status in [401, 403] {
+            match ProviderError::from(api(status)) {
+                ProviderError::Auth(m) => assert_eq!(m, "msg", "status {status}"),
+                other => panic!("status {status}: expected Auth, got {other:?}"),
+            }
+        }
+        assert!(matches!(
+            ProviderError::from(api(404)),
+            ProviderError::NotFound
+        ));
+        match ProviderError::from(api(429)) {
+            ProviderError::RateLimited { retry_after } => assert_eq!(retry_after, retry),
+            other => panic!("expected RateLimited, got {other:?}"),
+        }
+        for status in [400, 418, 500, 503] {
+            match ProviderError::from(api(status)) {
+                ProviderError::Api { status: s, message } => {
+                    assert_eq!((s, message.as_str()), (status, "msg"));
+                }
+                other => panic!("status {status}: expected Api, got {other:?}"),
+            }
+        }
+
+        let http = TmdbError::from(reqwest_builder_error());
+        let http_text = http.to_string();
+        match ProviderError::from(http) {
+            ProviderError::Transport(m) => {
+                assert!(!m.is_empty());
+                assert!(
+                    http_text.ends_with(&m),
+                    "Transport carries the transport description: {m:?} vs {http_text:?}"
+                );
+            }
+            other => panic!("expected Transport, got {other:?}"),
+        }
+
+        let json = json_error();
+        let json_text = json.to_string();
+        match ProviderError::from(TmdbError::Deserialization(json)) {
+            ProviderError::Deserialization(m) => assert_eq!(m, json_text),
+            other => panic!("expected Deserialization, got {other:?}"),
+        }
+
+        match ProviderError::from(TmdbError::PageOutOfRange {
+            field: "total_pages",
+            value: -1,
+        }) {
+            ProviderError::Deserialization(m) => {
+                assert_eq!(m, "TMDB reported an out-of-range `total_pages`: -1");
+            }
+            other => panic!("expected Deserialization, got {other:?}"),
+        }
+
+        match ProviderError::from(TmdbError::InvalidConfig("empty token".into())) {
+            ProviderError::InvalidInput(m) => assert_eq!(m, "empty token"),
+            other => panic!("expected InvalidInput, got {other:?}"),
+        }
+        assert!(matches!(
+            ProviderError::from(TmdbError::UnsupportedSource(
+                crate::unified::external_ids::ExternalSource::Mal
+            )),
+            ProviderError::Unsupported
+        ));
+        assert!(matches!(
+            ProviderError::from(TmdbError::Request {
+                kind: RequestErrorKind::InvalidRequest,
+                message: "m".into(),
+            }),
+            ProviderError::InvalidInput(ref m) if m == "m"
+        ));
+    }
+
+    #[test]
+    fn maps_tmdb_request_error_by_kind() {
+        let request = |kind| TmdbError::Request {
+            kind,
+            message: "boom".into(),
+        };
+        assert!(matches!(
+            ProviderError::from(request(RequestErrorKind::InvalidRequest)),
+            ProviderError::InvalidInput(ref m) if m == "boom"
+        ));
+        assert!(matches!(
+            ProviderError::from(request(RequestErrorKind::PaginationCycle)),
+            ProviderError::Other(ref m) if m == "pagination cycle: boom"
+        ));
     }
 }

@@ -8,7 +8,7 @@ use super::{
 use crate::{
     core::{config::TimeWindow, pagination::Page},
     generated::tmdb::{self, Credential, SecretString, types},
-    providers::rate_limit::RateLimiter,
+    providers::{rate_limit::RateLimiter, retry},
     unified::{
         conversions::{native_id, tmdb::TmdbListItem},
         external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
@@ -140,7 +140,8 @@ impl TmdbClient {
 
     /// Wait for a rate-limit slot before issuing a request. Returns once the
     /// token-bucket limiter permits another request (immediately if a token is
-    /// available). Used by [`Self::execute`] and the discover builders.
+    /// available). Used by the discover builders; [`Self::execute`] paces its
+    /// attempts through the same limiter.
     pub(crate) async fn acquire_rate_limit(&self) {
         self.rate_limiter.acquire().await;
     }
@@ -161,33 +162,13 @@ impl TmdbClient {
         Fut: std::future::Future<Output = Result<tmdb::ResponseValue<T>, tmdb::Error<E>>>,
         E: std::fmt::Debug,
     {
-        let policy = self.config.retry;
-        let mut retry_index = 0u32;
-        loop {
-            self.acquire_rate_limit().await;
-            let outcome = make_call()
+        retry::run(self.config.retry, &self.rate_limiter, "tmdb", || async {
+            make_call()
                 .await
                 .map(tmdb::ResponseValue::into_inner)
-                .map_err(TmdbError::from_generated);
-            match outcome {
-                Ok(value) => return Ok(value),
-                Err(err) => {
-                    if policy.should_retry(retry_index) && err.is_retryable() {
-                        let delay = policy.backoff(retry_index, err.retry_after());
-                        tracing::debug!(
-                            retry = retry_index,
-                            ?delay,
-                            error = %err,
-                            "tmdb: retrying transient error"
-                        );
-                        tokio::time::sleep(delay).await;
-                        retry_index += 1;
-                        continue;
-                    }
-                    return Err(err);
-                }
-            }
-        }
+                .map_err(TmdbError::from_generated)
+        })
+        .await
     }
 
     // ── Search ──
