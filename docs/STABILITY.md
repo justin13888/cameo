@@ -26,7 +26,7 @@ items also through the crate root. These are the only public paths:
 | --- | --- |
 | `cameo` (crate root) | the common items of every module below |
 | `cameo::unified` | models, `Genre`, `PartialDate`, `MediaId`, the provider traits, `CameoClient`, and `TimeWindow` |
-| `cameo::core` | `Page`, `PageToken`, `into_stream`, `ProviderError`, `TimeWindow` |
+| `cameo::core` | `Page`, `PageToken`, `into_stream`, `ProviderError`, `TransportError`, `DecodeError`, `TimeWindow` |
 | `cameo::providers` | `RateLimit`, `RetryPolicy` |
 | `cameo::providers::tmdb` | `TmdbClient`, its config, errors, discover builders, image URL helpers, and result types |
 | `cameo::providers::anilist` | `AniListClient`, its config, errors, and the anime discovery builder |
@@ -44,6 +44,30 @@ between files is never a public change.
   strings are not);
 - the on-disk cache format (self-migrating);
 - the vendored `generated` module — it is `pub(crate)` and unreachable.
+
+## Public dependencies
+
+A type from another crate that appears in cameo's public API makes that
+crate's breaking releases cameo's breaking releases. cameo therefore keeps
+third-party types out of its API unless they are the deliberate vocabulary of
+the API:
+
+- **Deliberately public:** `serde` (the models derive `Serialize` /
+  `Deserialize`), `serde_json::Value` (the `CacheBackend` value contract and
+  `AniListGqlError`'s `path` / `extensions`), `chrono` (dates and timestamps),
+  `futures`' `Stream` trait (returned by `into_stream`), and `async_trait`
+  (re-exported for trait implementers). A major release of
+  one of these is a breaking cameo release.
+- **Kept private:** the HTTP client (`reqwest`) and the JSON parser's error
+  type (`serde_json::Error`). Errors from them are wrapped in cameo's own
+  `TransportError` and `DecodeError`, which classify and describe the failure
+  and return the original from `std::error::Error::source()` where one can be
+  kept. Downcasting that source to the dependency's type is possible, but it
+  is not part of the stable API: the source's type may change when the
+  dependency does, without a breaking cameo release.
+
+`TvdbError::Http` and `TvdbError::Deserialization` still carry `reqwest::Error`
+and `serde_json::Error`; they move to the same wrappers in a later release.
 
 ## `#[non_exhaustive]`
 
