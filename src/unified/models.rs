@@ -404,7 +404,7 @@ pub struct UnifiedCredits {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedCastCredit {
     /// Provider-qualified person id (e.g. `tmdb:287`, `anilist:staff:95061`),
-    /// usable with [`CameoClient::person_details`](crate::unified::CameoClient::person_details).
+    /// usable with [`person_details`](crate::unified::CameoClient::person_details).
     pub person_id: MediaId,
     /// The person's name.
     pub name: String,
@@ -425,7 +425,7 @@ pub struct UnifiedCastCredit {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnifiedCrewCredit {
     /// Provider-qualified person id (e.g. `tmdb:7467`, `anilist:staff:95061`),
-    /// usable with [`CameoClient::person_details`](crate::unified::CameoClient::person_details).
+    /// usable with [`person_details`](crate::unified::CameoClient::person_details).
     pub person_id: MediaId,
     /// The person's name.
     pub name: String,
