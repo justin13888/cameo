@@ -106,7 +106,7 @@ async fn trending_tv_maps_episode_fields_and_status() {
     let show = &result.results[0];
     assert_eq!(show.number_of_episodes, Some(12));
     assert_eq!(show.episode_run_time, Some(24));
-    assert_eq!(show.status.as_deref(), Some("FINISHED"));
+    assert_eq!(show.status, Some(cameo::SeriesStatus::Ended));
 }
 
 #[tokio::test]

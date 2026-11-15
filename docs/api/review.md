@@ -11,7 +11,7 @@ rationale). Nothing is left open.
 
 ## Fixed
 
-- **No leaked generated types (C-STABLE).** The `progenitor`-generated TMDB
+- **No leaked generated types (C-STABLE).** The `spargen`-generated TMDB
   client is fully vendored behind hand-owned/unified types; the snapshot
   contains zero `generated::` paths. Provider methods return `Unified*` or
   hand-owned models (`TmdbCredits`, `TmdbImages`, …), never generated structs.

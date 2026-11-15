@@ -162,6 +162,82 @@ async fn malformed_json_body_is_deserialization_error() {
     );
 }
 
+/// A server that accepts the connection, reads the request, and closes it
+/// without responding is a *transport* error (no HTTP response was received),
+/// never an API error, and maps to `ProviderError::Transport`.
+#[tokio::test]
+async fn connection_closed_without_response_is_transport_error() {
+    use std::io::Read;
+
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let addr = listener.local_addr().unwrap();
+    let server = std::thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        let mut buf = [0u8; 4096];
+        let _ = stream.read(&mut buf);
+        // Dropping the stream closes the connection with no response.
+    });
+
+    let config = TmdbConfig::new_with_base_url("test-token", format!("http://{addr}"))
+        .with_retry(RetryPolicy::disabled());
+    let client = TmdbClient::new(config).unwrap();
+
+    let err = client.movie_details(550).await.unwrap_err();
+    server.join().unwrap();
+
+    match &err {
+        TmdbError::Http(e) => assert!(!e.is_connect() && !e.is_timeout(), "{e:?}"),
+        other => panic!("expected Http transport error, got {other:?}"),
+    }
+    assert!(
+        matches!(
+            cameo::ProviderError::from(err),
+            cameo::ProviderError::Transport(_)
+        ),
+        "expected ProviderError::Transport"
+    );
+}
+
+/// A request that cannot be built is a *request* error: nothing is sent, it is
+/// never an API error with a made-up status, and it maps to
+/// `ProviderError::InvalidInput`.
+#[tokio::test]
+async fn unbuildable_request_is_invalid_request_error() {
+    use cameo::providers::tmdb::error::RequestErrorKind;
+
+    let (server, client) = setup_tmdb_client().await;
+
+    let out_of_range = chrono::NaiveDate::from_ymd_opt(10_000, 1, 1).unwrap();
+    let err = client
+        .discover_movies()
+        .primary_release_date_gte(out_of_range)
+        .execute()
+        .await
+        .unwrap_err();
+
+    assert!(
+        server.received_requests().await.unwrap().is_empty(),
+        "nothing should have been sent"
+    );
+    assert!(
+        matches!(
+            err,
+            TmdbError::Request {
+                kind: RequestErrorKind::InvalidRequest,
+                ..
+            }
+        ),
+        "expected Request error, got {err:?}"
+    );
+    assert!(
+        matches!(
+            cameo::ProviderError::from(err),
+            cameo::ProviderError::InvalidInput(_)
+        ),
+        "expected ProviderError::InvalidInput"
+    );
+}
+
 /// A connection failure (nothing listening) is a *transport* error, distinct
 /// from an API-status error.
 #[tokio::test]

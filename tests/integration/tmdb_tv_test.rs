@@ -1,4 +1,7 @@
-use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
+use cameo::{
+    SeriesStatus, SeriesType,
+    providers::tmdb::{TmdbClient, TmdbConfig},
+};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path, query_param},
@@ -62,7 +65,8 @@ async fn tv_series_details_deserializes_response() {
     assert_eq!(details.show.name, "Breaking Bad");
     assert_eq!(details.number_of_seasons, Some(5));
     assert_eq!(details.number_of_episodes, Some(62));
-    assert_eq!(details.status.as_deref(), Some("Ended"));
+    assert_eq!(details.status, Some(SeriesStatus::Ended));
+    assert_eq!(details.type_, Some(SeriesType::Scripted));
     assert_eq!(
         details.show.genres,
         vec![cameo::Genre::Drama, cameo::Genre::Crime]

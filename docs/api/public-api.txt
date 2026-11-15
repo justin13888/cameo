@@ -1933,6 +1933,7 @@ pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_cast(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_companies(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_crew(self, &[u64]) -> Self
+pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_genre_list(self, &[cameo::unified::genre::Genre]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_genres(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_keywords(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_origin_country(self, impl core::convert::Into<alloc::string::String>) -> Self
@@ -1944,6 +1945,7 @@ pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_watch_monetization_types(self, &[cameo::providers::tmdb::builders::params::MonetizationType]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_watch_providers(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::without_companies(self, &[u64]) -> Self
+pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::without_genre_list(self, &[cameo::unified::genre::Genre]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::without_genres(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::without_keywords(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::without_watch_providers(self, &[u64]) -> Self
@@ -2007,6 +2009,7 @@ pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::vot
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::vote_count_lte(self, f32) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::watch_region(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_companies(self, &[u64]) -> Self
+pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_genre_list(self, &[cameo::unified::genre::Genre]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_genres(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_keywords(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_networks(self, u64) -> Self
@@ -2019,6 +2022,7 @@ pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::wit
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_watch_monetization_types(self, &[cameo::providers::tmdb::builders::params::MonetizationType]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_watch_providers(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::without_companies(self, &[u64]) -> Self
+pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::without_genre_list(self, &[cameo::unified::genre::Genre]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::without_genres(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::without_keywords(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::without_watch_providers(self, &[u64]) -> Self
@@ -2786,6 +2790,7 @@ pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_cast(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_companies(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_crew(self, &[u64]) -> Self
+pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_genre_list(self, &[cameo::unified::genre::Genre]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_genres(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_keywords(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_origin_country(self, impl core::convert::Into<alloc::string::String>) -> Self
@@ -2797,6 +2802,7 @@ pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_watch_monetization_types(self, &[cameo::providers::tmdb::builders::params::MonetizationType]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::with_watch_providers(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::without_companies(self, &[u64]) -> Self
+pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::without_genre_list(self, &[cameo::unified::genre::Genre]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::without_genres(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::without_keywords(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'a>::without_watch_providers(self, &[u64]) -> Self
@@ -2859,6 +2865,7 @@ pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::vot
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::vote_count_lte(self, f32) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::watch_region(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_companies(self, &[u64]) -> Self
+pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_genre_list(self, &[cameo::unified::genre::Genre]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_genres(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_keywords(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_networks(self, u64) -> Self
@@ -2871,6 +2878,7 @@ pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::wit
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_watch_monetization_types(self, &[cameo::providers::tmdb::builders::params::MonetizationType]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::with_watch_providers(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::without_companies(self, &[u64]) -> Self
+pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::without_genre_list(self, &[cameo::unified::genre::Genre]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::without_genres(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::without_keywords(self, &[u64]) -> Self
 pub fn cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'a>::without_watch_providers(self, &[u64]) -> Self
@@ -3142,7 +3150,7 @@ pub cameo::providers::tmdb::error::TmdbError::Api::retry_after: core::option::Op
 pub cameo::providers::tmdb::error::TmdbError::Api::status: u16
 pub cameo::providers::tmdb::error::TmdbError::Api::status_code: core::option::Option<i64>
 pub cameo::providers::tmdb::error::TmdbError::Deserialization(serde_json::error::Error)
-pub cameo::providers::tmdb::error::TmdbError::Http(reqwest::error::Error)
+pub cameo::providers::tmdb::error::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::providers::tmdb::error::TmdbError::InvalidConfig(alloc::string::String)
 pub cameo::providers::tmdb::error::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
@@ -3157,8 +3165,6 @@ impl core::fmt::Debug for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::fmt::Display for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl<E: core::fmt::Debug + core::marker::Send + core::marker::Sync + 'static> core::convert::From<progenitor_client::progenitor_client::Error<E>> for cameo::providers::tmdb::error::TmdbError
-pub fn cameo::providers::tmdb::error::TmdbError::from(progenitor_client::progenitor_client::Error<E>) -> Self
 impl core::marker::Freeze for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Send for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Sync for cameo::providers::tmdb::error::TmdbError
@@ -3189,6 +3195,53 @@ pub fn cameo::providers::tmdb::error::TmdbError::and<P, B, E>(self, P) -> tower_
 pub fn cameo::providers::tmdb::error::TmdbError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::error::TmdbError
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::error::TmdbError
+pub struct cameo::providers::tmdb::error::TransportError
+impl cameo::providers::tmdb::error::TransportError
+pub fn cameo::providers::tmdb::error::TransportError::is_connect(&self) -> bool
+pub fn cameo::providers::tmdb::error::TransportError::is_timeout(&self) -> bool
+impl core::clone::Clone for cameo::providers::tmdb::error::TransportError
+pub fn cameo::providers::tmdb::error::TransportError::clone(&self) -> cameo::providers::tmdb::error::TransportError
+impl core::error::Error for cameo::providers::tmdb::error::TransportError
+impl core::fmt::Debug for cameo::providers::tmdb::error::TransportError
+pub fn cameo::providers::tmdb::error::TransportError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::providers::tmdb::error::TransportError
+pub fn cameo::providers::tmdb::error::TransportError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::providers::tmdb::error::TransportError
+impl core::marker::Send for cameo::providers::tmdb::error::TransportError
+impl core::marker::Sync for cameo::providers::tmdb::error::TransportError
+impl core::marker::Unpin for cameo::providers::tmdb::error::TransportError
+impl core::marker::UnsafeUnpin for cameo::providers::tmdb::error::TransportError
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::error::TransportError
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::error::TransportError
+impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::error::TransportError where U: core::convert::From<T>
+pub fn cameo::providers::tmdb::error::TransportError::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::error::TransportError where U: core::convert::Into<T>
+pub type cameo::providers::tmdb::error::TransportError::Error = core::convert::Infallible
+pub fn cameo::providers::tmdb::error::TransportError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::tmdb::error::TransportError where U: core::convert::TryFrom<T>
+pub type cameo::providers::tmdb::error::TransportError::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::tmdb::error::TransportError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::tmdb::error::TransportError where T: core::clone::Clone
+pub type cameo::providers::tmdb::error::TransportError::Owned = T
+pub fn cameo::providers::tmdb::error::TransportError::clone_into(&self, &mut T)
+pub fn cameo::providers::tmdb::error::TransportError::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::providers::tmdb::error::TransportError where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::TransportError::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::providers::tmdb::error::TransportError where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::TransportError::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::tmdb::error::TransportError where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::TransportError::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::tmdb::error::TransportError where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::TransportError::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::tmdb::error::TransportError where T: core::clone::Clone
+pub unsafe fn cameo::providers::tmdb::error::TransportError::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::tmdb::error::TransportError
+pub fn cameo::providers::tmdb::error::TransportError::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::tmdb::error::TransportError where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::TransportError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::tmdb::error::TransportError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::error::TransportError
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::error::TransportError
 pub mod cameo::providers::tmdb::image_url
 #[non_exhaustive] pub enum cameo::providers::tmdb::image_url::BackdropSize
 pub cameo::providers::tmdb::image_url::BackdropSize::Original
@@ -4088,7 +4141,7 @@ pub cameo::providers::tmdb::TmdbError::Api::retry_after: core::option::Option<co
 pub cameo::providers::tmdb::TmdbError::Api::status: u16
 pub cameo::providers::tmdb::TmdbError::Api::status_code: core::option::Option<i64>
 pub cameo::providers::tmdb::TmdbError::Deserialization(serde_json::error::Error)
-pub cameo::providers::tmdb::TmdbError::Http(reqwest::error::Error)
+pub cameo::providers::tmdb::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::providers::tmdb::TmdbError::InvalidConfig(alloc::string::String)
 pub cameo::providers::tmdb::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
@@ -4103,8 +4156,6 @@ impl core::fmt::Debug for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::fmt::Display for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl<E: core::fmt::Debug + core::marker::Send + core::marker::Sync + 'static> core::convert::From<progenitor_client::progenitor_client::Error<E>> for cameo::providers::tmdb::error::TmdbError
-pub fn cameo::providers::tmdb::error::TmdbError::from(progenitor_client::progenitor_client::Error<E>) -> Self
 impl core::marker::Freeze for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Send for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Sync for cameo::providers::tmdb::error::TmdbError
@@ -5329,6 +5380,7 @@ pub fn cameo::unified::genre::Genre::from_anilist_genre(&str) -> cameo::unified:
 pub fn cameo::unified::genre::Genre::from_name(&str) -> cameo::unified::genre::Genre
 pub fn cameo::unified::genre::Genre::from_tmdb_id(i64) -> cameo::unified::genre::Genre
 pub fn cameo::unified::genre::Genre::name(&self) -> alloc::borrow::Cow<'_, str>
+pub fn cameo::unified::genre::Genre::tmdb_id(&self) -> core::option::Option<u64>
 impl core::clone::Clone for cameo::unified::genre::Genre
 pub fn cameo::unified::genre::Genre::clone(&self) -> cameo::unified::genre::Genre
 impl core::cmp::Eq for cameo::unified::genre::Genre
@@ -5689,6 +5741,130 @@ pub fn cameo::unified::Gender::and<P, B, E>(self, P) -> tower_http::follow_redir
 pub fn cameo::unified::Gender::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::Gender
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::Gender
+#[non_exhaustive] pub enum cameo::unified::models::SeriesStatus
+pub cameo::unified::models::SeriesStatus::Cancelled
+pub cameo::unified::models::SeriesStatus::Ended
+pub cameo::unified::models::SeriesStatus::Hiatus
+pub cameo::unified::models::SeriesStatus::InProduction
+pub cameo::unified::models::SeriesStatus::Other(alloc::string::String)
+pub cameo::unified::models::SeriesStatus::Pilot
+pub cameo::unified::models::SeriesStatus::Planned
+pub cameo::unified::models::SeriesStatus::ReturningSeries
+impl core::clone::Clone for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::clone(&self) -> cameo::unified::SeriesStatus
+impl core::cmp::Eq for cameo::unified::SeriesStatus
+impl core::cmp::PartialEq for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::eq(&self, &cameo::unified::SeriesStatus) -> bool
+impl core::fmt::Debug for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::SeriesStatus
+impl serde_core::ser::Serialize for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::SeriesStatus
+impl core::marker::Send for cameo::unified::SeriesStatus
+impl core::marker::Sync for cameo::unified::SeriesStatus
+impl core::marker::Unpin for cameo::unified::SeriesStatus
+impl core::marker::UnsafeUnpin for cameo::unified::SeriesStatus
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::SeriesStatus
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::SeriesStatus
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::SeriesStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::SeriesStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::SeriesStatus where U: core::convert::From<T>
+pub fn cameo::unified::SeriesStatus::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::SeriesStatus where U: core::convert::Into<T>
+pub type cameo::unified::SeriesStatus::Error = core::convert::Infallible
+pub fn cameo::unified::SeriesStatus::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::SeriesStatus where U: core::convert::TryFrom<T>
+pub type cameo::unified::SeriesStatus::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::SeriesStatus::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::SeriesStatus where T: core::clone::Clone
+pub type cameo::unified::SeriesStatus::Owned = T
+pub fn cameo::unified::SeriesStatus::clone_into(&self, &mut T)
+pub fn cameo::unified::SeriesStatus::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::SeriesStatus where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::SeriesStatus where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::SeriesStatus where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::SeriesStatus where T: core::clone::Clone
+pub unsafe fn cameo::unified::SeriesStatus::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::SeriesStatus where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::SeriesStatus where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::SeriesStatus::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::SeriesStatus
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::SeriesStatus
+#[non_exhaustive] pub enum cameo::unified::models::SeriesType
+pub cameo::unified::models::SeriesType::Documentary
+pub cameo::unified::models::SeriesType::Miniseries
+pub cameo::unified::models::SeriesType::News
+pub cameo::unified::models::SeriesType::Other(alloc::string::String)
+pub cameo::unified::models::SeriesType::Reality
+pub cameo::unified::models::SeriesType::Scripted
+pub cameo::unified::models::SeriesType::TalkShow
+pub cameo::unified::models::SeriesType::Video
+impl core::clone::Clone for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::clone(&self) -> cameo::unified::SeriesType
+impl core::cmp::Eq for cameo::unified::SeriesType
+impl core::cmp::PartialEq for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::eq(&self, &cameo::unified::SeriesType) -> bool
+impl core::fmt::Debug for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::SeriesType
+impl serde_core::ser::Serialize for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::SeriesType
+impl core::marker::Send for cameo::unified::SeriesType
+impl core::marker::Sync for cameo::unified::SeriesType
+impl core::marker::Unpin for cameo::unified::SeriesType
+impl core::marker::UnsafeUnpin for cameo::unified::SeriesType
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::SeriesType
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::SeriesType
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::SeriesType where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesType::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::SeriesType where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesType::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::SeriesType where U: core::convert::From<T>
+pub fn cameo::unified::SeriesType::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::SeriesType where U: core::convert::Into<T>
+pub type cameo::unified::SeriesType::Error = core::convert::Infallible
+pub fn cameo::unified::SeriesType::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::SeriesType where U: core::convert::TryFrom<T>
+pub type cameo::unified::SeriesType::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::SeriesType::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::SeriesType where T: core::clone::Clone
+pub type cameo::unified::SeriesType::Owned = T
+pub fn cameo::unified::SeriesType::clone_into(&self, &mut T)
+pub fn cameo::unified::SeriesType::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::SeriesType where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::SeriesType::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::SeriesType where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesType::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::SeriesType where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesType::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::SeriesType where T: core::clone::Clone
+pub unsafe fn cameo::unified::SeriesType::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::SeriesType where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::SeriesType where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesType::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::SeriesType::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::SeriesType
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::SeriesType
 #[non_exhaustive] pub enum cameo::unified::models::TitleKind
 pub cameo::unified::models::TitleKind::English
 pub cameo::unified::models::TitleKind::Native
@@ -6786,7 +6962,7 @@ pub cameo::unified::models::UnifiedTvShow::overview: core::option::Option<alloc:
 pub cameo::unified::models::UnifiedTvShow::popularity: core::option::Option<f64>
 pub cameo::unified::models::UnifiedTvShow::poster_url: core::option::Option<alloc::string::String>
 pub cameo::unified::models::UnifiedTvShow::provider_id: cameo::unified::media_id::MediaId
-pub cameo::unified::models::UnifiedTvShow::status: core::option::Option<alloc::string::String>
+pub cameo::unified::models::UnifiedTvShow::status: core::option::Option<cameo::unified::SeriesStatus>
 pub cameo::unified::models::UnifiedTvShow::vote_average: core::option::Option<f64>
 pub cameo::unified::models::UnifiedTvShow::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedTvShow
@@ -6804,7 +6980,7 @@ pub fn cameo::unified::UnifiedTvShow::with_original_name(self, impl core::conver
 pub fn cameo::unified::UnifiedTvShow::with_overview(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_popularity(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_poster_url(self, impl core::convert::Into<alloc::string::String>) -> Self
-pub fn cameo::unified::UnifiedTvShow::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_status(self, cameo::unified::SeriesStatus) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_average(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_count(self, u64) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedTvShow
@@ -6868,9 +7044,9 @@ pub cameo::unified::models::UnifiedTvShowDetails::production_countries: alloc::v
 pub cameo::unified::models::UnifiedTvShowDetails::seasons: alloc::vec::Vec<cameo::unified::UnifiedSeason>
 pub cameo::unified::models::UnifiedTvShowDetails::show: cameo::unified::UnifiedTvShow
 pub cameo::unified::models::UnifiedTvShowDetails::spoken_languages: alloc::vec::Vec<alloc::string::String>
-pub cameo::unified::models::UnifiedTvShowDetails::status: core::option::Option<alloc::string::String>
+pub cameo::unified::models::UnifiedTvShowDetails::status: core::option::Option<cameo::unified::SeriesStatus>
 pub cameo::unified::models::UnifiedTvShowDetails::tagline: core::option::Option<alloc::string::String>
-pub cameo::unified::models::UnifiedTvShowDetails::type_: core::option::Option<alloc::string::String>
+pub cameo::unified::models::UnifiedTvShowDetails::type_: core::option::Option<cameo::unified::SeriesType>
 impl cameo::unified::UnifiedTvShowDetails
 pub fn cameo::unified::UnifiedTvShowDetails::new(cameo::unified::UnifiedTvShow) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_created_by(self, alloc::vec::Vec<cameo::unified::Creator>) -> Self
@@ -6886,9 +7062,9 @@ pub fn cameo::unified::UnifiedTvShowDetails::with_production_companies(self, all
 pub fn cameo::unified::UnifiedTvShowDetails::with_production_countries(self, alloc::vec::Vec<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_seasons(self, alloc::vec::Vec<cameo::unified::UnifiedSeason>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_spoken_languages(self, alloc::vec::Vec<alloc::string::String>) -> Self
-pub fn cameo::unified::UnifiedTvShowDetails::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShowDetails::with_status(self, cameo::unified::SeriesStatus) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_tagline(self, impl core::convert::Into<alloc::string::String>) -> Self
-pub fn cameo::unified::UnifiedTvShowDetails::with_type(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShowDetails::with_type(self, cameo::unified::SeriesType) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedTvShowDetails
 pub fn cameo::unified::UnifiedTvShowDetails::clone(&self) -> cameo::unified::UnifiedTvShowDetails
 impl core::cmp::PartialEq for cameo::unified::UnifiedTvShowDetails
@@ -7486,6 +7662,7 @@ pub fn cameo::unified::genre::Genre::from_anilist_genre(&str) -> cameo::unified:
 pub fn cameo::unified::genre::Genre::from_name(&str) -> cameo::unified::genre::Genre
 pub fn cameo::unified::genre::Genre::from_tmdb_id(i64) -> cameo::unified::genre::Genre
 pub fn cameo::unified::genre::Genre::name(&self) -> alloc::borrow::Cow<'_, str>
+pub fn cameo::unified::genre::Genre::tmdb_id(&self) -> core::option::Option<u64>
 impl core::clone::Clone for cameo::unified::genre::Genre
 pub fn cameo::unified::genre::Genre::clone(&self) -> cameo::unified::genre::Genre
 impl core::cmp::Eq for cameo::unified::genre::Genre
@@ -7709,6 +7886,130 @@ pub fn cameo::unified::media_id::NativeId::and<P, B, E>(self, P) -> tower_http::
 pub fn cameo::unified::media_id::NativeId::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::media_id::NativeId
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::media_id::NativeId
+#[non_exhaustive] pub enum cameo::unified::SeriesStatus
+pub cameo::unified::SeriesStatus::Cancelled
+pub cameo::unified::SeriesStatus::Ended
+pub cameo::unified::SeriesStatus::Hiatus
+pub cameo::unified::SeriesStatus::InProduction
+pub cameo::unified::SeriesStatus::Other(alloc::string::String)
+pub cameo::unified::SeriesStatus::Pilot
+pub cameo::unified::SeriesStatus::Planned
+pub cameo::unified::SeriesStatus::ReturningSeries
+impl core::clone::Clone for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::clone(&self) -> cameo::unified::SeriesStatus
+impl core::cmp::Eq for cameo::unified::SeriesStatus
+impl core::cmp::PartialEq for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::eq(&self, &cameo::unified::SeriesStatus) -> bool
+impl core::fmt::Debug for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::SeriesStatus
+impl serde_core::ser::Serialize for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::SeriesStatus
+impl core::marker::Send for cameo::unified::SeriesStatus
+impl core::marker::Sync for cameo::unified::SeriesStatus
+impl core::marker::Unpin for cameo::unified::SeriesStatus
+impl core::marker::UnsafeUnpin for cameo::unified::SeriesStatus
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::SeriesStatus
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::SeriesStatus
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::SeriesStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::SeriesStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::SeriesStatus where U: core::convert::From<T>
+pub fn cameo::unified::SeriesStatus::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::SeriesStatus where U: core::convert::Into<T>
+pub type cameo::unified::SeriesStatus::Error = core::convert::Infallible
+pub fn cameo::unified::SeriesStatus::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::SeriesStatus where U: core::convert::TryFrom<T>
+pub type cameo::unified::SeriesStatus::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::SeriesStatus::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::SeriesStatus where T: core::clone::Clone
+pub type cameo::unified::SeriesStatus::Owned = T
+pub fn cameo::unified::SeriesStatus::clone_into(&self, &mut T)
+pub fn cameo::unified::SeriesStatus::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::SeriesStatus where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::SeriesStatus where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::SeriesStatus where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::SeriesStatus where T: core::clone::Clone
+pub unsafe fn cameo::unified::SeriesStatus::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::SeriesStatus where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::SeriesStatus where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::SeriesStatus::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::SeriesStatus
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::SeriesStatus
+#[non_exhaustive] pub enum cameo::unified::SeriesType
+pub cameo::unified::SeriesType::Documentary
+pub cameo::unified::SeriesType::Miniseries
+pub cameo::unified::SeriesType::News
+pub cameo::unified::SeriesType::Other(alloc::string::String)
+pub cameo::unified::SeriesType::Reality
+pub cameo::unified::SeriesType::Scripted
+pub cameo::unified::SeriesType::TalkShow
+pub cameo::unified::SeriesType::Video
+impl core::clone::Clone for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::clone(&self) -> cameo::unified::SeriesType
+impl core::cmp::Eq for cameo::unified::SeriesType
+impl core::cmp::PartialEq for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::eq(&self, &cameo::unified::SeriesType) -> bool
+impl core::fmt::Debug for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::SeriesType
+impl serde_core::ser::Serialize for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::SeriesType
+impl core::marker::Send for cameo::unified::SeriesType
+impl core::marker::Sync for cameo::unified::SeriesType
+impl core::marker::Unpin for cameo::unified::SeriesType
+impl core::marker::UnsafeUnpin for cameo::unified::SeriesType
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::SeriesType
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::SeriesType
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::SeriesType where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesType::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::SeriesType where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesType::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::SeriesType where U: core::convert::From<T>
+pub fn cameo::unified::SeriesType::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::SeriesType where U: core::convert::Into<T>
+pub type cameo::unified::SeriesType::Error = core::convert::Infallible
+pub fn cameo::unified::SeriesType::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::SeriesType where U: core::convert::TryFrom<T>
+pub type cameo::unified::SeriesType::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::SeriesType::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::SeriesType where T: core::clone::Clone
+pub type cameo::unified::SeriesType::Owned = T
+pub fn cameo::unified::SeriesType::clone_into(&self, &mut T)
+pub fn cameo::unified::SeriesType::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::SeriesType where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::SeriesType::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::SeriesType where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesType::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::SeriesType where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesType::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::SeriesType where T: core::clone::Clone
+pub unsafe fn cameo::unified::SeriesType::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::SeriesType where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::SeriesType where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesType::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::SeriesType::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::SeriesType
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::SeriesType
 #[non_exhaustive] pub enum cameo::unified::TitleKind
 pub cameo::unified::TitleKind::English
 pub cameo::unified::TitleKind::Native
@@ -9394,7 +9695,7 @@ pub cameo::unified::UnifiedTvShow::overview: core::option::Option<alloc::string:
 pub cameo::unified::UnifiedTvShow::popularity: core::option::Option<f64>
 pub cameo::unified::UnifiedTvShow::poster_url: core::option::Option<alloc::string::String>
 pub cameo::unified::UnifiedTvShow::provider_id: cameo::unified::media_id::MediaId
-pub cameo::unified::UnifiedTvShow::status: core::option::Option<alloc::string::String>
+pub cameo::unified::UnifiedTvShow::status: core::option::Option<cameo::unified::SeriesStatus>
 pub cameo::unified::UnifiedTvShow::vote_average: core::option::Option<f64>
 pub cameo::unified::UnifiedTvShow::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedTvShow
@@ -9412,7 +9713,7 @@ pub fn cameo::unified::UnifiedTvShow::with_original_name(self, impl core::conver
 pub fn cameo::unified::UnifiedTvShow::with_overview(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_popularity(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_poster_url(self, impl core::convert::Into<alloc::string::String>) -> Self
-pub fn cameo::unified::UnifiedTvShow::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_status(self, cameo::unified::SeriesStatus) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_average(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_count(self, u64) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedTvShow
@@ -9476,9 +9777,9 @@ pub cameo::unified::UnifiedTvShowDetails::production_countries: alloc::vec::Vec<
 pub cameo::unified::UnifiedTvShowDetails::seasons: alloc::vec::Vec<cameo::unified::UnifiedSeason>
 pub cameo::unified::UnifiedTvShowDetails::show: cameo::unified::UnifiedTvShow
 pub cameo::unified::UnifiedTvShowDetails::spoken_languages: alloc::vec::Vec<alloc::string::String>
-pub cameo::unified::UnifiedTvShowDetails::status: core::option::Option<alloc::string::String>
+pub cameo::unified::UnifiedTvShowDetails::status: core::option::Option<cameo::unified::SeriesStatus>
 pub cameo::unified::UnifiedTvShowDetails::tagline: core::option::Option<alloc::string::String>
-pub cameo::unified::UnifiedTvShowDetails::type_: core::option::Option<alloc::string::String>
+pub cameo::unified::UnifiedTvShowDetails::type_: core::option::Option<cameo::unified::SeriesType>
 impl cameo::unified::UnifiedTvShowDetails
 pub fn cameo::unified::UnifiedTvShowDetails::new(cameo::unified::UnifiedTvShow) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_created_by(self, alloc::vec::Vec<cameo::unified::Creator>) -> Self
@@ -9494,9 +9795,9 @@ pub fn cameo::unified::UnifiedTvShowDetails::with_production_companies(self, all
 pub fn cameo::unified::UnifiedTvShowDetails::with_production_countries(self, alloc::vec::Vec<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_seasons(self, alloc::vec::Vec<cameo::unified::UnifiedSeason>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_spoken_languages(self, alloc::vec::Vec<alloc::string::String>) -> Self
-pub fn cameo::unified::UnifiedTvShowDetails::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShowDetails::with_status(self, cameo::unified::SeriesStatus) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_tagline(self, impl core::convert::Into<alloc::string::String>) -> Self
-pub fn cameo::unified::UnifiedTvShowDetails::with_type(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShowDetails::with_type(self, cameo::unified::SeriesType) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedTvShowDetails
 pub fn cameo::unified::UnifiedTvShowDetails::clone(&self) -> cameo::unified::UnifiedTvShowDetails
 impl core::cmp::PartialEq for cameo::unified::UnifiedTvShowDetails
@@ -10252,6 +10553,7 @@ pub fn cameo::unified::genre::Genre::from_anilist_genre(&str) -> cameo::unified:
 pub fn cameo::unified::genre::Genre::from_name(&str) -> cameo::unified::genre::Genre
 pub fn cameo::unified::genre::Genre::from_tmdb_id(i64) -> cameo::unified::genre::Genre
 pub fn cameo::unified::genre::Genre::name(&self) -> alloc::borrow::Cow<'_, str>
+pub fn cameo::unified::genre::Genre::tmdb_id(&self) -> core::option::Option<u64>
 impl core::clone::Clone for cameo::unified::genre::Genre
 pub fn cameo::unified::genre::Genre::clone(&self) -> cameo::unified::genre::Genre
 impl core::cmp::Eq for cameo::unified::genre::Genre
@@ -10636,6 +10938,130 @@ pub fn cameo::providers::rate_limit::RateLimit::and<P, B, E>(self, P) -> tower_h
 pub fn cameo::providers::rate_limit::RateLimit::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::providers::rate_limit::RateLimit
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::rate_limit::RateLimit
+#[non_exhaustive] pub enum cameo::SeriesStatus
+pub cameo::SeriesStatus::Cancelled
+pub cameo::SeriesStatus::Ended
+pub cameo::SeriesStatus::Hiatus
+pub cameo::SeriesStatus::InProduction
+pub cameo::SeriesStatus::Other(alloc::string::String)
+pub cameo::SeriesStatus::Pilot
+pub cameo::SeriesStatus::Planned
+pub cameo::SeriesStatus::ReturningSeries
+impl core::clone::Clone for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::clone(&self) -> cameo::unified::SeriesStatus
+impl core::cmp::Eq for cameo::unified::SeriesStatus
+impl core::cmp::PartialEq for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::eq(&self, &cameo::unified::SeriesStatus) -> bool
+impl core::fmt::Debug for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::SeriesStatus
+impl serde_core::ser::Serialize for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::SeriesStatus
+impl core::marker::Send for cameo::unified::SeriesStatus
+impl core::marker::Sync for cameo::unified::SeriesStatus
+impl core::marker::Unpin for cameo::unified::SeriesStatus
+impl core::marker::UnsafeUnpin for cameo::unified::SeriesStatus
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::SeriesStatus
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::SeriesStatus
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::SeriesStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::SeriesStatus where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::SeriesStatus where U: core::convert::From<T>
+pub fn cameo::unified::SeriesStatus::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::SeriesStatus where U: core::convert::Into<T>
+pub type cameo::unified::SeriesStatus::Error = core::convert::Infallible
+pub fn cameo::unified::SeriesStatus::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::SeriesStatus where U: core::convert::TryFrom<T>
+pub type cameo::unified::SeriesStatus::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::SeriesStatus::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::SeriesStatus where T: core::clone::Clone
+pub type cameo::unified::SeriesStatus::Owned = T
+pub fn cameo::unified::SeriesStatus::clone_into(&self, &mut T)
+pub fn cameo::unified::SeriesStatus::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::SeriesStatus where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::SeriesStatus where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::SeriesStatus where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::SeriesStatus where T: core::clone::Clone
+pub unsafe fn cameo::unified::SeriesStatus::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::SeriesStatus
+pub fn cameo::unified::SeriesStatus::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::SeriesStatus where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::SeriesStatus where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesStatus::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::SeriesStatus::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::SeriesStatus
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::SeriesStatus
+#[non_exhaustive] pub enum cameo::SeriesType
+pub cameo::SeriesType::Documentary
+pub cameo::SeriesType::Miniseries
+pub cameo::SeriesType::News
+pub cameo::SeriesType::Other(alloc::string::String)
+pub cameo::SeriesType::Reality
+pub cameo::SeriesType::Scripted
+pub cameo::SeriesType::TalkShow
+pub cameo::SeriesType::Video
+impl core::clone::Clone for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::clone(&self) -> cameo::unified::SeriesType
+impl core::cmp::Eq for cameo::unified::SeriesType
+impl core::cmp::PartialEq for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::eq(&self, &cameo::unified::SeriesType) -> bool
+impl core::fmt::Debug for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::StructuralPartialEq for cameo::unified::SeriesType
+impl serde_core::ser::Serialize for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
+impl core::marker::Freeze for cameo::unified::SeriesType
+impl core::marker::Send for cameo::unified::SeriesType
+impl core::marker::Sync for cameo::unified::SeriesType
+impl core::marker::Unpin for cameo::unified::SeriesType
+impl core::marker::UnsafeUnpin for cameo::unified::SeriesType
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::unified::SeriesType
+impl core::panic::unwind_safe::UnwindSafe for cameo::unified::SeriesType
+impl<Q, K> equivalent::Equivalent<K> for cameo::unified::SeriesType where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesType::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::unified::SeriesType where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::unified::SeriesType::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::unified::SeriesType where U: core::convert::From<T>
+pub fn cameo::unified::SeriesType::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::unified::SeriesType where U: core::convert::Into<T>
+pub type cameo::unified::SeriesType::Error = core::convert::Infallible
+pub fn cameo::unified::SeriesType::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::unified::SeriesType where U: core::convert::TryFrom<T>
+pub type cameo::unified::SeriesType::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::unified::SeriesType::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::SeriesType where T: core::clone::Clone
+pub type cameo::unified::SeriesType::Owned = T
+pub fn cameo::unified::SeriesType::clone_into(&self, &mut T)
+pub fn cameo::unified::SeriesType::to_owned(&self) -> T
+impl<T> core::any::Any for cameo::unified::SeriesType where T: 'static + ?core::marker::Sized
+pub fn cameo::unified::SeriesType::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::unified::SeriesType where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesType::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::unified::SeriesType where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesType::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::SeriesType where T: core::clone::Clone
+pub unsafe fn cameo::unified::SeriesType::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::unified::SeriesType
+pub fn cameo::unified::SeriesType::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::SeriesType where T: for<'de> serde_core::de::Deserialize<'de>
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::SeriesType where T: ?core::marker::Sized
+pub fn cameo::unified::SeriesType::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::unified::SeriesType::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::unified::SeriesType
+impl<T> tracing::instrument::WithSubscriber for cameo::unified::SeriesType
 #[non_exhaustive] pub enum cameo::TimeWindow
 pub cameo::TimeWindow::Day
 pub cameo::TimeWindow::Week
@@ -10807,7 +11233,7 @@ pub cameo::TmdbError::Api::retry_after: core::option::Option<core::time::Duratio
 pub cameo::TmdbError::Api::status: u16
 pub cameo::TmdbError::Api::status_code: core::option::Option<i64>
 pub cameo::TmdbError::Deserialization(serde_json::error::Error)
-pub cameo::TmdbError::Http(reqwest::error::Error)
+pub cameo::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::TmdbError::InvalidConfig(alloc::string::String)
 pub cameo::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
@@ -10822,8 +11248,6 @@ impl core::fmt::Debug for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::fmt::Display for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl<E: core::fmt::Debug + core::marker::Send + core::marker::Sync + 'static> core::convert::From<progenitor_client::progenitor_client::Error<E>> for cameo::providers::tmdb::error::TmdbError
-pub fn cameo::providers::tmdb::error::TmdbError::from(progenitor_client::progenitor_client::Error<E>) -> Self
 impl core::marker::Freeze for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Send for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Sync for cameo::providers::tmdb::error::TmdbError
@@ -13114,7 +13538,7 @@ pub cameo::UnifiedTvShow::overview: core::option::Option<alloc::string::String>
 pub cameo::UnifiedTvShow::popularity: core::option::Option<f64>
 pub cameo::UnifiedTvShow::poster_url: core::option::Option<alloc::string::String>
 pub cameo::UnifiedTvShow::provider_id: cameo::unified::media_id::MediaId
-pub cameo::UnifiedTvShow::status: core::option::Option<alloc::string::String>
+pub cameo::UnifiedTvShow::status: core::option::Option<cameo::unified::SeriesStatus>
 pub cameo::UnifiedTvShow::vote_average: core::option::Option<f64>
 pub cameo::UnifiedTvShow::vote_count: core::option::Option<u64>
 impl cameo::unified::UnifiedTvShow
@@ -13132,7 +13556,7 @@ pub fn cameo::unified::UnifiedTvShow::with_original_name(self, impl core::conver
 pub fn cameo::unified::UnifiedTvShow::with_overview(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_popularity(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_poster_url(self, impl core::convert::Into<alloc::string::String>) -> Self
-pub fn cameo::unified::UnifiedTvShow::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShow::with_status(self, cameo::unified::SeriesStatus) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_average(self, f64) -> Self
 pub fn cameo::unified::UnifiedTvShow::with_vote_count(self, u64) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedTvShow
@@ -13196,9 +13620,9 @@ pub cameo::UnifiedTvShowDetails::production_countries: alloc::vec::Vec<alloc::st
 pub cameo::UnifiedTvShowDetails::seasons: alloc::vec::Vec<cameo::unified::UnifiedSeason>
 pub cameo::UnifiedTvShowDetails::show: cameo::unified::UnifiedTvShow
 pub cameo::UnifiedTvShowDetails::spoken_languages: alloc::vec::Vec<alloc::string::String>
-pub cameo::UnifiedTvShowDetails::status: core::option::Option<alloc::string::String>
+pub cameo::UnifiedTvShowDetails::status: core::option::Option<cameo::unified::SeriesStatus>
 pub cameo::UnifiedTvShowDetails::tagline: core::option::Option<alloc::string::String>
-pub cameo::UnifiedTvShowDetails::type_: core::option::Option<alloc::string::String>
+pub cameo::UnifiedTvShowDetails::type_: core::option::Option<cameo::unified::SeriesType>
 impl cameo::unified::UnifiedTvShowDetails
 pub fn cameo::unified::UnifiedTvShowDetails::new(cameo::unified::UnifiedTvShow) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_created_by(self, alloc::vec::Vec<cameo::unified::Creator>) -> Self
@@ -13214,9 +13638,9 @@ pub fn cameo::unified::UnifiedTvShowDetails::with_production_companies(self, all
 pub fn cameo::unified::UnifiedTvShowDetails::with_production_countries(self, alloc::vec::Vec<alloc::string::String>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_seasons(self, alloc::vec::Vec<cameo::unified::UnifiedSeason>) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_spoken_languages(self, alloc::vec::Vec<alloc::string::String>) -> Self
-pub fn cameo::unified::UnifiedTvShowDetails::with_status(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShowDetails::with_status(self, cameo::unified::SeriesStatus) -> Self
 pub fn cameo::unified::UnifiedTvShowDetails::with_tagline(self, impl core::convert::Into<alloc::string::String>) -> Self
-pub fn cameo::unified::UnifiedTvShowDetails::with_type(self, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::unified::UnifiedTvShowDetails::with_type(self, cameo::unified::SeriesType) -> Self
 impl core::clone::Clone for cameo::unified::UnifiedTvShowDetails
 pub fn cameo::unified::UnifiedTvShowDetails::clone(&self) -> cameo::unified::UnifiedTvShowDetails
 impl core::cmp::PartialEq for cameo::unified::UnifiedTvShowDetails

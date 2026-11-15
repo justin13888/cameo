@@ -15,8 +15,9 @@ Run `just` to list all available recipes. Key ones:
 ```bash
 just fmt          # format all code
 just clippy       # run clippy lints
-just test         # run tests (default features)
-just test-all     # run tests including AniList
+just test         # run tests (default features = `full`: tmdb + anilist + cache)
+just test-all     # run tests with `--features full` (same set, stated explicitly)
+just test-all-features  # run tests across every CI feature combination
 just test-live    # run live tests (requires TMDB_API_TOKEN in .env)
 just doc          # build and open docs
 just build        # build with default features
@@ -53,15 +54,23 @@ User call → CameoClient (src/unified/facade/)
 
 | Path | Purpose |
 |---|---|
-| `src/generated/` | Vendored progenitor output (`tmdb.rs`), committed; regenerate with `cargo xtask codegen`, do not edit directly |
+| `src/generated/` | Vendored spargen output (`tmdb.rs`, runtime support code embedded), committed; regenerate with `cargo xtask codegen`, do not edit directly |
 | `src/core/` | `CameoError`, `TimeWindow`, `PaginatedResponse`, `into_stream` |
 | `src/cache/` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig`, `CacheKey`, `MediaType` |
+| `src/providers/http.rs` | Shared HTTP client construction (timeouts, `User-Agent`) for both built-in providers |
+| `src/providers/rate_limit.rs` | Per-provider request-rate limiting |
+| `src/providers/retry.rs` | Retry policy for transient provider failures |
 | `src/providers/tmdb/` | `TmdbClient` (rate-limited), `TmdbConfig`, `ImageUrl`, discover builders, `TmdbError` |
 | `src/providers/anilist/` | `AniListClient` (GraphQL/reqwest), `AniListConfig`, `AniListError` |
-| `src/unified/traits.rs` | Six provider traits: `SearchProvider`, `DetailProvider`, `DiscoveryProvider`, `RecommendationProvider`, `SeasonProvider`, `WatchProviderTrait` |
-| `src/unified/models.rs` | `UnifiedMovie`, `UnifiedTvShow`, `UnifiedPerson`, detail variants, `UnifiedSearchResult` |
-| `src/unified/conversions/` | `Into` impls from provider types to unified types (tmdb/, anilist/ submodules) |
-| `src/unified/facade/` | `CameoClient`, `CameoClientBuilder`, `CameoClientError`; dispatch across providers |
+| `src/unified/traits.rs` | `Provider` (id + capabilities), the capability traits `SearchProvider`, `DetailProvider`, `DiscoveryProvider`, `RecommendationProvider`, `SeasonProvider`, `WatchAvailabilityProvider`, `ExternalIdProvider`, `CreditsProvider`, and the `MediaProvider` bundle; all return `ProviderError` |
+| `src/unified/models.rs` | `UnifiedMovie`, `UnifiedTvShow`, `UnifiedPerson`, detail variants, `UnifiedSearchResult`, credits |
+| `src/unified/builders.rs` | Constructors and builder-style setters for the unified models |
+| `src/unified/date.rs` | `PartialDate` for release/air dates |
+| `src/unified/genre.rs` | `Genre` and its provider mappings |
+| `src/unified/media_id.rs` | `MediaId`, `NativeId`: provider-qualified ids |
+| `src/unified/external_ids.rs` | `ExternalIds`, `ExternalSource`, `ExternalMatch` (IMDb, TVDB, MyAnimeList, Wikidata) |
+| `src/unified/conversions/` | Conversions from provider types to unified types (tmdb/, anilist/ submodules) |
+| `src/unified/facade/` | `CameoClient`, `CameoClientBuilder`, `CameoClientError`; capability registry and per-capability dispatch modules |
 | `xtask/` | Standalone codegen tool (`cargo xtask codegen`) with pinned deps + committed lockfile; regenerates `src/generated/tmdb.rs` from the spec |
 
 For feature flags, see README.md. For test commands, see TESTING.md.
@@ -70,69 +79,60 @@ For feature flags, see README.md. For test commands, see TESTING.md.
 
 ## Regenerating the TMDB OpenAPI Spec
 
-Prerequisites: `curl`, `jq`, `npx` (Node.js).
+Prerequisites: `curl`, `jq`.
 
 ```bash
 ./scripts/fetch-openapi.sh
 ```
 
 What it does:
-1. Downloads the official TMDB spec from `developer.themoviedb.org`
-2. Downgrades from OpenAPI 3.1.0 → 3.0.3 using a **pinned** `@apiture/openapi-down-convert` (progenitor requires 3.0.x); the version is pinned in the script so its output cannot drift with upstream releases
-3. Applies `scripts/tmdb-spec-patch.jq` — a set of deterministic normalizations (see that file for per-fix rationale):
+1. Downloads the official TMDB spec (OpenAPI 3.1) from `developer.themoviedb.org`. It stays 3.1: spargen reads 3.1 natively and rejects 3.0, so there is no down-convert step
+2. Applies `scripts/tmdb-spec-patch.jq` — a set of deterministic normalizations (see that file for per-fix rationale):
    - renames the TV-season `_id` field to `mongo_id` (avoids a duplicate `id` field in the generated code)
    - coerces integer `vote_average` schemas to `number`
    - coerces string-typed boolean defaults (`"default": "false"`) to real booleans
    - strips `example`/`examples` payloads (ignored by codegen, ~75% of the raw spec size)
-   - drops `default` from object property schemas, so response fields generate as `Option<T>` and accept TMDB's explicit `null`s (operation parameter defaults are kept)
-4. Writes the result to `openapi/tmdb-api.json`
+   - drops `default` from object property schemas (operation parameter defaults are kept)
+   - marks every optional response property nullable (`"type": [T, "null"]`), so it generates as `Option<T>` and accepts TMDB's explicit `null`s — arrays included
+   - hoists each operation's `200` body into `components/schemas/<OperationId>Response` and each enum parameter into `<OperationId><Param>`, so generated types get stable names (`MovieDetailsResponse`, `TrendingMoviesTimeWindow`) instead of hashed ones
+   - points the empty movie-recommendations response at the similar-movies schema
+   - declares the v4 token as an `http` bearer scheme (`v4_bearer`) and adds the v3 key as an `api_key` query scheme (`v3_api_key`); either satisfies every operation
+3. Writes the result to `openapi/tmdb-api.json`
 
 The pipeline is fully deterministic and requires **no manual post-editing**: given the same upstream spec, re-running the script reproduces `openapi/tmdb-api.json` byte-for-byte.
 
 ### Regenerating the vendored client
 
-The generated progenitor client is **vendored** at `src/generated/tmdb.rs` and committed — a normal `cargo build` performs **no** code generation. After changing `openapi/tmdb-api.json`, regenerate the client with the dedicated tool:
+The generated [spargen](https://github.com/getkono/spargen) client is **vendored** at `src/generated/tmdb.rs` and committed — a normal `cargo build` performs **no** code generation. After changing `openapi/tmdb-api.json`, regenerate the client with the dedicated tool:
 
 ```bash
 cargo xtask codegen
 ```
 
-This reads `openapi/tmdb-api.json`, runs progenitor, and rewrites `src/generated/tmdb.rs`. The `xtask/` crate has its own committed `Cargo.lock` with pinned codegen dependencies, so the output is reproducible — a CI freshness check (`.github/workflows/codegen-freshness.yml`) regenerates and fails the PR if the committed `src/generated/` is stale. Commit both `openapi/tmdb-api.json` and `src/generated/tmdb.rs` together.
+This reads `openapi/tmdb-api.json`, runs spargen (pinned in `xtask/Cargo.toml`), and rewrites `src/generated/tmdb.rs`; generation either succeeds or fails with a diagnostic naming the spec construct and its JSON Pointer. No post-generation patch is applied: v3 `api_key` and v4 bearer auth are security schemes the generated client attaches itself (`TmdbClient` registers the configured one with `with_credential`), and the generated client's `Debug` redacts the credential. spargen embeds its runtime in the output, so no spargen crate is a runtime dependency; the `tmdb` feature's `bytes`, `http`, `http-body`, `secrecy` and `time` dependencies (and the `reqwest`/`serde`/`serde_json` floors) are what that runtime needs. The `xtask/` crate has its own committed `Cargo.lock`, so the output is reproducible — a CI freshness check (`.github/workflows/codegen-freshness.yml`) regenerates and fails the PR if the committed `src/generated/` is stale. Commit both `openapi/tmdb-api.json` and `src/generated/tmdb.rs` together.
 
 ---
 
 ## Adding a New Provider
 
-1. Create `src/providers/<name>/` with:
-   - `mod.rs` — re-export submodules
-   - `client.rs` — `<Name>Client` struct with `new(config)` constructor
-   - `config.rs` — `<Name>Config` struct
-   - `error.rs` — `<Name>Error` implementing `std::error::Error` (use `thiserror`)
+A provider implements `Provider` plus whichever capability traits it supports and
+is registered with `CameoClient::builder().register_*_provider(...)`; this needs
+no changes to cameo. [docs/providers.md](docs/providers.md) is the guide for that
+(traits, `ProviderError` mapping, registration, priority).
 
-2. Implement traits from `src/unified/traits.rs` on `<Name>Client`:
-   - Required: `SearchProvider`, `DetailProvider`, `DiscoveryProvider`
-   - Optional: `RecommendationProvider`, `SeasonProvider`, `WatchProviderTrait`
-   - Each trait has an associated `Error` type — use `<Name>Error`
+Only a provider that ships **inside** this crate as a built-in (like TMDB and
+AniList) needs the in-crate steps below, on top of that guide:
 
-3. Add conversions in `src/unified/conversions/<name>/`:
-   - `Into<UnifiedMovie>`, `Into<UnifiedTvShow>`, `Into<UnifiedPerson>` for provider response types
-
-4. Add feature flag in `Cargo.toml`:
-   ```toml
-   [features]
-   <name> = []  # add any required deps as optional
-   ```
-
-5. Wire the builder in `src/unified/facade/mod.rs`:
-   - Add `#[cfg(feature = "<name>")] <name>_config: Option<<Name>Config>` to `CameoClientBuilder`
-   - Add `pub fn with_<name>(mut self, config: <Name>Config) -> Self` method
-   - Add `#[cfg(feature = "<name>")] <name>: Option<<Name>Client>` to `CameoClient`
-   - Add a `<Name>` variant to `CameoClientError`
-
-6. Plumb the client through each facade dispatch module (`search.rs`, `detail.rs`, `discovery.rs`, etc.):
-   - Provider priority: TMDB first, then AniList, then new provider (or make priority configurable)
-
-7. Add `#[cfg(feature = "<name>")]`-gated tests in `tests/integration/` and a `[[example]]` entry with `required-features = ["<name>"]`
+1. Add a feature flag in `Cargo.toml` (`<name> = [...]`, deps optional) and gate
+   `src/providers/<name>/` on it.
+2. Add `From<<Name>Error> for ProviderError` in `src/core/error.rs`.
+3. Add conversions to the unified models in `src/unified/conversions/<name>/`.
+4. Add `with_<name>(config)` to `CameoClientBuilder` (`src/unified/facade/mod.rs`)
+   and, in `build()`, push the client into each capability list it implements.
+   Built-ins register before out-of-crate providers; callers reorder with
+   `with_priority`.
+5. Add feature-gated tests in `tests/integration/` and any `[[example]]` with
+   `required-features = ["<name>"]`.
 
 ---
 
@@ -169,7 +169,7 @@ release-plz derives the next version from commit types:
 |---|---|
 | `fix:` | patch (0.1.x) |
 | `feat:` | minor (0.x.0) |
-| Any `!` breaking change | major (x.0.0) |
+| Any `!` breaking change | major (x.0.0); pre-1.0: minor (0.x.0) |
 
 ### Skipping a release
 
@@ -201,7 +201,8 @@ These apply to types in `src/generated/` (auto-generated from `openapi/tmdb-api.
 |---|---|
 | `PersonDetailsResponse.deathday` | `Option<serde_json::Value>` — TMDB returns null or a date string; parse as string if `Some` |
 | `PersonDetailsResponse.homepage` | `Option<serde_json::Value>` — same pattern as `deathday` |
-| TV season details `mongo_id` field | TMDB's `_id` (MongoDB ObjectId) is renamed to `mongo_id` by `scripts/tmdb-spec-patch.jq` to avoid a progenitor collision with the `id` field |
+| TV season details `mongo_id` field | TMDB's `_id` (MongoDB ObjectId) is renamed to `mongo_id` by `scripts/tmdb-spec-patch.jq` to avoid a collision with the `id` field |
 | `trending_movies` / `trending_tv` | No `page` parameter — these endpoints do not support pagination in the TMDB spec |
-| Scalar response fields are `Option<T>` | `scripts/tmdb-spec-patch.jq` drops the spec's property `default`s (`0`, `true`), which would otherwise generate plain `T` + `#[serde(default)]` — that handles a missing key but rejects the explicit `null` TMDB often sends. Conversions keep unified `Option` fields `None` when TMDB omits or nulls a value, `TmdbClient` fills a missing details id from the requested id, and list/search items without an id are dropped. **Known limitation:** array fields (e.g. `genre_ids`, `results`, `genres`) are still generated as `#[serde(default)] Vec<T>`, so a missing array is fine but an explicit `null` array still fails deserialization of the whole response |
+| Response fields are `Option<T>` | `scripts/tmdb-spec-patch.jq` drops the spec's property `default`s (`0`, `true`) and marks every optional response property nullable, so each field — scalar or array (`genre_ids`, `results`, `genres` are `Option<Vec<T>>`) — reads a missing key and an explicit `null` alike as `None`. spargen decodes a non-nullable optional field strictly and would reject the `null`. Conversions keep unified `Option` fields `None` when TMDB omits or nulls a value, read a missing list as empty, `TmdbClient` fills a missing details id from the requested id, and list/search items without an id are dropped |
+| Parameter types are aliases | spargen names every inline parameter schema by a hash (`Language80018710 = String`); they are plain type aliases, so `TmdbClient` passes `String`/`i32`/`bool` values directly |
 | `vote_average` on TV list types | `scripts/tmdb-spec-patch.jq` coerces the integer-typed `vote_average` schemas to `number`; affects `DiscoverTvResponseResultsItem`, `TvSeriesPopularListResponseResultsItem`, `TvSeriesSimilarResponseResultsItem`, and similar |

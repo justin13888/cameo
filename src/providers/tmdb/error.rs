@@ -1,18 +1,23 @@
-use std::time::Duration;
+use std::{fmt, time::Duration};
 
-use progenitor_client::Error as ProgenitorError;
 use reqwest::header::HeaderMap;
+
+use crate::generated::tmdb as generated;
 
 /// Error type for the TMDB provider.
 ///
-/// Failures fall into three clearly separated categories so callers can react
-/// appropriately without string-matching:
+/// Request failures fall into four clearly separated categories so callers can
+/// react appropriately without string-matching:
 ///
+/// * [`TmdbError::Request`] — the request was never sent, or the client stopped
+///   on its own: it could not be built (e.g. a parameter TMDB cannot carry) or
+///   a pagination `next` link revisited an earlier page. No HTTP response is
+///   involved.
 /// * [`TmdbError::Http`] — a transport failure (connection, DNS, TLS, timeout)
 ///   where **no** HTTP response was received.
 /// * [`TmdbError::Api`] — the server returned an error **status**, carrying the
 ///   real HTTP status, TMDB's decoded `{status_code, status_message}` body, and
-///   any `Retry-After` delay.
+///   any `Retry-After` delay. `status` is always a real HTTP status code.
 /// * [`TmdbError::Deserialization`] — a response body could not be decoded into
 ///   the expected type.
 #[non_exhaustive]
@@ -23,15 +28,16 @@ pub enum TmdbError {
     /// No HTTP response was received — distinct from [`TmdbError::Api`], which
     /// always carries a real HTTP status.
     ///
-    /// Errors built by this crate (including via `From<reqwest::Error>`) have
-    /// the request URL stripped with [`reqwest::Error::without_url`], because
-    /// a v3 API key travels in the URL's `api_key` query parameter and would
-    /// otherwise leak through `Display`/`Debug`.
+    /// The [`TransportError`] never holds the request URL: a v3 API key
+    /// travels in the URL's `api_key` query parameter and would otherwise leak
+    /// through `Display`/`Debug`.
     #[error("HTTP transport error: {0}")]
-    Http(#[source] reqwest::Error),
+    Http(#[source] TransportError),
 
     /// The TMDB API returned an error status.
     ///
+    /// Only ever constructed from a received HTTP response: failures that never
+    /// reached the server are [`TmdbError::Request`] or [`TmdbError::Http`].
     /// `status` is the real HTTP response code (e.g. 401, 404, 429) so callers
     /// can distinguish authentication failures from missing resources or rate
     /// limiting by matching on it. `status_code` and `message` are decoded from
@@ -54,6 +60,23 @@ pub enum TmdbError {
     #[error("deserialization error: {0}")]
     Deserialization(#[from] serde_json::Error),
 
+    /// The request failed without any HTTP response being involved.
+    ///
+    /// [`RequestErrorKind::InvalidRequest`]: the request could not be built
+    /// (e.g. a date outside the RFC 3339 range, or a missing credential), so
+    /// nothing was sent. [`RequestErrorKind::PaginationCycle`]: the client
+    /// stopped following TMDB's pagination because a `next` link revisited an
+    /// earlier page. Neither is retryable.
+    ///
+    /// `message` never carries a v3 `api_key` value.
+    #[error("{kind}: {message}")]
+    Request {
+        /// What kind of request failure this is.
+        kind: RequestErrorKind,
+        /// Human-readable description of the failure.
+        message: String,
+    },
+
     /// Invalid configuration (rejected at construction time).
     #[error("invalid configuration: {0}")]
     InvalidConfig(String),
@@ -64,11 +87,94 @@ pub enum TmdbError {
     UnsupportedSource(crate::unified::external_ids::ExternalSource),
 }
 
+/// The kind of a [`TmdbError::Request`] failure.
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum RequestErrorKind {
+    /// The request could not be built, so nothing was sent: the caller's input
+    /// or configuration cannot be expressed as a TMDB request.
+    InvalidRequest,
+    /// A pagination `next` link revisited a page already fetched, so the
+    /// client stopped rather than loop forever.
+    PaginationCycle,
+}
+
+impl fmt::Display for RequestErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            RequestErrorKind::InvalidRequest => "invalid request",
+            RequestErrorKind::PaginationCycle => "pagination cycle",
+        })
+    }
+}
+
+/// A transport failure: no usable HTTP response was received.
+///
+/// Carried by [`TmdbError::Http`]. It classifies the failure the way a retry
+/// layer needs ([`is_connect`](Self::is_connect),
+/// [`is_timeout`](Self::is_timeout)) and describes it in its `Display` output.
+/// It never holds or prints the request URL's `api_key` query value: the
+/// description has every `api_key` value replaced with `<redacted>`.
+#[derive(Debug, Clone)]
+pub struct TransportError {
+    kind: TransportKind,
+    message: String,
+}
+
+/// The class of a [`TransportError`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TransportKind {
+    /// Connection-level: DNS, refused or reset connection, TLS handshake.
+    Connect,
+    /// A connect or total-request timeout elapsed.
+    Timeout,
+    /// Anything else: malformed HTTP, redirect exhaustion, a body cut short,
+    /// a connection closed before any response.
+    Other,
+}
+
+impl TransportError {
+    fn new(kind: TransportKind, message: &str) -> Self {
+        Self {
+            kind,
+            message: redact_api_key(message),
+        }
+    }
+
+    /// Whether the connection could not be established (DNS, refused or reset
+    /// connection, TLS handshake). Transient: worth retrying.
+    pub fn is_connect(&self) -> bool {
+        self.kind == TransportKind::Connect
+    }
+
+    /// Whether a connect or total-request timeout elapsed. Transient: worth
+    /// retrying.
+    pub fn is_timeout(&self) -> bool {
+        self.kind == TransportKind::Timeout
+    }
+}
+
+impl fmt::Display for TransportError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
+impl std::error::Error for TransportError {}
+
 /// Wrap a transport error, stripping its request URL so a v3 `api_key` query
 /// parameter can never surface through `Display` or `Debug`.
 impl From<reqwest::Error> for TmdbError {
     fn from(err: reqwest::Error) -> Self {
-        TmdbError::Http(err.without_url())
+        let kind = if err.is_timeout() {
+            TransportKind::Timeout
+        } else if err.is_connect() {
+            TransportKind::Connect
+        } else {
+            TransportKind::Other
+        };
+        let err = err.without_url();
+        TmdbError::Http(TransportError::new(kind, &error_chain(&err)))
     }
 }
 
@@ -97,43 +203,45 @@ impl TmdbError {
             _ => None,
         }
     }
-}
 
-impl TmdbError {
-    /// Map a progenitor client error into a structured [`TmdbError`], decoding
+    /// Map a generated-client error into a structured [`TmdbError`], decoding
     /// the TMDB error body and `Retry-After` header for error responses.
     ///
-    /// This is `async` because reading the body of an unexpected (undeclared)
-    /// error response requires awaiting the response stream.
-    pub(crate) async fn from_progenitor<E>(err: ProgenitorError<E>) -> Self
-    where
-        E: std::fmt::Debug + Send + Sync + 'static,
-    {
+    /// spargen retains the (capped) body of every error response, so the
+    /// mapping is synchronous. Its own `Display` is not used for transport
+    /// failures: the underlying `reqwest::Error` prints the request URL, which
+    /// carries a v3 `api_key`, so the description is redacted first.
+    pub(crate) fn from_generated<E: fmt::Debug>(err: generated::Error<E>) -> Self {
+        use generated::Error as G;
         match err {
-            // Transport-level failures: no usable HTTP response.
-            ProgenitorError::CommunicationError(e)
-            | ProgenitorError::ResponseBodyError(e)
-            | ProgenitorError::InvalidUpgrade(e) => TmdbError::from(e),
+            G::Transport(e) => Self::transport(TransportKind::Connect, &e),
+            G::Timeout(kind) => TmdbError::Http(TransportError::new(
+                TransportKind::Timeout,
+                &format!("{kind:?} timeout elapsed"),
+            )),
+            G::Protocol(e) => Self::transport(TransportKind::Other, &e),
+            G::Redirect(e) => Self::transport(TransportKind::Other, &e),
+            G::InterruptedBody(e) => Self::transport(TransportKind::Other, &e),
 
-            // A successful response whose body did not match the schema.
-            ProgenitorError::InvalidResponsePayload(_bytes, e) => TmdbError::Deserialization(e),
-
-            // We failed to even build the request, or a client hook errored.
-            ProgenitorError::InvalidRequest(msg) => TmdbError::Api {
-                status: 0,
-                status_code: None,
-                message: format!("invalid request: {msg}"),
-                retry_after: None,
+            // reqwest failed inside the send (e.g. the connection closed
+            // before any response): no response was received, so this is a
+            // transport failure, not an API error.
+            G::RequestConstruction(e) if is_send_failure(&e) => {
+                Self::transport(TransportKind::Other, &e)
+            }
+            // We failed to even build the request (e.g. a missing credential).
+            G::RequestConstruction(e) => TmdbError::Request {
+                kind: RequestErrorKind::InvalidRequest,
+                message: redact_api_key(&error_chain(&e)),
             },
-            ProgenitorError::Custom(msg) => TmdbError::Api {
-                status: 0,
-                status_code: None,
-                message: format!("client hook error: {msg}"),
-                retry_after: None,
+            // The revisited URL is left out: it may carry a v3 `api_key`.
+            G::PaginationCycle { .. } => TmdbError::Request {
+                kind: RequestErrorKind::PaginationCycle,
+                message: "a `next` link revisited an earlier page".to_string(),
             },
 
             // A declared error response with a typed body.
-            ProgenitorError::ErrorResponse(rv) => {
+            G::Api(rv) => {
                 let status = rv.status().as_u16();
                 let retry_after = parse_retry_after(rv.headers());
                 TmdbError::Api {
@@ -144,75 +252,117 @@ impl TmdbError {
                 }
             }
 
-            // An undeclared error status — the common TMDB path. Read and decode
-            // the `{status_code, status_message}` body ourselves.
-            ProgenitorError::UnexpectedResponse(resp) => {
-                let status = resp.status().as_u16();
-                let retry_after = parse_retry_after(resp.headers());
-                let body = resp.text().await.unwrap_or_default();
-                let (status_code, message) = decode_tmdb_error_body(&body, status);
-                TmdbError::Api {
-                    status,
-                    status_code,
-                    message,
-                    retry_after,
+            // An undeclared error status — the common TMDB path. Decode the
+            // `{status_code, status_message}` body ourselves.
+            G::UnexpectedStatus {
+                status,
+                headers,
+                body,
+            } => Self::api(status.as_u16(), &headers, &body),
+
+            // A success body that did not match the schema is a decode
+            // failure; an error status whose body did not match is still an
+            // API error.
+            G::Decode {
+                status,
+                headers,
+                path,
+                body,
+                ..
+            } => {
+                if status.is_success() {
+                    TmdbError::Deserialization(<serde_json::Error as serde::de::Error>::custom(
+                        path,
+                    ))
+                } else {
+                    Self::api(status.as_u16(), &headers, &body)
                 }
             }
+        }
+    }
+
+    /// A [`TmdbError::Http`] of `kind` describing `err` (redacted).
+    fn transport(kind: TransportKind, err: &(dyn std::error::Error + 'static)) -> Self {
+        TmdbError::Http(TransportError::new(kind, &error_chain(err)))
+    }
+
+    /// A [`TmdbError::Api`] for an error `status`, decoding TMDB's error body.
+    fn api(status: u16, headers: &HeaderMap, body: &[u8]) -> Self {
+        let retry_after = parse_retry_after(headers);
+        let (status_code, message) = decode_tmdb_error_body(&String::from_utf8_lossy(body), status);
+        TmdbError::Api {
+            status,
+            status_code,
+            message,
+            retry_after,
         }
     }
 }
 
-/// Best-effort synchronous mapping, used where an `async` body read is not
-/// possible (the `?` operator). Preserves the transport/deserialization/API
-/// split and the HTTP status + `Retry-After`, but cannot read an undeclared
-/// error body, so an unexpected response's message is a generic
-/// `unexpected response: HTTP <status>` description (a declared error response
-/// uses its typed body, as `TmdbError::from_progenitor` does).
+/// Whether a request-construction error is really a failure inside the send:
+/// a request-kind `reqwest::Error` (not builder-kind, which reqwest raises
+/// before sending anything), e.g. a connection closed before any response.
+fn is_send_failure(err: &generated::RequestError) -> bool {
+    matches!(err, generated::RequestError::Other(_))
+        && std::error::Error::source(err)
+            .and_then(|e| e.downcast_ref::<reqwest::Error>())
+            .is_some_and(|e| e.is_request() && !e.is_builder())
+}
+
+/// `err` and each of its sources, joined with `": "`, skipping a source whose
+/// text its parent already ends with.
 ///
-/// Progenitor's own `Display` is deliberately not used: for unexpected
-/// responses it prints the `reqwest::Response` debug form, which includes the
-/// request URL (and therefore a v3 `api_key` query parameter).
-impl<E: std::fmt::Debug + Send + Sync + 'static> From<ProgenitorError<E>> for TmdbError {
-    fn from(err: ProgenitorError<E>) -> Self {
-        match err {
-            ProgenitorError::CommunicationError(e)
-            | ProgenitorError::ResponseBodyError(e)
-            | ProgenitorError::InvalidUpgrade(e) => TmdbError::from(e),
-            ProgenitorError::InvalidResponsePayload(_, e) => TmdbError::Deserialization(e),
-            ProgenitorError::InvalidRequest(msg) => TmdbError::Api {
-                status: 0,
-                status_code: None,
-                message: format!("invalid request: {msg}"),
-                retry_after: None,
-            },
-            ProgenitorError::Custom(msg) => TmdbError::Api {
-                status: 0,
-                status_code: None,
-                message: format!("client hook error: {msg}"),
-                retry_after: None,
-            },
-            ProgenitorError::ErrorResponse(rv) => {
-                let status = rv.status().as_u16();
-                let retry_after = parse_retry_after(rv.headers());
-                TmdbError::Api {
-                    status,
-                    status_code: None,
-                    message: format!("{:?}", rv.into_inner()),
-                    retry_after,
-                }
-            }
-            ProgenitorError::UnexpectedResponse(resp) => {
-                let status = resp.status().as_u16();
-                let retry_after = parse_retry_after(resp.headers());
-                TmdbError::Api {
-                    status,
-                    status_code: None,
-                    message: format!("unexpected response: HTTP {status}"),
-                    retry_after,
-                }
+/// A `reqwest::Error` in the chain prints its request URL; every such URL is
+/// written without its query string (where a v3 `api_key` travels).
+fn error_chain(err: &(dyn std::error::Error + 'static)) -> String {
+    let mut out = err.to_string();
+    let mut urls = Vec::new();
+    let mut current = Some(err);
+    while let Some(e) = current {
+        if let Some(url) = e
+            .downcast_ref::<reqwest::Error>()
+            .and_then(reqwest::Error::url)
+        {
+            urls.push(url.clone());
+        }
+        if !std::ptr::addr_eq(e, err) {
+            let text = e.to_string();
+            if !out.ends_with(&text) {
+                out.push_str(": ");
+                out.push_str(&text);
             }
         }
+        current = e.source();
     }
+    for url in urls {
+        let mut bare = url.clone();
+        bare.set_query(None);
+        out = out.replace(url.as_str(), bare.as_str());
+    }
+    out
+}
+
+/// Replace the value of every `api_key=` occurrence in `text` with
+/// `<redacted>`. The value ends at the next `&`, `#`, `)`, quote, or
+/// whitespace character.
+fn redact_api_key(text: &str) -> String {
+    const NEEDLE: &str = "api_key=";
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(at) = rest.find(NEEDLE) {
+        let value_start = at + NEEDLE.len();
+        out.push_str(&rest[..value_start]);
+        let value = &rest[value_start..];
+        let value_len = value
+            .find(|c: char| matches!(c, '&' | '#' | ')' | '"' | '\'') || c.is_whitespace())
+            .unwrap_or(value.len());
+        if value_len > 0 {
+            out.push_str("<redacted>");
+        }
+        rest = &value[value_len..];
+    }
+    out.push_str(rest);
+    out
 }
 
 /// Parse a `Retry-After` header (integer seconds) into a [`Duration`].
@@ -244,5 +394,115 @@ fn decode_tmdb_error_body(body: &str, status: u16) -> (Option<i64>, String) {
             };
             (None, message)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn redact_api_key_replaces_every_value() {
+        assert_eq!(
+            redact_api_key(
+                "error sending request for url (http://h/3/movie/1?api_key=SECRET&language=en)"
+            ),
+            "error sending request for url (http://h/3/movie/1?api_key=<redacted>&language=en)"
+        );
+        assert_eq!(
+            redact_api_key("a?api_key=ONE b?x=1&api_key=TWO"),
+            "a?api_key=<redacted> b?x=1&api_key=<redacted>"
+        );
+        assert_eq!(redact_api_key("no key here"), "no key here");
+        assert_eq!(redact_api_key("api_key="), "api_key=");
+    }
+
+    #[test]
+    fn decode_with_error_status_is_api_error() {
+        let err = TmdbError::from_generated::<std::convert::Infallible>(generated::Error::Decode {
+            status: reqwest::StatusCode::NOT_FOUND,
+            headers: HeaderMap::new(),
+            path: "expected value".to_string(),
+            body: bytes::Bytes::from_static(br#"{"status_code":34,"status_message":"nope"}"#),
+            truncated: false,
+        });
+        assert!(
+            matches!(
+                err,
+                TmdbError::Api {
+                    status: 404,
+                    status_code: Some(34),
+                    ref message,
+                    ..
+                } if message == "nope"
+            ),
+            "got {err:?}"
+        );
+    }
+
+    #[test]
+    fn decode_with_success_status_is_deserialization_error() {
+        let err = TmdbError::from_generated::<std::convert::Infallible>(generated::Error::Decode {
+            status: reqwest::StatusCode::OK,
+            headers: HeaderMap::new(),
+            path: "invalid type: null, expected i64".to_string(),
+            body: bytes::Bytes::new(),
+            truncated: false,
+        });
+        assert!(matches!(err, TmdbError::Deserialization(_)), "got {err:?}");
+        assert!(err.to_string().contains("expected i64"), "{err}");
+    }
+
+    #[test]
+    fn request_construction_is_invalid_request_not_api() {
+        let err = TmdbError::from_generated(
+            generated::Error::<std::convert::Infallible>::request_message(
+                "bad param api_key=SECRET".to_string(),
+            ),
+        );
+        match &err {
+            TmdbError::Request {
+                kind: RequestErrorKind::InvalidRequest,
+                message,
+            } => {
+                assert!(message.contains("bad param"), "{message}");
+                assert!(!message.contains("SECRET"), "{message}");
+            }
+            other => panic!("expected Request, got {other:?}"),
+        }
+        assert!(!err.is_retryable());
+        assert!(err.to_string().starts_with("invalid request: "), "{err}");
+    }
+
+    #[test]
+    fn pagination_cycle_is_request_error_without_url() {
+        let url = reqwest::Url::parse("http://h/3/x?page=2&api_key=SECRET").unwrap();
+        let err = TmdbError::from_generated(
+            generated::Error::<std::convert::Infallible>::PaginationCycle { url },
+        );
+        assert!(
+            matches!(
+                err,
+                TmdbError::Request {
+                    kind: RequestErrorKind::PaginationCycle,
+                    ..
+                }
+            ),
+            "got {err:?}"
+        );
+        assert!(!err.is_retryable());
+        assert!(!err.to_string().contains("SECRET"), "{err}");
+    }
+
+    #[test]
+    fn timeout_is_retryable_transport_error() {
+        let err = TmdbError::from_generated::<std::convert::Infallible>(generated::Error::Timeout(
+            generated::TimeoutKind::Total,
+        ));
+        match &err {
+            TmdbError::Http(e) => assert!(e.is_timeout() && !e.is_connect(), "{e:?}"),
+            other => panic!("expected Http, got {other:?}"),
+        }
+        assert!(err.is_retryable());
     }
 }

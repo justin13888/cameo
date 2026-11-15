@@ -62,9 +62,9 @@ compile_error!(
      (the default `full` feature enables both)."
 );
 
-/// Auto-generated low-level API client code (from progenitor).
+/// Auto-generated low-level API client code (from spargen).
 ///
-/// Crate-internal: these progenitor/typify-generated types are an
+/// Crate-internal: these spargen-generated types are an
 /// implementation detail and are **not** part of cameo's public API. The
 /// stable boundary is [`TmdbClient`](providers::tmdb::TmdbClient), which returns
 /// unified models and hand-owned TMDB types.
@@ -112,9 +112,10 @@ pub use unified::{
     Company, Creator, CreditsProvider, DetailProvider, DiscoveryProvider, ExternalId,
     ExternalIdProvider, ExternalIds, ExternalMatch, ExternalSource, Gender, Genre, MatchKind,
     MediaId, MediaProvider, NativeId, Network, ParseDateError, PartialDate, Provider,
-    RecommendationProvider, SearchProvider, SeasonProvider, TitleKind, UnifiedCastCredit,
-    UnifiedCredits, UnifiedCrewCredit, UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails,
-    UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeason, UnifiedSeasonDetails,
-    UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails, UnifiedWatchProviderEntry,
-    UnifiedWatchProviders, UnknownExternalSource, UnknownGenre, WatchAvailabilityProvider,
+    RecommendationProvider, SearchProvider, SeasonProvider, SeriesStatus, SeriesType, TitleKind,
+    UnifiedCastCredit, UnifiedCredits, UnifiedCrewCredit, UnifiedEpisode, UnifiedMovie,
+    UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeason,
+    UnifiedSeasonDetails, UnifiedStreamingService, UnifiedTvShow, UnifiedTvShowDetails,
+    UnifiedWatchProviderEntry, UnifiedWatchProviders, UnknownExternalSource, UnknownGenre,
+    WatchAvailabilityProvider,
 };

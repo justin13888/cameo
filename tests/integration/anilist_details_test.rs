@@ -210,6 +210,27 @@ async fn tv_show_details_releasing_is_in_production() {
     let result = client.tv_show_details(16498).await.unwrap();
 
     assert_eq!(result.in_production, Some(true));
+    assert_eq!(result.status, Some(cameo::SeriesStatus::ReturningSeries));
+    assert_eq!(result.show.status, result.status);
+}
+
+#[tokio::test]
+async fn tv_show_details_maps_every_anilist_status() {
+    for (raw, expected) in [
+        ("FINISHED", cameo::SeriesStatus::Ended),
+        ("NOT_YET_RELEASED", cameo::SeriesStatus::Planned),
+        ("CANCELLED", cameo::SeriesStatus::Cancelled),
+        ("HIATUS", cameo::SeriesStatus::Hiatus),
+        // An unknown value is kept verbatim rather than dropped.
+        (
+            "SOME_NEW_STATUS",
+            cameo::SeriesStatus::Other("SOME_NEW_STATUS".to_string()),
+        ),
+    ] {
+        let (_server, client) = mock_client(tv_details_body_with_status(json!(raw))).await;
+        let result = client.tv_show_details(16498).await.unwrap();
+        assert_eq!(result.status, Some(expected), "status {raw}");
+    }
 }
 
 #[tokio::test]
@@ -219,6 +240,7 @@ async fn tv_show_details_unknown_status_leaves_in_production_unknown() {
     let result = client.tv_show_details(16498).await.unwrap();
 
     assert_eq!(result.in_production, None);
+    assert_eq!(result.status, None);
 }
 
 #[tokio::test]

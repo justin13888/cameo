@@ -7,7 +7,7 @@ use crate::{
         genre::Genre,
         media_id::MediaId,
         models::{
-            AlternativeTitle, Company, TitleKind, UnifiedMovie, UnifiedMovieDetails,
+            AlternativeTitle, Company, SeriesStatus, TitleKind, UnifiedMovie, UnifiedMovieDetails,
             UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
         },
     },
@@ -199,8 +199,8 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
         adult: m.is_adult,
         number_of_episodes: non_negative(m.episodes),
         episode_run_time: non_negative(m.duration),
-        // AniList's raw `MediaStatus`, exactly as the detail conversion reports it.
-        status: m.status,
+        // AniList's `MediaStatus`, mapped exactly as the detail conversion maps it.
+        status: m.status.as_deref().map(SeriesStatus::from_anilist),
     }
 }
 
@@ -347,6 +347,7 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         .status
         .as_deref()
         .map(|s| matches!(s, "RELEASING" | "NOT_YET_RELEASED"));
+    let status = m.status.as_deref().map(SeriesStatus::from_anilist);
     let run_time = non_negative(m.duration);
     let number_of_episodes = non_negative(m.episodes);
 
@@ -374,14 +375,14 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
             // The embedded summary mirrors the detail-level episode data/status.
             number_of_episodes,
             episode_run_time: run_time,
-            status: m.status.clone(),
+            status: status.clone(),
         },
         tagline: None,
         // AniList models anime as a single continuous run, not TMDB-style seasons.
         number_of_seasons: None,
         number_of_episodes,
         in_production,
-        status: m.status,
+        status,
         homepage: None,
         networks: Vec::new(),
         production_companies,
@@ -503,7 +504,7 @@ mod tests {
         assert_eq!(details.show.status, summary.status);
         assert_eq!(details.number_of_episodes, Some(26));
         assert_eq!(details.episode_run_time, vec![23]);
-        assert_eq!(details.status.as_deref(), Some("RELEASING"));
+        assert_eq!(details.status, Some(SeriesStatus::ReturningSeries));
 
         let mut list = make_media(7, Some("MOVIE"));
         list.duration = Some(23);
