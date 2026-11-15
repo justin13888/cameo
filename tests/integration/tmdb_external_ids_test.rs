@@ -84,6 +84,72 @@ async fn tv_external_ids_accepts_null_and_empty_ids() {
     assert_eq!(ids.wikidata, None);
 }
 
+/// A TheTVDB id of `0` or below is not a real id and comes back as `None`.
+#[tokio::test]
+async fn tv_external_ids_drops_a_non_positive_tvdb_id() {
+    for tvdb_id in [0, -5] {
+        let (server, client) = setup_mock_client().await;
+
+        let mut body: serde_json::Value =
+            serde_json::from_str(include_str!("../fixtures/tv_external_ids_response.json"))
+                .unwrap();
+        body["tvdb_id"] = serde_json::json!(tvdb_id);
+
+        Mock::given(method("GET"))
+            .and(path("/3/tv/1396/external_ids"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(body))
+            .mount(&server)
+            .await;
+
+        let ids = client.tv_external_ids(1396).await.unwrap();
+
+        assert_eq!(ids.tmdb, Some(1396));
+        assert_eq!(ids.tvdb, None, "tvdb_id {tvdb_id}");
+    }
+}
+
+/// Movie and TV results whose id is zero or negative are skipped rather than
+/// wrapped into a huge `u64`.
+#[tokio::test]
+async fn find_skips_zero_and_negative_ids() {
+    let (server, client) = setup_mock_client().await;
+
+    let body = serde_json::json!({
+        "movie_results": [
+            { "id": 0, "title": "zero" },
+            { "id": -1, "title": "negative" },
+            { "id": 550, "title": "Fight Club" }
+        ],
+        "tv_results": [
+            { "id": 0, "name": "zero" },
+            { "id": -1, "name": "negative" },
+            { "id": 1396, "name": "Breaking Bad" }
+        ],
+        "person_results": [],
+        "tv_episode_results": [],
+        "tv_season_results": []
+    });
+
+    Mock::given(method("GET"))
+        .and(path("/3/find/tt0137523"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(body))
+        .mount(&server)
+        .await;
+
+    let matches = client
+        .find_by_external_id(&ExternalId::imdb("tt0137523"))
+        .await
+        .unwrap();
+
+    assert_eq!(
+        matches,
+        vec![
+            ExternalMatch::movie(MediaId::tmdb(550)),
+            ExternalMatch::tv_show(MediaId::tmdb(1396)),
+        ]
+    );
+}
+
 #[tokio::test]
 async fn find_by_imdb_id_returns_movie_match() {
     let (server, client) = setup_mock_client().await;

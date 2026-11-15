@@ -1554,6 +1554,13 @@ mod tests {
         assert!(matches!(err, AniListError::NotFound), "got {err:?}");
     }
 
+    #[tokio::test]
+    async fn a_zero_credits_id_is_not_found_without_a_request() {
+        let server = serve(json_response(200, credits()), 0).await;
+        let err = client_for(&server).media_credits(0).await.unwrap_err();
+        assert!(matches!(err, AniListError::NotFound), "got {err:?}");
+    }
+
     // ── Page mapping ───────────────────────────────────────────────────────────
 
     fn assert_passed_through<T>(page: &Page<T>) {
@@ -1721,6 +1728,20 @@ mod tests {
         let server = serve(json_response(200, body), 1).await;
         let ids = client_for(&server).external_ids(5).await.expect("ok");
         assert_eq!(ids.mal, None, "a negative MAL id is dropped");
+
+        let body = json!({ "data": { "Media": { "id": 0, "idMal": 9 } } });
+        let server = serve(json_response(200, body), 1).await;
+        let ids = client_for(&server).external_ids(5).await.expect("ok");
+        assert_eq!(ids.anilist, None, "a reported AniList id of 0 is dropped");
+        assert_eq!(ids.mal, Some(9));
+    }
+
+    #[tokio::test]
+    async fn find_by_mal_id_drops_a_media_id_of_zero() {
+        let body = json!({ "data": { "Media": { "id": 0, "format": "MOVIE" } } });
+        let server = serve(json_response(200, body), 1).await;
+        let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
+        assert_eq!(found, None);
     }
 
     #[tokio::test]
