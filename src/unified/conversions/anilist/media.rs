@@ -44,7 +44,7 @@ fn alternative_titles(
     synonyms: Option<&[String]>,
     country_of_origin: Option<&str>,
 ) -> Vec<AlternativeTitle> {
-    let native_lang = country_of_origin.and_then(known_country_language);
+    let native_lang = country_of_origin.and_then(country_to_language);
 
     let mut out: Vec<AlternativeTitle> = Vec::new();
     if let Some(t) = title {
@@ -94,25 +94,19 @@ fn score_to_vote_average(score: Option<i32>) -> Option<f64> {
     score.map(|s| s as f64 / 10.0)
 }
 
-/// Map an ISO 3166-1 alpha-2 country code to an ISO 639-1 language code for
-/// the common anime origins; `None` for any other country.
-fn known_country_language(country: &str) -> Option<&'static str> {
-    match country {
-        "JP" => Some("ja"),
-        "CN" | "TW" => Some("zh"),
-        "KR" => Some("ko"),
-        _ => None,
-    }
-}
-
 /// Convert an ISO 3166-1 alpha-2 country code to a rough ISO 639-1 language code.
 ///
-/// This is a best-effort mapping for common anime origins; an unknown country
-/// code is passed through unchanged.
-fn country_to_language(country: &str) -> String {
-    known_country_language(country)
-        .unwrap_or(country)
-        .to_string()
+/// This is a best-effort mapping for common anime origins. Returns `None` for
+/// countries without a known mapping rather than leaking the country code into
+/// a language field.
+fn country_to_language(country: &str) -> Option<&'static str> {
+    match country {
+        "JP" => Some("ja"),
+        "CN" => Some("zh"),
+        "KR" => Some("ko"),
+        "TW" => Some("zh"),
+        _ => None,
+    }
 }
 
 fn map_genres(genres: &Option<Vec<String>>) -> Vec<Genre> {
@@ -146,7 +140,11 @@ pub fn anilist_media_to_movie(m: AniListMedia) -> UnifiedMovie {
         vote_average: score_to_vote_average(m.average_score),
         // AniList exposes an average score but no vote count.
         vote_count: None,
-        original_language: m.country_of_origin.as_deref().map(country_to_language),
+        original_language: m
+            .country_of_origin
+            .as_deref()
+            .and_then(country_to_language)
+            .map(str::to_owned),
         adult: m.is_adult,
     }
 }
@@ -160,7 +158,11 @@ pub fn anilist_media_to_tv(m: AniListMedia) -> UnifiedTvShow {
         .as_deref()
         .map(|c| vec![c.to_string()])
         .unwrap_or_default();
-    let lang = m.country_of_origin.as_deref().map(country_to_language);
+    let lang = m
+        .country_of_origin
+        .as_deref()
+        .and_then(country_to_language)
+        .map(str::to_owned);
 
     UnifiedTvShow {
         provider_id: MediaId::anilist(m.id as u64),
@@ -224,7 +226,11 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
         })
         .unwrap_or_default();
 
-    let origin_lang = m.country_of_origin.as_deref().map(country_to_language);
+    let origin_lang = m
+        .country_of_origin
+        .as_deref()
+        .and_then(country_to_language)
+        .map(str::to_owned);
     let origin_country = m
         .country_of_origin
         .as_deref()
@@ -270,7 +276,8 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> UnifiedMo
         production_companies,
         production_countries: origin_country,
         spoken_languages: Vec::new(),
-        video: false,
+        // AniList has no "video entry" concept.
+        video: None,
         belongs_to_collection: None,
     }
 }
@@ -296,7 +303,11 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         })
         .unwrap_or_default();
 
-    let origin_lang = m.country_of_origin.as_deref().map(country_to_language);
+    let origin_lang = m
+        .country_of_origin
+        .as_deref()
+        .and_then(country_to_language)
+        .map(str::to_owned);
     let origin_country = m
         .country_of_origin
         .as_deref()
@@ -311,10 +322,11 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> UnifiedTvSho
         .map(|g| Genre::from_anilist_genre(g))
         .collect();
 
-    let in_production = matches!(
-        m.status.as_deref(),
-        Some("RELEASING") | Some("NOT_YET_RELEASED")
-    );
+    // Unknown status -> unknown production state, rather than `false`.
+    let in_production = m
+        .status
+        .as_deref()
+        .map(|s| matches!(s, "RELEASING" | "NOT_YET_RELEASED"));
     let episode_run_time = m
         .duration
         .map(|d| vec![d.max(0) as u32])
@@ -425,6 +437,19 @@ mod tests {
             country_of_origin: None,
             is_adult: None,
         }
+    }
+
+    #[test]
+    fn country_to_language_maps_known_origins() {
+        assert_eq!(country_to_language("JP"), Some("ja"));
+        assert_eq!(country_to_language("CN"), Some("zh"));
+        assert_eq!(country_to_language("KR"), Some("ko"));
+        assert_eq!(country_to_language("TW"), Some("zh"));
+    }
+
+    #[test]
+    fn country_to_language_unmapped_country_is_none() {
+        assert_eq!(country_to_language("US"), None);
     }
 
     #[test]

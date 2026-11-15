@@ -93,3 +93,49 @@ async fn live_person_details_brad_pitt() {
             .unwrap_or(false)
     );
 }
+
+#[tokio::test]
+async fn search_person_drops_items_without_id_and_keeps_unknown_adult() {
+    let (server, client) = setup_mock_client().await;
+    let body = serde_json::json!({
+        "page": 1,
+        "results": [
+            { "id": null, "name": "Null id" },
+            { "id": 287, "name": "Brad Pitt", "adult": null, "popularity": null, "gender": null }
+        ],
+        "total_pages": 1,
+        "total_results": 2
+    });
+    Mock::given(method("GET"))
+        .and(path("/3/search/person"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(body))
+        .mount(&server)
+        .await;
+
+    let page = client.search_people("brad pitt", None).await.unwrap();
+
+    assert_eq!(page.results.len(), 1);
+    let person = &page.results[0];
+    assert_eq!(person.provider_id, "tmdb:287");
+    assert_eq!(person.adult, None);
+    assert_eq!(person.popularity, None);
+    assert_eq!(person.gender, None);
+}
+
+#[tokio::test]
+async fn person_details_null_id_falls_back_to_requested_id() {
+    let (server, client) = setup_mock_client().await;
+    let mut body: serde_json::Value = serde_json::from_str(person_details_fixture()).unwrap();
+    body["id"] = serde_json::Value::Null;
+    body["adult"] = serde_json::Value::Null;
+    Mock::given(method("GET"))
+        .and(path("/3/person/287"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(body))
+        .mount(&server)
+        .await;
+
+    let details = client.person_details(287).await.unwrap();
+
+    assert_eq!(details.person.provider_id, "tmdb:287");
+    assert_eq!(details.person.adult, None);
+}

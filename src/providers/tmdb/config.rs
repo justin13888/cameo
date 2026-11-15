@@ -13,8 +13,11 @@ const DEFAULT_RATE_LIMIT: RateLimit = RateLimit::Limited {
 /// TMDB has two credential systems. The v4 "API Read Access Token" (a bearer
 /// JWT) is the modern default; the v3 "API Key" is an older credential many
 /// existing accounts still have, sent as an `api_key` query parameter.
+///
+/// The `Debug` output redacts the credential (e.g. `V4Bearer(<redacted>)`); use
+/// [`TmdbAuth::credential`] to read it deliberately.
 #[non_exhaustive]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum TmdbAuth {
     /// TMDB v4 API Read Access Token, sent as `Authorization: Bearer <token>`.
     V4Bearer(String),
@@ -31,9 +34,31 @@ impl TmdbAuth {
     }
 }
 
+/// Prints a fixed `<redacted>` placeholder in place of a secret.
+struct Redacted;
+
+impl std::fmt::Debug for Redacted {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("<redacted>")
+    }
+}
+
+impl std::fmt::Debug for TmdbAuth {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let scheme = match self {
+            TmdbAuth::V4Bearer(_) => "V4Bearer",
+            TmdbAuth::V3ApiKey(_) => "V3ApiKey",
+        };
+        f.debug_tuple(scheme).field(&Redacted).finish()
+    }
+}
+
 /// Configuration for the TMDB client.
+///
+/// The `Debug` output redacts the credential in [`auth`](Self::auth); all other
+/// fields are shown as-is.
 #[non_exhaustive]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 #[must_use = "a TmdbConfig does nothing unless passed to TmdbClient::new or CameoClient::builder"]
 pub struct TmdbConfig {
     /// Authentication credential (v4 bearer token or v3 API key).
@@ -68,6 +93,36 @@ pub struct TmdbConfig {
     /// Timeout for a complete request (connect through full response body).
     /// Defaults to 30s when `None`.
     pub request_timeout: Option<Duration>,
+}
+
+impl std::fmt::Debug for TmdbConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Destructure so adding a field forces a decision about printing it.
+        let Self {
+            auth,
+            base_url,
+            image_base_url,
+            language,
+            region,
+            include_adult,
+            rate_limit,
+            retry,
+            connect_timeout,
+            request_timeout,
+        } = self;
+        f.debug_struct("TmdbConfig")
+            .field("auth", auth)
+            .field("base_url", base_url)
+            .field("image_base_url", image_base_url)
+            .field("language", language)
+            .field("region", region)
+            .field("include_adult", include_adult)
+            .field("rate_limit", rate_limit)
+            .field("retry", retry)
+            .field("connect_timeout", connect_timeout)
+            .field("request_timeout", request_timeout)
+            .finish()
+    }
 }
 
 impl TmdbConfig {

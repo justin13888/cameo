@@ -84,6 +84,7 @@ What it does:
    - coerces integer `vote_average` schemas to `number`
    - coerces string-typed boolean defaults (`"default": "false"`) to real booleans
    - strips `example`/`examples` payloads (ignored by codegen, ~75% of the raw spec size)
+   - drops `default` from object property schemas, so response fields generate as `Option<T>` and accept TMDB's explicit `null`s (operation parameter defaults are kept)
 4. Writes the result to `openapi/tmdb-api.json`
 
 The pipeline is fully deterministic and requires **no manual post-editing**: given the same upstream spec, re-running the script reproduces `openapi/tmdb-api.json` byte-for-byte.
@@ -202,4 +203,5 @@ These apply to types in `src/generated/` (auto-generated from `openapi/tmdb-api.
 | `PersonDetailsResponse.homepage` | `Option<serde_json::Value>` — same pattern as `deathday` |
 | TV season details `mongo_id` field | TMDB's `_id` (MongoDB ObjectId) is renamed to `mongo_id` by `scripts/tmdb-spec-patch.jq` to avoid a progenitor collision with the `id` field |
 | `trending_movies` / `trending_tv` | No `page` parameter — these endpoints do not support pagination in the TMDB spec |
+| Scalar response fields are `Option<T>` | `scripts/tmdb-spec-patch.jq` drops the spec's property `default`s (`0`, `true`), which would otherwise generate plain `T` + `#[serde(default)]` — that handles a missing key but rejects the explicit `null` TMDB often sends. Conversions keep unified `Option` fields `None` when TMDB omits or nulls a value, `TmdbClient` fills a missing details id from the requested id, and list/search items without an id are dropped. **Known limitation:** array fields (e.g. `genre_ids`, `results`, `genres`) are still generated as `#[serde(default)] Vec<T>`, so a missing array is fine but an explicit `null` array still fails deserialization of the whole response |
 | `vote_average` on TV list types | `scripts/tmdb-spec-patch.jq` coerces the integer-typed `vote_average` schemas to `number`; affects `DiscoverTvResponseResultsItem`, `TvSeriesPopularListResponseResultsItem`, `TvSeriesSimilarResponseResultsItem`, and similar |
