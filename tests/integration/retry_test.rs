@@ -254,6 +254,106 @@ mod tmdb {
             "Retry-After: 1 should delay the retry >= 1s, took {elapsed:?}"
         );
     }
+
+    /// Mount one `first` response on `route`, then `200 EMPTY_SEARCH` for
+    /// every later request, each hit exactly once, and build a client with
+    /// [`TWO_RETRIES`].
+    async fn fail_once_then_succeed(
+        route: &str,
+        first: ResponseTemplate,
+    ) -> (MockServer, TmdbClient) {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path(route))
+            .respond_with(first)
+            .up_to_n_times(1)
+            .with_priority(1)
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path(route))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(EMPTY_SEARCH, "application/json"))
+            .with_priority(2)
+            .expect(1)
+            .mount(&server)
+            .await;
+        let config = TmdbConfig::new_with_base_url("t", server.uri()).with_retry(TWO_RETRIES);
+        (server, TmdbClient::new(config).unwrap())
+    }
+
+    /// The discover-movie builder runs through the retry seam: a 429 is
+    /// retried, and the second attempt's page is returned.
+    #[tokio::test]
+    async fn discover_movies_retries_429_then_succeeds() {
+        let first = ResponseTemplate::new(429)
+            .insert_header("Retry-After", "0")
+            .set_body_raw(
+                r#"{"status_code":25,"status_message":"limit"}"#,
+                "application/json",
+            );
+        let (_server, client) = fail_once_then_succeed("/3/discover/movie", first).await;
+
+        let page = client
+            .discover_movies()
+            .execute()
+            .await
+            .expect("recovers after one 429");
+        assert_eq!(page.page, 1);
+        assert!(page.results.is_empty());
+    }
+
+    /// The discover-TV builder runs through the retry seam: a 5xx is retried,
+    /// and the second attempt's page is returned.
+    #[tokio::test]
+    async fn discover_tv_retries_5xx_then_succeeds() {
+        let first = ResponseTemplate::new(503).set_body_raw(
+            r#"{"status_code":11,"status_message":"err"}"#,
+            "application/json",
+        );
+        let (_server, client) = fail_once_then_succeed("/3/discover/tv", first).await;
+
+        let page = client
+            .discover_tv()
+            .execute()
+            .await
+            .expect("recovers after one 503");
+        assert_eq!(page.page, 1);
+        assert!(page.results.is_empty());
+    }
+
+    /// A discover 4xx other than 429 is attempted exactly once, and its error
+    /// carries TMDB's decoded `status_code` and `status_message`.
+    #[tokio::test]
+    async fn discover_client_error_is_attempted_once_and_decoded() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/3/discover/movie"))
+            .respond_with(ResponseTemplate::new(401).set_body_raw(
+                r#"{"status_code":7,"status_message":"Invalid API key"}"#,
+                "application/json",
+            ))
+            .expect(1)
+            .mount(&server)
+            .await;
+        let config = TmdbConfig::new_with_base_url("t", server.uri()).with_retry(TWO_RETRIES);
+        let client = TmdbClient::new(config).unwrap();
+
+        let err = client.discover_movies().execute().await.unwrap_err();
+        match err {
+            TmdbError::Api {
+                status,
+                status_code,
+                message,
+                ..
+            } => {
+                assert_eq!(status, 401);
+                assert_eq!(status_code, Some(7));
+                assert_eq!(message, "Invalid API key");
+            }
+            other => panic!("expected Api error, got {other:?}"),
+        }
+    }
 }
 
 // ── AniList ───────────────────────────────────────────────────────────────────

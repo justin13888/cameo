@@ -4,7 +4,7 @@ use super::params::{self, TvShowType, TvStatus};
 use crate::{
     core::pagination::Page,
     generated::tmdb as generated,
-    providers::tmdb::{TmdbClient, builders::TvSortBy, convert::TmdbPaged, error::TmdbError},
+    providers::tmdb::{TmdbClient, builders::TvSortBy, error::TmdbError},
     unified::models::UnifiedTvShow,
 };
 
@@ -194,12 +194,17 @@ impl<'a> DiscoverTvBuilder<'a> {
 
     /// Execute the discover query and return a single page of unified shows.
     ///
+    /// The request is rate limited and retried under the client's
+    /// [`TmdbConfig::retry`](crate::providers::tmdb::TmdbConfig::retry)
+    /// policy, like every other endpoint.
+    ///
     /// # Errors
     ///
-    /// Returns [`TmdbError::Api`] on non-2xx HTTP responses and
-    /// [`TmdbError::Http`] on network failures.
+    /// Returns [`TmdbError::Api`] (with TMDB's decoded `status_code` and
+    /// `status_message`) on a non-2xx response once retries are spent,
+    /// [`TmdbError::Http`] on network failures, and [`TmdbError::Request`]
+    /// when a date filter cannot be encoded.
     pub async fn execute(self) -> Result<Page<UnifiedTvShow>, TmdbError> {
-        let page = self.page;
         let query = generated::DiscoverTvParams {
             air_date_gte: params::tmdb_date(self.air_date_gte)?,
             air_date_lte: params::tmdb_date(self.air_date_lte)?,
@@ -235,14 +240,6 @@ impl<'a> DiscoverTvBuilder<'a> {
             without_watch_providers: self.without_watch_providers,
             with_type: self.with_type,
         };
-        self.client.acquire_rate_limit().await;
-        let body = self
-            .client
-            .inner()
-            .discover_tv(query)
-            .await
-            .map_err(TmdbError::from_generated)?
-            .into_inner();
-        Ok(body.into_page(page)?.map(Into::into))
+        self.client.discover_tv_page(query).await
     }
 }
