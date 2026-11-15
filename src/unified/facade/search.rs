@@ -143,12 +143,12 @@ impl CameoClient {
     /// Search for movies with a specific provider (e.g. `"anilist"`).
     pub async fn search_movies_with(
         &self,
-        provider_id: &str,
+        provider: &str,
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         Ok(self
-            .select(&self.search, provider_id)?
+            .select(&self.search, provider)?
             .search_movies(query, page)
             .await?)
     }
@@ -156,12 +156,12 @@ impl CameoClient {
     /// Search for TV shows with a specific provider.
     pub async fn search_tv_shows_with(
         &self,
-        provider_id: &str,
+        provider: &str,
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         Ok(self
-            .select(&self.search, provider_id)?
+            .select(&self.search, provider)?
             .search_tv_shows(query, page)
             .await?)
     }
@@ -169,12 +169,12 @@ impl CameoClient {
     /// Search for people with a specific provider.
     pub async fn search_people_with(
         &self,
-        provider_id: &str,
+        provider: &str,
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedPerson>, CameoClientError> {
         Ok(self
-            .select(&self.search, provider_id)?
+            .select(&self.search, provider)?
             .search_people(query, page)
             .await?)
     }
@@ -182,12 +182,12 @@ impl CameoClient {
     /// Multi-search with a specific provider.
     pub async fn search_multi_with(
         &self,
-        provider_id: &str,
+        provider: &str,
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedSearchResult>, CameoClientError> {
         Ok(self
-            .select(&self.search, provider_id)?
+            .select(&self.search, provider)?
             .search_multi(query, page)
             .await?)
     }

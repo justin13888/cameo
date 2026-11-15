@@ -10,6 +10,7 @@ use super::CameoClient;
 use crate::{
     cache::{CacheBackend, CacheKey, CacheTtlConfig, MediaType},
     unified::{
+        media_id::MediaId,
         models::{
             UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails, UnifiedTvShow,
             UnifiedTvShowDetails,
@@ -62,19 +63,19 @@ impl Cache {
     }
 }
 
-/// The item-cache key for an entry of `media_type` with `provider_id`.
-fn item_key(media_type: MediaType, provider_id: &str) -> CacheKey {
+/// The item-cache key for an entry of `media_type` with `id`.
+fn item_key(media_type: MediaType, id: &MediaId) -> CacheKey {
     CacheKey::Item {
         media_type,
-        provider_id: provider_id.to_string(),
+        provider_id: id.to_string(),
     }
 }
 
-/// The detail-cache key for an entry of `media_type` with `provider_id`.
-fn detail_key(media_type: MediaType, provider_id: &str) -> CacheKey {
+/// The detail-cache key for an entry of `media_type` with `id`.
+fn detail_key(media_type: MediaType, id: &MediaId) -> CacheKey {
     CacheKey::Detail {
         media_type,
-        provider_id: provider_id.to_string(),
+        provider_id: id.to_string(),
     }
 }
 
@@ -86,19 +87,19 @@ pub(super) trait CacheItem: Serialize + Sync {
 
 impl CacheItem for UnifiedMovie {
     fn item_key(&self) -> CacheKey {
-        item_key(MediaType::Movie, &self.provider_id.to_string())
+        item_key(MediaType::Movie, &self.provider_id)
     }
 }
 
 impl CacheItem for UnifiedTvShow {
     fn item_key(&self) -> CacheKey {
-        item_key(MediaType::TvShow, &self.provider_id.to_string())
+        item_key(MediaType::TvShow, &self.provider_id)
     }
 }
 
 impl CacheItem for UnifiedPerson {
     fn item_key(&self) -> CacheKey {
-        item_key(MediaType::Person, &self.provider_id.to_string())
+        item_key(MediaType::Person, &self.provider_id)
     }
 }
 
@@ -148,22 +149,22 @@ impl CameoClient {
         }
     }
 
-    /// Look up a summary model by provider id: the item entry if present,
+    /// Look up a summary model by id: the item entry if present,
     /// otherwise the summary `project`ed out of the detail entry.
     async fn cached_with_detail_fallback<I, D>(
         &self,
         media_type: MediaType,
-        provider_id: &str,
+        id: &MediaId,
         project: fn(D) -> I,
     ) -> Option<I>
     where
         I: DeserializeOwned,
         D: DeserializeOwned,
     {
-        if let Some(item) = self.cache_get(&item_key(media_type, provider_id)).await {
+        if let Some(item) = self.cache_get(&item_key(media_type, id)).await {
             return Some(item);
         }
-        self.cache_get(&detail_key(media_type, provider_id))
+        self.cache_get(&detail_key(media_type, id))
             .await
             .map(project)
     }
@@ -172,62 +173,49 @@ impl CameoClient {
 // ── Explicit cache lookup API ────────────────────────────────────────────────
 
 impl CameoClient {
-    /// Look up a movie from the cache by provider id (e.g. `"tmdb:550"`).
-    pub async fn cached_movie(&self, provider_id: &str) -> Option<UnifiedMovie> {
-        self.cached_with_detail_fallback(MediaType::Movie, provider_id, |d: UnifiedMovieDetails| {
-            d.movie
-        })
-        .await
-    }
-
-    /// Look up full movie details from the cache by provider id.
-    pub async fn cached_movie_details(&self, provider_id: &str) -> Option<UnifiedMovieDetails> {
-        self.cache_get(&detail_key(MediaType::Movie, provider_id))
+    /// Look up a movie from the cache by id (e.g. `MediaId::tmdb(550)`).
+    pub async fn cached_movie(&self, id: &MediaId) -> Option<UnifiedMovie> {
+        self.cached_with_detail_fallback(MediaType::Movie, id, |d: UnifiedMovieDetails| d.movie)
             .await
     }
 
-    /// Look up a TV show from the cache by provider id.
-    pub async fn cached_tv_show(&self, provider_id: &str) -> Option<UnifiedTvShow> {
-        self.cached_with_detail_fallback(
-            MediaType::TvShow,
-            provider_id,
-            |d: UnifiedTvShowDetails| d.show,
-        )
-        .await
+    /// Look up full movie details from the cache by id.
+    pub async fn cached_movie_details(&self, id: &MediaId) -> Option<UnifiedMovieDetails> {
+        self.cache_get(&detail_key(MediaType::Movie, id)).await
     }
 
-    /// Look up full TV show details from the cache by provider id.
-    pub async fn cached_tv_show_details(&self, provider_id: &str) -> Option<UnifiedTvShowDetails> {
-        self.cache_get(&detail_key(MediaType::TvShow, provider_id))
+    /// Look up a TV show from the cache by id.
+    pub async fn cached_tv_show(&self, id: &MediaId) -> Option<UnifiedTvShow> {
+        self.cached_with_detail_fallback(MediaType::TvShow, id, |d: UnifiedTvShowDetails| d.show)
             .await
     }
 
-    /// Look up a person from the cache by provider id.
-    pub async fn cached_person(&self, provider_id: &str) -> Option<UnifiedPerson> {
-        self.cached_with_detail_fallback(
-            MediaType::Person,
-            provider_id,
-            |d: UnifiedPersonDetails| d.person,
-        )
-        .await
+    /// Look up full TV show details from the cache by id.
+    pub async fn cached_tv_show_details(&self, id: &MediaId) -> Option<UnifiedTvShowDetails> {
+        self.cache_get(&detail_key(MediaType::TvShow, id)).await
     }
 
-    /// Look up full person details from the cache by provider id.
-    pub async fn cached_person_details(&self, provider_id: &str) -> Option<UnifiedPersonDetails> {
-        self.cache_get(&detail_key(MediaType::Person, provider_id))
+    /// Look up a person from the cache by id.
+    pub async fn cached_person(&self, id: &MediaId) -> Option<UnifiedPerson> {
+        self.cached_with_detail_fallback(MediaType::Person, id, |d: UnifiedPersonDetails| d.person)
             .await
     }
 
-    /// Invalidate all cache entries for the given provider id.
+    /// Look up full person details from the cache by id.
+    pub async fn cached_person_details(&self, id: &MediaId) -> Option<UnifiedPersonDetails> {
+        self.cache_get(&detail_key(MediaType::Person, id)).await
+    }
+
+    /// Invalidate all cache entries for `id`.
     ///
     /// Backend failures are logged as `tracing` warnings, not surfaced.
-    pub async fn invalidate_cached(&self, provider_id: &str) {
+    pub async fn invalidate_cached(&self, id: &MediaId) {
         let Some(cache) = self.cache.as_ref() else {
             return;
         };
         for mt in [MediaType::Movie, MediaType::TvShow, MediaType::Person] {
-            cache.invalidate(&detail_key(mt, provider_id)).await;
-            cache.invalidate(&item_key(mt, provider_id)).await;
+            cache.invalidate(&detail_key(mt, id)).await;
+            cache.invalidate(&item_key(mt, id)).await;
         }
     }
 
