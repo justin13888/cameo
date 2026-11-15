@@ -934,10 +934,10 @@ impl TmdbClient {
 /// and drop result items without a TMDB id (see [`TmdbListItem`]).
 ///
 /// `requested` is the page number sent to TMDB (`None` when no page was sent).
-/// A missing or invalid `page` falls back to `requested` (or `1`), a missing
-/// `total_pages` falls back to that page (so `has_next` is `false`), and a
-/// missing `total_results` falls back to `0`, and missing `results` read as
-/// an empty list.
+/// A missing or invalid `page` falls back to `requested` (or `1`). A missing
+/// or invalid `total_pages` or `total_results` is unknown and reads as `0`,
+/// as [`Page`] documents, so `has_next` (`page < total_pages`) is `false`.
+/// Missing `results` read as an empty list.
 pub(crate) fn offset_page<T: TmdbListItem>(
     requested: Option<i32>,
     page: Option<i64>,
@@ -948,7 +948,7 @@ pub(crate) fn offset_page<T: TmdbListItem>(
     let to_u32 = |v: i64| u32::try_from(v).ok();
     let requested = requested.and_then(|p| u32::try_from(p).ok()).unwrap_or(1);
     let page = page.and_then(to_u32).unwrap_or(requested);
-    let total_pages = total_pages.and_then(to_u32).unwrap_or(page);
+    let total_pages = total_pages.and_then(to_u32).unwrap_or(0);
     let total_results = total_results.and_then(to_u32).unwrap_or(0);
     let results = results
         .unwrap_or_default()
@@ -1056,5 +1056,52 @@ mod tests {
             .expect("valid url");
         assert_eq!(url.path(), "/3/movie/550");
         assert!(!url.as_str().contains(SECRET), "{url}");
+    }
+
+    /// A list item with an optional id, standing in for a generated TMDB item.
+    struct Item(Option<i64>);
+
+    impl TmdbListItem for Item {
+        fn tmdb_id(&self) -> Option<i64> {
+            self.0
+        }
+    }
+
+    /// Omitted or invalid totals are unknown and read as `0`, as `Page`
+    /// documents, and leave no next page.
+    #[test]
+    fn offset_page_omitted_totals_read_as_zero() {
+        for (total_pages, total_results) in [(None, None), (Some(-1), Some(-1))] {
+            let page = offset_page(
+                Some(2),
+                None,
+                Some(vec![Item(Some(1))]),
+                total_pages,
+                total_results,
+            );
+            assert_eq!(page.page, 2);
+            assert_eq!(page.total_pages, 0);
+            assert_eq!(page.total_results, 0);
+            assert!(!page.has_next);
+            assert_eq!(page.next, None);
+            assert_eq!(page.results.len(), 1);
+        }
+    }
+
+    /// Reported totals pass through and drive `has_next`; id-less items drop.
+    #[test]
+    fn offset_page_reported_totals_pass_through() {
+        let page = offset_page(
+            None,
+            Some(1),
+            Some(vec![Item(Some(1)), Item(None)]),
+            Some(3),
+            Some(41),
+        );
+        assert_eq!(page.page, 1);
+        assert_eq!(page.total_pages, 3);
+        assert_eq!(page.total_results, 41);
+        assert!(page.has_next);
+        assert_eq!(page.results.len(), 1);
     }
 }

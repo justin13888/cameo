@@ -394,7 +394,7 @@ impl AniListClient {
                 .map(crate::unified::conversions::anilist::staff_to_person)
                 .collect(),
             pi.has_next_page,
-            pi.last_page.unwrap_or(1) as u32,
+            pi.last_page.unwrap_or(0) as u32,
             pi.total.unwrap_or(0) as u32,
         ))
     }
@@ -437,7 +437,7 @@ impl AniListClient {
             pi.current_page.unwrap_or(1) as u32,
             results,
             pi.has_next_page,
-            pi.last_page.unwrap_or(1) as u32,
+            pi.last_page.unwrap_or(0) as u32,
             pi.total.unwrap_or(0) as u32,
         ))
     }
@@ -892,10 +892,10 @@ fn media_page_root(resp: MediaPageResponse) -> Option<MediaPageData> {
 /// Convert a recommendation connection to a page of classified media,
 /// skipping null nodes, null recommended media, and entries whose format is
 /// absent or that [`classify`] places in neither list (e.g. `MUSIC`).
-/// A missing connection is an empty first page.
+/// A missing connection is an empty first page whose totals are unknown (`0`).
 fn recommendations_page(conn: Option<RecommendationConnection>) -> Page<UnifiedSearchResult> {
     let Some(conn) = conn else {
-        return Page::with_has_next(1, Vec::new(), false, 1, 0);
+        return Page::with_has_next(1, Vec::new(), false, 0, 0);
     };
     let pi = &conn.page_info;
     let results = conn
@@ -909,7 +909,7 @@ fn recommendations_page(conn: Option<RecommendationConnection>) -> Page<UnifiedS
         pi.current_page.unwrap_or(1) as u32,
         results,
         pi.has_next_page,
-        pi.last_page.unwrap_or(1) as u32,
+        pi.last_page.unwrap_or(0) as u32,
         pi.total.unwrap_or(0) as u32,
     )
 }
@@ -921,7 +921,7 @@ fn media_page_to_movies(page: Option<MediaPageData>) -> Result<Page<UnifiedMovie
         pi.current_page.unwrap_or(1) as u32,
         page.media.into_iter().map(anilist_media_to_movie).collect(),
         pi.has_next_page,
-        pi.last_page.unwrap_or(1) as u32,
+        pi.last_page.unwrap_or(0) as u32,
         pi.total.unwrap_or(0) as u32,
     ))
 }
@@ -933,7 +933,7 @@ fn media_page_to_tv(page: Option<MediaPageData>) -> Result<Page<UnifiedTvShow>, 
         pi.current_page.unwrap_or(1) as u32,
         page.media.into_iter().map(anilist_media_to_tv).collect(),
         pi.has_next_page,
-        pi.last_page.unwrap_or(1) as u32,
+        pi.last_page.unwrap_or(0) as u32,
         pi.total.unwrap_or(0) as u32,
     ))
 }
@@ -1521,7 +1521,8 @@ mod tests {
 
     fn assert_defaults<T>(page: &Page<T>) {
         assert_eq!(page.page, 1);
-        assert_eq!(page.total_pages, 1);
+        // Omitted totals are unknown, which `Page` documents as `0`.
+        assert_eq!(page.total_pages, 0);
         assert_eq!(page.total_results, 0);
         assert!(!page.has_next);
         assert_eq!(page.next, None);

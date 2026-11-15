@@ -163,6 +163,24 @@ async fn popular_movies_respects_pagination() {
     assert!(result.has_next_page());
 }
 
+#[tokio::test]
+async fn popular_movies_omitted_totals_read_as_zero() {
+    let mut body = page_response(vec![media_item(1, "Movie", "MOVIE")], 100);
+    let page_info = &mut body["data"]["Page"]["pageInfo"];
+    page_info["lastPage"] = Value::Null;
+    page_info["total"] = Value::Null;
+    page_info["hasNextPage"] = json!(true);
+    let (_server, client) = mock_client(body).await;
+
+    let result = client.popular_movies(None).await.unwrap();
+
+    // Unknown totals read as 0; `has_next` still comes from `hasNextPage`.
+    assert_eq!(result.total_pages, 0);
+    assert_eq!(result.total_results, 0);
+    assert!(result.has_next_page());
+    assert_eq!(result.results.len(), 1);
+}
+
 // ── top_rated_movies ──────────────────────────────────────────────────────────
 
 #[tokio::test]
