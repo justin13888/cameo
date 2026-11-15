@@ -1,12 +1,4 @@
 # Hand-written Rust sources still allowed over the file-length limit that
 # scripts/check-file-length.sh enforces. One path per line. This list may only
 # shrink: remove a path once its file is split below the limit, and never add
-# one. Splitting the files below is tracked in its own issue.
-src/cache/sqlite.rs
-src/providers/anilist/client/tests.rs
-src/providers/anilist/convert/media.rs
-src/providers/anilist/query.rs
-src/providers/tmdb/convert/tv.rs
-src/providers/tmdb/error.rs
-src/unified/genre.rs
-src/unified/models.rs
+# one. It lists no paths: every hand-written file is within the limit.
