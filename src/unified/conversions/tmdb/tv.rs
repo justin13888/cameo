@@ -174,6 +174,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
             .iter()
             .map(|&r| r.max(0) as u32)
             .collect();
+        let status = t.status.as_deref().map(SeriesStatus::from_tmdb);
         UnifiedTvShowDetails {
             show: UnifiedTvShow {
                 provider_id: MediaId::tmdb(t.id.unwrap_or_default() as u64),
@@ -199,14 +200,14 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 // data/status (first listed run time).
                 number_of_episodes,
                 episode_run_time: episode_run_time.first().copied(),
-                status: t.status.clone(),
+                status: status.clone(),
             },
             tagline: t.tagline,
             number_of_seasons: t.number_of_seasons.map(|n| n.max(0) as u32),
             number_of_episodes,
             // Spec default was `true`; an absent/null flag stays unknown.
             in_production: t.in_production,
-            status: t.status,
+            status,
             homepage: t.homepage,
             networks: t.networks.into_iter().map(Network::from).collect(),
             production_companies: t
@@ -215,7 +216,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 .map(Company::from)
                 .collect(),
             last_air_date: resolve_date(&t.last_air_date),
-            type_: t.type_,
+            type_: t.type_.as_deref().map(SeriesType::from_tmdb),
             media_format: None,
             created_by: t.created_by.into_iter().map(Creator::from).collect(),
             episode_run_time,
@@ -275,7 +276,9 @@ mod tests {
         unified::{
             genre::Genre,
             media_id::MediaId,
-            models::{UnifiedEpisode, UnifiedTvShow, UnifiedTvShowDetails},
+            models::{
+                SeriesStatus, SeriesType, UnifiedEpisode, UnifiedTvShow, UnifiedTvShowDetails,
+            },
         },
     };
 
@@ -356,14 +359,14 @@ mod tests {
         assert!(show.alternative_titles.is_empty());
         assert_eq!(show.number_of_episodes, Some(0));
         assert_eq!(show.episode_run_time, Some(0));
-        assert_eq!(show.status.as_deref(), Some("Ended"));
+        assert_eq!(show.status, Some(SeriesStatus::Ended));
 
         assert_eq!(details.tagline.as_deref(), Some("Winter is coming."));
         assert_eq!(details.number_of_seasons, Some(8));
         assert_eq!(details.number_of_episodes, Some(0));
         assert_eq!(details.in_production, Some(false));
-        assert_eq!(details.status.as_deref(), Some("Ended"));
-        assert_eq!(details.type_.as_deref(), Some("Scripted"));
+        assert_eq!(details.status, Some(SeriesStatus::Ended));
+        assert_eq!(details.type_, Some(SeriesType::Scripted));
         assert_eq!(details.media_format, None);
         assert_eq!(
             details.homepage.as_deref(),
@@ -612,7 +615,7 @@ mod tests {
         assert_eq!(details.show.episode_run_time, Some(45));
         assert_eq!(details.show.number_of_episodes, details.number_of_episodes);
         assert_eq!(details.show.number_of_episodes, Some(62));
-        assert_eq!(details.show.status.as_deref(), Some("Ended"));
+        assert_eq!(details.show.status, Some(SeriesStatus::Ended));
         assert_eq!(details.show.status, details.status);
     }
 }

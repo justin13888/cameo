@@ -133,7 +133,7 @@ mod tests {
         let tv = anilist_media_to_tv(make_media(2, "TV"));
         assert_eq!(tv.number_of_episodes, Some(12));
         assert_eq!(tv.episode_run_time, Some(24));
-        assert_eq!(tv.status.as_deref(), Some("FINISHED"));
+        assert_eq!(tv.status, Some(crate::unified::models::SeriesStatus::Ended));
     }
 
     #[test]

@@ -297,8 +297,8 @@ impl UnifiedTvShow {
         self
     }
     /// Set the release status.
-    pub fn with_status(mut self, value: impl Into<String>) -> Self {
-        self.status = Some(value.into());
+    pub fn with_status(mut self, value: SeriesStatus) -> Self {
+        self.status = Some(value);
         self
     }
 }
@@ -348,8 +348,8 @@ impl UnifiedTvShowDetails {
         self
     }
     /// Set the release status.
-    pub fn with_status(mut self, value: impl Into<String>) -> Self {
-        self.status = Some(value.into());
+    pub fn with_status(mut self, value: SeriesStatus) -> Self {
+        self.status = Some(value);
         self
     }
     /// Set the homepage URL.
@@ -372,9 +372,9 @@ impl UnifiedTvShowDetails {
         self.last_air_date = Some(value);
         self
     }
-    /// Set the show classification (e.g. "Scripted").
-    pub fn with_type(mut self, value: impl Into<String>) -> Self {
-        self.type_ = Some(value.into());
+    /// Set the show classification (e.g. [`SeriesType::Scripted`]).
+    pub fn with_type(mut self, value: SeriesType) -> Self {
+        self.type_ = Some(value);
         self
     }
     /// Set the provider media format (e.g. "TV", "OVA").
