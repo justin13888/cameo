@@ -36,6 +36,32 @@ const MOVIE_FORMATS: &[AnimeFormat] = AnimeFormat::MOVIES;
 /// AniList formats for anime that map to the "TV show" media type.
 const TV_FORMATS: &[AnimeFormat] = AnimeFormat::TV;
 
+/// The unified media type an AniList anime format maps to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Kind {
+    /// A movie: a format in [`MOVIE_FORMATS`].
+    Movie,
+    /// A TV show: a format in [`TV_FORMATS`].
+    Tv,
+}
+
+/// Classify an AniList `format` value (e.g. `"MOVIE"`, `"TV"`).
+///
+/// The single source of truth shared by the `formatIn` lists the movie and TV
+/// queries send ([`MOVIE_FORMATS`], [`TV_FORMATS`]) and the conversions that
+/// sort mixed results: a format in neither list (e.g. `MUSIC`) or an unknown
+/// value is `None`, so no result set reports it as a movie or a show.
+pub(crate) fn classify(format: &str) -> Option<Kind> {
+    let in_list = |formats: &[AnimeFormat]| formats.iter().any(|f| f.as_str() == format);
+    if in_list(MOVIE_FORMATS) {
+        Some(Kind::Movie)
+    } else if in_list(TV_FORMATS) {
+        Some(Kind::Tv)
+    } else {
+        None
+    }
+}
+
 /// Characters and staff fetched per [`AniListClient::media_credits`] request.
 ///
 /// Below AniList's 50-item maximum because each character also nests its
@@ -368,12 +394,18 @@ impl AniListClient {
                 .map(crate::unified::conversions::anilist::staff_to_person)
                 .collect(),
             pi.has_next_page,
-            pi.last_page.unwrap_or(1) as u32,
+            pi.last_page.unwrap_or(0) as u32,
             pi.total.unwrap_or(0) as u32,
         ))
     }
 
     /// Search across all anime formats. Returns movies and TV shows mixed.
+    ///
+    /// Each result is classified the way the movie and TV list queries filter:
+    /// `MOVIE` is a movie, `TV`, `TV_SHORT`, `ONA`, `OVA`, and `SPECIAL` are TV
+    /// shows, and anything else (e.g. `MUSIC`, or no format) is omitted, so a
+    /// page may hold fewer items than the configured page size while the
+    /// pagination metadata keeps describing AniList's unfiltered results.
     pub async fn search_multi(
         &self,
         query: &str,
@@ -405,7 +437,7 @@ impl AniListClient {
             pi.current_page.unwrap_or(1) as u32,
             results,
             pi.has_next_page,
-            pi.last_page.unwrap_or(1) as u32,
+            pi.last_page.unwrap_or(0) as u32,
             pi.total.unwrap_or(0) as u32,
         ))
     }
@@ -544,10 +576,15 @@ impl AniListClient {
 
     /// Find the anime with the given MyAnimeList ID.
     ///
-    /// Returns `Ok(None)` when AniList has no anime with that MAL id. The match
-    /// is a [`MatchKind::Movie`](crate::unified::MatchKind::Movie) for the
-    /// `MOVIE` format and a [`MatchKind::TvShow`](crate::unified::MatchKind::TvShow)
-    /// for every other format (TV, OVA, ONA, special, …).
+    /// The match uses the same classification as
+    /// [`search_multi`](Self::search_multi): a
+    /// [`MatchKind::Movie`](crate::unified::MatchKind::Movie) for the movie
+    /// formats (`MOVIE`) and a
+    /// [`MatchKind::TvShow`](crate::unified::MatchKind::TvShow) for the TV
+    /// formats (`TV`, `TV_SHORT`, `ONA`, `OVA`, `SPECIAL`).
+    ///
+    /// Returns `Ok(None)` when AniList has no anime with that MAL id, and when
+    /// the anime's format is absent or in neither list (e.g. `MUSIC`).
     pub async fn find_by_mal_id(&self, mal_id: i32) -> Result<Option<ExternalMatch>, AniListError> {
         let vars = json!({ "idMal": mal_id });
         tracing::debug!(mal_id, "anilist: graphql MEDIA_BY_MAL_ID");
@@ -561,9 +598,9 @@ impl AniListClient {
         };
         Ok(media.and_then(|media| {
             let id = MediaId::anilist(u64::try_from(media.id).ok()?);
-            Some(match media.format.as_deref() {
-                Some("MOVIE") => ExternalMatch::movie(id),
-                _ => ExternalMatch::tv_show(id),
+            Some(match media.format.as_deref().and_then(classify)? {
+                Kind::Movie => ExternalMatch::movie(id),
+                Kind::Tv => ExternalMatch::tv_show(id),
             })
         }))
     }
@@ -739,7 +776,7 @@ impl AniListClient {
     }
 
     /// Get community recommendations for an anime, keeping only recommended
-    /// **series** (any present format other than `MOVIE`, e.g. `TV`, `OVA`).
+    /// **series** (the TV formats `TV`, `TV_SHORT`, `ONA`, `OVA`, `SPECIAL`).
     ///
     /// Uses the same classification as [`search_multi`](Self::search_multi);
     /// see [`movie_recommendations`](Self::movie_recommendations) for how
@@ -853,11 +890,12 @@ fn media_page_root(resp: MediaPageResponse) -> Option<MediaPageData> {
 }
 
 /// Convert a recommendation connection to a page of classified media,
-/// skipping null nodes, null recommended media, and entries with no format.
-/// A missing connection is an empty first page.
+/// skipping null nodes, null recommended media, and entries whose format is
+/// absent or that [`classify`] places in neither list (e.g. `MUSIC`).
+/// A missing connection is an empty first page whose totals are unknown (`0`).
 fn recommendations_page(conn: Option<RecommendationConnection>) -> Page<UnifiedSearchResult> {
     let Some(conn) = conn else {
-        return Page::with_has_next(1, Vec::new(), false, 1, 0);
+        return Page::with_has_next(1, Vec::new(), false, 0, 0);
     };
     let pi = &conn.page_info;
     let results = conn
@@ -871,7 +909,7 @@ fn recommendations_page(conn: Option<RecommendationConnection>) -> Page<UnifiedS
         pi.current_page.unwrap_or(1) as u32,
         results,
         pi.has_next_page,
-        pi.last_page.unwrap_or(1) as u32,
+        pi.last_page.unwrap_or(0) as u32,
         pi.total.unwrap_or(0) as u32,
     )
 }
@@ -883,7 +921,7 @@ fn media_page_to_movies(page: Option<MediaPageData>) -> Result<Page<UnifiedMovie
         pi.current_page.unwrap_or(1) as u32,
         page.media.into_iter().map(anilist_media_to_movie).collect(),
         pi.has_next_page,
-        pi.last_page.unwrap_or(1) as u32,
+        pi.last_page.unwrap_or(0) as u32,
         pi.total.unwrap_or(0) as u32,
     ))
 }
@@ -895,7 +933,7 @@ fn media_page_to_tv(page: Option<MediaPageData>) -> Result<Page<UnifiedTvShow>, 
         pi.current_page.unwrap_or(1) as u32,
         page.media.into_iter().map(anilist_media_to_tv).collect(),
         pi.has_next_page,
-        pi.last_page.unwrap_or(1) as u32,
+        pi.last_page.unwrap_or(0) as u32,
         pi.total.unwrap_or(0) as u32,
     ))
 }
@@ -918,6 +956,23 @@ mod tests {
         core::pagination::PageToken,
         providers::{rate_limit::RateLimit, retry::RetryPolicy},
     };
+
+    #[test]
+    fn classify_matches_the_format_in_lists() {
+        for f in MOVIE_FORMATS {
+            assert_eq!(classify(f.as_str()), Some(Kind::Movie), "{f:?}");
+        }
+        for f in TV_FORMATS {
+            assert_eq!(classify(f.as_str()), Some(Kind::Tv), "{f:?}");
+        }
+    }
+
+    #[test]
+    fn classify_formats_outside_both_lists_are_none() {
+        assert_eq!(classify(AnimeFormat::Music.as_str()), None);
+        assert_eq!(classify("UNKNOWN"), None);
+        assert_eq!(classify(""), None);
+    }
 
     // ── Harness ────────────────────────────────────────────────────────────────
 
@@ -1466,7 +1521,8 @@ mod tests {
 
     fn assert_defaults<T>(page: &Page<T>) {
         assert_eq!(page.page, 1);
-        assert_eq!(page.total_pages, 1);
+        // Omitted totals are unknown, which `Page` documents as `0`.
+        assert_eq!(page.total_pages, 0);
         assert_eq!(page.total_results, 0);
         assert!(!page.has_next);
         assert_eq!(page.next, None);
@@ -1629,11 +1685,19 @@ mod tests {
         let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
         assert_eq!(found, Some(ExternalMatch::movie(movie.clone())));
 
-        for format in [json!("OVA"), Value::Null] {
-            let body = json!({ "data": { "Media": { "id": 5, "format": format } } });
+        for format in TV_FORMATS {
+            let body = json!({ "data": { "Media": { "id": 5, "format": format.as_str() } } });
             let server = serve(json_response(200, body), 1).await;
             let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
             assert_eq!(found, Some(ExternalMatch::tv_show(movie.clone())));
+        }
+
+        // A format `classify` places in neither list is not a match.
+        for format in [json!("MUSIC"), json!("NOT_A_FORMAT"), Value::Null] {
+            let body = json!({ "data": { "Media": { "id": 5, "format": format } } });
+            let server = serve(json_response(200, body), 1).await;
+            let found = client_for(&server).find_by_mal_id(9).await.expect("ok");
+            assert_eq!(found, None, "format {format}");
         }
 
         let not_found = json!({ "errors": [{ "message": "Not Found.", "status": 404 }] });
