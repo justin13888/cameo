@@ -24,6 +24,10 @@ impl TmdbClient {
     /// page argument and always returns the first (and only) page of
     /// trending results: the page reports `has_next == false` and
     /// `total_pages == 1`, whatever TMDB's body claims.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn trending_movies(
         &self,
@@ -50,6 +54,10 @@ impl TmdbClient {
     /// page argument and always returns the first (and only) page of
     /// trending results: the page reports `has_next == false` and
     /// `total_pages == 1`, whatever TMDB's body claims.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn trending_tv_shows(
         &self,
@@ -71,6 +79,12 @@ impl TmdbClient {
     // ── Popular / Top Rated ──
 
     /// Get popular movies.
+    ///
+    /// `page` is clamped as [`TmdbClient`'s pages](TmdbClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn popular_movies(&self, page: Option<u32>) -> Result<Page<UnifiedMovie>, TmdbError> {
         let params = tmdb::MoviePopularListParams {
@@ -85,6 +99,12 @@ impl TmdbClient {
     }
 
     /// Get top-rated movies.
+    ///
+    /// `page` is clamped as [`TmdbClient`'s pages](TmdbClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn top_rated_movies(
         &self,
@@ -102,6 +122,12 @@ impl TmdbClient {
     }
 
     /// Get popular TV shows.
+    ///
+    /// `page` is clamped as [`TmdbClient`'s pages](TmdbClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn popular_tv_shows(
         &self,
@@ -118,6 +144,12 @@ impl TmdbClient {
     }
 
     /// Get top-rated TV shows.
+    ///
+    /// `page` is clamped as [`TmdbClient`'s pages](TmdbClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn top_rated_tv_shows(
         &self,
