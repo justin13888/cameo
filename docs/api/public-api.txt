@@ -138,6 +138,10 @@ impl core::hash::Hash for cameo::cache::key::MediaType
 pub fn cameo::cache::key::MediaType::hash<__H: core::hash::Hasher>(&self, &mut __H)
 impl core::marker::Copy for cameo::cache::key::MediaType
 impl core::marker::StructuralPartialEq for cameo::cache::key::MediaType
+impl serde_core::ser::Serialize for cameo::cache::key::MediaType
+pub fn cameo::cache::key::MediaType::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::cache::key::MediaType
+pub fn cameo::cache::key::MediaType::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
 impl core::marker::Freeze for cameo::cache::key::MediaType
 impl core::marker::Send for cameo::cache::key::MediaType
 impl core::marker::Sync for cameo::cache::key::MediaType
@@ -171,6 +175,7 @@ impl<T> core::clone::CloneToUninit for cameo::cache::key::MediaType where T: cor
 pub unsafe fn cameo::cache::key::MediaType::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::cache::key::MediaType
 pub fn cameo::cache::key::MediaType::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::cache::key::MediaType where T: for<'de> serde_core::de::Deserialize<'de>
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::cache::key::MediaType where T: ?core::marker::Sized
 pub fn cameo::cache::key::MediaType::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 pub fn cameo::cache::key::MediaType::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
@@ -350,6 +355,10 @@ impl core::hash::Hash for cameo::cache::key::MediaType
 pub fn cameo::cache::key::MediaType::hash<__H: core::hash::Hasher>(&self, &mut __H)
 impl core::marker::Copy for cameo::cache::key::MediaType
 impl core::marker::StructuralPartialEq for cameo::cache::key::MediaType
+impl serde_core::ser::Serialize for cameo::cache::key::MediaType
+pub fn cameo::cache::key::MediaType::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::cache::key::MediaType
+pub fn cameo::cache::key::MediaType::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
 impl core::marker::Freeze for cameo::cache::key::MediaType
 impl core::marker::Send for cameo::cache::key::MediaType
 impl core::marker::Sync for cameo::cache::key::MediaType
@@ -383,6 +392,7 @@ impl<T> core::clone::CloneToUninit for cameo::cache::key::MediaType where T: cor
 pub unsafe fn cameo::cache::key::MediaType::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::cache::key::MediaType
 pub fn cameo::cache::key::MediaType::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::cache::key::MediaType where T: for<'de> serde_core::de::Deserialize<'de>
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::cache::key::MediaType where T: ?core::marker::Sized
 pub fn cameo::cache::key::MediaType::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 pub fn cameo::cache::key::MediaType::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
@@ -403,10 +413,14 @@ pub fn cameo::cache::CacheTtlConfig::movie_details_ttl(&self, core::option::Opti
 pub fn cameo::cache::CacheTtlConfig::tv_show_details_ttl(&self, core::option::Option<&str>, core::option::Option<&str>, core::option::Option<&str>, bool) -> core::time::Duration
 impl core::clone::Clone for cameo::cache::CacheTtlConfig
 pub fn cameo::cache::CacheTtlConfig::clone(&self) -> cameo::cache::CacheTtlConfig
+impl core::cmp::Eq for cameo::cache::CacheTtlConfig
+impl core::cmp::PartialEq for cameo::cache::CacheTtlConfig
+pub fn cameo::cache::CacheTtlConfig::eq(&self, &cameo::cache::CacheTtlConfig) -> bool
 impl core::default::Default for cameo::cache::CacheTtlConfig
 pub fn cameo::cache::CacheTtlConfig::default() -> Self
 impl core::fmt::Debug for cameo::cache::CacheTtlConfig
 pub fn cameo::cache::CacheTtlConfig::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::cache::CacheTtlConfig
 impl core::marker::Freeze for cameo::cache::CacheTtlConfig
 impl core::marker::Send for cameo::cache::CacheTtlConfig
 impl core::marker::Sync for cameo::cache::CacheTtlConfig
@@ -414,6 +428,10 @@ impl core::marker::Unpin for cameo::cache::CacheTtlConfig
 impl core::marker::UnsafeUnpin for cameo::cache::CacheTtlConfig
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::cache::CacheTtlConfig
 impl core::panic::unwind_safe::UnwindSafe for cameo::cache::CacheTtlConfig
+impl<Q, K> equivalent::Equivalent<K> for cameo::cache::CacheTtlConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::cache::CacheTtlConfig::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::cache::CacheTtlConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::cache::CacheTtlConfig::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::cache::CacheTtlConfig where U: core::convert::From<T>
 pub fn cameo::cache::CacheTtlConfig::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::cache::CacheTtlConfig where U: core::convert::Into<T>
@@ -576,6 +594,11 @@ pub cameo::core::error::ProviderError::RateLimited
 pub cameo::core::error::ProviderError::RateLimited::retry_after: core::option::Option<core::time::Duration>
 pub cameo::core::error::ProviderError::Transport(alloc::string::String)
 pub cameo::core::error::ProviderError::Unsupported
+impl core::clone::Clone for cameo::core::error::ProviderError
+pub fn cameo::core::error::ProviderError::clone(&self) -> cameo::core::error::ProviderError
+impl core::cmp::Eq for cameo::core::error::ProviderError
+impl core::cmp::PartialEq for cameo::core::error::ProviderError
+pub fn cameo::core::error::ProviderError::eq(&self, &cameo::core::error::ProviderError) -> bool
 impl core::convert::From<cameo::core::error::ProviderError> for cameo::unified::facade::CameoClientError
 pub fn cameo::unified::facade::CameoClientError::from(cameo::core::error::ProviderError) -> Self
 impl core::convert::From<cameo::providers::anilist::error::AniListError> for cameo::core::error::ProviderError
@@ -587,6 +610,7 @@ impl core::fmt::Debug for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::fmt::Display for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::core::error::ProviderError
 impl core::marker::Freeze for cameo::core::error::ProviderError
 impl core::marker::Send for cameo::core::error::ProviderError
 impl core::marker::Sync for cameo::core::error::ProviderError
@@ -594,6 +618,10 @@ impl core::marker::Unpin for cameo::core::error::ProviderError
 impl core::marker::UnsafeUnpin for cameo::core::error::ProviderError
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::core::error::ProviderError
 impl core::panic::unwind_safe::UnwindSafe for cameo::core::error::ProviderError
+impl<Q, K> equivalent::Equivalent<K> for cameo::core::error::ProviderError where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::core::error::ProviderError::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::core::error::ProviderError where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::core::error::ProviderError::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::core::error::ProviderError where U: core::convert::From<T>
 pub fn cameo::core::error::ProviderError::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::core::error::ProviderError where U: core::convert::Into<T>
@@ -602,6 +630,10 @@ pub fn cameo::core::error::ProviderError::try_from(U) -> core::result::Result<T,
 impl<T, U> core::convert::TryInto<U> for cameo::core::error::ProviderError where U: core::convert::TryFrom<T>
 pub type cameo::core::error::ProviderError::Error = <U as core::convert::TryFrom<T>>::Error
 pub fn cameo::core::error::ProviderError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::core::error::ProviderError where T: core::clone::Clone
+pub type cameo::core::error::ProviderError::Owned = T
+pub fn cameo::core::error::ProviderError::clone_into(&self, &mut T)
+pub fn cameo::core::error::ProviderError::to_owned(&self) -> T
 impl<T> alloc::string::ToString for cameo::core::error::ProviderError where T: core::fmt::Display + ?core::marker::Sized
 pub fn cameo::core::error::ProviderError::to_string(&self) -> alloc::string::String
 impl<T> core::any::Any for cameo::core::error::ProviderError where T: 'static + ?core::marker::Sized
@@ -610,6 +642,8 @@ impl<T> core::borrow::Borrow<T> for cameo::core::error::ProviderError where T: ?
 pub fn cameo::core::error::ProviderError::borrow(&self) -> &T
 impl<T> core::borrow::BorrowMut<T> for cameo::core::error::ProviderError where T: ?core::marker::Sized
 pub fn cameo::core::error::ProviderError::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::core::error::ProviderError where T: core::clone::Clone
+pub unsafe fn cameo::core::error::ProviderError::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::from(T) -> T
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::core::error::ProviderError where T: ?core::marker::Sized
@@ -849,10 +883,14 @@ pub fn cameo::providers::anilist::config::AniListConfig::with_request_timeout(se
 pub fn cameo::providers::anilist::config::AniListConfig::with_retry(self, cameo::providers::retry::RetryPolicy) -> Self
 impl core::clone::Clone for cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::clone(&self) -> cameo::providers::anilist::config::AniListConfig
+impl core::cmp::Eq for cameo::providers::anilist::config::AniListConfig
+impl core::cmp::PartialEq for cameo::providers::anilist::config::AniListConfig
+pub fn cameo::providers::anilist::config::AniListConfig::eq(&self, &cameo::providers::anilist::config::AniListConfig) -> bool
 impl core::default::Default for cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::default() -> Self
 impl core::fmt::Debug for cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::config::AniListConfig
 impl core::marker::Freeze for cameo::providers::anilist::config::AniListConfig
 impl core::marker::Send for cameo::providers::anilist::config::AniListConfig
 impl core::marker::Sync for cameo::providers::anilist::config::AniListConfig
@@ -860,6 +898,10 @@ impl core::marker::Unpin for cameo::providers::anilist::config::AniListConfig
 impl core::marker::UnsafeUnpin for cameo::providers::anilist::config::AniListConfig
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::config::AniListConfig
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::config::AniListConfig
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::config::AniListConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::config::AniListConfig::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::config::AniListConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::config::AniListConfig::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::anilist::config::AniListConfig where U: core::convert::From<T>
 pub fn cameo::providers::anilist::config::AniListConfig::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::config::AniListConfig where U: core::convert::Into<T>
@@ -1704,10 +1746,14 @@ pub fn cameo::providers::anilist::config::AniListConfig::with_request_timeout(se
 pub fn cameo::providers::anilist::config::AniListConfig::with_retry(self, cameo::providers::retry::RetryPolicy) -> Self
 impl core::clone::Clone for cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::clone(&self) -> cameo::providers::anilist::config::AniListConfig
+impl core::cmp::Eq for cameo::providers::anilist::config::AniListConfig
+impl core::cmp::PartialEq for cameo::providers::anilist::config::AniListConfig
+pub fn cameo::providers::anilist::config::AniListConfig::eq(&self, &cameo::providers::anilist::config::AniListConfig) -> bool
 impl core::default::Default for cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::default() -> Self
 impl core::fmt::Debug for cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::config::AniListConfig
 impl core::marker::Freeze for cameo::providers::anilist::config::AniListConfig
 impl core::marker::Send for cameo::providers::anilist::config::AniListConfig
 impl core::marker::Sync for cameo::providers::anilist::config::AniListConfig
@@ -1715,6 +1761,10 @@ impl core::marker::Unpin for cameo::providers::anilist::config::AniListConfig
 impl core::marker::UnsafeUnpin for cameo::providers::anilist::config::AniListConfig
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::config::AniListConfig
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::config::AniListConfig
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::config::AniListConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::config::AniListConfig::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::config::AniListConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::config::AniListConfig::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::anilist::config::AniListConfig where U: core::convert::From<T>
 pub fn cameo::providers::anilist::config::AniListConfig::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::config::AniListConfig where U: core::convert::Into<T>
@@ -3043,8 +3093,12 @@ impl cameo::providers::tmdb::config::TmdbAuth
 pub fn cameo::providers::tmdb::config::TmdbAuth::credential(&self) -> &str
 impl core::clone::Clone for cameo::providers::tmdb::config::TmdbAuth
 pub fn cameo::providers::tmdb::config::TmdbAuth::clone(&self) -> cameo::providers::tmdb::config::TmdbAuth
+impl core::cmp::Eq for cameo::providers::tmdb::config::TmdbAuth
+impl core::cmp::PartialEq for cameo::providers::tmdb::config::TmdbAuth
+pub fn cameo::providers::tmdb::config::TmdbAuth::eq(&self, &cameo::providers::tmdb::config::TmdbAuth) -> bool
 impl core::fmt::Debug for cameo::providers::tmdb::config::TmdbAuth
 pub fn cameo::providers::tmdb::config::TmdbAuth::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::Freeze for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::Send for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::Sync for cameo::providers::tmdb::config::TmdbAuth
@@ -3052,6 +3106,10 @@ impl core::marker::Unpin for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::UnsafeUnpin for cameo::providers::tmdb::config::TmdbAuth
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::config::TmdbAuth
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::config::TmdbAuth
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::config::TmdbAuth where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbAuth::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::config::TmdbAuth where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbAuth::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::config::TmdbAuth where U: core::convert::From<T>
 pub fn cameo::providers::tmdb::config::TmdbAuth::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::config::TmdbAuth where U: core::convert::Into<T>
@@ -3106,8 +3164,12 @@ pub fn cameo::providers::tmdb::config::TmdbConfig::with_request_timeout(self, co
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_retry(self, cameo::providers::retry::RetryPolicy) -> Self
 impl core::clone::Clone for cameo::providers::tmdb::config::TmdbConfig
 pub fn cameo::providers::tmdb::config::TmdbConfig::clone(&self) -> cameo::providers::tmdb::config::TmdbConfig
+impl core::cmp::Eq for cameo::providers::tmdb::config::TmdbConfig
+impl core::cmp::PartialEq for cameo::providers::tmdb::config::TmdbConfig
+pub fn cameo::providers::tmdb::config::TmdbConfig::eq(&self, &cameo::providers::tmdb::config::TmdbConfig) -> bool
 impl core::fmt::Debug for cameo::providers::tmdb::config::TmdbConfig
 pub fn cameo::providers::tmdb::config::TmdbConfig::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::Freeze for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::Send for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::Sync for cameo::providers::tmdb::config::TmdbConfig
@@ -3115,6 +3177,10 @@ impl core::marker::Unpin for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::UnsafeUnpin for cameo::providers::tmdb::config::TmdbConfig
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::config::TmdbConfig
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::config::TmdbConfig
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::config::TmdbConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbConfig::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::config::TmdbConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbConfig::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::config::TmdbConfig where U: core::convert::From<T>
 pub fn cameo::providers::tmdb::config::TmdbConfig::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::config::TmdbConfig where U: core::convert::Into<T>
@@ -3143,6 +3209,62 @@ pub fn cameo::providers::tmdb::config::TmdbConfig::or<P, B, E>(self, P) -> tower
 impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::config::TmdbConfig
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::config::TmdbConfig
 pub mod cameo::providers::tmdb::error
+#[non_exhaustive] pub enum cameo::providers::tmdb::error::RequestErrorKind
+pub cameo::providers::tmdb::error::RequestErrorKind::InvalidRequest
+pub cameo::providers::tmdb::error::RequestErrorKind::PaginationCycle
+impl core::clone::Clone for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::clone(&self) -> cameo::providers::tmdb::error::RequestErrorKind
+impl core::cmp::Eq for cameo::providers::tmdb::error::RequestErrorKind
+impl core::cmp::PartialEq for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::eq(&self, &cameo::providers::tmdb::error::RequestErrorKind) -> bool
+impl core::fmt::Debug for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::Freeze for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::Send for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::Sync for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::Unpin for cameo::providers::tmdb::error::RequestErrorKind
+impl core::marker::UnsafeUnpin for cameo::providers::tmdb::error::RequestErrorKind
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::error::RequestErrorKind
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::error::RequestErrorKind
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::error::RequestErrorKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::error::RequestErrorKind where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::equivalent(&self, &K) -> bool
+impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::error::RequestErrorKind where U: core::convert::From<T>
+pub fn cameo::providers::tmdb::error::RequestErrorKind::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::error::RequestErrorKind where U: core::convert::Into<T>
+pub type cameo::providers::tmdb::error::RequestErrorKind::Error = core::convert::Infallible
+pub fn cameo::providers::tmdb::error::RequestErrorKind::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::tmdb::error::RequestErrorKind where U: core::convert::TryFrom<T>
+pub type cameo::providers::tmdb::error::RequestErrorKind::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::tmdb::error::RequestErrorKind::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::tmdb::error::RequestErrorKind where T: core::clone::Clone
+pub type cameo::providers::tmdb::error::RequestErrorKind::Owned = T
+pub fn cameo::providers::tmdb::error::RequestErrorKind::clone_into(&self, &mut T)
+pub fn cameo::providers::tmdb::error::RequestErrorKind::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::providers::tmdb::error::RequestErrorKind where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::providers::tmdb::error::RequestErrorKind where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::tmdb::error::RequestErrorKind where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::tmdb::error::RequestErrorKind where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::tmdb::error::RequestErrorKind where T: core::clone::Clone
+pub unsafe fn cameo::providers::tmdb::error::RequestErrorKind::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::tmdb::error::RequestErrorKind
+pub fn cameo::providers::tmdb::error::RequestErrorKind::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::tmdb::error::RequestErrorKind where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::RequestErrorKind::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::tmdb::error::RequestErrorKind::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::error::RequestErrorKind
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::error::RequestErrorKind
 #[non_exhaustive] pub enum cameo::providers::tmdb::error::TmdbError
 pub cameo::providers::tmdb::error::TmdbError::Api
 pub cameo::providers::tmdb::error::TmdbError::Api::message: alloc::string::String
@@ -3152,6 +3274,9 @@ pub cameo::providers::tmdb::error::TmdbError::Api::status_code: core::option::Op
 pub cameo::providers::tmdb::error::TmdbError::Deserialization(serde_json::error::Error)
 pub cameo::providers::tmdb::error::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::providers::tmdb::error::TmdbError::InvalidConfig(alloc::string::String)
+pub cameo::providers::tmdb::error::TmdbError::Request
+pub cameo::providers::tmdb::error::TmdbError::Request::kind: cameo::providers::tmdb::error::RequestErrorKind
+pub cameo::providers::tmdb::error::TmdbError::Request::message: alloc::string::String
 pub cameo::providers::tmdb::error::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::from(cameo::providers::tmdb::error::TmdbError) -> Self
@@ -3526,6 +3651,17 @@ pub fn cameo::providers::tmdb::image_url::ImageUrl::logo(&str, cameo::providers:
 pub fn cameo::providers::tmdb::image_url::ImageUrl::poster(&str, cameo::providers::tmdb::image_url::PosterSize) -> alloc::string::String
 pub fn cameo::providers::tmdb::image_url::ImageUrl::profile(&str, cameo::providers::tmdb::image_url::ProfileSize) -> alloc::string::String
 pub fn cameo::providers::tmdb::image_url::ImageUrl::still(&str, cameo::providers::tmdb::image_url::StillSize) -> alloc::string::String
+impl core::clone::Clone for cameo::providers::tmdb::image_url::ImageUrl
+pub fn cameo::providers::tmdb::image_url::ImageUrl::clone(&self) -> cameo::providers::tmdb::image_url::ImageUrl
+impl core::cmp::Eq for cameo::providers::tmdb::image_url::ImageUrl
+impl core::cmp::PartialEq for cameo::providers::tmdb::image_url::ImageUrl
+pub fn cameo::providers::tmdb::image_url::ImageUrl::eq(&self, &cameo::providers::tmdb::image_url::ImageUrl) -> bool
+impl core::fmt::Debug for cameo::providers::tmdb::image_url::ImageUrl
+pub fn cameo::providers::tmdb::image_url::ImageUrl::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::tmdb::image_url::ImageUrl
+pub fn cameo::providers::tmdb::image_url::ImageUrl::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::tmdb::image_url::ImageUrl
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::image_url::ImageUrl
 impl core::marker::Freeze for cameo::providers::tmdb::image_url::ImageUrl
 impl core::marker::Send for cameo::providers::tmdb::image_url::ImageUrl
 impl core::marker::Sync for cameo::providers::tmdb::image_url::ImageUrl
@@ -3533,6 +3669,10 @@ impl core::marker::Unpin for cameo::providers::tmdb::image_url::ImageUrl
 impl core::marker::UnsafeUnpin for cameo::providers::tmdb::image_url::ImageUrl
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::image_url::ImageUrl
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::image_url::ImageUrl
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::image_url::ImageUrl where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::image_url::ImageUrl::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::image_url::ImageUrl where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::image_url::ImageUrl::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::image_url::ImageUrl where U: core::convert::From<T>
 pub fn cameo::providers::tmdb::image_url::ImageUrl::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::image_url::ImageUrl where U: core::convert::Into<T>
@@ -3541,12 +3681,18 @@ pub fn cameo::providers::tmdb::image_url::ImageUrl::try_from(U) -> core::result:
 impl<T, U> core::convert::TryInto<U> for cameo::providers::tmdb::image_url::ImageUrl where U: core::convert::TryFrom<T>
 pub type cameo::providers::tmdb::image_url::ImageUrl::Error = <U as core::convert::TryFrom<T>>::Error
 pub fn cameo::providers::tmdb::image_url::ImageUrl::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::tmdb::image_url::ImageUrl where T: core::clone::Clone
+pub type cameo::providers::tmdb::image_url::ImageUrl::Owned = T
+pub fn cameo::providers::tmdb::image_url::ImageUrl::clone_into(&self, &mut T)
+pub fn cameo::providers::tmdb::image_url::ImageUrl::to_owned(&self) -> T
 impl<T> core::any::Any for cameo::providers::tmdb::image_url::ImageUrl where T: 'static + ?core::marker::Sized
 pub fn cameo::providers::tmdb::image_url::ImageUrl::type_id(&self) -> core::any::TypeId
 impl<T> core::borrow::Borrow<T> for cameo::providers::tmdb::image_url::ImageUrl where T: ?core::marker::Sized
 pub fn cameo::providers::tmdb::image_url::ImageUrl::borrow(&self) -> &T
 impl<T> core::borrow::BorrowMut<T> for cameo::providers::tmdb::image_url::ImageUrl where T: ?core::marker::Sized
 pub fn cameo::providers::tmdb::image_url::ImageUrl::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::tmdb::image_url::ImageUrl where T: core::clone::Clone
+pub unsafe fn cameo::providers::tmdb::image_url::ImageUrl::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::providers::tmdb::image_url::ImageUrl
 pub fn cameo::providers::tmdb::image_url::ImageUrl::from(T) -> T
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::tmdb::image_url::ImageUrl where T: ?core::marker::Sized
@@ -4098,8 +4244,12 @@ impl cameo::providers::tmdb::config::TmdbAuth
 pub fn cameo::providers::tmdb::config::TmdbAuth::credential(&self) -> &str
 impl core::clone::Clone for cameo::providers::tmdb::config::TmdbAuth
 pub fn cameo::providers::tmdb::config::TmdbAuth::clone(&self) -> cameo::providers::tmdb::config::TmdbAuth
+impl core::cmp::Eq for cameo::providers::tmdb::config::TmdbAuth
+impl core::cmp::PartialEq for cameo::providers::tmdb::config::TmdbAuth
+pub fn cameo::providers::tmdb::config::TmdbAuth::eq(&self, &cameo::providers::tmdb::config::TmdbAuth) -> bool
 impl core::fmt::Debug for cameo::providers::tmdb::config::TmdbAuth
 pub fn cameo::providers::tmdb::config::TmdbAuth::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::Freeze for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::Send for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::Sync for cameo::providers::tmdb::config::TmdbAuth
@@ -4107,6 +4257,10 @@ impl core::marker::Unpin for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::UnsafeUnpin for cameo::providers::tmdb::config::TmdbAuth
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::config::TmdbAuth
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::config::TmdbAuth
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::config::TmdbAuth where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbAuth::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::config::TmdbAuth where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbAuth::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::config::TmdbAuth where U: core::convert::From<T>
 pub fn cameo::providers::tmdb::config::TmdbAuth::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::config::TmdbAuth where U: core::convert::Into<T>
@@ -4143,6 +4297,9 @@ pub cameo::providers::tmdb::TmdbError::Api::status_code: core::option::Option<i6
 pub cameo::providers::tmdb::TmdbError::Deserialization(serde_json::error::Error)
 pub cameo::providers::tmdb::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::providers::tmdb::TmdbError::InvalidConfig(alloc::string::String)
+pub cameo::providers::tmdb::TmdbError::Request
+pub cameo::providers::tmdb::TmdbError::Request::kind: cameo::providers::tmdb::error::RequestErrorKind
+pub cameo::providers::tmdb::TmdbError::Request::message: alloc::string::String
 pub cameo::providers::tmdb::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::from(cameo::providers::tmdb::error::TmdbError) -> Self
@@ -4300,6 +4457,17 @@ pub fn cameo::providers::tmdb::image_url::ImageUrl::logo(&str, cameo::providers:
 pub fn cameo::providers::tmdb::image_url::ImageUrl::poster(&str, cameo::providers::tmdb::image_url::PosterSize) -> alloc::string::String
 pub fn cameo::providers::tmdb::image_url::ImageUrl::profile(&str, cameo::providers::tmdb::image_url::ProfileSize) -> alloc::string::String
 pub fn cameo::providers::tmdb::image_url::ImageUrl::still(&str, cameo::providers::tmdb::image_url::StillSize) -> alloc::string::String
+impl core::clone::Clone for cameo::providers::tmdb::image_url::ImageUrl
+pub fn cameo::providers::tmdb::image_url::ImageUrl::clone(&self) -> cameo::providers::tmdb::image_url::ImageUrl
+impl core::cmp::Eq for cameo::providers::tmdb::image_url::ImageUrl
+impl core::cmp::PartialEq for cameo::providers::tmdb::image_url::ImageUrl
+pub fn cameo::providers::tmdb::image_url::ImageUrl::eq(&self, &cameo::providers::tmdb::image_url::ImageUrl) -> bool
+impl core::fmt::Debug for cameo::providers::tmdb::image_url::ImageUrl
+pub fn cameo::providers::tmdb::image_url::ImageUrl::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::hash::Hash for cameo::providers::tmdb::image_url::ImageUrl
+pub fn cameo::providers::tmdb::image_url::ImageUrl::hash<__H: core::hash::Hasher>(&self, &mut __H)
+impl core::marker::Copy for cameo::providers::tmdb::image_url::ImageUrl
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::image_url::ImageUrl
 impl core::marker::Freeze for cameo::providers::tmdb::image_url::ImageUrl
 impl core::marker::Send for cameo::providers::tmdb::image_url::ImageUrl
 impl core::marker::Sync for cameo::providers::tmdb::image_url::ImageUrl
@@ -4307,6 +4475,10 @@ impl core::marker::Unpin for cameo::providers::tmdb::image_url::ImageUrl
 impl core::marker::UnsafeUnpin for cameo::providers::tmdb::image_url::ImageUrl
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::image_url::ImageUrl
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::image_url::ImageUrl
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::image_url::ImageUrl where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::image_url::ImageUrl::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::image_url::ImageUrl where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::image_url::ImageUrl::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::image_url::ImageUrl where U: core::convert::From<T>
 pub fn cameo::providers::tmdb::image_url::ImageUrl::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::image_url::ImageUrl where U: core::convert::Into<T>
@@ -4315,12 +4487,18 @@ pub fn cameo::providers::tmdb::image_url::ImageUrl::try_from(U) -> core::result:
 impl<T, U> core::convert::TryInto<U> for cameo::providers::tmdb::image_url::ImageUrl where U: core::convert::TryFrom<T>
 pub type cameo::providers::tmdb::image_url::ImageUrl::Error = <U as core::convert::TryFrom<T>>::Error
 pub fn cameo::providers::tmdb::image_url::ImageUrl::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::tmdb::image_url::ImageUrl where T: core::clone::Clone
+pub type cameo::providers::tmdb::image_url::ImageUrl::Owned = T
+pub fn cameo::providers::tmdb::image_url::ImageUrl::clone_into(&self, &mut T)
+pub fn cameo::providers::tmdb::image_url::ImageUrl::to_owned(&self) -> T
 impl<T> core::any::Any for cameo::providers::tmdb::image_url::ImageUrl where T: 'static + ?core::marker::Sized
 pub fn cameo::providers::tmdb::image_url::ImageUrl::type_id(&self) -> core::any::TypeId
 impl<T> core::borrow::Borrow<T> for cameo::providers::tmdb::image_url::ImageUrl where T: ?core::marker::Sized
 pub fn cameo::providers::tmdb::image_url::ImageUrl::borrow(&self) -> &T
 impl<T> core::borrow::BorrowMut<T> for cameo::providers::tmdb::image_url::ImageUrl where T: ?core::marker::Sized
 pub fn cameo::providers::tmdb::image_url::ImageUrl::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::tmdb::image_url::ImageUrl where T: core::clone::Clone
+pub unsafe fn cameo::providers::tmdb::image_url::ImageUrl::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::providers::tmdb::image_url::ImageUrl
 pub fn cameo::providers::tmdb::image_url::ImageUrl::from(T) -> T
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::tmdb::image_url::ImageUrl where T: ?core::marker::Sized
@@ -4469,8 +4647,12 @@ pub fn cameo::providers::tmdb::config::TmdbConfig::with_request_timeout(self, co
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_retry(self, cameo::providers::retry::RetryPolicy) -> Self
 impl core::clone::Clone for cameo::providers::tmdb::config::TmdbConfig
 pub fn cameo::providers::tmdb::config::TmdbConfig::clone(&self) -> cameo::providers::tmdb::config::TmdbConfig
+impl core::cmp::Eq for cameo::providers::tmdb::config::TmdbConfig
+impl core::cmp::PartialEq for cameo::providers::tmdb::config::TmdbConfig
+pub fn cameo::providers::tmdb::config::TmdbConfig::eq(&self, &cameo::providers::tmdb::config::TmdbConfig) -> bool
 impl core::fmt::Debug for cameo::providers::tmdb::config::TmdbConfig
 pub fn cameo::providers::tmdb::config::TmdbConfig::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::Freeze for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::Send for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::Sync for cameo::providers::tmdb::config::TmdbConfig
@@ -4478,6 +4660,10 @@ impl core::marker::Unpin for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::UnsafeUnpin for cameo::providers::tmdb::config::TmdbConfig
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::config::TmdbConfig
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::config::TmdbConfig
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::config::TmdbConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbConfig::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::config::TmdbConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbConfig::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::config::TmdbConfig where U: core::convert::From<T>
 pub fn cameo::providers::tmdb::config::TmdbConfig::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::config::TmdbConfig where U: core::convert::Into<T>
@@ -5260,6 +5446,8 @@ pub async fn cameo::unified::facade::CameoClient::search_movies_with(&self, &str
 pub async fn cameo::unified::facade::CameoClient::search_multi_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::search_people_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::search_tv_shows_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+impl core::clone::Clone for cameo::unified::facade::CameoClient
+pub fn cameo::unified::facade::CameoClient::clone(&self) -> cameo::unified::facade::CameoClient
 impl core::fmt::Debug for cameo::unified::facade::CameoClient
 pub fn cameo::unified::facade::CameoClient::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::marker::Freeze for cameo::unified::facade::CameoClient
@@ -5277,12 +5465,18 @@ pub fn cameo::unified::facade::CameoClient::try_from(U) -> core::result::Result<
 impl<T, U> core::convert::TryInto<U> for cameo::unified::facade::CameoClient where U: core::convert::TryFrom<T>
 pub type cameo::unified::facade::CameoClient::Error = <U as core::convert::TryFrom<T>>::Error
 pub fn cameo::unified::facade::CameoClient::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::facade::CameoClient where T: core::clone::Clone
+pub type cameo::unified::facade::CameoClient::Owned = T
+pub fn cameo::unified::facade::CameoClient::clone_into(&self, &mut T)
+pub fn cameo::unified::facade::CameoClient::to_owned(&self) -> T
 impl<T> core::any::Any for cameo::unified::facade::CameoClient where T: 'static + ?core::marker::Sized
 pub fn cameo::unified::facade::CameoClient::type_id(&self) -> core::any::TypeId
 impl<T> core::borrow::Borrow<T> for cameo::unified::facade::CameoClient where T: ?core::marker::Sized
 pub fn cameo::unified::facade::CameoClient::borrow(&self) -> &T
 impl<T> core::borrow::BorrowMut<T> for cameo::unified::facade::CameoClient where T: ?core::marker::Sized
 pub fn cameo::unified::facade::CameoClient::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::facade::CameoClient where T: core::clone::Clone
+pub unsafe fn cameo::unified::facade::CameoClient::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::unified::facade::CameoClient
 pub fn cameo::unified::facade::CameoClient::from(T) -> T
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::facade::CameoClient where T: ?core::marker::Sized
@@ -5495,7 +5689,7 @@ pub fn cameo::unified::genre::UnknownGenre::or<P, B, E>(self, P) -> tower_http::
 impl<T> tracing::instrument::Instrument for cameo::unified::genre::UnknownGenre
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::genre::UnknownGenre
 pub mod cameo::unified::media_id
-pub enum cameo::unified::media_id::MediaIdParseError
+#[non_exhaustive] pub enum cameo::unified::media_id::MediaIdParseError
 pub cameo::unified::media_id::MediaIdParseError::Empty(alloc::string::String)
 pub cameo::unified::media_id::MediaIdParseError::MissingSeparator(alloc::string::String)
 impl core::clone::Clone for cameo::unified::media_id::MediaIdParseError
@@ -7241,6 +7435,10 @@ impl core::hash::Hash for cameo::unified::traits::Capability
 pub fn cameo::unified::traits::Capability::hash<__H: core::hash::Hasher>(&self, &mut __H)
 impl core::marker::Copy for cameo::unified::traits::Capability
 impl core::marker::StructuralPartialEq for cameo::unified::traits::Capability
+impl serde_core::ser::Serialize for cameo::unified::traits::Capability
+pub fn cameo::unified::traits::Capability::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::traits::Capability
+pub fn cameo::unified::traits::Capability::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
 impl core::marker::Freeze for cameo::unified::traits::Capability
 impl core::marker::Send for cameo::unified::traits::Capability
 impl core::marker::Sync for cameo::unified::traits::Capability
@@ -7274,6 +7472,7 @@ impl<T> core::clone::CloneToUninit for cameo::unified::traits::Capability where 
 pub unsafe fn cameo::unified::traits::Capability::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::unified::traits::Capability
 pub fn cameo::unified::traits::Capability::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::traits::Capability where T: for<'de> serde_core::de::Deserialize<'de>
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::traits::Capability where T: ?core::marker::Sized
 pub fn cameo::unified::traits::Capability::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 pub fn cameo::unified::traits::Capability::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
@@ -7454,6 +7653,10 @@ impl core::hash::Hash for cameo::unified::traits::Capability
 pub fn cameo::unified::traits::Capability::hash<__H: core::hash::Hasher>(&self, &mut __H)
 impl core::marker::Copy for cameo::unified::traits::Capability
 impl core::marker::StructuralPartialEq for cameo::unified::traits::Capability
+impl serde_core::ser::Serialize for cameo::unified::traits::Capability
+pub fn cameo::unified::traits::Capability::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::traits::Capability
+pub fn cameo::unified::traits::Capability::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
 impl core::marker::Freeze for cameo::unified::traits::Capability
 impl core::marker::Send for cameo::unified::traits::Capability
 impl core::marker::Sync for cameo::unified::traits::Capability
@@ -7487,6 +7690,7 @@ impl<T> core::clone::CloneToUninit for cameo::unified::traits::Capability where 
 pub unsafe fn cameo::unified::traits::Capability::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::unified::traits::Capability
 pub fn cameo::unified::traits::Capability::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::traits::Capability where T: for<'de> serde_core::de::Deserialize<'de>
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::traits::Capability where T: ?core::marker::Sized
 pub fn cameo::unified::traits::Capability::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 pub fn cameo::unified::traits::Capability::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
@@ -7777,7 +7981,7 @@ pub fn cameo::unified::external_ids::MatchKind::and<P, B, E>(self, P) -> tower_h
 pub fn cameo::unified::external_ids::MatchKind::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::MatchKind
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::MatchKind
-pub enum cameo::unified::MediaIdParseError
+#[non_exhaustive] pub enum cameo::unified::MediaIdParseError
 pub cameo::unified::MediaIdParseError::Empty(alloc::string::String)
 pub cameo::unified::MediaIdParseError::MissingSeparator(alloc::string::String)
 impl core::clone::Clone for cameo::unified::media_id::MediaIdParseError
@@ -8291,6 +8495,8 @@ pub async fn cameo::unified::facade::CameoClient::search_movies_with(&self, &str
 pub async fn cameo::unified::facade::CameoClient::search_multi_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::search_people_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::search_tv_shows_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+impl core::clone::Clone for cameo::unified::facade::CameoClient
+pub fn cameo::unified::facade::CameoClient::clone(&self) -> cameo::unified::facade::CameoClient
 impl core::fmt::Debug for cameo::unified::facade::CameoClient
 pub fn cameo::unified::facade::CameoClient::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::marker::Freeze for cameo::unified::facade::CameoClient
@@ -8308,12 +8514,18 @@ pub fn cameo::unified::facade::CameoClient::try_from(U) -> core::result::Result<
 impl<T, U> core::convert::TryInto<U> for cameo::unified::facade::CameoClient where U: core::convert::TryFrom<T>
 pub type cameo::unified::facade::CameoClient::Error = <U as core::convert::TryFrom<T>>::Error
 pub fn cameo::unified::facade::CameoClient::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::facade::CameoClient where T: core::clone::Clone
+pub type cameo::unified::facade::CameoClient::Owned = T
+pub fn cameo::unified::facade::CameoClient::clone_into(&self, &mut T)
+pub fn cameo::unified::facade::CameoClient::to_owned(&self) -> T
 impl<T> core::any::Any for cameo::unified::facade::CameoClient where T: 'static + ?core::marker::Sized
 pub fn cameo::unified::facade::CameoClient::type_id(&self) -> core::any::TypeId
 impl<T> core::borrow::Borrow<T> for cameo::unified::facade::CameoClient where T: ?core::marker::Sized
 pub fn cameo::unified::facade::CameoClient::borrow(&self) -> &T
 impl<T> core::borrow::BorrowMut<T> for cameo::unified::facade::CameoClient where T: ?core::marker::Sized
 pub fn cameo::unified::facade::CameoClient::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::facade::CameoClient where T: core::clone::Clone
+pub unsafe fn cameo::unified::facade::CameoClient::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::unified::facade::CameoClient
 pub fn cameo::unified::facade::CameoClient::from(T) -> T
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::facade::CameoClient where T: ?core::marker::Sized
@@ -10345,6 +10557,10 @@ impl core::hash::Hash for cameo::unified::traits::Capability
 pub fn cameo::unified::traits::Capability::hash<__H: core::hash::Hasher>(&self, &mut __H)
 impl core::marker::Copy for cameo::unified::traits::Capability
 impl core::marker::StructuralPartialEq for cameo::unified::traits::Capability
+impl serde_core::ser::Serialize for cameo::unified::traits::Capability
+pub fn cameo::unified::traits::Capability::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::unified::traits::Capability
+pub fn cameo::unified::traits::Capability::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
 impl core::marker::Freeze for cameo::unified::traits::Capability
 impl core::marker::Send for cameo::unified::traits::Capability
 impl core::marker::Sync for cameo::unified::traits::Capability
@@ -10378,6 +10594,7 @@ impl<T> core::clone::CloneToUninit for cameo::unified::traits::Capability where 
 pub unsafe fn cameo::unified::traits::Capability::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::unified::traits::Capability
 pub fn cameo::unified::traits::Capability::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::unified::traits::Capability where T: for<'de> serde_core::de::Deserialize<'de>
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::traits::Capability where T: ?core::marker::Sized
 pub fn cameo::unified::traits::Capability::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 pub fn cameo::unified::traits::Capability::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
@@ -10683,6 +10900,10 @@ impl core::hash::Hash for cameo::cache::key::MediaType
 pub fn cameo::cache::key::MediaType::hash<__H: core::hash::Hasher>(&self, &mut __H)
 impl core::marker::Copy for cameo::cache::key::MediaType
 impl core::marker::StructuralPartialEq for cameo::cache::key::MediaType
+impl serde_core::ser::Serialize for cameo::cache::key::MediaType
+pub fn cameo::cache::key::MediaType::serialize<__S>(&self, __S) -> core::result::Result<<__S as serde_core::ser::Serializer>::Ok, <__S as serde_core::ser::Serializer>::Error> where __S: serde_core::ser::Serializer
+impl<'de> serde_core::de::Deserialize<'de> for cameo::cache::key::MediaType
+pub fn cameo::cache::key::MediaType::deserialize<__D>(__D) -> core::result::Result<Self, <__D as serde_core::de::Deserializer>::Error> where __D: serde_core::de::Deserializer<'de>
 impl core::marker::Freeze for cameo::cache::key::MediaType
 impl core::marker::Send for cameo::cache::key::MediaType
 impl core::marker::Sync for cameo::cache::key::MediaType
@@ -10716,6 +10937,7 @@ impl<T> core::clone::CloneToUninit for cameo::cache::key::MediaType where T: cor
 pub unsafe fn cameo::cache::key::MediaType::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::cache::key::MediaType
 pub fn cameo::cache::key::MediaType::from(T) -> T
+impl<T> serde_core::de::DeserializeOwned for cameo::cache::key::MediaType where T: for<'de> serde_core::de::Deserialize<'de>
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::cache::key::MediaType where T: ?core::marker::Sized
 pub fn cameo::cache::key::MediaType::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 pub fn cameo::cache::key::MediaType::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
@@ -10843,6 +11065,11 @@ pub cameo::ProviderError::RateLimited
 pub cameo::ProviderError::RateLimited::retry_after: core::option::Option<core::time::Duration>
 pub cameo::ProviderError::Transport(alloc::string::String)
 pub cameo::ProviderError::Unsupported
+impl core::clone::Clone for cameo::core::error::ProviderError
+pub fn cameo::core::error::ProviderError::clone(&self) -> cameo::core::error::ProviderError
+impl core::cmp::Eq for cameo::core::error::ProviderError
+impl core::cmp::PartialEq for cameo::core::error::ProviderError
+pub fn cameo::core::error::ProviderError::eq(&self, &cameo::core::error::ProviderError) -> bool
 impl core::convert::From<cameo::core::error::ProviderError> for cameo::unified::facade::CameoClientError
 pub fn cameo::unified::facade::CameoClientError::from(cameo::core::error::ProviderError) -> Self
 impl core::convert::From<cameo::providers::anilist::error::AniListError> for cameo::core::error::ProviderError
@@ -10854,6 +11081,7 @@ impl core::fmt::Debug for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::fmt::Display for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::core::error::ProviderError
 impl core::marker::Freeze for cameo::core::error::ProviderError
 impl core::marker::Send for cameo::core::error::ProviderError
 impl core::marker::Sync for cameo::core::error::ProviderError
@@ -10861,6 +11089,10 @@ impl core::marker::Unpin for cameo::core::error::ProviderError
 impl core::marker::UnsafeUnpin for cameo::core::error::ProviderError
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::core::error::ProviderError
 impl core::panic::unwind_safe::UnwindSafe for cameo::core::error::ProviderError
+impl<Q, K> equivalent::Equivalent<K> for cameo::core::error::ProviderError where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::core::error::ProviderError::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::core::error::ProviderError where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::core::error::ProviderError::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::core::error::ProviderError where U: core::convert::From<T>
 pub fn cameo::core::error::ProviderError::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::core::error::ProviderError where U: core::convert::Into<T>
@@ -10869,6 +11101,10 @@ pub fn cameo::core::error::ProviderError::try_from(U) -> core::result::Result<T,
 impl<T, U> core::convert::TryInto<U> for cameo::core::error::ProviderError where U: core::convert::TryFrom<T>
 pub type cameo::core::error::ProviderError::Error = <U as core::convert::TryFrom<T>>::Error
 pub fn cameo::core::error::ProviderError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::core::error::ProviderError where T: core::clone::Clone
+pub type cameo::core::error::ProviderError::Owned = T
+pub fn cameo::core::error::ProviderError::clone_into(&self, &mut T)
+pub fn cameo::core::error::ProviderError::to_owned(&self) -> T
 impl<T> alloc::string::ToString for cameo::core::error::ProviderError where T: core::fmt::Display + ?core::marker::Sized
 pub fn cameo::core::error::ProviderError::to_string(&self) -> alloc::string::String
 impl<T> core::any::Any for cameo::core::error::ProviderError where T: 'static + ?core::marker::Sized
@@ -10877,6 +11113,8 @@ impl<T> core::borrow::Borrow<T> for cameo::core::error::ProviderError where T: ?
 pub fn cameo::core::error::ProviderError::borrow(&self) -> &T
 impl<T> core::borrow::BorrowMut<T> for cameo::core::error::ProviderError where T: ?core::marker::Sized
 pub fn cameo::core::error::ProviderError::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::core::error::ProviderError where T: core::clone::Clone
+pub unsafe fn cameo::core::error::ProviderError::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::from(T) -> T
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::core::error::ProviderError where T: ?core::marker::Sized
@@ -11190,8 +11428,12 @@ impl cameo::providers::tmdb::config::TmdbAuth
 pub fn cameo::providers::tmdb::config::TmdbAuth::credential(&self) -> &str
 impl core::clone::Clone for cameo::providers::tmdb::config::TmdbAuth
 pub fn cameo::providers::tmdb::config::TmdbAuth::clone(&self) -> cameo::providers::tmdb::config::TmdbAuth
+impl core::cmp::Eq for cameo::providers::tmdb::config::TmdbAuth
+impl core::cmp::PartialEq for cameo::providers::tmdb::config::TmdbAuth
+pub fn cameo::providers::tmdb::config::TmdbAuth::eq(&self, &cameo::providers::tmdb::config::TmdbAuth) -> bool
 impl core::fmt::Debug for cameo::providers::tmdb::config::TmdbAuth
 pub fn cameo::providers::tmdb::config::TmdbAuth::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::Freeze for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::Send for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::Sync for cameo::providers::tmdb::config::TmdbAuth
@@ -11199,6 +11441,10 @@ impl core::marker::Unpin for cameo::providers::tmdb::config::TmdbAuth
 impl core::marker::UnsafeUnpin for cameo::providers::tmdb::config::TmdbAuth
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::config::TmdbAuth
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::config::TmdbAuth
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::config::TmdbAuth where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbAuth::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::config::TmdbAuth where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbAuth::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::config::TmdbAuth where U: core::convert::From<T>
 pub fn cameo::providers::tmdb::config::TmdbAuth::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::config::TmdbAuth where U: core::convert::Into<T>
@@ -11235,6 +11481,9 @@ pub cameo::TmdbError::Api::status_code: core::option::Option<i64>
 pub cameo::TmdbError::Deserialization(serde_json::error::Error)
 pub cameo::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::TmdbError::InvalidConfig(alloc::string::String)
+pub cameo::TmdbError::Request
+pub cameo::TmdbError::Request::kind: cameo::providers::tmdb::error::RequestErrorKind
+pub cameo::TmdbError::Request::message: alloc::string::String
 pub cameo::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
 pub fn cameo::core::error::ProviderError::from(cameo::providers::tmdb::error::TmdbError) -> Self
@@ -11560,10 +11809,14 @@ pub fn cameo::providers::anilist::config::AniListConfig::with_request_timeout(se
 pub fn cameo::providers::anilist::config::AniListConfig::with_retry(self, cameo::providers::retry::RetryPolicy) -> Self
 impl core::clone::Clone for cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::clone(&self) -> cameo::providers::anilist::config::AniListConfig
+impl core::cmp::Eq for cameo::providers::anilist::config::AniListConfig
+impl core::cmp::PartialEq for cameo::providers::anilist::config::AniListConfig
+pub fn cameo::providers::anilist::config::AniListConfig::eq(&self, &cameo::providers::anilist::config::AniListConfig) -> bool
 impl core::default::Default for cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::default() -> Self
 impl core::fmt::Debug for cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::providers::anilist::config::AniListConfig
 impl core::marker::Freeze for cameo::providers::anilist::config::AniListConfig
 impl core::marker::Send for cameo::providers::anilist::config::AniListConfig
 impl core::marker::Sync for cameo::providers::anilist::config::AniListConfig
@@ -11571,6 +11824,10 @@ impl core::marker::Unpin for cameo::providers::anilist::config::AniListConfig
 impl core::marker::UnsafeUnpin for cameo::providers::anilist::config::AniListConfig
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::anilist::config::AniListConfig
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::anilist::config::AniListConfig
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::anilist::config::AniListConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::config::AniListConfig::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::anilist::config::AniListConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::anilist::config::AniListConfig::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::anilist::config::AniListConfig where U: core::convert::From<T>
 pub fn cameo::providers::anilist::config::AniListConfig::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::anilist::config::AniListConfig where U: core::convert::Into<T>
@@ -11704,10 +11961,14 @@ pub fn cameo::cache::CacheTtlConfig::movie_details_ttl(&self, core::option::Opti
 pub fn cameo::cache::CacheTtlConfig::tv_show_details_ttl(&self, core::option::Option<&str>, core::option::Option<&str>, core::option::Option<&str>, bool) -> core::time::Duration
 impl core::clone::Clone for cameo::cache::CacheTtlConfig
 pub fn cameo::cache::CacheTtlConfig::clone(&self) -> cameo::cache::CacheTtlConfig
+impl core::cmp::Eq for cameo::cache::CacheTtlConfig
+impl core::cmp::PartialEq for cameo::cache::CacheTtlConfig
+pub fn cameo::cache::CacheTtlConfig::eq(&self, &cameo::cache::CacheTtlConfig) -> bool
 impl core::default::Default for cameo::cache::CacheTtlConfig
 pub fn cameo::cache::CacheTtlConfig::default() -> Self
 impl core::fmt::Debug for cameo::cache::CacheTtlConfig
 pub fn cameo::cache::CacheTtlConfig::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::cache::CacheTtlConfig
 impl core::marker::Freeze for cameo::cache::CacheTtlConfig
 impl core::marker::Send for cameo::cache::CacheTtlConfig
 impl core::marker::Sync for cameo::cache::CacheTtlConfig
@@ -11715,6 +11976,10 @@ impl core::marker::Unpin for cameo::cache::CacheTtlConfig
 impl core::marker::UnsafeUnpin for cameo::cache::CacheTtlConfig
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::cache::CacheTtlConfig
 impl core::panic::unwind_safe::UnwindSafe for cameo::cache::CacheTtlConfig
+impl<Q, K> equivalent::Equivalent<K> for cameo::cache::CacheTtlConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::cache::CacheTtlConfig::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::cache::CacheTtlConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::cache::CacheTtlConfig::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::cache::CacheTtlConfig where U: core::convert::From<T>
 pub fn cameo::cache::CacheTtlConfig::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::cache::CacheTtlConfig where U: core::convert::Into<T>
@@ -11793,6 +12058,8 @@ pub async fn cameo::unified::facade::CameoClient::search_movies_with(&self, &str
 pub async fn cameo::unified::facade::CameoClient::search_multi_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::search_people_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::unified::facade::CameoClientError>
 pub async fn cameo::unified::facade::CameoClient::search_tv_shows_with(&self, &str, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::unified::facade::CameoClientError>
+impl core::clone::Clone for cameo::unified::facade::CameoClient
+pub fn cameo::unified::facade::CameoClient::clone(&self) -> cameo::unified::facade::CameoClient
 impl core::fmt::Debug for cameo::unified::facade::CameoClient
 pub fn cameo::unified::facade::CameoClient::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::marker::Freeze for cameo::unified::facade::CameoClient
@@ -11810,12 +12077,18 @@ pub fn cameo::unified::facade::CameoClient::try_from(U) -> core::result::Result<
 impl<T, U> core::convert::TryInto<U> for cameo::unified::facade::CameoClient where U: core::convert::TryFrom<T>
 pub type cameo::unified::facade::CameoClient::Error = <U as core::convert::TryFrom<T>>::Error
 pub fn cameo::unified::facade::CameoClient::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::unified::facade::CameoClient where T: core::clone::Clone
+pub type cameo::unified::facade::CameoClient::Owned = T
+pub fn cameo::unified::facade::CameoClient::clone_into(&self, &mut T)
+pub fn cameo::unified::facade::CameoClient::to_owned(&self) -> T
 impl<T> core::any::Any for cameo::unified::facade::CameoClient where T: 'static + ?core::marker::Sized
 pub fn cameo::unified::facade::CameoClient::type_id(&self) -> core::any::TypeId
 impl<T> core::borrow::Borrow<T> for cameo::unified::facade::CameoClient where T: ?core::marker::Sized
 pub fn cameo::unified::facade::CameoClient::borrow(&self) -> &T
 impl<T> core::borrow::BorrowMut<T> for cameo::unified::facade::CameoClient where T: ?core::marker::Sized
 pub fn cameo::unified::facade::CameoClient::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::unified::facade::CameoClient where T: core::clone::Clone
+pub unsafe fn cameo::unified::facade::CameoClient::clone_to_uninit(&self, *mut u8)
 impl<T> core::convert::From<T> for cameo::unified::facade::CameoClient
 pub fn cameo::unified::facade::CameoClient::from(T) -> T
 impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::unified::facade::CameoClient where T: ?core::marker::Sized
@@ -12801,8 +13074,12 @@ pub fn cameo::providers::tmdb::config::TmdbConfig::with_request_timeout(self, co
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_retry(self, cameo::providers::retry::RetryPolicy) -> Self
 impl core::clone::Clone for cameo::providers::tmdb::config::TmdbConfig
 pub fn cameo::providers::tmdb::config::TmdbConfig::clone(&self) -> cameo::providers::tmdb::config::TmdbConfig
+impl core::cmp::Eq for cameo::providers::tmdb::config::TmdbConfig
+impl core::cmp::PartialEq for cameo::providers::tmdb::config::TmdbConfig
+pub fn cameo::providers::tmdb::config::TmdbConfig::eq(&self, &cameo::providers::tmdb::config::TmdbConfig) -> bool
 impl core::fmt::Debug for cameo::providers::tmdb::config::TmdbConfig
 pub fn cameo::providers::tmdb::config::TmdbConfig::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::StructuralPartialEq for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::Freeze for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::Send for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::Sync for cameo::providers::tmdb::config::TmdbConfig
@@ -12810,6 +13087,10 @@ impl core::marker::Unpin for cameo::providers::tmdb::config::TmdbConfig
 impl core::marker::UnsafeUnpin for cameo::providers::tmdb::config::TmdbConfig
 impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::config::TmdbConfig
 impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::config::TmdbConfig
+impl<Q, K> equivalent::Equivalent<K> for cameo::providers::tmdb::config::TmdbConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbConfig::equivalent(&self, &K) -> bool
+impl<Q, K> hashbrown::Equivalent<K> for cameo::providers::tmdb::config::TmdbConfig where Q: core::cmp::Eq + ?core::marker::Sized, K: core::borrow::Borrow<Q> + ?core::marker::Sized
+pub fn cameo::providers::tmdb::config::TmdbConfig::equivalent(&self, &K) -> bool
 impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::config::TmdbConfig where U: core::convert::From<T>
 pub fn cameo::providers::tmdb::config::TmdbConfig::into(self) -> U
 impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::config::TmdbConfig where U: core::convert::Into<T>
