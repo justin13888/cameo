@@ -70,7 +70,7 @@ async fn search_indexes_individual_items_into_item_cache() {
     client.search_movies("fight club", None).await.unwrap();
 
     // The item for "tmdb:550" should be retrievable from cache without another HTTP call.
-    let cached = client.cached_movie("tmdb:550").await;
+    let cached = client.cached_movie(&MediaId::tmdb(550)).await;
     assert!(cached.is_some(), "item should be indexed after search");
     assert_eq!(cached.unwrap().provider_id, "tmdb:550");
 }
@@ -113,7 +113,7 @@ async fn detail_fetch_populates_both_detail_and_item_caches() {
     let fetched = client.movie_details(&MediaId::tmdb(550)).await.unwrap();
 
     // Detail cache should be populated.
-    let detail = client.cached_movie_details("tmdb:550").await;
+    let detail = client.cached_movie_details(&MediaId::tmdb(550)).await;
     assert!(detail.is_some(), "detail cache should be populated");
     assert_eq!(
         detail.as_ref(),
@@ -122,7 +122,7 @@ async fn detail_fetch_populates_both_detail_and_item_caches() {
     );
 
     // Item cache should also be populated.
-    let item = client.cached_movie("tmdb:550").await;
+    let item = client.cached_movie(&MediaId::tmdb(550)).await;
     assert!(
         item.is_some(),
         "item cache should be populated after detail fetch"
@@ -155,7 +155,7 @@ async fn cached_search_results_equal_the_uncached_result() {
     let cached = client.search_movies("fight club", None).await.unwrap();
     assert_eq!(cached, uncached);
     assert_eq!(
-        client.cached_movie("tmdb:550").await,
+        client.cached_movie(&MediaId::tmdb(550)).await,
         Some(uncached.results[0].clone())
     );
 }
@@ -179,7 +179,7 @@ async fn cached_movie_details_returns_none_if_only_search_was_done() {
     client.search_movies("fight club", None).await.unwrap();
 
     // Item should be in cache, but NOT the full details.
-    let detail = client.cached_movie_details("tmdb:550").await;
+    let detail = client.cached_movie_details(&MediaId::tmdb(550)).await;
     assert!(
         detail.is_none(),
         "details should not be available after search-only"
@@ -204,13 +204,23 @@ async fn invalidate_cached_removes_all_entries_for_provider_id() {
     client.movie_details(&MediaId::tmdb(550)).await.unwrap();
 
     // Verify entries exist.
-    assert!(client.cached_movie("tmdb:550").await.is_some());
-    assert!(client.cached_movie_details("tmdb:550").await.is_some());
+    assert!(client.cached_movie(&MediaId::tmdb(550)).await.is_some());
+    assert!(
+        client
+            .cached_movie_details(&MediaId::tmdb(550))
+            .await
+            .is_some()
+    );
 
-    client.invalidate_cached("tmdb:550").await;
+    client.invalidate_cached(&MediaId::tmdb(550)).await;
 
-    assert!(client.cached_movie("tmdb:550").await.is_none());
-    assert!(client.cached_movie_details("tmdb:550").await.is_none());
+    assert!(client.cached_movie(&MediaId::tmdb(550)).await.is_none());
+    assert!(
+        client
+            .cached_movie_details(&MediaId::tmdb(550))
+            .await
+            .is_none()
+    );
 }
 
 #[tokio::test]
@@ -227,12 +237,17 @@ async fn clear_cache_empties_everything() {
         .await;
 
     client.movie_details(&MediaId::tmdb(550)).await.unwrap();
-    assert!(client.cached_movie("tmdb:550").await.is_some());
+    assert!(client.cached_movie(&MediaId::tmdb(550)).await.is_some());
 
     client.clear_cache().await;
 
-    assert!(client.cached_movie("tmdb:550").await.is_none());
-    assert!(client.cached_movie_details("tmdb:550").await.is_none());
+    assert!(client.cached_movie(&MediaId::tmdb(550)).await.is_none());
+    assert!(
+        client
+            .cached_movie_details(&MediaId::tmdb(550))
+            .await
+            .is_none()
+    );
 }
 
 // ── Age-aware detail TTLs ────────────────────────────────────────────────────

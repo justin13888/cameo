@@ -794,7 +794,7 @@ mod cache {
         client.movie_details(&a_id(9)).await.expect("details");
         client.movie_details(&a_id(9)).await.expect("details");
         assert_eq!(fake.calls(), ["a.movie_details", "a.movie_details"]);
-        assert_eq!(client.cached_movie_details("a:9").await, None);
+        assert_eq!(client.cached_movie_details(&a_id(9)).await, None);
     }
 
     /// A failing write is swallowed: the call still returns the provider's
@@ -811,7 +811,7 @@ mod cache {
         let page = client.search_movies("q", None).await.expect("search");
         assert_eq!(page.results[0].title, "a");
         assert_eq!(backend.writes().len(), 2, "search page and its one item");
-        assert_eq!(client.cached_movie("a:1").await, None);
+        assert_eq!(client.cached_movie(&a_id(1)).await, None);
     }
 
     /// A stored value of the wrong shape is a miss, and the fresh result
@@ -850,10 +850,16 @@ mod cache {
         backend.put(detail(MediaType::TvShow, "a:2"), json(&show_details));
         backend.put(detail(MediaType::Person, "a:3"), json(&person_details));
 
-        assert_eq!(client.cached_movie("a:1").await, Some(movie_details.movie));
-        assert_eq!(client.cached_tv_show("a:2").await, Some(show_details.show));
         assert_eq!(
-            client.cached_person("a:3").await,
+            client.cached_movie(&a_id(1)).await,
+            Some(movie_details.movie)
+        );
+        assert_eq!(
+            client.cached_tv_show(&a_id(2)).await,
+            Some(show_details.show)
+        );
+        assert_eq!(
+            client.cached_person(&a_id(3)).await,
             Some(person_details.person)
         );
 
@@ -864,13 +870,13 @@ mod cache {
         backend.put(item(MediaType::TvShow, "a:2"), json(&show_item));
         backend.put(item(MediaType::Person, "a:3"), json(&person_item));
 
-        assert_eq!(client.cached_movie("a:1").await, Some(movie_item));
-        assert_eq!(client.cached_tv_show("a:2").await, Some(show_item));
-        assert_eq!(client.cached_person("a:3").await, Some(person_item));
+        assert_eq!(client.cached_movie(&a_id(1)).await, Some(movie_item));
+        assert_eq!(client.cached_tv_show(&a_id(2)).await, Some(show_item));
+        assert_eq!(client.cached_person(&a_id(3)).await, Some(person_item));
 
-        assert_eq!(client.cached_movie("a:404").await, None);
-        assert_eq!(client.cached_tv_show_details("a:404").await, None);
-        assert_eq!(client.cached_person_details("a:404").await, None);
+        assert_eq!(client.cached_movie(&a_id(404)).await, None);
+        assert_eq!(client.cached_tv_show_details(&a_id(404)).await, None);
+        assert_eq!(client.cached_person_details(&a_id(404)).await, None);
         assert!(fake.calls().is_empty(), "lookups never call a provider");
     }
 
@@ -884,18 +890,18 @@ mod cache {
         let client = client(&fake, backend.clone());
 
         client.search_movies("q", None).await.expect("search");
-        let typed = client.cached_movie("a:1").await;
+        let typed = client.cached_movie(&a_id(1)).await;
         assert_eq!(typed, Some(UnifiedMovie::new(a_id(1), "a")));
 
         client.search_multi("q", None).await.expect("search");
 
-        assert_eq!(client.cached_movie("a:1").await, typed);
+        assert_eq!(client.cached_movie(&a_id(1)).await, typed);
         assert_eq!(
-            client.cached_tv_show("a:2").await,
+            client.cached_tv_show(&a_id(2)).await,
             Some(UnifiedTvShow::new(a_id(2), "a"))
         );
         assert_eq!(
-            client.cached_person("a:3").await,
+            client.cached_person(&a_id(3)).await,
             Some(UnifiedPerson::new(a_id(3), "a"))
         );
         let ttl = Duration::from_secs(44);
@@ -963,8 +969,8 @@ mod cache {
         client.movie_details(&a_id(9)).await.expect("details");
         client.movie_details(&a_id(9)).await.expect("details");
         assert_eq!(fake.calls(), ["a.movie_details", "a.movie_details"]);
-        assert_eq!(client.cached_movie("a:9").await, None);
-        client.invalidate_cached("a:9").await;
+        assert_eq!(client.cached_movie(&a_id(9)).await, None);
+        client.invalidate_cached(&a_id(9)).await;
         client.clear_cache().await;
     }
 }
