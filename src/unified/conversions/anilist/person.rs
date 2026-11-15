@@ -66,7 +66,7 @@ pub fn staff_detail_to_person_details(s: AniListStaffDetail) -> Option<UnifiedPe
             known_for_department: department,
             profile_url: s.image.and_then(|i| i.large),
             popularity: None,
-            gender: s.gender.as_deref().map(Gender::from_anilist),
+            gender: s.gender.as_deref().and_then(Gender::from_anilist),
             adult: None,
         },
         biography: s.description,
@@ -98,10 +98,10 @@ mod tests {
     #[test]
     fn gender_mapping() {
         use crate::unified::models::Gender;
-        assert_eq!(Gender::from_anilist("Female"), Gender::Female);
-        assert_eq!(Gender::from_anilist("Male"), Gender::Male);
-        assert_eq!(Gender::from_anilist("Non-binary"), Gender::NonBinary);
-        assert_eq!(Gender::from_anilist("Unknown"), Gender::NotSpecified);
+        assert_eq!(Gender::from_anilist("Female"), Some(Gender::Female));
+        assert_eq!(Gender::from_anilist("Male"), Some(Gender::Male));
+        assert_eq!(Gender::from_anilist("Non-binary"), Some(Gender::NonBinary));
+        assert_eq!(Gender::from_anilist("Unknown"), None);
     }
 
     #[test]

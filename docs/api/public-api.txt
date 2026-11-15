@@ -6007,9 +6007,6 @@ pub cameo::unified::models::Gender::Female
 pub cameo::unified::models::Gender::Male
 pub cameo::unified::models::Gender::NonBinary
 pub cameo::unified::models::Gender::NotSpecified
-impl cameo::unified::Gender
-pub fn cameo::unified::Gender::from_anilist(&str) -> Self
-pub fn cameo::unified::Gender::from_tmdb(i64) -> core::option::Option<Self>
 impl core::clone::Clone for cameo::unified::Gender
 pub fn cameo::unified::Gender::clone(&self) -> cameo::unified::Gender
 impl core::cmp::Eq for cameo::unified::Gender
@@ -7898,9 +7895,6 @@ pub cameo::unified::Gender::Female
 pub cameo::unified::Gender::Male
 pub cameo::unified::Gender::NonBinary
 pub cameo::unified::Gender::NotSpecified
-impl cameo::unified::Gender
-pub fn cameo::unified::Gender::from_anilist(&str) -> Self
-pub fn cameo::unified::Gender::from_tmdb(i64) -> core::option::Option<Self>
 impl core::clone::Clone for cameo::unified::Gender
 pub fn cameo::unified::Gender::clone(&self) -> cameo::unified::Gender
 impl core::cmp::Eq for cameo::unified::Gender
@@ -10806,9 +10800,6 @@ pub cameo::Gender::Female
 pub cameo::Gender::Male
 pub cameo::Gender::NonBinary
 pub cameo::Gender::NotSpecified
-impl cameo::unified::Gender
-pub fn cameo::unified::Gender::from_anilist(&str) -> Self
-pub fn cameo::unified::Gender::from_tmdb(i64) -> core::option::Option<Self>
 impl core::clone::Clone for cameo::unified::Gender
 pub fn cameo::unified::Gender::clone(&self) -> cameo::unified::Gender
 impl core::cmp::Eq for cameo::unified::Gender
