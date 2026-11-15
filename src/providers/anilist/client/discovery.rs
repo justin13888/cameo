@@ -27,6 +27,13 @@ impl AniListClient {
     /// AniList has no time-window concept. The `time_window` argument is
     /// accepted for trait compatibility but is always ignored — AniList
     /// returns a single global trending list regardless of the requested window.
+    ///
+    /// Unlike TMDB's, AniList's trending list is paged: `page` is sent as
+    /// [`AniListClient`'s pages](AniListClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors).
     pub async fn trending_movies(
         &self,
         _time_window: TimeWindow,
@@ -50,6 +57,13 @@ impl AniListClient {
     /// AniList has no time-window concept. The `time_window` argument is
     /// accepted for trait compatibility but is always ignored — AniList
     /// returns a single global trending list regardless of the requested window.
+    ///
+    /// Unlike TMDB's, AniList's trending list is paged: `page` is sent as
+    /// [`AniListClient`'s pages](AniListClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors).
     pub async fn trending_tv_shows(
         &self,
         _time_window: TimeWindow,
@@ -67,6 +81,12 @@ impl AniListClient {
     }
 
     /// Get popular anime movies (sorted by popularity).
+    ///
+    /// `page` is sent as [`AniListClient`'s pages](AniListClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors).
     pub async fn popular_movies(
         &self,
         page: Option<u32>,
@@ -83,6 +103,12 @@ impl AniListClient {
     }
 
     /// Get top-scored anime movies (sorted by average score).
+    ///
+    /// `page` is sent as [`AniListClient`'s pages](AniListClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors).
     pub async fn top_rated_movies(
         &self,
         page: Option<u32>,
@@ -99,6 +125,12 @@ impl AniListClient {
     }
 
     /// Get popular anime TV shows (sorted by popularity).
+    ///
+    /// `page` is sent as [`AniListClient`'s pages](AniListClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors).
     pub async fn popular_tv_shows(
         &self,
         page: Option<u32>,
@@ -115,6 +147,12 @@ impl AniListClient {
     }
 
     /// Get top-scored anime TV shows (sorted by average score).
+    ///
+    /// `page` is sent as [`AniListClient`'s pages](AniListClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors).
     pub async fn top_rated_tv_shows(
         &self,
         page: Option<u32>,
@@ -143,7 +181,8 @@ impl AniListClient {
     ///
     /// # Errors
     ///
-    /// Returns [`AniListError::NotFound`] if no anime has this id.
+    /// Returns [`AniListError::NotFound`] if no anime has this id, plus the
+    /// [usual request errors](AniListClient#errors).
     pub async fn movie_recommendations(
         &self,
         id: i32,
@@ -165,7 +204,8 @@ impl AniListClient {
     ///
     /// # Errors
     ///
-    /// Returns [`AniListError::NotFound`] if no anime has this id.
+    /// Returns [`AniListError::NotFound`] if no anime has this id, plus the
+    /// [usual request errors](AniListClient#errors).
     pub async fn tv_recommendations(
         &self,
         id: i32,
