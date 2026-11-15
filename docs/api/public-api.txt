@@ -5689,7 +5689,7 @@ pub fn cameo::unified::genre::UnknownGenre::or<P, B, E>(self, P) -> tower_http::
 impl<T> tracing::instrument::Instrument for cameo::unified::genre::UnknownGenre
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::genre::UnknownGenre
 pub mod cameo::unified::media_id
-pub enum cameo::unified::media_id::MediaIdParseError
+#[non_exhaustive] pub enum cameo::unified::media_id::MediaIdParseError
 pub cameo::unified::media_id::MediaIdParseError::Empty(alloc::string::String)
 pub cameo::unified::media_id::MediaIdParseError::MissingSeparator(alloc::string::String)
 impl core::clone::Clone for cameo::unified::media_id::MediaIdParseError
@@ -7981,7 +7981,7 @@ pub fn cameo::unified::external_ids::MatchKind::and<P, B, E>(self, P) -> tower_h
 pub fn cameo::unified::external_ids::MatchKind::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::unified::external_ids::MatchKind
 impl<T> tracing::instrument::WithSubscriber for cameo::unified::external_ids::MatchKind
-pub enum cameo::unified::MediaIdParseError
+#[non_exhaustive] pub enum cameo::unified::MediaIdParseError
 pub cameo::unified::MediaIdParseError::Empty(alloc::string::String)
 pub cameo::unified::MediaIdParseError::MissingSeparator(alloc::string::String)
 impl core::clone::Clone for cameo::unified::media_id::MediaIdParseError

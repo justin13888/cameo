@@ -41,6 +41,7 @@ pub struct MediaId {
 
 /// Error returned when a string cannot be parsed as a [`MediaId`].
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[non_exhaustive]
 pub enum MediaIdParseError {
     /// The string did not contain a `provider:native` separator.
     #[error("media id `{0}` is missing a ':' separator")]
