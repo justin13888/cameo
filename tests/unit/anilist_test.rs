@@ -244,3 +244,39 @@ async fn test_trending_movies_ignores_time_window() {
         "the time window leaked into the request"
     );
 }
+
+#[test]
+fn new_rejects_per_page_out_of_range() {
+    for per_page in [0, 51] {
+        let mut config = AniListConfig::new();
+        config.per_page = per_page;
+        let err = AniListClient::new(config).expect_err("out-of-range per_page");
+        assert!(
+            matches!(&err, AniListError::InvalidConfig(msg) if msg.contains("per_page")),
+            "{err:?}"
+        );
+    }
+}
+
+#[test]
+fn new_rejects_empty_or_unparseable_base_url() {
+    for base_url in ["", "not a url", "ftp://graphql.anilist.co"] {
+        let err = AniListClient::new(AniListConfig::new().with_base_url(base_url))
+            .expect_err("bad base_url");
+        assert!(
+            matches!(&err, AniListError::InvalidConfig(msg) if msg.contains("base_url")),
+            "{base_url:?}: {err:?}"
+        );
+    }
+}
+
+#[test]
+fn new_accepts_boundary_per_page_and_custom_base_url() {
+    for per_page in [1, 50] {
+        let mut config = AniListConfig::new().with_base_url("http://127.0.0.1:1");
+        config.per_page = per_page;
+        let client = AniListClient::new(config).expect("valid config");
+        assert_eq!(client.config().per_page, per_page);
+        assert_eq!(client.config().base_url, "http://127.0.0.1:1");
+    }
+}
