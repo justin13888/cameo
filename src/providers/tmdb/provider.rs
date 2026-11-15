@@ -11,7 +11,7 @@ use super::client::TmdbClient;
 use crate::{
     core::{config::TimeWindow, error::ProviderError, pagination::Page},
     unified::{
-        conversions::tmdb::credits::tmdb_credits_to_unified,
+        conversions::tmdb::credits::{tmdb_movie_credits_to_unified, tmdb_tv_credits_to_unified},
         external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         media_id::MediaId,
         models::{
@@ -238,18 +238,21 @@ impl WatchAvailabilityProvider for TmdbClient {
 }
 
 /// Movie credits come from `/movie/{id}/credits`; TV credits from
-/// `/tv/{id}/aggregate_credits`, which lists each person once with their
-/// highest-billed role (see [`TmdbClient::tv_series_credits`]).
+/// `/tv/{id}/aggregate_credits`, which lists each person once with all their
+/// roles and jobs. Each role becomes its own cast credit and each job its own
+/// crew credit, so a person appears once per character and once per job.
 #[async_trait]
 impl CreditsProvider for TmdbClient {
     async fn movie_credits(&self, id: &MediaId) -> Result<UnifiedCredits, ProviderError> {
-        let credits = TmdbClient::movie_credits(self, tmdb_id(id)?).await?;
-        Ok(tmdb_credits_to_unified(id.clone(), credits))
+        let credits = self.movie_credits_response(tmdb_id(id)?).await?;
+        Ok(tmdb_movie_credits_to_unified(id.clone(), credits))
     }
 
     async fn tv_show_credits(&self, id: &MediaId) -> Result<UnifiedCredits, ProviderError> {
-        let credits = TmdbClient::tv_series_credits(self, tmdb_id(id)?).await?;
-        Ok(tmdb_credits_to_unified(id.clone(), credits))
+        let credits = self
+            .tv_series_aggregate_credits_response(tmdb_id(id)?)
+            .await?;
+        Ok(tmdb_tv_credits_to_unified(id.clone(), credits))
     }
 }
 

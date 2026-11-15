@@ -354,20 +354,41 @@ impl TmdbClient {
     /// Get the cast and crew for a movie.
     #[tracing::instrument(skip(self))]
     pub async fn movie_credits(&self, movie_id: i32) -> Result<TmdbCredits, TmdbError> {
-        self.execute(|| self.inner.movie_credits(movie_id, self.language()))
+        self.movie_credits_response(movie_id).await.map(Into::into)
+    }
+
+    /// Get the cast and crew for a TV series.
+    ///
+    /// Comes from `/tv/{id}/aggregate_credits`, which lists each person once.
+    /// [`TmdbCredits`] keeps one entry per person, holding only the first of
+    /// their characters and the first of their jobs.
+    #[tracing::instrument(skip(self))]
+    pub async fn tv_series_credits(&self, series_id: i32) -> Result<TmdbCredits, TmdbError> {
+        self.tv_series_aggregate_credits_response(series_id)
             .await
             .map(Into::into)
     }
 
-    /// Get the cast and crew for a TV series.
-    #[tracing::instrument(skip(self))]
-    pub async fn tv_series_credits(&self, series_id: i32) -> Result<TmdbCredits, TmdbError> {
+    /// Fetch `/movie/{id}/credits` as TMDB returned it.
+    pub(crate) async fn movie_credits_response(
+        &self,
+        movie_id: i32,
+    ) -> Result<types::MovieCreditsResponse, TmdbError> {
+        self.execute(|| self.inner.movie_credits(movie_id, self.language()))
+            .await
+    }
+
+    /// Fetch `/tv/{id}/aggregate_credits` as TMDB returned it, with every
+    /// character and job of each person.
+    pub(crate) async fn tv_series_aggregate_credits_response(
+        &self,
+        series_id: i32,
+    ) -> Result<types::TvSeriesAggregateCreditsResponse, TmdbError> {
         self.execute(|| {
             self.inner
                 .tv_series_aggregate_credits(series_id, self.language())
         })
         .await
-        .map(Into::into)
     }
 
     // ── Trending ──
