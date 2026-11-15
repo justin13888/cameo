@@ -26,6 +26,7 @@ pub use sqlite::SqliteCache;
 /// keeping volatile or recently-released content fresher.
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use = "a CacheTtlConfig does nothing unless passed to CameoClientBuilder::with_cache_ttl"]
 pub struct CacheTtlConfig {
     /// Fallback TTL for detail responses when no age policy matches.
     pub details: Duration,

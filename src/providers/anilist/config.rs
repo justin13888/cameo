@@ -16,6 +16,7 @@ const DEFAULT_RATE_LIMIT: RateLimit = RateLimit::Limited {
 /// Configuration for the [`AniListClient`](super::client::AniListClient).
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use = "an AniListConfig does nothing unless passed to AniListClient::new or CameoClient::builder"]
 pub struct AniListConfig {
     /// Base URL for the AniList GraphQL endpoint.
     ///
