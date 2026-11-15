@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::{
-    core::error::ProviderError,
+    core::error::{DecodeError, ProviderError, TransportError},
     providers::{http::is_retryable_status, retry::Retryable},
 };
 
@@ -11,10 +11,12 @@ use crate::{
 pub enum TvdbError {
     /// HTTP transport error (connection, DNS, TLS) — no response was received.
     ///
-    /// The request URL is stripped with [`reqwest::Error::without_url`], so a
-    /// search query never travels into logs through an error.
+    /// The [`TransportError`] never holds the request URL, so a search query
+    /// never travels into logs through an error. The original HTTP-client
+    /// error, stripped of that URL, is its
+    /// [`source`](std::error::Error::source).
     #[error("HTTP transport error: {0}")]
-    Http(#[source] reqwest::Error),
+    Http(#[source] TransportError),
 
     /// TheTVDB answered with an error HTTP status.
     ///
@@ -31,8 +33,11 @@ pub enum TvdbError {
     },
 
     /// A response body could not be deserialized.
+    ///
+    /// The JSON parser's error is the [`DecodeError`]'s
+    /// [`source`](std::error::Error::source).
     #[error("deserialization error: {0}")]
-    Deserialization(#[from] serde_json::Error),
+    Deserialization(#[source] DecodeError),
 
     /// A successful response carried no `data`.
     #[error("no data returned from TheTVDB")]
@@ -48,10 +53,16 @@ pub enum TvdbError {
     InvalidConfig(String),
 }
 
-/// Wrap a transport error, stripping its request URL.
-impl From<reqwest::Error> for TvdbError {
-    fn from(err: reqwest::Error) -> Self {
-        TvdbError::Http(err.without_url())
+impl TvdbError {
+    /// Wrap a `reqwest` error as [`TvdbError::Http`], stripping its request
+    /// URL.
+    pub(crate) fn from_reqwest(err: reqwest::Error) -> Self {
+        TvdbError::Http(TransportError::from_reqwest(err, ToString::to_string))
+    }
+
+    /// Wrap a JSON parser error as [`TvdbError::Deserialization`].
+    pub(crate) fn from_json(err: serde_json::Error) -> Self {
+        TvdbError::Deserialization(DecodeError::json(err))
     }
 }
 
@@ -76,7 +87,7 @@ impl Retryable for TvdbError {
 impl From<TvdbError> for ProviderError {
     fn from(err: TvdbError) -> Self {
         match err {
-            TvdbError::Http(e) => ProviderError::Transport(e.without_url().to_string()),
+            TvdbError::Http(e) => ProviderError::Transport(e.to_string()),
             TvdbError::Status {
                 status,
                 retry_after,
@@ -129,13 +140,13 @@ mod tests {
         let http = reqwest_builder_error();
         let http_text = http.to_string();
         assert_eq!(
-            ProviderError::from(TvdbError::Http(http)),
+            ProviderError::from(TvdbError::from_reqwest(http)),
             ProviderError::Transport(http_text)
         );
         let json = json_error();
         let json_text = json.to_string();
         assert_eq!(
-            ProviderError::from(TvdbError::Deserialization(json)),
+            ProviderError::from(TvdbError::from_json(json)),
             ProviderError::Deserialization(json_text)
         );
         assert_eq!(

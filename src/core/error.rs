@@ -95,7 +95,7 @@ type Source = Arc<dyn std::error::Error + Send + Sync + 'static>;
 
 /// A transport failure: no usable HTTP response was received.
 ///
-/// Carried by `TmdbError::Http` and `AniListError::Http`. It classifies the
+/// Carried by `TmdbError::Http`, `AniListError::Http` and `TvdbError::Http`. It classifies the
 /// failure the way a retry layer needs ([`is_connect`](Self::is_connect),
 /// [`is_timeout`](Self::is_timeout)) and describes it in its `Display` output.
 ///
@@ -116,7 +116,10 @@ pub struct TransportError {
 
 /// The class of a [`TransportError`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(not(any(feature = "tmdb", feature = "anilist")), allow(dead_code))]
+#[cfg_attr(
+    not(any(feature = "tmdb", feature = "anilist", feature = "tvdb")),
+    allow(dead_code)
+)]
 pub(crate) enum TransportKind {
     /// Connection-level: DNS, refused or reset connection, TLS handshake.
     Connect,
@@ -143,7 +146,10 @@ impl TransportError {
     /// A transport error wrapping `err`, classified from it and described by
     /// `describe`. The request URL is stripped from `err` before `describe`
     /// sees it and before it is kept as the [`source`](std::error::Error::source).
-    #[cfg_attr(not(any(feature = "tmdb", feature = "anilist")), allow(dead_code))]
+    #[cfg_attr(
+        not(any(feature = "tmdb", feature = "anilist", feature = "tvdb")),
+        allow(dead_code)
+    )]
     pub(crate) fn from_reqwest(
         err: reqwest::Error,
         describe: impl FnOnce(&reqwest::Error) -> String,
@@ -193,8 +199,8 @@ impl std::error::Error for TransportError {
 /// A body or stored value that could not be decoded from (or encoded to) its
 /// JSON form.
 ///
-/// Carried by `TmdbError::Deserialization`, `AniListError::Deserialization`
-/// and `CacheError::Serialization`. The JSON library's own error type is not
+/// Carried by `TmdbError::Deserialization`, `AniListError::Deserialization`,
+/// `TvdbError::Deserialization` and `CacheError::Serialization`. The JSON library's own error type is not
 /// part of cameo's public API, so a major upgrade of that library is not a
 /// cameo breaking change. Where a JSON parser error produced it, that error is
 /// the [`source`](std::error::Error::source) (downcast it to inspect it); a
@@ -217,7 +223,10 @@ impl DecodeError {
 
     /// A decode error wrapping a JSON parser error, which becomes its
     /// [`source`](std::error::Error::source).
-    #[cfg_attr(not(any(feature = "anilist", feature = "cache")), allow(dead_code))]
+    #[cfg_attr(
+        not(any(feature = "anilist", feature = "tvdb", feature = "cache")),
+        allow(dead_code)
+    )]
     pub(crate) fn json(err: serde_json::Error) -> Self {
         Self {
             message: err.to_string(),

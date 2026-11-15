@@ -66,9 +66,6 @@ the API:
   is not part of the stable API: the source's type may change when the
   dependency does, without a breaking cameo release.
 
-`TvdbError::Http` and `TvdbError::Deserialization` still carry `reqwest::Error`
-and `serde_json::Error`; they move to the same wrappers in a later release.
-
 ## `#[non_exhaustive]`
 
 Public enums and structs that model external data (models, `Genre`, error
