@@ -1,5 +1,6 @@
 //! Conversions from AniList GraphQL response types to unified models.
 
+pub mod credits;
 pub mod media;
 pub mod person;
 

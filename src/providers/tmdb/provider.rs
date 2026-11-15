@@ -11,16 +11,18 @@ use super::client::TmdbClient;
 use crate::{
     core::{config::TimeWindow, error::ProviderError, pagination::Page},
     unified::{
+        conversions::tmdb::credits::tmdb_credits_to_unified,
         external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         media_id::MediaId,
         models::{
-            UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
-            UnifiedSearchResult, UnifiedSeasonDetails, UnifiedTvShow, UnifiedTvShowDetails,
-            UnifiedWatchProviders,
+            UnifiedCredits, UnifiedEpisode, UnifiedMovie, UnifiedMovieDetails, UnifiedPerson,
+            UnifiedPersonDetails, UnifiedSearchResult, UnifiedSeasonDetails, UnifiedTvShow,
+            UnifiedTvShowDetails, UnifiedWatchProviders,
         },
         traits::{
-            Capability, DetailProvider, DiscoveryProvider, ExternalIdProvider, Provider,
-            RecommendationProvider, SearchProvider, SeasonProvider, WatchAvailabilityProvider,
+            Capability, CreditsProvider, DetailProvider, DiscoveryProvider, ExternalIdProvider,
+            Provider, RecommendationProvider, SearchProvider, SeasonProvider,
+            WatchAvailabilityProvider,
         },
     },
 };
@@ -33,6 +35,7 @@ const TMDB_CAPABILITIES: &[Capability] = &[
     Capability::Seasons,
     Capability::WatchAvailability,
     Capability::ExternalIds,
+    Capability::Credits,
 ];
 
 /// External sources TMDB's `/find` endpoint accepts.
@@ -231,6 +234,22 @@ impl WatchAvailabilityProvider for TmdbClient {
         id: &MediaId,
     ) -> Result<UnifiedWatchProviders, ProviderError> {
         Ok(TmdbClient::tv_watch_providers(self, tmdb_id(id)?).await?)
+    }
+}
+
+/// Movie credits come from `/movie/{id}/credits`; TV credits from
+/// `/tv/{id}/aggregate_credits`, which lists each person once with their
+/// highest-billed role (see [`TmdbClient::tv_series_credits`]).
+#[async_trait]
+impl CreditsProvider for TmdbClient {
+    async fn movie_credits(&self, id: &MediaId) -> Result<UnifiedCredits, ProviderError> {
+        let credits = TmdbClient::movie_credits(self, tmdb_id(id)?).await?;
+        Ok(tmdb_credits_to_unified(id.clone(), credits))
+    }
+
+    async fn tv_show_credits(&self, id: &MediaId) -> Result<UnifiedCredits, ProviderError> {
+        let credits = TmdbClient::tv_series_credits(self, tmdb_id(id)?).await?;
+        Ok(tmdb_credits_to_unified(id.clone(), credits))
     }
 }
 
