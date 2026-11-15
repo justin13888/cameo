@@ -1,7 +1,3 @@
-/// Conversions from AniList GraphQL response types to unified types.
-#[cfg(feature = "anilist")]
-pub mod anilist;
-
 /// A provider's native numeric id as a [`MediaId`](crate::unified::MediaId)
 /// number, or `None` when it is not a valid id.
 ///

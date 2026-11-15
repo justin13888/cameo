@@ -1,11 +1,8 @@
 //! AniList media → unified model conversions.
 
-use super::{media_id, resolve_date};
+use super::{Kind, classify, media_id, resolve_date};
 use crate::{
-    providers::anilist::{
-        client::{Kind, classify},
-        response::{AniListMedia, AniListMediaDetail, AniListTitle},
-    },
+    providers::anilist::response::{AniListMedia, AniListMediaDetail, AniListTitle},
     unified::{
         genre::Genre,
         models::{

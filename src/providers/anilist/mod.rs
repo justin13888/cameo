@@ -2,6 +2,9 @@
 pub mod client;
 /// AniList client configuration.
 pub mod config;
+/// Conversions from AniList GraphQL response types to unified models, and the
+/// format and page helpers the client builds requests and pages with.
+mod convert;
 /// Filtered anime discovery builder and its typed filter enums.
 pub mod discover;
 /// AniList-specific error types.
