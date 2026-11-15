@@ -140,7 +140,7 @@ impl From<types::TvSeriesAggregateCreditsResponse> for TmdbCredits {
     fn from(c: types::TvSeriesAggregateCreditsResponse) -> Self {
         let cast = c
             .cast
-            .into_iter()
+            .into_iter().flatten()
             .map(|c| CastMember {
                 id: c.id.and_then(|id| u64::try_from(id).ok()).unwrap_or(0),
                 name: c.name.unwrap_or_default(),
@@ -156,7 +156,7 @@ impl From<types::TvSeriesAggregateCreditsResponse> for TmdbCredits {
             .collect();
         let crew = c
             .crew
-            .into_iter()
+            .into_iter().flatten()
             .map(|c| CrewMember {
                 id: c.id.and_then(|id| u64::try_from(id).ok()).unwrap_or(0),
                 name: c.name.unwrap_or_default(),
@@ -178,7 +178,7 @@ impl From<types::MovieImagesResponse> for TmdbImages {
         TmdbImages {
             backdrops: i
                 .backdrops
-                .into_iter()
+                .into_iter().flatten()
                 .map(|b| {
                     image_from(
                         b.file_path,
@@ -193,7 +193,7 @@ impl From<types::MovieImagesResponse> for TmdbImages {
                 .collect(),
             posters: i
                 .posters
-                .into_iter()
+                .into_iter().flatten()
                 .map(|p| {
                     image_from(
                         p.file_path,
@@ -208,7 +208,7 @@ impl From<types::MovieImagesResponse> for TmdbImages {
                 .collect(),
             logos: i
                 .logos
-                .into_iter()
+                .into_iter().flatten()
                 .map(|l| {
                     image_from(
                         l.file_path,

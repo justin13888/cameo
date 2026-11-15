@@ -21,7 +21,7 @@ macro_rules! impl_movie_from {
                     backdrop_url: resolve_backdrop(&m.backdrop_path),
                     genres: m
                         .genre_ids
-                        .iter()
+                        .iter().flatten()
                         .map(|&id| Genre::from_tmdb_id(id))
                         .collect(),
                     popularity: m.popularity,
@@ -73,7 +73,7 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
                 backdrop_url: resolve_backdrop(&m.backdrop_path),
                 genres: m
                     .genres
-                    .iter()
+                    .iter().flatten()
                     .filter_map(|g| g.id.map(Genre::from_tmdb_id))
                     .collect(),
                 popularity: m.popularity,
@@ -94,17 +94,17 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
             imdb_id: m.imdb_id,
             production_companies: m
                 .production_companies
-                .into_iter()
+                .into_iter().flatten()
                 .map(Company::from)
                 .collect(),
             production_countries: m
                 .production_countries
-                .iter()
+                .iter().flatten()
                 .filter_map(|c| c.name.clone())
                 .collect(),
             spoken_languages: m
                 .spoken_languages
-                .iter()
+                .iter().flatten()
                 .filter_map(|l| l.english_name.clone())
                 .collect(),
             // Spec default was `true`; an absent/null flag stays unknown.

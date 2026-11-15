@@ -133,5 +133,19 @@ def declare_security:
   }
   | .security = [{"v4_bearer": []}, {"v3_api_key": []}];
 
+# (9) Give the movie-recommendations response its real shape.
+#     The spec declares it as an object with no properties, which generates a
+#     struct that discards the whole body. TMDB returns the same paged movie
+#     list as the similar-movies endpoint, so point it at that schema. Applied
+#     after (7) and only while the upstream schema is still empty.
+def fix_movie_recommendations:
+  ["paths", "/3/movie/{movie_id}/recommendations", "get", "responses", "200", "content",
+   "application/json", "schema"] as $pointer
+  | if ((.components.schemas.MovieRecommendationsResponse.properties // {}) | length) == 0
+       and .components.schemas.MovieSimilarResponse != null
+    then setpath($pointer; {"$ref": "#/components/schemas/MovieSimilarResponse"})
+      | del(.components.schemas.MovieRecommendationsResponse)
+    else . end;
+
 rename_id | fix_vote_average | fix_bool_defaults | strip_examples | strip_property_defaults
-| nullable_responses | name_schemas | declare_security
+| nullable_responses | name_schemas | fix_movie_recommendations | declare_security

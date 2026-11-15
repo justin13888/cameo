@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     core::{config::TimeWindow, pagination::Page},
-    generated::tmdb::{self, types},
+    generated::tmdb::{self, types, Credential, SecretString},
     providers::rate_limit::RateLimiter,
     unified::{
         conversions::tmdb::TmdbListItem,
@@ -24,7 +24,15 @@ use crate::{
 
 const TMDB_BASE_URL: &str = "https://api.themoviedb.org";
 
-/// High-level TMDB API client wrapping the generated progenitor client.
+/// The security scheme a v4 bearer token is registered under
+/// (`scripts/tmdb-spec-patch.jq` declares it).
+const V4_BEARER_SCHEME: &str = "v4_bearer";
+
+/// The security scheme a v3 API key is registered under
+/// (`scripts/tmdb-spec-patch.jq` declares it).
+const V3_API_KEY_SCHEME: &str = "v3_api_key";
+
+/// High-level TMDB API client wrapping the generated (spargen) client.
 ///
 /// Adds bearer token authentication, rate limiting, and ergonomic pagination.
 ///
@@ -38,7 +46,7 @@ const TMDB_BASE_URL: &str = "https://api.themoviedb.org";
 ///
 /// The `Debug` output never contains the API credential: it shows the
 /// (redacted) [`TmdbConfig`] and the rate limiter, and omits the underlying
-/// HTTP client, whose default headers and query parameters carry the secret.
+/// generated client (whose own `Debug` redacts the registered credential).
 #[derive(Clone)]
 pub struct TmdbClient {
     inner: tmdb::Client,
@@ -60,30 +68,36 @@ impl TmdbClient {
     pub fn new(config: TmdbConfig) -> Result<Self, TmdbError> {
         config.validate().map_err(TmdbError::InvalidConfig)?;
 
-        let mut headers = reqwest::header::HeaderMap::new();
-        // v4 bearer tokens travel in the Authorization header; v3 API keys
-        // travel as a query parameter (wired below via the generated client).
         if let TmdbAuth::V4Bearer(token) = &config.auth {
-            let mut auth_value = reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
+            // Reject a token that cannot travel in a header up front, rather
+            // than failing every request.
+            reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
                 .map_err(|e| TmdbError::InvalidConfig(format!("invalid API token: {e}")))?;
-            // Sensitive values print as `Sensitive` in `Debug` (reqwest's
-            // client `Debug` lists its default headers).
-            auth_value.set_sensitive(true);
-            headers.insert(reqwest::header::AUTHORIZATION, auth_value);
         }
 
         let http_client = crate::providers::http::build_client(
             config.connect_timeout,
             config.request_timeout,
-            headers,
+            reqwest::header::HeaderMap::new(),
         )
         .map_err(TmdbError::from)?;
 
         let base_url = config.base_url.as_deref().unwrap_or(TMDB_BASE_URL);
-        let mut inner = tmdb::Client::new_with_client(base_url, http_client);
-        if let TmdbAuth::V3ApiKey(key) = &config.auth {
-            inner.auth_query = Some(("api_key".to_string(), key.clone()));
-        }
+        let inner = tmdb::Client::with_client(http_client, base_url)
+            .map_err(|e| TmdbError::InvalidConfig(format!("invalid base URL: {e}")))?;
+        // The spec patch declares both credentials as security schemes: a v4
+        // token travels as `Authorization: Bearer`, a v3 key as the `api_key`
+        // query parameter. The generated client redacts either in `Debug`.
+        let inner = match &config.auth {
+            TmdbAuth::V4Bearer(token) => inner.with_credential(
+                V4_BEARER_SCHEME,
+                Credential::Bearer(SecretString::from(token.clone())),
+            ),
+            TmdbAuth::V3ApiKey(key) => inner.with_credential(
+                V3_API_KEY_SCHEME,
+                Credential::ApiKey(SecretString::from(key.clone())),
+            ),
+        };
         let rate_limiter = RateLimiter::new(config.rate_limit);
 
         Ok(Self {
@@ -106,12 +120,12 @@ impl TmdbClient {
 
     // ── Helper accessors for default config values ──
 
-    fn language(&self) -> Option<&str> {
-        self.config.language.as_deref()
+    fn language(&self) -> Option<String> {
+        self.config.language.clone()
     }
 
-    fn region(&self) -> Option<&str> {
-        self.config.region.as_deref()
+    fn region(&self) -> Option<String> {
+        self.config.region.clone()
     }
 
     fn include_adult(&self) -> Option<bool> {
@@ -134,7 +148,7 @@ impl TmdbClient {
     /// Execute a generated-client call under the rate limiter, unwrap the
     /// response body, and map any failure into a structured [`TmdbError`]
     /// (decoding TMDB's `{status_code, status_message}` body and `Retry-After`
-    /// header via [`TmdbError::from_progenitor`]).
+    /// header via [`TmdbError::from_generated`]).
     ///
     /// `make_call` is a closure returning a fresh request future each time it is
     /// invoked, so the retry loop can re-issue it. This is the single seam
@@ -144,19 +158,17 @@ impl TmdbClient {
     async fn execute<T, E, F, Fut>(&self, make_call: F) -> Result<T, TmdbError>
     where
         F: Fn() -> Fut,
-        Fut: std::future::Future<
-                Output = Result<progenitor_client::ResponseValue<T>, progenitor_client::Error<E>>,
-            >,
-        E: std::fmt::Debug + Send + Sync + 'static,
+        Fut: std::future::Future<Output = Result<tmdb::ResponseValue<T>, tmdb::Error<E>>>,
+        E: std::fmt::Debug,
     {
         let policy = self.config.retry;
         let mut retry_index = 0u32;
         loop {
             self.acquire_rate_limit().await;
-            let outcome = match make_call().await {
-                Ok(rv) => Ok(rv.into_inner()),
-                Err(err) => Err(TmdbError::from_progenitor(err).await),
-            };
+            let outcome = make_call()
+                .await
+                .map(tmdb::ResponseValue::into_inner)
+                .map_err(TmdbError::from_generated);
             match outcome {
                 Ok(value) => return Ok(value),
                 Err(err) => {
@@ -187,18 +199,15 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, TmdbError> {
+        let params = tmdb::SearchMovieParams {
+            include_adult: self.include_adult(),
+            language: self.language(),
+            page: Self::tmdb_page(page),
+            region: self.region(),
+            ..Default::default()
+        };
         let body = self
-            .execute(|| {
-                self.inner.search_movie(
-                    self.include_adult(),
-                    self.language(),
-                    Self::tmdb_page(page),
-                    None, // primary_release_year
-                    query,
-                    self.region(),
-                    None, // year
-                )
-            })
+            .execute(|| self.inner.search_movie(query, params.clone()))
             .await?;
         Ok(offset_page(
             Self::tmdb_page(page),
@@ -217,17 +226,14 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, TmdbError> {
+        let params = tmdb::SearchTvParams {
+            include_adult: self.include_adult(),
+            language: self.language(),
+            page: Self::tmdb_page(page),
+            ..Default::default()
+        };
         let body = self
-            .execute(|| {
-                self.inner.search_tv(
-                    None, // first_air_date_year
-                    self.include_adult(),
-                    self.language(),
-                    Self::tmdb_page(page),
-                    query,
-                    None, // year
-                )
-            })
+            .execute(|| self.inner.search_tv(query, params.clone()))
             .await?;
         Ok(offset_page(
             Self::tmdb_page(page),
@@ -246,15 +252,13 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedPerson>, TmdbError> {
+        let params = tmdb::SearchPersonParams {
+            include_adult: self.include_adult(),
+            language: self.language(),
+            page: Self::tmdb_page(page),
+        };
         let body = self
-            .execute(|| {
-                self.inner.search_person(
-                    self.include_adult(),
-                    self.language(),
-                    Self::tmdb_page(page),
-                    query,
-                )
-            })
+            .execute(|| self.inner.search_person(query, params.clone()))
             .await?;
         Ok(offset_page(
             Self::tmdb_page(page),
@@ -273,15 +277,13 @@ impl TmdbClient {
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedSearchResult>, TmdbError> {
+        let params = tmdb::SearchMultiParams {
+            include_adult: self.include_adult(),
+            language: self.language(),
+            page: Self::tmdb_page(page),
+        };
         let body = self
-            .execute(|| {
-                self.inner.search_multi(
-                    self.include_adult(),
-                    self.language(),
-                    Self::tmdb_page(page),
-                    query,
-                )
-            })
+            .execute(|| self.inner.search_multi(query, params.clone()))
             .await?;
         Ok(offset_page(
             Self::tmdb_page(page),
@@ -298,8 +300,12 @@ impl TmdbClient {
     /// Get detailed information about a movie.
     #[tracing::instrument(skip(self))]
     pub async fn movie_details(&self, movie_id: i32) -> Result<UnifiedMovieDetails, TmdbError> {
+        let params = tmdb::MovieDetailsParams {
+            language: self.language(),
+            ..Default::default()
+        };
         let mut body = self
-            .execute(|| self.inner.movie_details(movie_id, None, self.language()))
+            .execute(|| self.inner.movie_details(movie_id, params.clone()))
             .await?;
         // TMDB may send a null/missing id; fall back to the requested one.
         body.id.get_or_insert(i64::from(movie_id));
@@ -313,11 +319,12 @@ impl TmdbClient {
         movie_id: i32,
         append: &str,
     ) -> Result<UnifiedMovieDetails, TmdbError> {
+        let params = tmdb::MovieDetailsParams {
+            append_to_response: Some(append.to_owned()),
+            language: self.language(),
+        };
         let mut body = self
-            .execute(|| {
-                self.inner
-                    .movie_details(movie_id, Some(append), self.language())
-            })
+            .execute(|| self.inner.movie_details(movie_id, params.clone()))
             .await?;
         body.id.get_or_insert(i64::from(movie_id));
         Ok(body.into())
@@ -329,11 +336,12 @@ impl TmdbClient {
         &self,
         series_id: i32,
     ) -> Result<UnifiedTvShowDetails, TmdbError> {
+        let params = tmdb::TvSeriesDetailsParams {
+            language: self.language(),
+            ..Default::default()
+        };
         let mut body = self
-            .execute(|| {
-                self.inner
-                    .tv_series_details(series_id, None, self.language())
-            })
+            .execute(|| self.inner.tv_series_details(series_id, params.clone()))
             .await?;
         body.id.get_or_insert(i64::from(series_id));
         Ok(body.into())
@@ -342,8 +350,12 @@ impl TmdbClient {
     /// Get detailed information about a person.
     #[tracing::instrument(skip(self))]
     pub async fn person_details(&self, person_id: i32) -> Result<UnifiedPersonDetails, TmdbError> {
+        let params = tmdb::PersonDetailsParams {
+            language: self.language(),
+            ..Default::default()
+        };
         let mut body = self
-            .execute(|| self.inner.person_details(person_id, None, self.language()))
+            .execute(|| self.inner.person_details(person_id, params.clone()))
             .await?;
         body.id.get_or_insert(i64::from(person_id));
         Ok(body.into())
@@ -354,7 +366,10 @@ impl TmdbClient {
     /// Get the cast and crew for a movie.
     #[tracing::instrument(skip(self))]
     pub async fn movie_credits(&self, movie_id: i32) -> Result<TmdbCredits, TmdbError> {
-        self.execute(|| self.inner.movie_credits(movie_id, self.language()))
+        let params = tmdb::MovieCreditsParams {
+            language: self.language(),
+        };
+        self.execute(|| self.inner.movie_credits(movie_id, params.clone()))
             .await
             .map(Into::into)
     }
@@ -362,9 +377,12 @@ impl TmdbClient {
     /// Get the cast and crew for a TV series.
     #[tracing::instrument(skip(self))]
     pub async fn tv_series_credits(&self, series_id: i32) -> Result<TmdbCredits, TmdbError> {
+        let params = tmdb::TvSeriesAggregateCreditsParams {
+            language: self.language(),
+        };
         self.execute(|| {
             self.inner
-                .tv_series_aggregate_credits(series_id, self.language())
+                .tv_series_aggregate_credits(series_id, params.clone())
         })
         .await
         .map(Into::into)
@@ -389,8 +407,11 @@ impl TmdbClient {
             TimeWindow::Day => types::TrendingMoviesTimeWindow::Day,
             TimeWindow::Week => types::TrendingMoviesTimeWindow::Week,
         };
+        let params = tmdb::TrendingMoviesParams {
+            language: self.language(),
+        };
         let body = self
-            .execute(|| self.inner.trending_movies(tw, self.language()))
+            .execute(|| self.inner.trending_movies(tw.clone(), params.clone()))
             .await?;
         Ok(offset_page(
             None,
@@ -419,8 +440,11 @@ impl TmdbClient {
             TimeWindow::Day => types::TrendingTvTimeWindow::Day,
             TimeWindow::Week => types::TrendingTvTimeWindow::Week,
         };
+        let params = tmdb::TrendingTvParams {
+            language: self.language(),
+        };
         let body = self
-            .execute(|| self.inner.trending_tv(tw, self.language()))
+            .execute(|| self.inner.trending_tv(tw.clone(), params.clone()))
             .await?;
         Ok(offset_page(
             None,
@@ -437,11 +461,13 @@ impl TmdbClient {
     /// Get popular movies.
     #[tracing::instrument(skip(self))]
     pub async fn popular_movies(&self, page: Option<u32>) -> Result<Page<UnifiedMovie>, TmdbError> {
+        let params = tmdb::MoviePopularListParams {
+            language: self.language(),
+            page: Self::tmdb_page(page),
+            region: self.region(),
+        };
         let body = self
-            .execute(|| {
-                self.inner
-                    .movie_popular_list(self.language(), Self::tmdb_page(page), self.region())
-            })
+            .execute(|| self.inner.movie_popular_list(params.clone()))
             .await?;
         Ok(offset_page(
             Self::tmdb_page(page),
@@ -459,14 +485,13 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, TmdbError> {
+        let params = tmdb::MovieTopRatedListParams {
+            language: self.language(),
+            page: Self::tmdb_page(page),
+            region: self.region(),
+        };
         let body = self
-            .execute(|| {
-                self.inner.movie_top_rated_list(
-                    self.language(),
-                    Self::tmdb_page(page),
-                    self.region(),
-                )
-            })
+            .execute(|| self.inner.movie_top_rated_list(params.clone()))
             .await?;
         Ok(offset_page(
             Self::tmdb_page(page),
@@ -484,11 +509,12 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, TmdbError> {
+        let params = tmdb::TvSeriesPopularListParams {
+            language: self.language(),
+            page: Self::tmdb_page(page),
+        };
         let body = self
-            .execute(|| {
-                self.inner
-                    .tv_series_popular_list(self.language(), Self::tmdb_page(page))
-            })
+            .execute(|| self.inner.tv_series_popular_list(params.clone()))
             .await?;
         Ok(offset_page(
             Self::tmdb_page(page),
@@ -506,11 +532,12 @@ impl TmdbClient {
         &self,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, TmdbError> {
+        let params = tmdb::TvSeriesTopRatedListParams {
+            language: self.language(),
+            page: Self::tmdb_page(page),
+        };
         let body = self
-            .execute(|| {
-                self.inner
-                    .tv_series_top_rated_list(self.language(), Self::tmdb_page(page))
-            })
+            .execute(|| self.inner.tv_series_top_rated_list(params.clone()))
             .await?;
         Ok(offset_page(
             Self::tmdb_page(page),
@@ -531,14 +558,14 @@ impl TmdbClient {
         movie_id: i32,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, TmdbError> {
-        let map = self
-            .execute(|| {
-                self.inner
-                    .movie_recommendations(movie_id, self.language(), Self::tmdb_page(page))
-            })
+        let params = tmdb::MovieRecommendationsParams {
+            language: self.language(),
+            page: Self::tmdb_page(page),
+        };
+        // The spec patch gives this endpoint the similar-movies response shape.
+        let body = self
+            .execute(|| self.inner.movie_recommendations(movie_id, params.clone()))
             .await?;
-        let body: MovieRecommendationsResponse =
-            serde_json::from_value(serde_json::Value::Object(map))?;
         Ok(offset_page(
             Self::tmdb_page(page),
             body.page,
@@ -556,13 +583,14 @@ impl TmdbClient {
         series_id: i32,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, TmdbError> {
+        let params = tmdb::TvSeriesRecommendationsParams {
+            language: self.language(),
+            page: Self::tmdb_page(page),
+        };
         let body = self
             .execute(|| {
-                self.inner.tv_series_recommendations(
-                    series_id,
-                    self.language(),
-                    Self::tmdb_page(page),
-                )
+                self.inner
+                    .tv_series_recommendations(series_id, params.clone())
             })
             .await?;
         Ok(offset_page(
@@ -582,11 +610,12 @@ impl TmdbClient {
         movie_id: i32,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, TmdbError> {
+        let params = tmdb::MovieSimilarParams {
+            language: self.language(),
+            page: Self::tmdb_page(page),
+        };
         let body = self
-            .execute(|| {
-                self.inner
-                    .movie_similar(movie_id, self.language(), Self::tmdb_page(page))
-            })
+            .execute(|| self.inner.movie_similar(movie_id, params.clone()))
             .await?;
         Ok(offset_page(
             Self::tmdb_page(page),
@@ -613,10 +642,14 @@ impl TmdbClient {
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, TmdbError> {
         let id_str = series_id.to_string();
+        let params = tmdb::TvSeriesSimilarParams {
+            language: self.language(),
+            page: Self::tmdb_page(page),
+        };
         let body = self
             .execute(|| {
                 self.inner
-                    .tv_series_similar(&id_str, self.language(), Self::tmdb_page(page))
+                    .tv_series_similar(id_str.as_str(), params.clone())
             })
             .await?;
         Ok(offset_page(
@@ -638,10 +671,14 @@ impl TmdbClient {
         series_id: i32,
         season_number: u32,
     ) -> Result<UnifiedSeasonDetails, TmdbError> {
+        let params = tmdb::TvSeasonDetailsParams {
+            language: self.language(),
+            ..Default::default()
+        };
         let mut body = self
             .execute(|| {
                 self.inner
-                    .tv_season_details(series_id, season_number as i32, None, self.language())
+                    .tv_season_details(series_id, season_number as i32, params.clone())
             })
             .await?;
         body.season_number.get_or_insert(i64::from(season_number));
@@ -659,14 +696,17 @@ impl TmdbClient {
         season_number: u32,
         episode_number: u32,
     ) -> Result<UnifiedEpisode, TmdbError> {
+        let params = tmdb::TvEpisodeDetailsParams {
+            language: self.language(),
+            ..Default::default()
+        };
         let mut body = self
             .execute(|| {
                 self.inner.tv_episode_details(
                     series_id,
                     season_number as i32,
                     episode_number as i32,
-                    None,
-                    self.language(),
+                    params.clone(),
                 )
             })
             .await?;
@@ -781,18 +821,26 @@ impl TmdbClient {
             ExternalSource::Wikidata => types::FindByIdExternalSource::WikidataId,
             other => return Err(TmdbError::UnsupportedSource(other)),
         };
+        let params = tmdb::FindByIdParams {
+            language: self.language(),
+        };
         let body = self
-            .execute(|| self.inner.find_by_id(&id.id, source, self.language()))
+            .execute(|| {
+                self.inner
+                    .find_by_id(id.id.as_str(), source.clone(), params.clone())
+            })
             .await?;
         let movies = body
             .movie_results
             .iter()
+            .flatten()
             .filter_map(|m| m.id.and_then(|n| u64::try_from(n).ok()))
             .map(|n| ExternalMatch::movie(MediaId::tmdb(n)));
         // `tv_results` is untyped in the spec; only the `id` is needed.
         let shows = body
             .tv_results
             .iter()
+            .flatten()
             .filter_map(|v| v.get("id").and_then(serde_json::Value::as_u64))
             .map(|n| ExternalMatch::tv_show(MediaId::tmdb(n)));
         Ok(movies.chain(shows).collect())
@@ -803,12 +851,16 @@ impl TmdbClient {
     /// Get the list of official movie genres.
     #[tracing::instrument(skip(self))]
     pub async fn movie_genres(&self) -> Result<Vec<Genre>, TmdbError> {
+        let params = tmdb::GenreMovieListParams {
+            language: self.language(),
+        };
         let resp = self
-            .execute(|| self.inner.genre_movie_list(self.language()))
+            .execute(|| self.inner.genre_movie_list(params.clone()))
             .await?;
         Ok(resp
             .genres
             .into_iter()
+            .flatten()
             .filter_map(|g| g.id.map(Genre::from_tmdb_id))
             .collect())
     }
@@ -816,12 +868,16 @@ impl TmdbClient {
     /// Get the list of official TV show genres.
     #[tracing::instrument(skip(self))]
     pub async fn tv_genres(&self) -> Result<Vec<Genre>, TmdbError> {
+        let params = tmdb::GenreTvListParams {
+            language: self.language(),
+        };
         let resp = self
-            .execute(|| self.inner.genre_tv_list(self.language()))
+            .execute(|| self.inner.genre_tv_list(params.clone()))
             .await?;
         Ok(resp
             .genres
             .into_iter()
+            .flatten()
             .filter_map(|g| g.id.map(Genre::from_tmdb_id))
             .collect())
     }
@@ -831,15 +887,13 @@ impl TmdbClient {
     /// Get images for a movie.
     #[tracing::instrument(skip(self))]
     pub async fn movie_images(&self, movie_id: i32) -> Result<TmdbImages, TmdbError> {
-        self.execute(|| {
-            self.inner.movie_images(
-                movie_id,
-                None, // include_image_language
-                self.language(),
-            )
-        })
-        .await
-        .map(Into::into)
+        let params = tmdb::MovieImagesParams {
+            language: self.language(),
+            ..Default::default()
+        };
+        self.execute(|| self.inner.movie_images(movie_id, params.clone()))
+            .await
+            .map(Into::into)
     }
 
     // ── Discover Builders ──
@@ -857,31 +911,18 @@ impl TmdbClient {
 
 // ── Typed recommendation / watch-provider response models ───────────────────────
 
-/// Typed view of the movie-recommendations response.
-///
-/// The generated client returns this endpoint as an untyped JSON map, so it is
-/// re-parsed into typed structs (shape-identical to the "similar movies"
-/// endpoint) instead of hand-indexed.
-#[derive(serde::Deserialize)]
-struct MovieRecommendationsResponse {
-    page: Option<i64>,
-    #[serde(default)]
-    results: Vec<types::MovieSimilarResponseResultsItem>,
-    total_pages: Option<i64>,
-    total_results: Option<i64>,
-}
-
 /// Build a [`Page`] from TMDB offset-pagination fields, tolerating `null`s,
 /// and drop result items without a TMDB id (see [`TmdbListItem`]).
 ///
 /// `requested` is the page number sent to TMDB (`None` when no page was sent).
 /// A missing or invalid `page` falls back to `requested` (or `1`), a missing
 /// `total_pages` falls back to that page (so `has_next` is `false`), and a
-/// missing `total_results` falls back to `0`.
+/// missing `total_results` falls back to `0`, and missing `results` read as
+/// an empty list.
 pub(crate) fn offset_page<T: TmdbListItem>(
     requested: Option<i32>,
     page: Option<i64>,
-    results: Vec<T>,
+    results: Option<Vec<T>>,
     total_pages: Option<i64>,
     total_results: Option<i64>,
 ) -> Page<T> {
@@ -891,6 +932,7 @@ pub(crate) fn offset_page<T: TmdbListItem>(
     let total_pages = total_pages.and_then(to_u32).unwrap_or(page);
     let total_results = total_results.and_then(to_u32).unwrap_or(0);
     let results = results
+        .unwrap_or_default()
         .into_iter()
         .filter(|item| item.tmdb_id().is_some())
         .collect();
@@ -965,28 +1007,35 @@ mod tests {
 
     const SECRET: &str = "SECRETKEY123";
 
-    /// The generated client's `Debug` (patched by `cargo xtask codegen`) and
-    /// the underlying reqwest client's default headers must not expose the
-    /// credential for either auth scheme.
+    /// The generated client's `Debug` must not expose the credential for
+    /// either auth scheme, while still showing which scheme is registered.
     #[test]
     fn generated_client_debug_redacts_credentials() {
-        for config in [TmdbConfig::new(SECRET), TmdbConfig::new_v3(SECRET)] {
+        for (config, scheme) in [
+            (TmdbConfig::new(SECRET), V4_BEARER_SCHEME),
+            (TmdbConfig::new_v3(SECRET), V3_API_KEY_SCHEME),
+        ] {
             let client = TmdbClient::new(config).expect("valid config");
-            let debug = format!("{:?}", client.inner());
-            assert!(!debug.contains(SECRET), "credential leaked: {debug}");
+            for debug in [
+                format!("{:?}", client.inner()),
+                format!("{:#?}", client.inner()),
+            ] {
+                assert!(!debug.contains(SECRET), "credential leaked: {debug}");
+                assert!(debug.contains(scheme), "{debug}");
+            }
         }
     }
 
-    /// The v3 key is still wired into the generated client (only its `Debug`
-    /// is redacted).
+    /// The `_url` accessors never carry the v3 key: it is attached only when a
+    /// request is sent.
     #[test]
-    fn v3_key_is_still_attached() {
+    fn v3_key_is_not_in_url_accessor() {
         let client = TmdbClient::new(TmdbConfig::new_v3(SECRET)).expect("valid config");
-        let debug = format!("{:?}", client.inner());
-        assert!(debug.contains("api_key"), "{debug}");
-        assert_eq!(
-            client.inner().auth_query,
-            Some(("api_key".to_string(), SECRET.to_string()))
-        );
+        let url = client
+            .inner()
+            .movie_details_url(550, None)
+            .expect("valid url");
+        assert_eq!(url.path(), "/3/movie/550");
+        assert!(!url.as_str().contains(SECRET), "{url}");
     }
 }

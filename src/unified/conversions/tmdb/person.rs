@@ -69,7 +69,7 @@ pub(crate) fn multi_search_result(
             backdrop_url: resolve_backdrop(&item.backdrop_path),
             genres: item
                 .genre_ids
-                .iter()
+                .iter().flatten()
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
             popularity: item.popularity,
@@ -93,7 +93,7 @@ pub(crate) fn multi_search_result(
             backdrop_url: resolve_backdrop(&item.backdrop_path),
             genres: item
                 .genre_ids
-                .iter()
+                .iter().flatten()
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
             popularity: item.popularity,

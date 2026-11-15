@@ -77,8 +77,8 @@ impl From<crate::providers::tmdb::TmdbError> for ProviderError {
         use crate::providers::tmdb::TmdbError;
         match err {
             // `without_url` again: the variant is public, so a caller-built
-            // `TmdbError::Http` may still carry a URL with a v3 `api_key`.
-            TmdbError::Http(e) => ProviderError::Transport(e.without_url().to_string()),
+            // `TransportError` never carries the request URL's `api_key`.
+            TmdbError::Http(e) => ProviderError::Transport(e.to_string()),
             TmdbError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
             TmdbError::InvalidConfig(s) => ProviderError::InvalidInput(s),
             TmdbError::UnsupportedSource(_) => ProviderError::Unsupported,

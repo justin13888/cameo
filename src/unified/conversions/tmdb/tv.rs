@@ -23,7 +23,7 @@ macro_rules! impl_tv_from {
                     backdrop_url: resolve_backdrop(&t.backdrop_path),
                     genres: t
                         .genre_ids
-                        .iter()
+                        .iter().flatten()
                         .map(|&id| Genre::from_tmdb_id(id))
                         .collect(),
                     popularity: t.popularity,
@@ -64,7 +64,7 @@ macro_rules! impl_tv_from_no_adult {
                     backdrop_url: resolve_backdrop(&t.backdrop_path),
                     genres: t
                         .genre_ids
-                        .iter()
+                        .iter().flatten()
                         .map(|&id| Genre::from_tmdb_id(id))
                         .collect(),
                     popularity: t.popularity,
@@ -171,7 +171,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
         let number_of_episodes = t.number_of_episodes.map(|n| n.max(0) as u32);
         let episode_run_time: Vec<u32> = t
             .episode_run_time
-            .iter()
+            .iter().flatten()
             .map(|&r| r.max(0) as u32)
             .collect();
         UnifiedTvShowDetails {
@@ -186,7 +186,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
                 backdrop_url: resolve_backdrop(&t.backdrop_path),
                 genres: t
                     .genres
-                    .iter()
+                    .iter().flatten()
                     .filter_map(|g| g.id.map(Genre::from_tmdb_id))
                     .collect(),
                 popularity: t.popularity,
@@ -211,7 +211,7 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
             networks: t.networks.into_iter().map(Network::from).collect(),
             production_companies: t
                 .production_companies
-                .into_iter()
+                .into_iter().flatten()
                 .map(Company::from)
                 .collect(),
             last_air_date: resolve_date(&t.last_air_date),
@@ -221,19 +221,19 @@ impl From<types::TvSeriesDetailsResponse> for UnifiedTvShowDetails {
             episode_run_time,
             spoken_languages: t
                 .spoken_languages
-                .iter()
+                .iter().flatten()
                 .filter_map(|l| l.english_name.clone())
                 .collect(),
             production_countries: t
                 .production_countries
-                .iter()
+                .iter().flatten()
                 .filter_map(|c| c.name.clone())
                 .collect(),
             // A season with no number cannot be addressed; defaulting it to 0
             // would pass it off as the Specials season, so it is dropped.
             seasons: t
                 .seasons
-                .into_iter()
+                .into_iter().flatten()
                 .filter(|s| s.season_number.is_some())
                 .map(UnifiedSeason::from)
                 .collect(),
@@ -261,7 +261,7 @@ pub(crate) fn season_details_from(
         // would invent a phantom episode 0, so it is dropped.
         episodes: t
             .episodes
-            .into_iter()
+            .into_iter().flatten()
             .filter(|e| e.episode_number.is_some())
             .map(Into::into)
             .collect(),

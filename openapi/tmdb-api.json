@@ -7717,10 +7717,6 @@
           }
         }
       },
-      "MovieRecommendationsResponse": {
-        "type": "object",
-        "properties": {}
-      },
       "MovieReleaseDatesResponse": {
         "type": "object",
         "properties": {
@@ -39415,7 +39411,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MovieRecommendationsResponse"
+                  "$ref": "#/components/schemas/MovieSimilarResponse"
                 }
               }
             }
