@@ -76,8 +76,8 @@ impl From<crate::providers::tmdb::TmdbError> for ProviderError {
     fn from(err: crate::providers::tmdb::TmdbError) -> Self {
         use crate::providers::tmdb::TmdbError;
         match err {
-            // `without_url` again: the variant is public, so a caller-built
-            // `TransportError` never carries the request URL's `api_key`.
+            // The `TransportError` description is already redacted: it never
+            // carries the request URL's `api_key`.
             TmdbError::Http(e) => ProviderError::Transport(e.to_string()),
             TmdbError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
             TmdbError::InvalidConfig(s) => ProviderError::InvalidInput(s),

@@ -162,6 +162,42 @@ async fn malformed_json_body_is_deserialization_error() {
     );
 }
 
+/// A server that accepts the connection, reads the request, and closes it
+/// without responding is a *transport* error (no HTTP response was received),
+/// never an API error, and maps to `ProviderError::Transport`.
+#[tokio::test]
+async fn connection_closed_without_response_is_transport_error() {
+    use std::io::Read;
+
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let addr = listener.local_addr().unwrap();
+    let server = std::thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        let mut buf = [0u8; 4096];
+        let _ = stream.read(&mut buf);
+        // Dropping the stream closes the connection with no response.
+    });
+
+    let config = TmdbConfig::new_with_base_url("test-token", format!("http://{addr}"))
+        .with_retry(RetryPolicy::disabled());
+    let client = TmdbClient::new(config).unwrap();
+
+    let err = client.movie_details(550).await.unwrap_err();
+    server.join().unwrap();
+
+    match &err {
+        TmdbError::Http(e) => assert!(!e.is_connect() && !e.is_timeout(), "{e:?}"),
+        other => panic!("expected Http transport error, got {other:?}"),
+    }
+    assert!(
+        matches!(
+            cameo::ProviderError::from(err),
+            cameo::ProviderError::Transport(_)
+        ),
+        "expected ProviderError::Transport"
+    );
+}
+
 /// A connection failure (nothing listening) is a *transport* error, distinct
 /// from an API-status error.
 #[tokio::test]

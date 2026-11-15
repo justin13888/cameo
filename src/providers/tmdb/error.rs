@@ -84,7 +84,8 @@ enum TransportKind {
     Connect,
     /// A connect or total-request timeout elapsed.
     Timeout,
-    /// Anything else: malformed HTTP, redirect exhaustion, a body cut short.
+    /// Anything else: malformed HTTP, redirect exhaustion, a body cut short,
+    /// a connection closed before any response.
     Other,
 }
 
@@ -178,6 +179,12 @@ impl TmdbError {
             G::Redirect(e) => Self::transport(TransportKind::Other, &e),
             G::InterruptedBody(e) => Self::transport(TransportKind::Other, &e),
 
+            // reqwest failed inside the send (e.g. the connection closed
+            // before any response): no response was received, so this is a
+            // transport failure, not an API error.
+            G::RequestConstruction(e) if is_send_failure(&e) => {
+                Self::transport(TransportKind::Other, &e)
+            }
             // We failed to even build the request (e.g. a missing credential).
             G::RequestConstruction(e) => TmdbError::Api {
                 status: 0,
@@ -249,6 +256,16 @@ impl TmdbError {
             retry_after,
         }
     }
+}
+
+/// Whether a request-construction error is really a failure inside the send:
+/// a request-kind `reqwest::Error` (not builder-kind, which reqwest raises
+/// before sending anything), e.g. a connection closed before any response.
+fn is_send_failure(err: &generated::RequestError) -> bool {
+    matches!(err, generated::RequestError::Other(_))
+        && std::error::Error::source(err)
+            .and_then(|e| e.downcast_ref::<reqwest::Error>())
+            .is_some_and(|e| e.is_request() && !e.is_builder())
 }
 
 /// `err` and each of its sources, joined with `": "`, skipping a source whose
