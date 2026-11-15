@@ -19,11 +19,12 @@ use crate::{
 ///
 /// ```no_run
 /// # async fn example(client: &cameo::providers::tmdb::TmdbClient) -> Result<(), cameo::providers::tmdb::TmdbError> {
+/// use cameo::Genre;
 /// use cameo::providers::tmdb::builders::TvSortBy;
 /// let results = client
 ///     .discover_tv()
 ///     .sort_by(TvSortBy::PopularityDesc)
-///     .with_genres(&[10765]) // Sci-Fi & Fantasy
+///     .with_genre_list(&[Genre::SciFiFantasy])
 ///     .first_air_date_year(2024)
 ///     .execute()
 ///     .await?;

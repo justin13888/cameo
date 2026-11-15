@@ -11,6 +11,13 @@ pub(crate) fn join_ids(ids: &[u64]) -> String {
     ids.iter().map(u64::to_string).collect::<Vec<_>>().join(",")
 }
 
+/// Join the TMDB ids of `genres` into TMDB's comma-separated (AND) form,
+/// skipping genres that have no TMDB id.
+pub(crate) fn join_genres(genres: &[crate::Genre]) -> String {
+    let ids: Vec<u64> = genres.iter().filter_map(crate::Genre::tmdb_id).collect();
+    join_ids(&ids)
+}
+
 /// A movie release type (TMDB `with_release_type`).
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -167,6 +174,31 @@ macro_rules! common_discover_setters {
             self
         }
 
+        /// Filter by typed genres (AND semantics — items must match all).
+        ///
+        /// The typed counterpart of [`Self::with_genres`]: each genre is sent as
+        /// its [`Genre::tmdb_id`](crate::Genre::tmdb_id). Genres with no TMDB id
+        /// (the anime-specific genres, or a named unknown genre) cannot be
+        /// expressed as a TMDB filter and are skipped. Replaces any earlier
+        /// genre filter set by either setter.
+        pub fn with_genre_list(mut self, genres: &[$crate::Genre]) -> Self {
+            self.with_genres = Some($crate::providers::tmdb::builders::params::join_genres(
+                genres,
+            ));
+            self
+        }
+
+        /// Exclude typed genres.
+        ///
+        /// The typed counterpart of [`Self::without_genres`]; genres with no
+        /// TMDB id are skipped, as in [`Self::with_genre_list`].
+        pub fn without_genre_list(mut self, genres: &[$crate::Genre]) -> Self {
+            self.without_genres = Some($crate::providers::tmdb::builders::params::join_genres(
+                genres,
+            ));
+            self
+        }
+
         /// Filter by keyword IDs.
         pub fn with_keywords(mut self, keyword_ids: &[u64]) -> Self {
             self.with_keywords = Some($crate::providers::tmdb::builders::params::join_ids(
@@ -298,6 +330,20 @@ mod tests {
         assert_eq!(join_ids(&[28, 12, 878]), "28,12,878");
         assert_eq!(join_ids(&[550]), "550");
         assert_eq!(join_ids(&[]), "");
+    }
+
+    #[test]
+    fn join_genres_skips_genres_without_a_tmdb_id() {
+        use crate::{Genre, UnknownGenre};
+        assert_eq!(
+            join_genres(&[Genre::Action, Genre::Mecha, Genre::ScienceFiction]),
+            "28,878"
+        );
+        assert_eq!(
+            join_genres(&[Genre::Other(UnknownGenre::TmdbId(4242))]),
+            "4242"
+        );
+        assert_eq!(join_genres(&[Genre::SliceOfLife]), "");
     }
 
     #[test]

@@ -139,6 +139,67 @@ impl Genre {
         }
     }
 
+    /// The TMDB genre id for this genre, the inverse of [`Genre::from_tmdb_id`].
+    ///
+    /// Returns `None` for genres TMDB has no id for: the anime-specific
+    /// variants ([`Genre::Mecha`], [`Genre::SliceOfLife`], ...), a
+    /// [`UnknownGenre::Named`] genre, and a [`UnknownGenre::TmdbId`] holding a
+    /// negative (invalid) id. A non-negative unknown id is returned verbatim, so
+    /// `Genre::from_tmdb_id(n).tmdb_id() == Some(n as u64)` for every `n >= 0`.
+    ///
+    /// Movie and TV genres use different TMDB ids (e.g. [`Genre::Action`] is a
+    /// movie genre; TV uses [`Genre::ActionAdventure`]).
+    ///
+    /// ```
+    /// use cameo::Genre;
+    /// assert_eq!(Genre::Action.tmdb_id(), Some(28));
+    /// assert_eq!(Genre::SciFiFantasy.tmdb_id(), Some(10765));
+    /// assert_eq!(Genre::Mecha.tmdb_id(), None);
+    /// ```
+    pub fn tmdb_id(&self) -> Option<u64> {
+        Some(match self {
+            // Movie-only
+            Genre::Action => 28,
+            Genre::Adventure => 12,
+            Genre::Fantasy => 14,
+            Genre::History => 36,
+            Genre::Horror => 27,
+            Genre::Music => 10402,
+            Genre::Romance => 10749,
+            Genre::ScienceFiction => 878,
+            Genre::Thriller => 53,
+            Genre::TvMovie => 10770,
+            Genre::War => 10752,
+            // TV-only
+            Genre::ActionAdventure => 10759,
+            Genre::Kids => 10762,
+            Genre::News => 10763,
+            Genre::Reality => 10764,
+            Genre::SciFiFantasy => 10765,
+            Genre::Soap => 10766,
+            Genre::Talk => 10767,
+            Genre::WarPolitics => 10768,
+            // Shared
+            Genre::Animation => 16,
+            Genre::Comedy => 35,
+            Genre::Crime => 80,
+            Genre::Documentary => 99,
+            Genre::Drama => 18,
+            Genre::Family => 10751,
+            Genre::Mystery => 9648,
+            Genre::Western => 37,
+            // Anime-specific genres have no TMDB id.
+            Genre::Mecha
+            | Genre::MahouShoujo
+            | Genre::SliceOfLife
+            | Genre::Sports
+            | Genre::Supernatural
+            | Genre::Ecchi
+            | Genre::Other(UnknownGenre::Named(_)) => return None,
+            Genre::Other(UnknownGenre::TmdbId(id)) => return u64::try_from(*id).ok(),
+        })
+    }
+
     /// Convert a genre name string to a [`Genre`] (case-insensitive).
     ///
     /// Returns `Genre::Other(UnknownGenre::Named(s))` for unrecognized names.
@@ -338,6 +399,45 @@ mod tests {
         assert_ne!(Genre::from_tmdb_id(-5), Genre::from_tmdb_id(0));
         // The id survives in the display name rather than becoming "Unknown".
         assert_eq!(Genre::from_tmdb_id(4242).name(), "TMDB genre 4242");
+    }
+
+    #[test]
+    fn tmdb_id_round_trips_every_known_tmdb_id() {
+        let ids: [i64; 27] = [
+            28, 12, 14, 36, 27, 10402, 10749, 878, 53, 10770, 10752, 10759, 10762, 10763, 10764,
+            10765, 10766, 10767, 10768, 16, 35, 80, 99, 18, 10751, 9648, 37,
+        ];
+        for id in ids {
+            let genre = Genre::from_tmdb_id(id);
+            assert!(
+                !matches!(genre, Genre::Other(_)),
+                "{id} maps to a known variant"
+            );
+            assert_eq!(genre.tmdb_id(), Some(id as u64), "round trip of {id}");
+        }
+    }
+
+    #[test]
+    fn tmdb_id_unknown_ids_mirror_from_tmdb_id() {
+        assert_eq!(Genre::from_tmdb_id(99999).tmdb_id(), Some(99999));
+        assert_eq!(Genre::from_tmdb_id(0).tmdb_id(), Some(0));
+        // A negative id is not a valid TMDB id.
+        assert_eq!(Genre::from_tmdb_id(-5).tmdb_id(), None);
+    }
+
+    #[test]
+    fn tmdb_id_is_none_without_a_tmdb_genre() {
+        for genre in [
+            Genre::Mecha,
+            Genre::MahouShoujo,
+            Genre::SliceOfLife,
+            Genre::Sports,
+            Genre::Supernatural,
+            Genre::Ecchi,
+            Genre::Other(UnknownGenre::Named("isekai".to_string())),
+        ] {
+            assert_eq!(genre.tmdb_id(), None, "{genre:?}");
+        }
     }
 
     #[test]

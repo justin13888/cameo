@@ -18,11 +18,12 @@ use crate::{
 ///
 /// ```no_run
 /// # async fn example(client: &cameo::providers::tmdb::TmdbClient) -> Result<(), cameo::providers::tmdb::TmdbError> {
+/// use cameo::Genre;
 /// use cameo::providers::tmdb::builders::MovieSortBy;
 /// let results = client
 ///     .discover_movies()
 ///     .sort_by(MovieSortBy::PopularityDesc)
-///     .with_genres(&[28]) // Action
+///     .with_genre_list(&[Genre::Action])
 ///     .primary_release_year(2024)
 ///     .execute()
 ///     .await?;
