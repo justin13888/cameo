@@ -9,8 +9,9 @@ use super::{
     error::AniListError,
     query,
     response::{
-        GraphQlResponse, MediaDetailResponse, MediaPageResponse, MediaRecommendationsResponse,
-        RecommendationConnection, StaffDetailResponse, StaffPageResponse,
+        GraphQlResponse, MediaDetailResponse, MediaPageData, MediaPageResponse,
+        MediaRecommendationsResponse, RecommendationConnection, StaffDetailResponse,
+        StaffPageResponse,
     },
 };
 use crate::{
@@ -100,26 +101,49 @@ impl AniListClient {
 
     // ── GraphQL execution engine ───────────────────────────────────────────────
 
-    /// Execute a GraphQL query and deserialize the `data` field.
+    /// Execute a GraphQL query and extract the root field the caller needs.
+    ///
+    /// `root` projects the deserialized `data` object onto the root field the
+    /// caller needs (e.g. `Media` or `Page`). Classification happens per
+    /// attempt, so a transient upstream failure that nulls the root field is
+    /// retried like any other 429/5xx.
     ///
     /// The response body is read **before** the HTTP status is inspected, so
     /// GraphQL errors and rate-limit headers are surfaced for every status
     /// (AniList returns `404`/`429` as GraphQL errors on an otherwise-2xx
     /// response, and rate-limit info in `Retry-After`).
     ///
-    /// # Partial-data policy
+    /// # Error classification
     ///
-    /// When a response carries **both** `data` and `errors` (a partial
-    /// success), the usable `data` is returned and the errors are logged at
-    /// `warn` level rather than discarded — failing would throw away good data.
-    /// Errors are only surfaced as [`AniListError::GraphQL`] when no `data` is
-    /// present. A GraphQL error carrying `status: 404` always maps to
-    /// [`AniListError::NotFound`].
-    async fn graphql<T: DeserializeOwned>(
+    /// - A GraphQL error carrying `status: 404` always maps to
+    ///   [`AniListError::NotFound`].
+    /// - **Partial data:** when the response carries errors but the root field
+    ///   is non-null, the root is returned and the errors are logged at `warn`
+    ///   level rather than discarded — failing would throw away good data.
+    /// - When the response carries errors and the root field is null or
+    ///   missing, the errors are surfaced as [`AniListError::GraphQL`] (never
+    ///   as not-found / no-data), retried when any status is 429/5xx.
+    ///   This holds even when the errors carry only a non-error status (e.g.
+    ///   `200`): the server reported errors, so we do not claim the item is
+    ///   missing.
+    /// - If the HTTP status is non-2xx, GraphQL errors without a `status`
+    ///   inherit the HTTP status (before any other check), so e.g. an HTTP 500
+    ///   with status-less errors is treated as a 5xx and an HTTP 404 as
+    ///   not-found.
+    /// - With no errors (absent or empty) and a null root, a non-2xx HTTP
+    ///   status yields [`AniListError::Status`] (retried on 429/5xx).
+    /// - With no errors, a null root on a 2xx response yields `Ok(None)`; the
+    ///   caller decides whether that means not-found (details) or no-data
+    ///   (lists).
+    async fn graphql<R, T>(
         &self,
         query: &str,
         variables: Value,
-    ) -> Result<T, AniListError> {
+        root: fn(R) -> Option<T>,
+    ) -> Result<Option<T>, AniListError>
+    where
+        R: DeserializeOwned,
+    {
         let body = json!({
             "query": query,
             "variables": variables,
@@ -130,7 +154,7 @@ impl AniListClient {
         loop {
             // Pace requests (including retries) within the rate limit.
             self.rate_limiter.acquire().await;
-            match self.graphql_attempt::<T>(&body).await {
+            match self.graphql_attempt(&body, root).await {
                 Ok(data) => return Ok(data),
                 Err(err) => {
                     if policy.should_retry(retry_index) && err.is_retryable() {
@@ -152,7 +176,16 @@ impl AniListClient {
     }
 
     /// A single GraphQL request attempt (no rate limiting or retrying).
-    async fn graphql_attempt<T: DeserializeOwned>(&self, body: &Value) -> Result<T, AniListError> {
+    ///
+    /// See [`graphql`](Self::graphql) for the classification rules.
+    async fn graphql_attempt<R, T>(
+        &self,
+        body: &Value,
+        root: fn(R) -> Option<T>,
+    ) -> Result<Option<T>, AniListError>
+    where
+        R: DeserializeOwned,
+    {
         let resp = self
             .http
             .post(&self.config.base_url)
@@ -168,7 +201,7 @@ impl AniListClient {
         let text = resp.text().await?;
 
         // Parse the GraphQL envelope regardless of HTTP status.
-        let gql_resp: GraphQlResponse<T> = match serde_json::from_str(&text) {
+        let gql_resp: GraphQlResponse<R> = match serde_json::from_str(&text) {
             Ok(parsed) => parsed,
             Err(parse_err) => {
                 // The body was not a GraphQL envelope. An error status is the
@@ -184,16 +217,25 @@ impl AniListClient {
             }
         };
 
-        if let Some(errors) = gql_resp.errors.filter(|e| !e.is_empty()) {
+        if let Some(mut errors) = gql_resp.errors.filter(|e| !e.is_empty()) {
+            // Status-less errors inherit a non-2xx HTTP status so they
+            // classify correctly (e.g. HTTP 404 → not found, HTTP 500 → 5xx).
+            if !status.is_success() {
+                let http_status = i64::from(status.as_u16());
+                for e in errors.iter_mut().filter(|e| e.status.is_none()) {
+                    e.status = Some(http_status);
+                }
+            }
             // Derive not-found from the structured `status`, not the message.
             if errors.iter().any(|e| e.status == Some(404)) {
                 return Err(AniListError::NotFound);
             }
-            // Partial-data policy: prefer usable data over failing.
-            if let Some(data) = gql_resp.data {
+            // Partial-data policy: prefer a usable root over failing.
+            if let Some(value) = gql_resp.data.and_then(root) {
                 tracing::warn!(?errors, "anilist: returning partial data alongside errors");
-                return Ok(data);
+                return Ok(Some(value));
             }
+            // The root is null/missing: the errors explain why.
             tracing::warn!(?errors, "anilist: graphql errors");
             return Err(AniListError::GraphQL {
                 errors,
@@ -201,11 +243,12 @@ impl AniListClient {
             });
         }
 
-        if let Some(data) = gql_resp.data {
-            return Ok(data);
+        // No errors (absent or empty).
+        let data_present = gql_resp.data.is_some();
+        if let Some(value) = gql_resp.data.and_then(root) {
+            return Ok(Some(value));
         }
-
-        // No data and no errors: distinguish an error status from an empty body.
+        // Null root / no data on an error status: report the HTTP status.
         if !status.is_success() {
             return Err(AniListError::Status {
                 status: status.as_u16(),
@@ -213,7 +256,12 @@ impl AniListClient {
                 message: truncate_body(&text),
             });
         }
-        Err(AniListError::NoData)
+        if data_present {
+            // A successful response with a null root: the caller decides.
+            Ok(None)
+        } else {
+            Err(AniListError::NoData)
+        }
     }
 
     // ── Helper: build JSON array for format_in variable ───────────────────────
@@ -251,8 +299,10 @@ impl AniListClient {
             page = page_num,
             "anilist: graphql SEARCH_ANIME (search_movies)"
         );
-        let resp: MediaPageResponse = self.graphql(query::SEARCH_ANIME, vars).await?;
-        media_page_to_movies(resp)
+        let page = self
+            .graphql(query::SEARCH_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_movies(page)
     }
 
     /// Search for anime series (TV, OVA, ONA, Special) by title.
@@ -273,8 +323,10 @@ impl AniListClient {
             page = page_num,
             "anilist: graphql SEARCH_ANIME (search_tv_shows)"
         );
-        let resp: MediaPageResponse = self.graphql(query::SEARCH_ANIME, vars).await?;
-        media_page_to_tv(resp)
+        let page = self
+            .graphql(query::SEARCH_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_tv(page)
     }
 
     /// Search for staff (voice actors, directors, animators, etc.) by name.
@@ -290,8 +342,10 @@ impl AniListClient {
             "perPage": per_page,
         });
         tracing::debug!(query, page = page_num, "anilist: graphql SEARCH_STAFF");
-        let resp: StaffPageResponse = self.graphql(query::SEARCH_STAFF, vars).await?;
-        let page_data = resp.page.ok_or(AniListError::NoData)?;
+        let page_data = self
+            .graphql(query::SEARCH_STAFF, vars, |r: StaffPageResponse| r.page)
+            .await?
+            .ok_or(AniListError::NoData)?;
         let pi = &page_data.page_info;
         Ok(Page::with_has_next(
             pi.current_page.unwrap_or(1) as u32,
@@ -324,8 +378,10 @@ impl AniListClient {
             page = page_num,
             "anilist: graphql SEARCH_ANIME (search_multi)"
         );
-        let resp: MediaPageResponse = self.graphql(query::SEARCH_ANIME, vars).await?;
-        let page_data = resp.page.ok_or(AniListError::NoData)?;
+        let page_data = self
+            .graphql(query::SEARCH_ANIME, vars, media_page_root)
+            .await?
+            .ok_or(AniListError::NoData)?;
         let pi = &page_data.page_info;
         let results = page_data
             .media
@@ -347,8 +403,10 @@ impl AniListClient {
     pub async fn movie_details(&self, id: i32) -> Result<UnifiedMovieDetails, AniListError> {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql MEDIA_DETAILS (movie_details)");
-        let resp: MediaDetailResponse = self.graphql(query::MEDIA_DETAILS, vars).await?;
-        let media = resp.media.ok_or(AniListError::NotFound)?;
+        let media = self
+            .graphql(query::MEDIA_DETAILS, vars, |r: MediaDetailResponse| r.media)
+            .await?
+            .ok_or(AniListError::NotFound)?;
         Ok(crate::unified::conversions::anilist::anilist_media_detail_to_movie_details(media))
     }
 
@@ -356,8 +414,10 @@ impl AniListClient {
     pub async fn tv_show_details(&self, id: i32) -> Result<UnifiedTvShowDetails, AniListError> {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql MEDIA_DETAILS (tv_show_details)");
-        let resp: MediaDetailResponse = self.graphql(query::MEDIA_DETAILS, vars).await?;
-        let media = resp.media.ok_or(AniListError::NotFound)?;
+        let media = self
+            .graphql(query::MEDIA_DETAILS, vars, |r: MediaDetailResponse| r.media)
+            .await?
+            .ok_or(AniListError::NotFound)?;
         Ok(crate::unified::conversions::anilist::anilist_media_detail_to_tv_details(media))
     }
 
@@ -365,8 +425,10 @@ impl AniListClient {
     pub async fn person_details(&self, id: i32) -> Result<UnifiedPersonDetails, AniListError> {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql STAFF_DETAILS (person_details)");
-        let resp: StaffDetailResponse = self.graphql(query::STAFF_DETAILS, vars).await?;
-        let staff = resp.staff.ok_or(AniListError::NotFound)?;
+        let staff = self
+            .graphql(query::STAFF_DETAILS, vars, |r: StaffDetailResponse| r.staff)
+            .await?
+            .ok_or(AniListError::NotFound)?;
         Ok(crate::unified::conversions::anilist::staff_detail_to_person_details(staff))
     }
 
@@ -394,8 +456,10 @@ impl AniListClient {
             page = page_num,
             "anilist: graphql LIST_TRENDING_ANIME (trending_movies)"
         );
-        let resp: MediaPageResponse = self.graphql(query::LIST_TRENDING_ANIME, vars).await?;
-        media_page_to_movies(resp)
+        let page = self
+            .graphql(query::LIST_TRENDING_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_movies(page)
     }
 
     /// Get trending anime series.
@@ -420,8 +484,10 @@ impl AniListClient {
             page = page_num,
             "anilist: graphql LIST_TRENDING_ANIME (trending_tv)"
         );
-        let resp: MediaPageResponse = self.graphql(query::LIST_TRENDING_ANIME, vars).await?;
-        media_page_to_tv(resp)
+        let page = self
+            .graphql(query::LIST_TRENDING_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_tv(page)
     }
 
     /// Get popular anime movies (sorted by popularity).
@@ -439,8 +505,10 @@ impl AniListClient {
             page = page_num,
             "anilist: graphql LIST_POPULAR_ANIME (popular_movies)"
         );
-        let resp: MediaPageResponse = self.graphql(query::LIST_POPULAR_ANIME, vars).await?;
-        media_page_to_movies(resp)
+        let page = self
+            .graphql(query::LIST_POPULAR_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_movies(page)
     }
 
     /// Get top-scored anime movies (sorted by average score).
@@ -458,8 +526,10 @@ impl AniListClient {
             page = page_num,
             "anilist: graphql LIST_TOP_SCORED_ANIME (top_rated_movies)"
         );
-        let resp: MediaPageResponse = self.graphql(query::LIST_TOP_SCORED_ANIME, vars).await?;
-        media_page_to_movies(resp)
+        let page = self
+            .graphql(query::LIST_TOP_SCORED_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_movies(page)
     }
 
     /// Get popular anime TV shows (sorted by popularity).
@@ -477,8 +547,10 @@ impl AniListClient {
             page = page_num,
             "anilist: graphql LIST_POPULAR_ANIME (popular_tv_shows)"
         );
-        let resp: MediaPageResponse = self.graphql(query::LIST_POPULAR_ANIME, vars).await?;
-        media_page_to_tv(resp)
+        let page = self
+            .graphql(query::LIST_POPULAR_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_tv(page)
     }
 
     /// Get top-scored anime TV shows (sorted by average score).
@@ -496,8 +568,10 @@ impl AniListClient {
             page = page_num,
             "anilist: graphql LIST_TOP_SCORED_ANIME (top_rated_tv_shows)"
         );
-        let resp: MediaPageResponse = self.graphql(query::LIST_TOP_SCORED_ANIME, vars).await?;
-        media_page_to_tv(resp)
+        let page = self
+            .graphql(query::LIST_TOP_SCORED_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_tv(page)
     }
 
     // ── Recommendations ────────────────────────────────────────────────────────
@@ -567,9 +641,14 @@ impl AniListClient {
             page = page_num,
             "anilist: graphql MEDIA_RECOMMENDATIONS"
         );
-        let resp: MediaRecommendationsResponse =
-            self.graphql(query::MEDIA_RECOMMENDATIONS, vars).await?;
-        let media = resp.media.ok_or(AniListError::NotFound)?;
+        let media = self
+            .graphql(
+                query::MEDIA_RECOMMENDATIONS,
+                vars,
+                |r: MediaRecommendationsResponse| r.media,
+            )
+            .await?
+            .ok_or(AniListError::NotFound)?;
         Ok(media.recommendations)
     }
 
@@ -593,8 +672,10 @@ impl AniListClient {
             page = %vars["page"],
             "anilist: graphql DISCOVER_ANIME (discover_anime movies)"
         );
-        let resp: MediaPageResponse = self.graphql(query::DISCOVER_ANIME, vars).await?;
-        media_page_to_movies(resp)
+        let page = self
+            .graphql(query::DISCOVER_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_movies(page)
     }
 
     /// Run [`query::DISCOVER_ANIME`] and convert the page to TV shows.
@@ -606,8 +687,10 @@ impl AniListClient {
             page = %vars["page"],
             "anilist: graphql DISCOVER_ANIME (discover_anime tv)"
         );
-        let resp: MediaPageResponse = self.graphql(query::DISCOVER_ANIME, vars).await?;
-        media_page_to_tv(resp)
+        let page = self
+            .graphql(query::DISCOVER_ANIME, vars, media_page_root)
+            .await?;
+        media_page_to_tv(page)
     }
 }
 
@@ -626,6 +709,11 @@ fn truncate_body(body: &str) -> String {
     } else {
         truncated
     }
+}
+
+/// Root-field extractor for queries returning a media `Page`.
+fn media_page_root(resp: MediaPageResponse) -> Option<MediaPageData> {
+    resp.page
 }
 
 /// Convert a recommendation connection to a page of classified media,
@@ -652,10 +740,8 @@ fn recommendations_page(conn: Option<RecommendationConnection>) -> Page<UnifiedS
     )
 }
 
-fn media_page_to_movies(
-    resp: MediaPageResponse,
-) -> Result<Page<UnifiedMovie>, super::error::AniListError> {
-    let page = resp.page.ok_or(super::error::AniListError::NoData)?;
+fn media_page_to_movies(page: Option<MediaPageData>) -> Result<Page<UnifiedMovie>, AniListError> {
+    let page = page.ok_or(AniListError::NoData)?;
     let pi = &page.page_info;
     Ok(Page::with_has_next(
         pi.current_page.unwrap_or(1) as u32,
@@ -666,10 +752,8 @@ fn media_page_to_movies(
     ))
 }
 
-fn media_page_to_tv(
-    resp: MediaPageResponse,
-) -> Result<Page<UnifiedTvShow>, super::error::AniListError> {
-    let page = resp.page.ok_or(super::error::AniListError::NoData)?;
+fn media_page_to_tv(page: Option<MediaPageData>) -> Result<Page<UnifiedTvShow>, AniListError> {
+    let page = page.ok_or(AniListError::NoData)?;
     let pi = &page.page_info;
     Ok(Page::with_has_next(
         pi.current_page.unwrap_or(1) as u32,
