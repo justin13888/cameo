@@ -122,7 +122,15 @@ impl CameoClient {
         {
             self.cache_put(key, &result, self.cache_ttl(|t| t.search))
                 .await;
-            self.cache_items(&result.results).await;
+            // Index the wrapped model, not the wrapper: `cached_*` reads the
+            // item entry as the bare summary model.
+            for item in &result.results {
+                match item {
+                    UnifiedSearchResult::Movie(m) => self.cache_item(m).await,
+                    UnifiedSearchResult::TvShow(t) => self.cache_item(t).await,
+                    UnifiedSearchResult::Person(p) => self.cache_item(p).await,
+                }
+            }
         }
         Ok(result)
     }
