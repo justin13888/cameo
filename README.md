@@ -109,7 +109,7 @@ breaking change, and the deprecation cadence.
 
 ## MSRV
 
-The minimum supported Rust version is **1.88**. This crate uses [let-chains](https://blog.rust-lang.org/2025/06/26/Rust-1.88.0.html) (`if let A = x && let B = y`) which were stabilized in Rust 1.88. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
+The minimum supported Rust version is **1.89**, the version `rusqlite` 0.41 (the `cache` feature's SQLite backend) declares. This crate also uses [let-chains](https://blog.rust-lang.org/2025/06/26/Rust-1.88.0.html) (`if let A = x && let B = y`), which were stabilized in Rust 1.88. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
 
 ## License
 
