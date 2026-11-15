@@ -64,8 +64,10 @@ async fn movie_details_deserializes_response() {
     assert_eq!(details.runtime, Some(139));
     assert_eq!(details.budget, Some(63000000));
     assert_eq!(details.imdb_id.as_deref(), Some("tt0137523"));
-    assert_eq!(details.movie.genres.len(), 2);
-    assert!(details.movie.genres.contains(&cameo::Genre::Drama));
+    assert_eq!(
+        details.movie.genres,
+        vec![cameo::Genre::Drama, cameo::Genre::Thriller]
+    );
     assert_eq!(details.video, Some(false));
     assert_eq!(details.movie.adult, Some(false));
 }
@@ -131,8 +133,19 @@ async fn movie_genres_deserializes_response() {
 
     let genres = client.movie_genres().await.unwrap();
 
-    assert!(!genres.is_empty());
-    assert!(genres.contains(&cameo::Genre::Action));
+    assert_eq!(
+        genres,
+        vec![
+            cameo::Genre::Action,
+            cameo::Genre::Adventure,
+            cameo::Genre::Animation,
+            cameo::Genre::Comedy,
+            cameo::Genre::Drama,
+            cameo::Genre::Horror,
+            cameo::Genre::ScienceFiction,
+            cameo::Genre::Thriller,
+        ]
+    );
 }
 
 #[tokio::test]
