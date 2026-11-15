@@ -31,6 +31,8 @@ mod integration {
     #[cfg(feature = "tmdb")]
     mod tmdb_auth_test;
     #[cfg(feature = "tmdb")]
+    mod tmdb_certifications_test;
+    #[cfg(feature = "tmdb")]
     mod tmdb_client_characterization_test;
     #[cfg(feature = "tmdb")]
     mod tmdb_credits_test;

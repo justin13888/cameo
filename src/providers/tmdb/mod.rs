@@ -8,7 +8,7 @@ pub mod config;
 pub mod error;
 /// Image URL construction helpers.
 pub mod image_url;
-/// Stable, hand-owned TMDB result types (credits, images).
+/// Stable, hand-owned TMDB result types (credits, images, certifications).
 pub mod models;
 /// Unified provider-trait implementations.
 mod provider;
@@ -17,4 +17,4 @@ pub use client::TmdbClient;
 pub use config::{TmdbAuth, TmdbConfig};
 pub use error::TmdbError;
 pub use image_url::{BackdropSize, ImageUrl, LogoSize, PosterSize, ProfileSize, StillSize};
-pub use models::{CastMember, CrewMember, TmdbCredits, TmdbImage, TmdbImages};
+pub use models::{CastMember, CrewMember, TmdbCertification, TmdbCredits, TmdbImage, TmdbImages};

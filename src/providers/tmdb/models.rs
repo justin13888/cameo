@@ -3,7 +3,8 @@
 //! These types are owned by cameo (unlike the generated `types::*`), so a spec
 //! update or generator bump cannot rename or reshape the public API. They cover
 //! the TMDB-specific endpoints that have no cross-provider unified equivalent
-//! (credits and images); everything else returns a unified model.
+//! (credits, images and certifications); everything else returns a unified
+//! model.
 //!
 //! [`TmdbClient`]: crate::providers::tmdb::TmdbClient
 
@@ -73,6 +74,79 @@ pub struct TmdbImages {
     pub posters: Vec<TmdbImage>,
     /// Logo images.
     pub logos: Vec<TmdbImage>,
+}
+
+/// A title's certification (content rating) in one country, such as `PG-13`
+/// in the US or `TV-MA` for a US TV series.
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct TmdbCertification {
+    /// ISO 3166-1 alpha-2 code of the country the rating applies in (TMDB's
+    /// `iso_3166_1`), e.g. `"US"`.
+    pub country: String,
+    /// The rating that country's rating board assigned, e.g. `"R"`.
+    pub certification: String,
+}
+
+impl TmdbCertification {
+    /// Pair a country with a rating, trimming both and rejecting either when
+    /// it is empty.
+    fn from_parts(country: Option<String>, certification: Option<String>) -> Option<Self> {
+        let country = non_blank(country)?;
+        let certification = non_blank(certification)?;
+        Some(Self {
+            country,
+            certification,
+        })
+    }
+}
+
+/// The trimmed value, or `None` when it is missing or blank.
+fn non_blank(value: Option<String>) -> Option<String> {
+    let trimmed = value?.trim().to_owned();
+    (!trimmed.is_empty()).then_some(trimmed)
+}
+
+/// TMDB's release type for a theatrical release (`3`), whose certification
+/// is preferred over those of other release types in the same country.
+const THEATRICAL_RELEASE: i64 = 3;
+
+/// One certification per country from a movie's `/release_dates` response.
+///
+/// A country lists one entry per release (premiere, theatrical, digital, ...),
+/// many with an empty certification. The theatrical release's certification
+/// wins; otherwise the first non-empty one in TMDB's order. Countries with no
+/// code or no non-empty certification are skipped. Countries keep TMDB's order.
+pub(crate) fn movie_certifications(
+    response: types::MovieReleaseDatesResponse,
+) -> Vec<TmdbCertification> {
+    response
+        .results
+        .into_iter()
+        .flatten()
+        .filter_map(|country| {
+            let mut releases: Vec<_> = country.release_dates.into_iter().flatten().collect();
+            // A stable sort keeps TMDB's order among non-theatrical releases.
+            releases.sort_by_key(|r| r.r#type != Some(THEATRICAL_RELEASE));
+            let certification = releases
+                .into_iter()
+                .find_map(|r| non_blank(r.certification))?;
+            TmdbCertification::from_parts(country.iso_3166_1, Some(certification))
+        })
+        .collect()
+}
+
+/// One certification per country from a TV series' `/content_ratings`
+/// response. Entries with no country code or an empty rating are skipped.
+pub(crate) fn tv_series_certifications(
+    response: types::TvSeriesContentRatingsResponse,
+) -> Vec<TmdbCertification> {
+    response
+        .results
+        .into_iter()
+        .flatten()
+        .filter_map(|r| TmdbCertification::from_parts(r.iso_3166_1, r.rating))
+        .collect()
 }
 
 /// A single image asset.
@@ -387,6 +461,78 @@ mod tests {
             .map(|c| (c.id, c.job.as_deref()))
             .collect();
         assert_eq!(crew, [(66633, Some("Creator"))]);
+    }
+
+    /// A movie's certification per country prefers the theatrical release,
+    /// falls back to the first non-empty one, and skips countries with no
+    /// code or no certification.
+    #[test]
+    fn movie_certifications_pick_one_per_country() {
+        let raw: types::MovieReleaseDatesResponse = serde_json::from_value(json!({
+            "id": 603,
+            "results": [
+                { "iso_3166_1": "US", "release_dates": [
+                    { "certification": "", "type": 1 },
+                    { "certification": "NR", "type": 4 },
+                    { "certification": " R ", "type": 3 }
+                ] },
+                { "iso_3166_1": "DE", "release_dates": [
+                    { "certification": "", "type": 3 },
+                    { "certification": "16", "type": 5 },
+                    { "certification": "18", "type": 6 }
+                ] },
+                { "iso_3166_1": "FR", "release_dates": [{ "certification": "", "type": 3 }] },
+                { "iso_3166_1": "GB" },
+                { "release_dates": [{ "certification": "PG", "type": 3 }] },
+                { "iso_3166_1": " ", "release_dates": [{ "certification": "PG", "type": 3 }] }
+            ]
+        }))
+        .expect("release dates deserialize");
+
+        let certs: Vec<_> = movie_certifications(raw)
+            .into_iter()
+            .map(|c| (c.country, c.certification))
+            .collect();
+        assert_eq!(
+            certs,
+            [
+                ("US".to_owned(), "R".to_owned()),
+                ("DE".to_owned(), "16".to_owned())
+            ]
+        );
+    }
+
+    /// TV content ratings map one-to-one, skipping blank entries; a missing
+    /// `results` reads as no ratings.
+    #[test]
+    fn tv_series_certifications_skip_blank_entries() {
+        let raw: types::TvSeriesContentRatingsResponse = serde_json::from_value(json!({
+            "id": 1396,
+            "results": [
+                { "iso_3166_1": "US", "rating": "TV-MA", "descriptors": [] },
+                { "iso_3166_1": "DE", "rating": "" },
+                { "iso_3166_1": "BR", "rating": null },
+                { "rating": "16" },
+                { "iso_3166_1": "KR", "rating": "19" }
+            ]
+        }))
+        .expect("content ratings deserialize");
+
+        let certs: Vec<_> = tv_series_certifications(raw)
+            .into_iter()
+            .map(|c| (c.country, c.certification))
+            .collect();
+        assert_eq!(
+            certs,
+            [
+                ("US".to_owned(), "TV-MA".to_owned()),
+                ("KR".to_owned(), "19".to_owned())
+            ]
+        );
+
+        let empty: types::TvSeriesContentRatingsResponse =
+            serde_json::from_value(json!({ "id": 1 })).expect("deserialize");
+        assert!(tv_series_certifications(empty).is_empty());
     }
 
     /// Image fields TMDB omits (or reports negative) are `None`, not `0`;
