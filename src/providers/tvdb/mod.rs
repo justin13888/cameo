@@ -1,7 +1,8 @@
 //! TheTVDB (v4) provider: series, movies, and episodes with absolute numbers.
 //!
-//! [`TvdbClient`] logs in with a project API key (and optional subscriber
-//! PIN), keeps the bearer token, and renews it when TheTVDB answers `401`.
+//! [`TvdbClient`](crate::providers::tvdb::TvdbClient) logs in with a project
+//! API key (and optional subscriber PIN), keeps the bearer token, and renews
+//! it when TheTVDB answers `401`.
 
 /// TheTVDB REST client.
 pub mod client;

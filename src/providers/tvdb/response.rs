@@ -1,7 +1,7 @@
 //! TheTVDB v4 records, as the API returns them.
 //!
 //! These are hand-owned types covering the fields cameo reads: they are
-//! returned by [`TvdbClient`](super::TvdbClient)'s inherent methods so that
+//! returned by [`TvdbClient`](crate::providers::tvdb::TvdbClient)'s inherent methods so that
 //! TheTVDB-only data (content ratings, every translation, artwork, and each
 //! episode's absolute number) stays reachable, and they are converted to the
 //! unified models by the provider-trait implementations.
