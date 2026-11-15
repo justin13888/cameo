@@ -160,6 +160,11 @@ async fn malformed_json_body_is_deserialization_error() {
         matches!(err, TmdbError::Deserialization(_)),
         "expected Deserialization error, got {err:?}"
     );
+    // The payload is cameo's own DecodeError, reachable through `source()`.
+    let decode = std::error::Error::source(&err)
+        .and_then(|e| e.downcast_ref::<cameo::DecodeError>())
+        .unwrap_or_else(|| panic!("no DecodeError source: {err:?}"));
+    assert!(!decode.to_string().is_empty(), "{decode:?}");
 }
 
 /// A server that accepts the connection, reads the request, and closes it
