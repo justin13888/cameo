@@ -15,7 +15,7 @@ Run `just` to list all available recipes. Key ones:
 ```bash
 just fmt          # format all code
 just clippy       # run clippy lints
-just test         # run tests (default features = `full`: tmdb + anilist + cache)
+just test         # run tests (default features = `full`: tmdb + anilist + tvdb + cache)
 just test-all     # run tests with `--features full` (same set, stated explicitly)
 just test-all-features  # run tests across every CI feature combination
 just test-live    # run live tests (requires TMDB_API_TOKEN in .env)
@@ -43,10 +43,11 @@ cargo run --example anilist_showcase --features anilist -- 'Your Name'
 User call → CameoClient (src/unified/facade/)
                 ├─ TmdbClient (src/providers/tmdb/)
                 │       └─ Generated REST client (vendored src/generated/tmdb.rs; regen via `cargo xtask codegen`)
-                └─ AniListClient (src/providers/anilist/)
+                ├─ AniListClient (src/providers/anilist/)
+                └─ TvdbClient (src/providers/tvdb/)
                             │
-                            ▼  conversions (src/unified/conversions/)
-                     Unified types (src/unified/models.rs)
+                            ▼  conversions (src/providers/<name>/convert/)
+                     Unified types (src/unified/models.rs, src/unified/models/)
                             │
                             ▼  cache (src/cache/)
                      CacheBackend → SqliteCache (SQLite via rusqlite)
@@ -55,22 +56,23 @@ User call → CameoClient (src/unified/facade/)
 | Path | Purpose |
 |---|---|
 | `src/generated/` | Vendored spargen output (`tmdb.rs`, runtime support code embedded), committed; regenerate with `cargo xtask codegen`, do not edit directly |
-| `src/core/` | `CameoError`, `TimeWindow`, `PaginatedResponse`, `into_stream` |
-| `src/cache/` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig`, `CacheKey`, `MediaType` |
-| `src/providers/http.rs` | Shared HTTP client construction (timeouts, `User-Agent`) for both built-in providers |
-| `src/providers/rate_limit.rs` | Per-provider request-rate limiting |
-| `src/providers/retry.rs` | Retry policy for transient provider failures |
-| `src/providers/tmdb/` | `TmdbClient` (rate-limited), `TmdbConfig`, `ImageUrl`, discover builders, `TmdbError` |
-| `src/providers/anilist/` | `AniListClient` (GraphQL/reqwest), `AniListConfig`, `AniListError` |
+| `src/core/` | `ProviderError`, `TransportError`, `DecodeError`, `TimeWindow`, `Page`, `PageToken`, `into_stream` |
+| `src/cache/` | `CacheBackend` trait and `CacheError` (`backend.rs`), `CacheKey` and `MediaType` (`key.rs`), `SqliteCache` (`sqlite.rs`, `sqlite/`), `CacheTtlConfig` |
+| `src/providers/http.rs` | Shared HTTP client construction (timeouts, `User-Agent`) for the built-in providers |
+| `src/providers/rate_limit.rs` | Per-provider request-rate limiting (`RateLimit`) |
+| `src/providers/retry.rs` | Retry policy for transient provider failures (`RetryPolicy`) |
+| `src/providers/tmdb/` | `TmdbClient` (`client/`, one module per endpoint family), `TmdbConfig`, `ImageUrl`, discover builders (`builders/`), `TmdbError` (`error.rs`), conversions to unified types (`convert/`), capability-trait impls (`provider.rs`) |
+| `src/providers/anilist/` | `AniListClient` (`client/`: GraphQL transport in `graphql.rs`, endpoints by family), `AniListConfig`, `DiscoverAnimeBuilder`, `AniListError`, GraphQL queries and response types, conversions (`convert/`), capability-trait impls (`provider.rs`) |
+| `src/providers/tvdb/` | `TvdbClient`, `TvdbConfig`, `TvdbError`, response types, conversions (`convert/`), capability-trait impls (`provider.rs`) |
 | `src/unified/traits.rs` | `Provider` (id + capabilities), the capability traits `SearchProvider`, `DetailProvider`, `DiscoveryProvider`, `RecommendationProvider`, `SeasonProvider`, `WatchAvailabilityProvider`, `ExternalIdProvider`, `CreditsProvider`, and the `MediaProvider` bundle; all return `ProviderError` |
-| `src/unified/models.rs` | `UnifiedMovie`, `UnifiedTvShow`, `UnifiedPerson`, detail variants, `UnifiedSearchResult`, credits |
-| `src/unified/builders.rs` | Constructors and builder-style setters for the unified models |
+| `src/unified/models.rs`, `src/unified/models/` | `UnifiedMovie`, `UnifiedTvShow`, `UnifiedPerson`, detail variants, `UnifiedSearchResult`, credits |
+| `src/unified/builders.rs`, `src/unified/builders/` | Constructors and builder-style setters for the unified models |
 | `src/unified/date.rs` | `PartialDate` for release/air dates |
 | `src/unified/genre.rs` | `Genre` and its provider mappings |
 | `src/unified/media_id.rs` | `MediaId`, `NativeId`: provider-qualified ids |
 | `src/unified/external_ids.rs` | `ExternalIds`, `ExternalSource`, `ExternalMatch` (IMDb, TVDB, MyAnimeList, Wikidata) |
-| `src/unified/conversions/` | Conversions from provider types to unified types (tmdb/, anilist/ submodules) |
-| `src/unified/facade/` | `CameoClient`, `CameoClientBuilder`, `CameoClientError`; capability registry and per-capability dispatch modules |
+| `src/unified/conversions/` | Shared conversion helpers (`native_id`); each provider's own conversions live in its `convert/` |
+| `src/unified/facade/` | `CameoClient` (`mod.rs`), `CameoClientBuilder` (`builder.rs`), `CameoClientError` (`error.rs`), the facade cache layer (`cache.rs`), and one dispatch module per capability |
 | `xtask/` | Standalone codegen tool (`cargo xtask codegen`) with pinned deps + committed lockfile; regenerates `src/generated/tmdb.rs` from the spec |
 
 For feature flags, see README.md. For test commands, see TESTING.md.
@@ -121,14 +123,14 @@ is registered with `CameoClient::builder().register_*_provider(...)`; this needs
 no changes to cameo. [docs/providers.md](docs/providers.md) is the guide for that
 (traits, `ProviderError` mapping, registration, priority).
 
-Only a provider that ships **inside** this crate as a built-in (like TMDB and
-AniList) needs the in-crate steps below, on top of that guide:
+Only a provider that ships **inside** this crate as a built-in (like TMDB,
+AniList and TheTVDB) needs the in-crate steps below, on top of that guide:
 
 1. Add a feature flag in `Cargo.toml` (`<name> = [...]`, deps optional) and gate
    `src/providers/<name>/` on it.
-2. Add `From<<Name>Error> for ProviderError` in `src/core/error.rs`.
-3. Add conversions to the unified models in `src/unified/conversions/<name>/`.
-4. Add `with_<name>(config)` to `CameoClientBuilder` (`src/unified/facade/mod.rs`)
+2. Add `From<<Name>Error> for ProviderError` in `src/providers/<name>/error.rs`.
+3. Add conversions to the unified models in `src/providers/<name>/convert/`.
+4. Add `with_<name>(config)` to `CameoClientBuilder` (`src/unified/facade/builder.rs`)
    and, in `build()`, push the client into each capability list it implements.
    Built-ins register before out-of-crate providers; callers reorder with
    `with_priority`.
