@@ -76,7 +76,9 @@ impl From<crate::providers::tmdb::TmdbError> for ProviderError {
     fn from(err: crate::providers::tmdb::TmdbError) -> Self {
         use crate::providers::tmdb::TmdbError;
         match err {
-            TmdbError::Http(e) => ProviderError::Transport(e.to_string()),
+            // `without_url` again: the variant is public, so a caller-built
+            // `TmdbError::Http` may still carry a URL with a v3 `api_key`.
+            TmdbError::Http(e) => ProviderError::Transport(e.without_url().to_string()),
             TmdbError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
             TmdbError::InvalidConfig(s) => ProviderError::InvalidInput(s),
             TmdbError::Api {
@@ -99,7 +101,7 @@ impl From<crate::providers::anilist::AniListError> for ProviderError {
     fn from(err: crate::providers::anilist::AniListError) -> Self {
         use crate::providers::anilist::AniListError;
         match err {
-            AniListError::Http(e) => ProviderError::Transport(e.to_string()),
+            AniListError::Http(e) => ProviderError::Transport(e.without_url().to_string()),
             AniListError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
             AniListError::InvalidConfig(s) => ProviderError::InvalidInput(s),
             AniListError::NotFound => ProviderError::NotFound,

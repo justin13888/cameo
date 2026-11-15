@@ -43,8 +43,12 @@ pub struct AniListGqlError {
 #[derive(Debug, thiserror::Error)]
 pub enum AniListError {
     /// HTTP transport error (connection, DNS, TLS) — no response was received.
+    ///
+    /// Errors built by this crate (including via `From<reqwest::Error>`) have
+    /// the request URL stripped with [`reqwest::Error::without_url`], matching
+    /// the TMDB provider's redaction policy.
     #[error("HTTP transport error: {0}")]
-    Http(#[from] reqwest::Error),
+    Http(#[source] reqwest::Error),
 
     /// The server returned an error HTTP status with no usable GraphQL body
     /// (e.g. a 5xx HTML page). Carries the `Retry-After` delay when present.
@@ -85,6 +89,14 @@ pub enum AniListError {
     /// Invalid configuration (rejected at construction time).
     #[error("invalid configuration: {0}")]
     InvalidConfig(String),
+}
+
+/// Wrap a transport error, stripping its request URL (consistent with
+/// `TmdbError`, whose v3 API key travels in the URL).
+impl From<reqwest::Error> for AniListError {
+    fn from(err: reqwest::Error) -> Self {
+        AniListError::Http(err.without_url())
+    }
 }
 
 impl AniListError {
