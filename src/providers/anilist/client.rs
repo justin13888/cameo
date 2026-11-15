@@ -36,6 +36,32 @@ const MOVIE_FORMATS: &[AnimeFormat] = AnimeFormat::MOVIES;
 /// AniList formats for anime that map to the "TV show" media type.
 const TV_FORMATS: &[AnimeFormat] = AnimeFormat::TV;
 
+/// The unified media type an AniList anime format maps to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Kind {
+    /// A movie: a format in [`MOVIE_FORMATS`].
+    Movie,
+    /// A TV show: a format in [`TV_FORMATS`].
+    Tv,
+}
+
+/// Classify an AniList `format` value (e.g. `"MOVIE"`, `"TV"`).
+///
+/// The single source of truth shared by the `formatIn` lists the movie and TV
+/// queries send ([`MOVIE_FORMATS`], [`TV_FORMATS`]) and the conversions that
+/// sort mixed results: a format in neither list (e.g. `MUSIC`) or an unknown
+/// value is `None`, so no result set reports it as a movie or a show.
+pub(crate) fn classify(format: &str) -> Option<Kind> {
+    let in_list = |formats: &[AnimeFormat]| formats.iter().any(|f| f.as_str() == format);
+    if in_list(MOVIE_FORMATS) {
+        Some(Kind::Movie)
+    } else if in_list(TV_FORMATS) {
+        Some(Kind::Tv)
+    } else {
+        None
+    }
+}
+
 /// Characters and staff fetched per [`AniListClient::media_credits`] request.
 ///
 /// Below AniList's 50-item maximum because each character also nests its
@@ -374,6 +400,12 @@ impl AniListClient {
     }
 
     /// Search across all anime formats. Returns movies and TV shows mixed.
+    ///
+    /// Each result is classified the way the movie and TV list queries filter:
+    /// `MOVIE` is a movie, `TV`, `TV_SHORT`, `ONA`, `OVA`, and `SPECIAL` are TV
+    /// shows, and anything else (e.g. `MUSIC`, or no format) is omitted, so a
+    /// page may hold fewer items than the configured page size while the
+    /// pagination metadata keeps describing AniList's unfiltered results.
     pub async fn search_multi(
         &self,
         query: &str,
@@ -739,7 +771,7 @@ impl AniListClient {
     }
 
     /// Get community recommendations for an anime, keeping only recommended
-    /// **series** (any present format other than `MOVIE`, e.g. `TV`, `OVA`).
+    /// **series** (the TV formats `TV`, `TV_SHORT`, `ONA`, `OVA`, `SPECIAL`).
     ///
     /// Uses the same classification as [`search_multi`](Self::search_multi);
     /// see [`movie_recommendations`](Self::movie_recommendations) for how
@@ -918,6 +950,23 @@ mod tests {
         core::pagination::PageToken,
         providers::{rate_limit::RateLimit, retry::RetryPolicy},
     };
+
+    #[test]
+    fn classify_matches_the_format_in_lists() {
+        for f in MOVIE_FORMATS {
+            assert_eq!(classify(f.as_str()), Some(Kind::Movie), "{f:?}");
+        }
+        for f in TV_FORMATS {
+            assert_eq!(classify(f.as_str()), Some(Kind::Tv), "{f:?}");
+        }
+    }
+
+    #[test]
+    fn classify_formats_outside_both_lists_are_none() {
+        assert_eq!(classify(AnimeFormat::Music.as_str()), None);
+        assert_eq!(classify("UNKNOWN"), None);
+        assert_eq!(classify(""), None);
+    }
 
     // ── Harness ────────────────────────────────────────────────────────────────
 

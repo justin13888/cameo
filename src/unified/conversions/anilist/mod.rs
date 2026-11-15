@@ -171,6 +171,9 @@ mod tests {
 
         let ova_result = anilist_media_to_search_result(make_media(3, "OVA"));
         assert!(matches!(ova_result, Some(UnifiedSearchResult::TvShow(_))));
+
+        let music_result = anilist_media_to_search_result(make_media(4, "MUSIC"));
+        assert!(music_result.is_none());
     }
 
     #[test]
