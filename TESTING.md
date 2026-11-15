@@ -7,7 +7,7 @@
 | Unit | None | `tests/unit/` | Pure logic: conversions, builders, config, pagination, genre mapping, cache TTL |
 | Wiremock (TMDB) | Mocked | `tests/integration/tmdb_*.rs` | Deserialization of real-shaped TMDB responses, generated-client field coverage |
 | Wiremock (AniList) | Mocked | `tests/integration/anilist_*.rs` | AniList GraphQL response parsing, score conversion, format mapping, list-result episodes/duration/status |
-| Facade | Mocked | `tests/integration/facade_dispatch_test.rs`, `tests/integration/cache_integration_test.rs` | CameoClient dispatch, cache read/write, provider fallback, NoProviders errors |
+| Facade | Mocked | `tests/integration/facade_dispatch_test.rs`, `tests/integration/cache_integration_test.rs` | CameoClient dispatch, cache read/write, provider fallback, `NotConfigured` / `Unsupported` errors |
 | Live (gated) | Real API | `tests/integration/tmdb_search_test.rs` etc. | Smoke tests — assert results are non-empty, don't assert specific values |
 
 ---
@@ -15,11 +15,11 @@
 ## Run Commands
 
 ```bash
-# Default features (tmdb + cache): all unit + wiremock tests
+# Default features (`full` = tmdb + anilist + cache): all unit + wiremock tests
 cargo test
 
-# Include AniList wiremock tests
-cargo test --features anilist
+# Every CI feature combination (what the pre-push hook runs)
+just test-all-features
 
 # AniList only (no TMDB)
 cargo test --no-default-features --features anilist
@@ -38,7 +38,7 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 
 ## Coverage Matrix
 
-### TmdbClient (32 methods)
+### TmdbClient
 
 | Method | Unit | Wiremock | Facade | Live |
 |---|---|---|---|---|
@@ -75,7 +75,7 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `discover_movies` | — | ✓ | — | ✓ |
 | `discover_tv` | — | ✓ | — | ✓ |
 
-### AniListClient (18 methods)
+### AniListClient
 
 | Method | Unit | Wiremock |
 |---|---|---|
@@ -97,10 +97,11 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 | `tv_recommendations` | — | ✓ |
 | `external_ids` | — | ✓ |
 | `find_by_mal_id` | — | ✓ |
+| `media_credits` | — | ✓ |
 
 AniList's `RecommendationProvider` impl (incl. `similar_*` → `Unsupported`) is covered in `anilist_recommendations_test.rs`.
 
-### CameoClient Facade (24 trait methods)
+### CameoClient Facade (capability trait methods)
 
 | Trait | Method | Wiremock | Cache |
 |---|---|---|---|
@@ -123,13 +124,15 @@ AniList's `RecommendationProvider` impl (incl. `similar_*` → `Unsupported`) is
 | `RecommendationProvider` | `similar_tv_shows` | ✓ (facade, AniList `Unsupported`) | — |
 | `SeasonProvider` | `season_details` | ✓ (facade) | — |
 | `SeasonProvider` | `episode_details` | — | — |
-| `WatchProviderTrait` | `movie_watch_providers` | ✓ (facade) | — |
-| `WatchProviderTrait` | `tv_watch_providers` | — | — |
+| `WatchAvailabilityProvider` | `movie_watch_providers` | ✓ (facade) | — |
+| `WatchAvailabilityProvider` | `tv_watch_providers` | — | — |
 | `ExternalIdProvider` | `movie_external_ids` | ✓ (registry stub) | — (not cached) |
 | `ExternalIdProvider` | `tv_external_ids` | ✓ (facade) | — (not cached) |
 | `ExternalIdProvider` | `find_by_external_id` | ✓ (facade, fan-out/merge via registry stubs) | — (not cached) |
+| `CreditsProvider` | `movie_credits` | ✓ (facade) | — (not cached) |
+| `CreditsProvider` | `tv_show_credits` | ✓ (facade, TMDB and AniList) | — (not cached) |
 
-### CameoClient Cache API (9 methods)
+### CameoClient Cache API
 
 | Method | Test |
 |---|---|
@@ -141,7 +144,6 @@ AniList's `RecommendationProvider` impl (incl. `similar_*` → `Unsupported`) is
 | `cached_person_details` | — |
 | `invalidate_cached` | ✓ |
 | `clear_cache` | ✓ |
-| `flush_cache_writes` | ✓ (used in all cache tests) |
 
 ---
 
@@ -191,20 +193,7 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 ## Guidelines for Adding Tests
 
 1. **Every new public method** → wiremock test with fixture (or inline JSON for AniList).
-2. **Conversion logic** (e.g. new `Into` impl, new genre variant) → unit test in `tests/unit/conversion_test.rs` or `tests/unit/genre_test.rs`.
+2. **Conversion logic** (e.g. new `Into` impl, new genre variant) → `#[cfg(test)]` unit test beside the conversion in `src/unified/conversions/`, or in `tests/unit/genre_test.rs` for genre mapping.
 3. **Facade dispatch** → one test per dispatch category (not per method). Test that the right provider is called and the result converts correctly.
 4. **Live tests** → smoke-only. Assert results are non-empty; never assert specific titles or IDs that could change.
 5. **Fixtures** → capture from real API, trim to 1–2 results, name as `{resource}_response.json`.
-
----
-
-## Test Count Summary
-
-| Layer | Count |
-|---|---|
-| Unit | 69 |
-| Wiremock (TMDB) | 41 |
-| Wiremock (AniList) | 48 |
-| Facade / Cache | 26 |
-| Live (TMDB) | 8 |
-| **Total** | **~192** |
