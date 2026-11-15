@@ -33,7 +33,8 @@ variants and fields in a minor release without it being breaking. Consequently:
 
 - match on these enums with a `_` arm;
 - construct these structs via their `new()` + `with_*` builders, not struct
-  literals.
+  literals; a config with no required fields (e.g. `CacheTtlConfig`) starts
+  from `Default::default()` instead of `new()`.
 
 ## What counts as a breaking change
 

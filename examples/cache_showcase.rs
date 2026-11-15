@@ -63,9 +63,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("=== 1. Setup: CameoClient with in-memory cache ===\n");
 
-    let mut custom_ttl = CacheTtlConfig::default();
-    custom_ttl.search = Duration::from_secs(300); // 5 min (default: 1 hour)
-    custom_ttl.discovery = Duration::from_secs(120); // 2 min (default: 15 min)
+    let custom_ttl = CacheTtlConfig::default()
+        .with_search(Duration::from_secs(300)) // 5 min (default: 1 hour)
+        .with_discovery(Duration::from_secs(120)); // 2 min (default: 15 min)
     println!("  Custom TTLs:");
     println!("    search:    {}s", custom_ttl.search.as_secs());
     println!("    discovery: {}s", custom_ttl.discovery.as_secs());
