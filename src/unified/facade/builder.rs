@@ -26,6 +26,7 @@ use crate::unified::traits::{
 /// themselves with the `register_*_provider` methods (one per capability trait
 /// they implement) — adding a provider requires no facade changes.
 #[derive(Default)]
+#[must_use = "a CameoClientBuilder does nothing until .build() is called"]
 pub struct CameoClientBuilder {
     #[cfg(feature = "tmdb")]
     tmdb_config: Option<TmdbConfig>,
