@@ -18,7 +18,7 @@ clippy:
 clippy-all:
     #!/usr/bin/env sh
     set -e
-    for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tmdb,anilist,cache"; do
+    for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tvdb" "tmdb,anilist,tvdb,cache"; do
         echo "==> clippy --features $features"
         cargo clippy --all-targets --no-default-features --features "$features" -- -D warnings
     done
@@ -51,7 +51,7 @@ test-features features:
 test-all-features:
     #!/usr/bin/env sh
     set -e
-    for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tmdb,anilist,cache"; do
+    for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tvdb" "tmdb,anilist,tvdb,cache"; do
         echo "==> test --features $features"
         cargo test --no-default-features --features "$features"
     done

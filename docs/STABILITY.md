@@ -13,7 +13,7 @@ marked otherwise is part of the stable API and follows [SemVer](https://semver.o
   `Page`, …) and their public methods/builders;
 - the provider capability traits (`SearchProvider`, `DetailProvider`, …) and the
   `CameoClient` facade;
-- the low-level `TmdbClient` / `AniListClient` surfaces, their configs, and the
+- the low-level `TmdbClient` / `AniListClient` / `TvdbClient` surfaces, their configs, and the
   hand-owned result types they return;
 - the cache contract (`CacheBackend`, `CacheKey`, `CacheError`).
 

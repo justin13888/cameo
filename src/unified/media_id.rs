@@ -31,7 +31,8 @@ impl fmt::Display for NativeId {
     }
 }
 
-/// A provider-qualified media identifier, e.g. `tmdb:550` or `anilist:staff:95061`.
+/// A provider-qualified media identifier, e.g. `tmdb:550`, `tvdb:81189` or
+/// `anilist:staff:95061`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MediaId {
     provider: Cow<'static, str>,
@@ -67,6 +68,14 @@ impl MediaId {
     /// A numeric AniList media id (`anilist:<id>`).
     pub fn anilist(id: u64) -> Self {
         Self::new("anilist", NativeId::Num(id))
+    }
+
+    /// A numeric TheTVDB series or movie id (`tvdb:<id>`).
+    ///
+    /// TheTVDB numbers series and movies separately, so the same id can name
+    /// one of each; the facade's split movie/TV calls say which is meant.
+    pub fn tvdb(id: u64) -> Self {
+        Self::new("tvdb", NativeId::Num(id))
     }
 
     /// An AniList staff id (`anilist:staff:<id>`).
@@ -188,6 +197,17 @@ mod tests {
         assert_eq!(MediaId::parse("tmdb:550").unwrap(), id);
         assert_eq!(id.provider(), "tmdb");
         assert_eq!(id.as_u64(), Some(550));
+    }
+
+    #[test]
+    fn round_trips_tvdb() {
+        let id = MediaId::tvdb(81189);
+        assert_eq!(id.to_string(), "tvdb:81189");
+        assert_eq!(MediaId::parse("tvdb:81189").unwrap(), id);
+        assert_eq!("tvdb:81189".parse::<MediaId>().unwrap(), id);
+        assert_eq!(id.provider(), "tvdb");
+        assert_eq!(id.as_u64(), Some(81189));
+        assert_eq!(id, "tvdb:81189");
     }
 
     #[test]

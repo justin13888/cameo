@@ -25,9 +25,10 @@ missing_docs = "warn"
 
 [features]
 default = ["full"]
-full = ["tmdb", "anilist", "cache"]
+full = ["tmdb", "anilist", "tvdb", "cache"]
 tmdb = ["dep:bytes", "dep:http", "dep:http-body", "dep:secrecy", "dep:time"]
 anilist = []
+tvdb = []
 cache = ["dep:rusqlite", "dep:dirs"]
 live-tests = [] # Gate for tests that hit the real provider APIs (TMDB and AniList)
 

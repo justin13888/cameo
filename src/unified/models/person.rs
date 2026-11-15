@@ -52,7 +52,7 @@ impl Gender {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(feature = "tmdb", feature = "anilist")))]
 mod gender_tests {
     use super::Gender;
 

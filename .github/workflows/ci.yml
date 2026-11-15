@@ -60,7 +60,8 @@ jobs:
           - "anilist,cache"       # AniList + cache, no TMDB
           - "tmdb"                # TMDB without cache
           - "tmdb,anilist"        # TMDB + AniList, no cache
-          - "tmdb,anilist,cache"  # all features
+          - "tvdb"                # TheTVDB only, no TMDB, no cache
+          - "tmdb,anilist,tvdb,cache"  # all features
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
