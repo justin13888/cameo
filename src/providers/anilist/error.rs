@@ -25,6 +25,9 @@ pub struct AniListGqlError {
     pub message: String,
     /// Machine-readable status code (mirrors the HTTP status; `404` for
     /// not-found, `429` for rate limiting, etc.).
+    ///
+    /// When AniList omits it on a non-2xx response, the client fills it in
+    /// from the HTTP status.
     #[serde(default)]
     pub status: Option<i64>,
     /// Query locations the error refers to.
@@ -43,8 +46,12 @@ pub struct AniListGqlError {
 #[derive(Debug, thiserror::Error)]
 pub enum AniListError {
     /// HTTP transport error (connection, DNS, TLS) — no response was received.
+    ///
+    /// Errors built by this crate (including via `From<reqwest::Error>`) have
+    /// the request URL stripped with [`reqwest::Error::without_url`], matching
+    /// the TMDB provider's redaction policy.
     #[error("HTTP transport error: {0}")]
-    Http(#[from] reqwest::Error),
+    Http(#[source] reqwest::Error),
 
     /// The server returned an error HTTP status with no usable GraphQL body
     /// (e.g. a 5xx HTML page). Carries the `Retry-After` delay when present.
@@ -58,7 +65,9 @@ pub enum AniListError {
         message: String,
     },
 
-    /// One or more GraphQL errors were returned with no usable `data`.
+    /// One or more GraphQL errors were returned with no usable `data` — the
+    /// root field the query needed (e.g. `Media` or `Page`) was null or
+    /// missing. Errors without a `status` inherit a non-2xx HTTP status.
     ///
     /// Carries the `Retry-After` delay so a retry layer can honor rate limits
     /// signaled via GraphQL errors (AniList returns `429` this way).
@@ -85,6 +94,14 @@ pub enum AniListError {
     /// Invalid configuration (rejected at construction time).
     #[error("invalid configuration: {0}")]
     InvalidConfig(String),
+}
+
+/// Wrap a transport error, stripping its request URL (consistent with
+/// `TmdbError`, whose v3 API key travels in the URL).
+impl From<reqwest::Error> for AniListError {
+    fn from(err: reqwest::Error) -> Self {
+        AniListError::Http(err.without_url())
+    }
 }
 
 impl AniListError {

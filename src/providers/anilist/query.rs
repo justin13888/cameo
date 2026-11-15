@@ -1,10 +1,37 @@
 //! GraphQL query string constants for the AniList API (GraphQL v2 schema).
 //!
-//! AniList does not support named fragments across request boundaries, so the
-//! four list queries (search / trending / popular / top-scored) share a single
-//! media selection defined **once** in [`anime_list_query`]; each query differs
-//! only in its operation name, variable list, and `media(...)` arguments. Only
-//! fields that are actually converted are requested — no dead queried fields.
+//! AniList does not support named fragments across request boundaries, so every
+//! query returning list-shaped media (search / trending / popular / top-scored /
+//! discover / recommendations) shares a single media selection defined **once**
+//! in [`anime_media_selection`]; the paginated list queries are built by
+//! [`anime_list_query`] and differ only in their operation name, variable list,
+//! and `media(...)` arguments. Only fields that are actually converted are
+//! requested — no dead queried fields.
+
+/// The shared media field selection (the body of a `media { … }` block) used
+/// by every query whose results are converted with
+/// `anilist_media_to_movie` / `anilist_media_to_tv`.
+macro_rules! anime_media_selection {
+    () => {
+        concat!(
+            "      id\n",
+            "      title { romaji english native }\n",
+            "      description(asHtml: false)\n",
+            "      startDate { year month day }\n",
+            "      coverImage { large extraLarge }\n",
+            "      bannerImage\n",
+            "      genres\n",
+            "      popularity\n",
+            "      averageScore\n",
+            "      episodes\n",
+            "      duration\n",
+            "      status\n",
+            "      format\n",
+            "      countryOfOrigin\n",
+            "      isAdult\n",
+        )
+    };
+}
 
 /// Build a paginated ANIME list query with the shared media selection.
 ///
@@ -23,21 +50,7 @@ macro_rules! anime_list_query {
             "    media(",
             $media_args,
             ") {\n",
-            "      id\n",
-            "      title { romaji english native }\n",
-            "      description(asHtml: false)\n",
-            "      startDate { year month day }\n",
-            "      coverImage { large extraLarge }\n",
-            "      bannerImage\n",
-            "      genres\n",
-            "      popularity\n",
-            "      averageScore\n",
-            "      episodes\n",
-            "      duration\n",
-            "      status\n",
-            "      format\n",
-            "      countryOfOrigin\n",
-            "      isAdult\n",
+            anime_media_selection!(),
             "    }\n",
             "  }\n",
             "}\n"
@@ -71,6 +84,41 @@ pub const LIST_TOP_SCORED_ANIME: &str = anime_list_query!(
     "ListTopScoredAnime",
     "($page: Int, $perPage: Int, $formatIn: [MediaFormat])",
     "type: ANIME, format_in: $formatIn, sort: [SCORE_DESC]"
+);
+
+/// Discover anime with the filters of
+/// [`DiscoverAnimeBuilder`](super::discover::DiscoverAnimeBuilder).
+///
+/// Every filter is a GraphQL variable (user input is never interpolated into
+/// the query text). Unset filters are omitted from the variables object, which
+/// AniList treats as "no filter".
+pub const DISCOVER_ANIME: &str = anime_list_query!(
+    "DiscoverAnime",
+    "($page: Int, $perPage: Int, $formatIn: [MediaFormat], $genreIn: [String], \
+     $genreNotIn: [String], $countryOfOrigin: CountryCode, $season: MediaSeason, \
+     $seasonYear: Int, $status: MediaStatus, $isAdult: Boolean, $sort: [MediaSort])",
+    "type: ANIME, format_in: $formatIn, genre_in: $genreIn, genre_not_in: $genreNotIn, \
+     countryOfOrigin: $countryOfOrigin, season: $season, seasonYear: $seasonYear, \
+     status: $status, isAdult: $isAdult, sort: $sort"
+);
+
+/// Fetch a page of community recommendations for an anime, highest-rated
+/// first. Each recommended media uses the shared list selection.
+///
+/// Variables: `$id: Int!`, `$page: Int`, `$perPage: Int`.
+pub const MEDIA_RECOMMENDATIONS: &str = concat!(
+    "query MediaRecommendations($id: Int!, $page: Int, $perPage: Int) {\n",
+    "  Media(id: $id, type: ANIME) {\n",
+    "    recommendations(page: $page, perPage: $perPage, sort: [RATING_DESC]) {\n",
+    "      pageInfo { total currentPage lastPage hasNextPage }\n",
+    "      nodes {\n",
+    "        mediaRecommendation {\n",
+    anime_media_selection!(),
+    "        }\n",
+    "      }\n",
+    "    }\n",
+    "  }\n",
+    "}\n"
 );
 
 /// Fetch full details for a single anime by AniList ID.
@@ -148,6 +196,8 @@ mod tests {
         ("LIST_TRENDING_ANIME", LIST_TRENDING_ANIME),
         ("LIST_POPULAR_ANIME", LIST_POPULAR_ANIME),
         ("LIST_TOP_SCORED_ANIME", LIST_TOP_SCORED_ANIME),
+        ("DISCOVER_ANIME", DISCOVER_ANIME),
+        ("MEDIA_RECOMMENDATIONS", MEDIA_RECOMMENDATIONS),
         ("MEDIA_DETAILS", MEDIA_DETAILS),
         ("SEARCH_STAFF", SEARCH_STAFF),
         ("STAFF_DETAILS", STAFF_DETAILS),
@@ -158,7 +208,16 @@ mod tests {
         LIST_TRENDING_ANIME,
         LIST_POPULAR_ANIME,
         LIST_TOP_SCORED_ANIME,
+        DISCOVER_ANIME,
     ];
+
+    /// The `media { … }` selection body of a list query.
+    fn selection(q: &str) -> String {
+        let start = q.find("media(").expect("media selection");
+        let brace = q[start..].find(") {").expect("media body") + start + 2;
+        let end = q[brace..].find("\n    }").expect("media body end") + brace;
+        q[brace..end].to_string()
+    }
 
     /// Every query is well-formed GraphQL: balanced braces/parens and a single
     /// top-level `query` operation.
@@ -175,16 +234,10 @@ mod tests {
         }
     }
 
-    /// The four list queries share the exact same media field selection — the
+    /// The list queries share the exact same media field selection — the
     /// point of the shared macro.
     #[test]
     fn list_queries_share_one_media_selection() {
-        let selection = |q: &str| {
-            let start = q.find("media(").expect("media selection");
-            let brace = q[start..].find('{').expect("media body") + start;
-            let end = q[brace..].find("\n  }").expect("media body end") + brace;
-            q[brace..end].to_string()
-        };
         let first = selection(LIST_QUERIES[0]);
         for q in &LIST_QUERIES[1..] {
             assert_eq!(selection(q), first, "list media selections diverged");
@@ -205,6 +258,45 @@ mod tests {
         }
     }
 
+    /// Recommended media are requested with the same selection as the list
+    /// queries, so they convert identically.
+    #[test]
+    fn recommendations_reuse_the_list_media_selection() {
+        let list = selection(LIST_QUERIES[0]);
+        assert!(
+            MEDIA_RECOMMENDATIONS.contains(&list),
+            "recommendations selection diverged from the list selection"
+        );
+        assert!(MEDIA_RECOMMENDATIONS.contains("sort: [RATING_DESC]"));
+        for dead in ["endDate", "studios", "season"] {
+            assert!(!MEDIA_RECOMMENDATIONS.contains(dead), "dead field {dead}");
+        }
+    }
+
+    /// The discover query passes every filter as a variable — no filter value
+    /// is ever interpolated into the query text.
+    #[test]
+    fn discover_query_uses_variables_for_every_filter() {
+        for (var, arg) in [
+            ("$formatIn: [MediaFormat]", "format_in: $formatIn"),
+            ("$genreIn: [String]", "genre_in: $genreIn"),
+            ("$genreNotIn: [String]", "genre_not_in: $genreNotIn"),
+            (
+                "$countryOfOrigin: CountryCode",
+                "countryOfOrigin: $countryOfOrigin",
+            ),
+            ("$season: MediaSeason", "season: $season"),
+            ("$seasonYear: Int", "seasonYear: $seasonYear"),
+            ("$status: MediaStatus", "status: $status"),
+            ("$isAdult: Boolean", "isAdult: $isAdult"),
+            ("$sort: [MediaSort]", "sort: $sort"),
+        ] {
+            assert!(DISCOVER_ANIME.contains(var), "missing variable {var}");
+            assert!(DISCOVER_ANIME.contains(arg), "missing argument {arg}");
+        }
+        assert!(DISCOVER_ANIME.contains("type: ANIME"));
+    }
+
     /// No query requests fields the conversions never read.
     #[test]
     fn no_dead_queried_fields() {
@@ -213,8 +305,14 @@ mod tests {
         // and `status` are now live (#67), while detail-only fields
         // (`endDate`, `studios`) stay out of list queries.
         for q in LIST_QUERIES {
+            // Inspect only the field selection: `season` is a legitimate
+            // *filter argument* of the discover query.
+            let fields = selection(q);
             for dead in ["endDate", "studios", "season"] {
-                assert!(!q.contains(dead), "list query requests dead field {dead}");
+                assert!(
+                    !fields.contains(dead),
+                    "list query requests dead field {dead}"
+                );
             }
         }
         assert!(
