@@ -7,7 +7,16 @@ use crate::{
 };
 
 impl CameoClient {
-    /// Search for movies via the configured provider(s).
+    /// Search for movies with the highest-priority search provider.
+    ///
+    /// `page: None` is the first page. With a cache configured, a result is
+    /// served from and stored under the query trimmed and lowercased, so
+    /// `"Dune"` and `" dune "` share an entry.
+    ///
+    /// # Errors
+    ///
+    /// [`CameoClientError::Unsupported`] when no configured provider can
+    /// search, and [`CameoClientError::Provider`] when the provider fails.
     pub async fn search_movies(
         &self,
         query: &str,
@@ -37,7 +46,13 @@ impl CameoClient {
         Ok(result)
     }
 
-    /// Search for TV shows via the configured provider(s).
+    /// Search for TV shows with the highest-priority search provider.
+    ///
+    /// Paged and cached as [`search_movies`](Self::search_movies) is.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies`](Self::search_movies).
     pub async fn search_tv_shows(
         &self,
         query: &str,
@@ -67,7 +82,13 @@ impl CameoClient {
         Ok(result)
     }
 
-    /// Search for people via the configured provider(s).
+    /// Search for people with the highest-priority search provider.
+    ///
+    /// Paged and cached as [`search_movies`](Self::search_movies) is.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies`](Self::search_movies).
     pub async fn search_people(
         &self,
         query: &str,
@@ -97,7 +118,14 @@ impl CameoClient {
         Ok(result)
     }
 
-    /// Multi-search across movies, TV shows, and people.
+    /// Multi-search across movies, TV shows, and people with the
+    /// highest-priority search provider.
+    ///
+    /// Paged and cached as [`search_movies`](Self::search_movies) is.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies`](Self::search_movies).
     pub async fn search_multi(
         &self,
         query: &str,
@@ -137,10 +165,16 @@ impl CameoClient {
 }
 
 /// Per-call provider selection: search with a specific provider by id (e.g.
-/// `"anilist"`), overriding the default priority. These bypass the cache since
-/// the result is provider-scoped.
+/// `"anilist"`), overriding the default priority. These neither read nor write
+/// the cache. Search is the only capability with a per-call override.
 impl CameoClient {
     /// Search for movies with a specific provider (e.g. `"anilist"`).
+    ///
+    /// # Errors
+    ///
+    /// [`CameoClientError::Unsupported`] when no configured search provider
+    /// has the id `provider`, and [`CameoClientError::Provider`] when that
+    /// provider fails.
     pub async fn search_movies_with(
         &self,
         provider: &str,
@@ -154,6 +188,10 @@ impl CameoClient {
     }
 
     /// Search for TV shows with a specific provider.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies_with`](Self::search_movies_with).
     pub async fn search_tv_shows_with(
         &self,
         provider: &str,
@@ -167,6 +205,10 @@ impl CameoClient {
     }
 
     /// Search for people with a specific provider.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies_with`](Self::search_movies_with).
     pub async fn search_people_with(
         &self,
         provider: &str,
@@ -180,6 +222,10 @@ impl CameoClient {
     }
 
     /// Multi-search with a specific provider.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies_with`](Self::search_movies_with).
     pub async fn search_multi_with(
         &self,
         provider: &str,

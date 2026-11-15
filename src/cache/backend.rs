@@ -53,9 +53,18 @@ impl CacheError {
 ///   a deliberate choice: `Value` is serde-native, self-describing, and keeps
 ///   the trait object-safe without a generic parameter.
 /// - **Keys** — a [`CacheKey`] identifies an entry. Derive a stable string from
-///   [`CacheKey::key_type`] + [`CacheKey::key_id`]; both already embed the
-///   provider/version namespace, so distinct providers and schema versions
-///   never collide.
+///   [`CacheKey::key_type`] + [`CacheKey::key_id`]; `key_id` embeds the
+///   provider namespace (the [`MediaId`](crate::MediaId) prefix, or the
+///   serving provider's id for search and discovery pages), so distinct
+///   providers never collide.
+/// - **Versioning** — keys carry **no** schema version. When cameo changes the
+///   shape of a stored model, an entry written by an older version may fail
+///   to deserialize (the facade then treats it as a miss) or may deserialize
+///   with fields left at their defaults. A backend whose entries outlive a
+///   cameo upgrade must therefore version its own storage
+///   (e.g. a version in a key prefix or table name, flushed on change), as
+///   [`SqliteCache`](super::SqliteCache) does with SQLite's
+///   `PRAGMA user_version`.
 /// - **TTL** — [`set`](CacheBackend::set) is given a time-to-live; expired
 ///   entries must be reported as `None` by [`get`](CacheBackend::get).
 /// - **Errors** — return [`CacheError`]; they are logged and treated as a miss,

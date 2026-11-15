@@ -202,6 +202,17 @@ impl CameoClientBuilder {
     }
 
     /// Build the `CameoClient`.
+    ///
+    /// Each configured built-in provider's client is constructed here, so its
+    /// configuration is validated here; nothing is sent.
+    ///
+    /// # Errors
+    ///
+    /// [`CameoClientError::NotConfigured`] when no provider is configured or
+    /// registered. [`CameoClientError::Provider`] when a built-in provider's
+    /// client cannot be constructed: its configuration is invalid
+    /// ([`InvalidInput`](crate::ProviderError::InvalidInput)) or its HTTP
+    /// client cannot be built ([`Transport`](crate::ProviderError::Transport)).
     pub fn build(self) -> Result<CameoClient, CameoClientError> {
         let mut client = CameoClient {
             search: Vec::new(),

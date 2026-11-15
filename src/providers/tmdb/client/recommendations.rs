@@ -10,6 +10,14 @@ use crate::{
 
 impl TmdbClient {
     /// Get movie recommendations based on a movie.
+    ///
+    /// `page` is clamped as [`TmdbClient`'s pages](TmdbClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `movie_id` is above `i32::MAX` (nothing is
+    /// sent), [`TmdbError::Api`] with status `404` when no movie has this id,
+    /// plus the [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn movie_recommendations(
         &self,
@@ -31,6 +39,14 @@ impl TmdbClient {
     }
 
     /// Get TV show recommendations based on a TV show.
+    ///
+    /// `page` is clamped as [`TmdbClient`'s pages](TmdbClient#pages) are.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `series_id` is above `i32::MAX` (nothing is
+    /// sent), [`TmdbError::Api`] with status `404` when no series has this id,
+    /// plus the [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn tv_recommendations(
         &self,
@@ -52,6 +68,10 @@ impl TmdbClient {
     }
 
     /// Get movies similar to a given movie.
+    ///
+    /// # Errors
+    ///
+    /// As [`movie_recommendations`](Self::movie_recommendations).
     #[tracing::instrument(skip(self))]
     pub async fn similar_movies(
         &self,
@@ -78,6 +98,10 @@ impl TmdbClient {
     /// is range-checked like every other id, then converted to a string before
     /// calling the generated client so that the correct path (e.g.
     /// `/3/tv/1399/similar`) is constructed.
+    ///
+    /// # Errors
+    ///
+    /// As [`tv_recommendations`](Self::tv_recommendations).
     #[tracing::instrument(skip(self))]
     pub async fn similar_tv_shows(
         &self,

@@ -37,7 +37,14 @@ impl AniListClient {
     /// Get full details for an anime movie by AniList ID.
     ///
     /// The result carries AniList's reported id, or `id` when the reported
-    /// one is not a valid AniList id.
+    /// one is not a valid AniList id. The format is not checked: an id naming
+    /// a TV series returns that series as movie details (see
+    /// [Ids](AniListClient#ids)).
+    ///
+    /// # Errors
+    ///
+    /// [`AniListError::NotFound`] when no anime has this id, plus the
+    /// [usual request errors](AniListClient#errors).
     pub async fn movie_details(&self, id: i32) -> Result<UnifiedMovieDetails, AniListError> {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql MEDIA_DETAILS (movie_details)");
@@ -52,7 +59,14 @@ impl AniListClient {
     /// Get full details for an anime TV series by AniList ID.
     ///
     /// The result carries AniList's reported id, or `id` when the reported
-    /// one is not a valid AniList id.
+    /// one is not a valid AniList id. The format is not checked: an id naming
+    /// a movie returns that movie as TV show details (see
+    /// [Ids](AniListClient#ids)).
+    ///
+    /// # Errors
+    ///
+    /// [`AniListError::NotFound`] when no anime has this id, plus the
+    /// [usual request errors](AniListClient#errors).
     pub async fn tv_show_details(&self, id: i32) -> Result<UnifiedTvShowDetails, AniListError> {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql MEDIA_DETAILS (tv_show_details)");
@@ -68,6 +82,11 @@ impl AniListClient {
     ///
     /// The result carries AniList's reported id, or `id` when the reported
     /// one is not a valid AniList staff id.
+    ///
+    /// # Errors
+    ///
+    /// [`AniListError::NotFound`] when no staff member has this id, plus the
+    /// [usual request errors](AniListClient#errors).
     pub async fn person_details(&self, id: i32) -> Result<UnifiedPersonDetails, AniListError> {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql STAFF_DETAILS (person_details)");
@@ -96,7 +115,8 @@ impl AniListClient {
     /// # Errors
     ///
     /// [`AniListError::NotFound`] when no anime has this id (a zero or
-    /// negative id never names one, so it fails without a request).
+    /// negative id never names one, so it fails without a request), plus the
+    /// [usual request errors](AniListClient#errors).
     pub async fn media_credits(&self, id: i32) -> Result<UnifiedCredits, AniListError> {
         let title = MediaId::anilist(native_id(i64::from(id)).ok_or(AniListError::NotFound)?);
         let mut characters = Vec::new();
@@ -156,7 +176,8 @@ impl AniListClient {
     ///
     /// # Errors
     ///
-    /// [`AniListError::NotFound`] when no anime has this id.
+    /// [`AniListError::NotFound`] when no anime has this id, plus the
+    /// [usual request errors](AniListClient#errors).
     pub async fn external_ids(&self, id: i32) -> Result<ExternalIds, AniListError> {
         let vars = json!({ "id": id });
         tracing::debug!(id, "anilist: graphql MEDIA_EXTERNAL_IDS");
@@ -183,6 +204,11 @@ impl AniListClient {
     ///
     /// Returns `Ok(None)` when AniList has no anime with that MAL id, and when
     /// the anime's format is absent or in neither list (e.g. `MUSIC`).
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors); an unknown MAL id
+    /// is `Ok(None)`, not [`AniListError::NotFound`].
     pub async fn find_by_mal_id(&self, mal_id: i32) -> Result<Option<ExternalMatch>, AniListError> {
         let vars = json!({ "idMal": mal_id });
         tracing::debug!(mal_id, "anilist: graphql MEDIA_BY_MAL_ID");

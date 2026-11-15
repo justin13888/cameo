@@ -28,23 +28,35 @@ pub use error::CameoClientError;
 
 /// Multi-provider facade client backed by a capability registry.
 ///
-/// Each capability is dispatched to the first provider that supports it (built-in
-/// providers first, then registered ones). A call with no provider configured
-/// returns [`CameoClientError::NotConfigured`]; a call no configured provider
-/// supports returns [`CameoClientError::Unsupported`].
+/// Each call is answered by one provider, picked in one of three ways:
 ///
-/// # Multi-provider semantics (v1)
+/// - **Search and discovery** go to the highest-priority provider supporting
+///   the capability (built-in providers first, then registered ones, reordered
+///   by [`CameoClientBuilder::with_priority`]). Search alone can also be sent
+///   to a named provider per call with the `search_*_with` methods (e.g.
+///   [`search_movies_with`](CameoClient::search_movies_with)); discovery has
+///   no per-call override.
+/// - **Lookups by [`MediaId`]** (details, credits, recommendations and similar
+///   titles, seasons and episodes, watch providers, external ids) are
+///   **routed by the id's origin**, whatever the priority: an `anilist:*` id
+///   is always answered by AniList and never sent to TMDB.
+/// - [`find_by_external_id`](CameoClient::find_by_external_id) has no origin
+///   to route by: it queries every provider accepting the id's source and
+///   merges the matches in priority order.
 ///
-/// Results are **not merged** across providers. A search/discovery call is
-/// answered by a single provider — the highest-priority one supporting the
-/// capability (configurable via [`CameoClientBuilder::with_priority`], overridable
-/// per-call via the `*_with` methods). Detail/recommendation/season/watch,
-/// credits, and external-id lookups are **routed by [`MediaId`] origin**: an `anilist:*` id
-/// is always answered by AniList and never sent to TMDB. The one exception is
-/// [`find_by_external_id`](CameoClient::find_by_external_id), which has no
-/// origin to route by: it queries every provider accepting the id's source and
-/// merges the matches in priority order. Otherwise, cross-provider result
+/// Results are otherwise **not merged** across providers; cross-provider
 /// merging or de-duplication is out of scope for v1.
+///
+/// # Errors
+///
+/// [`CameoClientBuilder::build`] refuses a builder with no provider
+/// ([`CameoClientError::NotConfigured`]), so a built client always has one.
+/// A request method returns [`CameoClientError::Unsupported`] when no
+/// configured provider supports the call (for a lookup by id: none registered
+/// for the capability matches the id's origin, as with a `tvdb:*` id and no
+/// TheTVDB provider), and [`CameoClientError::Provider`] with the answering
+/// provider's [`ProviderError`](crate::ProviderError) when the provider fails
+/// (e.g. `NotFound` for an id naming no record).
 ///
 /// Cloning is cheap: every provider and the cache backend are held behind an
 /// [`Arc`], so a clone shares them (including rate limiters and the cache)

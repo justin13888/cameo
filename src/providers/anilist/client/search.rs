@@ -19,6 +19,13 @@ use crate::{
 
 impl AniListClient {
     /// Search for anime movies by title.
+    ///
+    /// `page` is sent as [`AniListClient`'s pages](AniListClient#pages) are.
+    /// No match yields an empty page.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors).
     pub async fn search_movies(
         &self,
         query: &str,
@@ -38,6 +45,13 @@ impl AniListClient {
     }
 
     /// Search for anime series (TV, OVA, ONA, Special) by title.
+    ///
+    /// `page` is sent as [`AniListClient`'s pages](AniListClient#pages) are.
+    /// No match yields an empty page.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors).
     pub async fn search_tv_shows(
         &self,
         query: &str,
@@ -57,6 +71,13 @@ impl AniListClient {
     }
 
     /// Search for staff (voice actors, directors, animators, etc.) by name.
+    ///
+    /// `page` is sent as [`AniListClient`'s pages](AniListClient#pages) are.
+    /// No match yields an empty page.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors).
     pub async fn search_people(
         &self,
         query: &str,
@@ -88,6 +109,10 @@ impl AniListClient {
     /// shows, and anything else (e.g. `MUSIC`, or no format) is omitted, so a
     /// page may hold fewer items than the configured page size while the
     /// pagination metadata keeps describing AniList's unfiltered results.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](AniListClient#errors).
     pub async fn search_multi(
         &self,
         query: &str,

@@ -13,6 +13,13 @@ use crate::{
 
 impl TmdbClient {
     /// Search for movies by title.
+    ///
+    /// `page` is clamped as [`TmdbClient`'s pages](TmdbClient#pages) are. No
+    /// match yields an empty page.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn search_movies(
         &self,
@@ -33,6 +40,13 @@ impl TmdbClient {
     }
 
     /// Search for TV shows by name.
+    ///
+    /// `page` is clamped as [`TmdbClient`'s pages](TmdbClient#pages) are. No
+    /// match yields an empty page.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn search_tv_shows(
         &self,
@@ -52,6 +66,13 @@ impl TmdbClient {
     }
 
     /// Search for people by name.
+    ///
+    /// `page` is clamped as [`TmdbClient`'s pages](TmdbClient#pages) are. No
+    /// match yields an empty page.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn search_people(
         &self,
@@ -70,6 +91,15 @@ impl TmdbClient {
     }
 
     /// Multi-search across movies, TV shows, and people.
+    ///
+    /// `page` is clamped as [`TmdbClient`'s pages](TmdbClient#pages) are. An
+    /// item whose media type is missing or unknown, or whose id is not a valid
+    /// TMDB id, is omitted, so a page may hold fewer items than TMDB sent
+    /// while its pagination totals keep describing TMDB's unfiltered results.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn search_multi(
         &self,

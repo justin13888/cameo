@@ -19,6 +19,12 @@ impl TmdbClient {
     // ── Details ──
 
     /// Get detailed information about a movie.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `movie_id` is above `i32::MAX` (nothing is
+    /// sent), [`TmdbError::Api`] with status `404` when no movie has this id,
+    /// plus the [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn movie_details(&self, movie_id: u64) -> Result<UnifiedMovieDetails, TmdbError> {
         let movie_id = wire_int(movie_id, "id")?;
@@ -41,6 +47,10 @@ impl TmdbClient {
     /// certification per country, picked as
     /// [`movie_certifications`](Self::movie_certifications) picks them; without
     /// it that field stays empty. Other appended blocks are not read.
+    ///
+    /// # Errors
+    ///
+    /// As [`movie_details`](Self::movie_details).
     #[tracing::instrument(skip(self))]
     pub async fn movie_details_with_append(
         &self,
@@ -60,6 +70,12 @@ impl TmdbClient {
     }
 
     /// Get detailed information about a TV series.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `series_id` is above `i32::MAX` (nothing is
+    /// sent), [`TmdbError::Api`] with status `404` when no series has this id,
+    /// plus the [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn tv_show_details(&self, series_id: u64) -> Result<UnifiedTvShowDetails, TmdbError> {
         let series_id = wire_int(series_id, "id")?;
@@ -81,6 +97,10 @@ impl TmdbClient {
     /// the series' content ratings, kept as
     /// [`tv_show_certifications`](Self::tv_show_certifications) keeps them;
     /// without it that field stays empty. Other appended blocks are not read.
+    ///
+    /// # Errors
+    ///
+    /// As [`tv_show_details`](Self::tv_show_details).
     #[tracing::instrument(skip(self))]
     pub async fn tv_show_details_with_append(
         &self,
@@ -100,6 +120,12 @@ impl TmdbClient {
     }
 
     /// Get detailed information about a person.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::Request`] when `person_id` is above `i32::MAX` (nothing is
+    /// sent), [`TmdbError::Api`] with status `404` when no person has this id,
+    /// plus the [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn person_details(&self, person_id: u64) -> Result<UnifiedPersonDetails, TmdbError> {
         let person_id = wire_int(person_id, "id")?;
@@ -117,6 +143,10 @@ impl TmdbClient {
     // ── Credits ──
 
     /// Get the cast and crew for a movie.
+    ///
+    /// # Errors
+    ///
+    /// As [`movie_details`](Self::movie_details).
     #[tracing::instrument(skip(self))]
     pub async fn movie_credits(&self, movie_id: u64) -> Result<TmdbCredits, TmdbError> {
         self.movie_credits_response(movie_id).await.map(Into::into)
@@ -127,6 +157,10 @@ impl TmdbClient {
     /// Comes from `/tv/{id}/aggregate_credits`, which lists each person once.
     /// [`TmdbCredits`] keeps one entry per person, holding only the first of
     /// their characters and the first of their jobs.
+    ///
+    /// # Errors
+    ///
+    /// As [`tv_show_details`](Self::tv_show_details).
     #[tracing::instrument(skip(self))]
     pub async fn tv_show_credits(&self, series_id: u64) -> Result<TmdbCredits, TmdbError> {
         self.tv_series_aggregate_credits_response(series_id)
@@ -216,6 +250,12 @@ impl TmdbClient {
     // ── Genres ──
 
     /// Get the list of official movie genres.
+    ///
+    /// Entries without an id are skipped.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn movie_genres(&self) -> Result<Vec<Genre>, TmdbError> {
         let params = tmdb::GenreMovieListParams {
@@ -233,6 +273,12 @@ impl TmdbClient {
     }
 
     /// Get the list of official TV show genres.
+    ///
+    /// Entries without an id are skipped.
+    ///
+    /// # Errors
+    ///
+    /// The [usual request errors](TmdbClient#errors).
     #[tracing::instrument(skip(self))]
     pub async fn tv_show_genres(&self) -> Result<Vec<Genre>, TmdbError> {
         let params = tmdb::GenreTvListParams {
@@ -252,6 +298,10 @@ impl TmdbClient {
     // ── Images ──
 
     /// Get images for a movie.
+    ///
+    /// # Errors
+    ///
+    /// As [`movie_details`](Self::movie_details).
     #[tracing::instrument(skip(self))]
     pub async fn movie_images(&self, movie_id: u64) -> Result<TmdbImages, TmdbError> {
         let movie_id = wire_int(movie_id, "id")?;

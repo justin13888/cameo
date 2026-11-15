@@ -33,8 +33,15 @@ how ids minted by this provider route back to it (`MediaId::new("omdb", …)`).
 Mirror the built-in providers: keep an inherent low-level client that speaks the
 upstream API and returns **stable, hand-owned types** (or unified models), then
 adapt it to the capability traits. The trait impls should be thin — convert to
-unified models and map errors. `TmdbClient` (inherent methods) +
-`impl SearchProvider for TmdbClient` (`src/providers/tmdb/`) is the reference.
+unified models and map errors. `TmdbClient`'s inherent methods
+(`src/providers/tmdb/client/`) and its trait impls
+(`src/providers/tmdb/provider.rs`) are the reference.
+
+When an inherent method and a trait method share a name (`TmdbClient`'s
+`movie_details(u64)` and `DetailProvider::movie_details(&MediaId)`, for
+example; each provider's inherent methods take its own native id type, such as
+`i32` on `AniListClient`), method-call syntax picks the inherent one. Callers reach the trait
+form fully qualified: `DetailProvider::movie_details(&client, &id)`.
 
 ## 3. Config contract
 
@@ -95,7 +102,16 @@ compile outside cameo. Mint ids with `MediaId::new(self.id(), NativeId::…)`.
 Return [`ProviderError`]: map not-found to `NotFound`, auth failures to `Auth`,
 rate limits to `RateLimited { retry_after }`, unsupported operations to
 `Unsupported`, and anything else to the appropriate variant. The facade
-translates these into `CameoClientError` for callers.
+wraps these in `CameoClientError::Provider` for callers.
+
+The built-in providers also keep to two input rules, which callers of the
+traits rely on:
+
+- A `MediaId` minted by another provider, or one whose native part you cannot
+  parse, fails with `InvalidInput` before anything is sent.
+- `page: None` means the first page. Clamp or pass through an out-of-range
+  page as your upstream API needs (TMDB clamps to `1..=500`; AniList sends the
+  page unchanged), and document which.
 
 ## 6. Register with the facade
 

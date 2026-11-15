@@ -31,10 +31,79 @@ mod tests;
 /// requests with a token-bucket limiter matching that limit by default (see
 /// [`AniListConfig::with_rate_limit`](super::config::AniListConfig::with_rate_limit)).
 ///
+/// # Ids
+///
+/// Id parameters are AniList's own `i32` media or staff ids. A details
+/// method fetches the media with that id whatever its format:
+/// [`movie_details`](Self::movie_details) on a TV series' id returns that
+/// series as movie details, and [`tv_show_details`](Self::tv_show_details) on
+/// a movie's id returns that movie as TV show details.
+///
+/// # Pages
+///
+/// A paged method's `page: None` asks for the first page. A page number is
+/// sent to AniList unchanged, not clamped (unlike TMDB's, which are clamped
+/// to `1..=500`). Each page holds up to [`AniListConfig::per_page`] items.
+///
+/// # Errors
+///
+/// Every endpoint method can fail with these errors, called "the usual
+/// request errors" below:
+///
+/// * [`AniListError::Http`] when no response was received (connection, DNS,
+///   TLS, or timeout).
+/// * [`AniListError::Status`] when AniList answers with an error status and
+///   no usable GraphQL body, and [`AniListError::GraphQL`] when it answers
+///   with GraphQL errors and no usable data (rate limiting arrives this way
+///   as status `429`).
+/// * [`AniListError::Deserialization`] when the body is not a GraphQL
+///   response, [`AniListError::NoData`] when a successful response has no
+///   data, and [`AniListError::PageOutOfRange`] when a paged response reports
+///   a negative page number or total.
+///
+/// A lookup by id whose record does not exist fails with
+/// [`AniListError::NotFound`], unlike TMDB, which reports a missing record as
+/// an HTTP `404` status. Transient failures (`429`, `5xx`, connect and timeout
+/// errors) are retried under [`AniListConfig::retry`] before the last one is
+/// returned.
+///
+/// # Inherent methods and the capability traits
+///
+/// `AniListClient` also implements the unified capability traits
+/// ([`SearchProvider`](crate::unified::SearchProvider),
+/// [`DetailProvider`](crate::unified::DetailProvider), and the rest), several
+/// of whose methods share a name with an inherent method here but differ in
+/// signature:
+///
+/// | | Inherent method | Trait method |
+/// |---|---|---|
+/// | Ids | native `i32` (e.g. `movie_details(1)`) | [`&MediaId`](crate::unified::MediaId) (e.g. `movie_details(&MediaId::anilist(1))`) |
+/// | Errors | [`AniListError`] | [`ProviderError`](crate::ProviderError) |
+///
+/// Method-call syntax (`client.search_movies(..)`) always resolves to the
+/// inherent method, even with the trait in scope. Call a trait method with
+/// the fully qualified form:
+///
+/// ```no_run
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// use cameo::{AniListClient, AniListConfig, DetailProvider, MediaId};
+///
+/// let client = AniListClient::new(AniListConfig::new())?;
+/// // Inherent: native id, `AniListError`.
+/// let native = client.movie_details(21519).await?;
+/// // Trait: `MediaId`, `ProviderError`.
+/// let unified = DetailProvider::movie_details(&client, &MediaId::anilist(21519)).await?;
+/// # let _ = (native, unified);
+/// # Ok(())
+/// # }
+/// ```
+///
 /// # Cloning
 ///
-/// `AniListClient` is cheaply cloneable — the underlying `reqwest::Client` is
-/// reference-counted, so clones share the same connection pool.
+/// `AniListClient` is cheap to clone. Clones share the same HTTP client (and
+/// so the same connection pool) and the same rate limiter (and so the same
+/// rate-limit budget); each clone holds its own copy of the
+/// [`AniListConfig`].
 ///
 /// # Example
 ///

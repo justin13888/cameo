@@ -41,11 +41,70 @@ const V3_API_KEY_SCHEME: &str = "v3_api_key";
 /// ([`RequestErrorKind::InvalidRequest`]) before anything is sent, rather than
 /// being wrapped or clamped onto a different record.
 ///
+/// # Pages
+///
+/// A paged method's `page: None` asks for the first page. A page number is
+/// clamped to `1..=500`, the range TMDB serves, before it is sent: `Some(0)`
+/// fetches page 1 and anything above 500 fetches page 500. The trending
+/// methods are not paged and always return a single page.
+///
+/// # Errors
+///
+/// Every endpoint method can fail with these errors, which its own `# Errors`
+/// section calls "the usual request errors":
+///
+/// * [`TmdbError::Api`] when TMDB answers with an error status: `401` for a
+///   rejected credential, `404` when no record has the requested id, `429`
+///   when rate limited (with any `Retry-After` delay). A missing record is a
+///   `404` here, not a dedicated variant.
+/// * [`TmdbError::Http`] when no response was received (connection, DNS, TLS,
+///   or timeout).
+/// * [`TmdbError::Deserialization`] when a success body does not match the
+///   expected shape, and [`TmdbError::PageOutOfRange`] when a paged response
+///   reports a page number or total that does not fit a `u32`.
+/// * [`TmdbError::Request`] when the request cannot be built, so nothing is
+///   sent.
+///
+/// Transient failures (`429`, `5xx`, connect and timeout errors) are retried
+/// under [`TmdbConfig::retry`] before the last one is returned.
+///
+/// # Inherent methods and the capability traits
+///
+/// `TmdbClient` also implements the unified capability traits
+/// ([`SearchProvider`](crate::unified::SearchProvider),
+/// [`DetailProvider`](crate::unified::DetailProvider), and the rest), several
+/// of whose methods share a name with an inherent method here but differ in
+/// signature:
+///
+/// | | Inherent method | Trait method |
+/// |---|---|---|
+/// | Ids | native `u64` (e.g. `movie_details(550)`) | [`&MediaId`](crate::unified::MediaId) (e.g. `movie_details(&MediaId::tmdb(550))`) |
+/// | Errors | [`TmdbError`] | [`ProviderError`](crate::ProviderError) |
+/// | Results | unified models plus TMDB-only types ([`TmdbCredits`](super::models::TmdbCredits), [`TmdbImages`](super::models::TmdbImages)) | unified models only |
+///
+/// Method-call syntax (`client.movie_details(..)`) always resolves to the
+/// inherent method, even with the trait in scope. Call a trait method with
+/// the fully qualified form:
+///
+/// ```no_run
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// use cameo::{DetailProvider, MediaId, TmdbClient, TmdbConfig};
+///
+/// let client = TmdbClient::new(TmdbConfig::new("your-token"))?;
+/// // Inherent: native id, `TmdbError`.
+/// let native = client.movie_details(550).await?;
+/// // Trait: `MediaId`, `ProviderError`.
+/// let unified = DetailProvider::movie_details(&client, &MediaId::tmdb(550)).await?;
+/// # let _ = (native, unified);
+/// # Ok(())
+/// # }
+/// ```
+///
 /// # Cloning
 ///
-/// `TmdbClient` is cheaply cloneable — the underlying HTTP client,
-/// configuration, and rate limiter are all reference-counted so clones share
-/// the same connection pool and the same rate-limit budget.
+/// `TmdbClient` is cheap to clone. Clones share the same HTTP client (and so
+/// the same connection pool) and the same rate limiter (and so the same
+/// rate-limit budget); each clone holds its own copy of the [`TmdbConfig`].
 ///
 /// # Debug output
 ///
@@ -70,6 +129,17 @@ impl std::fmt::Debug for TmdbClient {
 
 impl TmdbClient {
     /// Create a new TMDB client from the given configuration.
+    ///
+    /// Nothing is sent: the credential is checked only when a request is
+    /// made.
+    ///
+    /// # Errors
+    ///
+    /// [`TmdbError::InvalidConfig`] when the credential is empty, `language`
+    /// is not a tag like `"en"` or `"en-US"`, `region` is not an ISO 3166-1
+    /// alpha-2 code like `"US"`, the rate limit is invalid, a v4 token holds
+    /// characters an HTTP header cannot carry, or `base_url` cannot be
+    /// parsed. [`TmdbError::Http`] when the HTTP client cannot be built.
     pub fn new(config: TmdbConfig) -> Result<Self, TmdbError> {
         config.validate().map_err(TmdbError::InvalidConfig)?;
 
