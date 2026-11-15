@@ -415,14 +415,13 @@ impl TmdbClient {
     ///
     /// # Note
     ///
-    /// Trending endpoints do not support pagination. The `page` argument is
-    /// accepted for API consistency but is ignored by TMDB — this method
-    /// always returns the first (and only) page of trending results.
-    #[tracing::instrument(skip(self, _page))]
+    /// TMDB trending endpoints are not paginated, so this method takes no
+    /// page argument and always returns the first (and only) page of
+    /// trending results.
+    #[tracing::instrument(skip(self))]
     pub async fn trending_movies(
         &self,
         time_window: TimeWindow,
-        _page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, TmdbError> {
         let tw = match time_window {
             TimeWindow::Day => types::TrendingMoviesTimeWindow::Day,
@@ -448,14 +447,13 @@ impl TmdbClient {
     ///
     /// # Note
     ///
-    /// Trending endpoints do not support pagination. The `page` argument is
-    /// accepted for API consistency but is ignored by TMDB — this method
-    /// always returns the first (and only) page of trending results.
-    #[tracing::instrument(skip(self, _page))]
+    /// TMDB trending endpoints are not paginated, so this method takes no
+    /// page argument and always returns the first (and only) page of
+    /// trending results.
+    #[tracing::instrument(skip(self))]
     pub async fn trending_tv(
         &self,
         time_window: TimeWindow,
-        _page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, TmdbError> {
         let tw = match time_window {
             TimeWindow::Day => types::TrendingTvTimeWindow::Day,

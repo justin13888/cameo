@@ -108,7 +108,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n=== trending_movies (week) ===");
     use cameo::core::config::TimeWindow;
-    let trending = client.trending_movies(TimeWindow::Week, None).await?;
+    let trending = client.trending_movies(TimeWindow::Week).await?;
     println!("  {} trending movies", trending.total_results);
     for m in trending.results.iter().take(5) {
         let pop = m
