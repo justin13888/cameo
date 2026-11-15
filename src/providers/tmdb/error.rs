@@ -67,8 +67,8 @@ pub enum TmdbError {
 
     /// A response body could not be deserialized into the expected type.
     ///
-    /// The [`DecodeError`] carries the decoder's message; where a JSON parser
-    /// error produced it, that error is its
+    /// The [`DecodeError`] carries the decoder's message, which is all the
+    /// request pipeline reports, so it has no
     /// [`source`](std::error::Error::source).
     #[error("deserialization error: {0}")]
     Deserialization(#[source] DecodeError),
