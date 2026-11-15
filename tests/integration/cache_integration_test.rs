@@ -110,17 +110,53 @@ async fn detail_fetch_populates_both_detail_and_item_caches() {
         .mount(&server)
         .await;
 
-    client.movie_details(&MediaId::tmdb(550)).await.unwrap();
+    let fetched = client.movie_details(&MediaId::tmdb(550)).await.unwrap();
 
     // Detail cache should be populated.
     let detail = client.cached_movie_details("tmdb:550").await;
     assert!(detail.is_some(), "detail cache should be populated");
+    assert_eq!(
+        detail.as_ref(),
+        Some(&fetched),
+        "cached details equal the fetched details"
+    );
 
     // Item cache should also be populated.
     let item = client.cached_movie("tmdb:550").await;
     assert!(
         item.is_some(),
         "item cache should be populated after detail fetch"
+    );
+    assert_eq!(
+        item,
+        Some(fetched.movie),
+        "cached item equals the fetched movie"
+    );
+}
+
+/// What a cache hit returns equals the uncached result field for field, for
+/// both the search page and the item it indexed.
+#[tokio::test]
+async fn cached_search_results_equal_the_uncached_result() {
+    let server = MockServer::start().await;
+    let client = setup(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/search/movie"))
+        .and(query_param("query", "fight club"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(search_movie_fixture(), "application/json"),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let uncached = client.search_movies("fight club", None).await.unwrap();
+    let cached = client.search_movies("fight club", None).await.unwrap();
+    assert_eq!(cached, uncached);
+    assert_eq!(
+        client.cached_movie("tmdb:550").await,
+        Some(uncached.results[0].clone())
     );
 }
 
