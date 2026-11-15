@@ -37,9 +37,10 @@ unified models and map errors. `TmdbClient`'s inherent methods
 (`src/providers/tmdb/client/`) and its trait impls
 (`src/providers/tmdb/provider.rs`) are the reference.
 
-When an inherent method and a trait method share a name (the built-ins'
+When an inherent method and a trait method share a name (`TmdbClient`'s
 `movie_details(u64)` and `DetailProvider::movie_details(&MediaId)`, for
-example), method-call syntax picks the inherent one. Callers reach the trait
+example; each provider's inherent methods take its own native id type, such as
+`i32` on `AniListClient`), method-call syntax picks the inherent one. Callers reach the trait
 form fully qualified: `DetailProvider::movie_details(&client, &id)`.
 
 ## 3. Config contract
