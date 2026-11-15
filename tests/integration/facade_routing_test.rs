@@ -113,12 +113,13 @@ impl SearchProvider for Fake {
         self.log("search_multi");
         Ok(Page::offset(
             1,
-            vec![UnifiedSearchResult::movie(UnifiedMovie::new(
-                self.own_id(1),
-                self.id,
-            ))],
+            vec![
+                UnifiedSearchResult::movie(UnifiedMovie::new(self.own_id(1), self.id)),
+                UnifiedSearchResult::tv_show(UnifiedTvShow::new(self.own_id(2), self.id)),
+                UnifiedSearchResult::person(UnifiedPerson::new(self.own_id(3), self.id)),
+            ],
             1,
-            1,
+            3,
         ))
     }
 }
@@ -871,6 +872,42 @@ mod cache {
         assert_eq!(client.cached_tv_show_details("a:404").await, None);
         assert_eq!(client.cached_person_details("a:404").await, None);
         assert!(fake.calls().is_empty(), "lookups never call a provider");
+    }
+
+    /// `search_multi` indexes the model each result wraps, so `cached_*`
+    /// returns it, and it does not clobber an item an earlier typed search
+    /// stored.
+    #[tokio::test]
+    async fn search_multi_indexes_the_wrapped_models() {
+        let fake = Fake::new("a");
+        let backend = Arc::new(Recording::default());
+        let client = client(&fake, backend.clone());
+
+        client.search_movies("q", None).await.expect("search");
+        let typed = client.cached_movie("a:1").await;
+        assert_eq!(typed, Some(UnifiedMovie::new(a_id(1), "a")));
+
+        client.search_multi("q", None).await.expect("search");
+
+        assert_eq!(client.cached_movie("a:1").await, typed);
+        assert_eq!(
+            client.cached_tv_show("a:2").await,
+            Some(UnifiedTvShow::new(a_id(2), "a"))
+        );
+        assert_eq!(
+            client.cached_person("a:3").await,
+            Some(UnifiedPerson::new(a_id(3), "a"))
+        );
+        let ttl = Duration::from_secs(44);
+        let multi_writes = backend.writes().split_off(2);
+        assert_eq!(
+            multi_writes[1..],
+            [
+                (item(MediaType::Movie, "a:1"), ttl),
+                (item(MediaType::TvShow, "a:2"), ttl),
+                (item(MediaType::Person, "a:3"), ttl),
+            ]
+        );
     }
 
     /// Per-call `*_with` searches neither read nor write the cache.

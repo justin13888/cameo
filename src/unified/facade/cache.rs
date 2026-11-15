@@ -11,8 +11,8 @@ use crate::{
     cache::{CacheBackend, CacheKey, CacheTtlConfig, MediaType},
     unified::{
         models::{
-            UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails,
-            UnifiedSearchResult, UnifiedTvShow, UnifiedTvShowDetails,
+            UnifiedMovie, UnifiedMovieDetails, UnifiedPerson, UnifiedPersonDetails, UnifiedTvShow,
+            UnifiedTvShowDetails,
         },
         traits::Provider,
     },
@@ -99,18 +99,6 @@ impl CacheItem for UnifiedTvShow {
 impl CacheItem for UnifiedPerson {
     fn item_key(&self) -> CacheKey {
         item_key(MediaType::Person, &self.provider_id.to_string())
-    }
-}
-
-/// A mixed search result is keyed by the media type and id of the value it
-/// wraps; the wrapper itself is what gets stored.
-impl CacheItem for UnifiedSearchResult {
-    fn item_key(&self) -> CacheKey {
-        match self {
-            UnifiedSearchResult::Movie(m) => m.item_key(),
-            UnifiedSearchResult::TvShow(t) => t.item_key(),
-            UnifiedSearchResult::Person(p) => p.item_key(),
-        }
     }
 }
 
