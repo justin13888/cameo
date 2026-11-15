@@ -1,9 +1,10 @@
 //! TMDB TV type → unified model conversions.
 
-use super::{resolve_backdrop, resolve_date, resolve_logo, resolve_poster, tmdb_media_id};
+use super::{
+    resolve_backdrop, resolve_date, resolve_logo, resolve_poster, resolve_still, tmdb_media_id,
+};
 use crate::{
     generated::tmdb::types,
-    providers::tmdb::image_url::{ImageUrl, StillSize},
     unified::{genre::Genre, media_id::MediaId, models::*},
 };
 
@@ -97,10 +98,7 @@ impl From<types::TvSeasonDetailsResponseEpisodesItem> for UnifiedEpisode {
             overview: e.overview,
             air_date: resolve_date(&e.air_date),
             runtime: e.runtime.filter(|&v| v > 0).map(|v| v as u32),
-            still_url: e
-                .still_path
-                .as_deref()
-                .map(|p| ImageUrl::still(p, StillSize::W300)),
+            still_url: resolve_still(&e.still_path),
             vote_average: e.vote_average,
         }
     }
@@ -114,10 +112,7 @@ impl From<types::TvEpisodeDetailsResponse> for UnifiedEpisode {
             overview: e.overview,
             air_date: resolve_date(&e.air_date),
             runtime: e.runtime.filter(|&v| v > 0).map(|v| v as u32),
-            still_url: e
-                .still_path
-                .as_deref()
-                .map(|p| ImageUrl::still(p, StillSize::W300)),
+            still_url: resolve_still(&e.still_path),
             vote_average: e.vote_average,
         }
     }
