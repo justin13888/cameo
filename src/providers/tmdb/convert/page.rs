@@ -5,6 +5,12 @@ use crate::{
     unified::conversions::native_id,
 };
 
+/// The highest page number TMDB serves for any list endpoint.
+///
+/// TMDB rejects `page` above this, and the client clamps requested pages to
+/// `1..=MAX_PAGE`, so no page past it can ever be fetched.
+pub(crate) const MAX_PAGE: u32 = 500;
+
 /// A TMDB list/search result item whose TMDB id may be absent.
 ///
 /// An item without an id cannot be fetched again or cached under a stable key
@@ -108,9 +114,11 @@ impl_tmdb_paged!(
 /// `requested` is the page number sent to TMDB (`None` when no page was sent).
 /// A missing `page` falls back to `requested` (or `1`). A missing
 /// `total_pages` or `total_results` is unknown and reads as `0`, as [`Page`]
-/// documents, so `has_next` (`page < total_pages`) is `false`. Missing
-/// `results` read as an empty list. An item whose id is missing, zero, or
-/// negative is dropped and logged at `warn`.
+/// documents, so `has_next` (`page < total_pages`) is `false`. A reported
+/// `total_pages` above [`MAX_PAGE`] is capped at it, so the page the client
+/// cannot request is never advertised as next; `total_results` is kept as
+/// reported. Missing `results` read as an empty list. An item whose id is
+/// missing, zero, or negative is dropped and logged at `warn`.
 ///
 /// # Errors
 ///
@@ -125,7 +133,9 @@ fn offset_page<T: TmdbListItem>(
 ) -> Result<Page<T>, TmdbError> {
     let requested = requested.and_then(|p| u32::try_from(p).ok()).unwrap_or(1);
     let page = page_field("page", page)?.unwrap_or(requested);
-    let total_pages = page_field("total_pages", total_pages)?.unwrap_or(0);
+    let total_pages = page_field("total_pages", total_pages)?
+        .unwrap_or(0)
+        .min(MAX_PAGE);
     let total_results = page_field("total_results", total_results)?.unwrap_or(0);
     let results = results
         .unwrap_or_default()
@@ -142,6 +152,19 @@ fn offset_page<T: TmdbListItem>(
         })
         .collect();
     Ok(Page::offset(page, results, total_pages, total_results))
+}
+
+/// Mark `page` as the only page of its result set: no next page, and
+/// `total_pages` of `1`. `total_results` is kept as reported.
+///
+/// For endpoints that ignore the requested page (TMDB trending), where any
+/// `total_pages` TMDB reports could never be walked: requesting page 2 returns
+/// page 1 again.
+pub(crate) fn single_page<T>(mut page: Page<T>) -> Page<T> {
+    page.has_next = false;
+    page.next = None;
+    page.total_pages = 1;
+    page
 }
 
 /// A reported pagination `field` as a `u32`: `None` when TMDB omitted it, and
@@ -204,6 +227,38 @@ mod tests {
         assert_eq!(page.total_results, 41);
         assert!(page.has_next);
         assert_eq!(page.results.len(), 1);
+    }
+
+    /// A `total_pages` past TMDB's page limit is capped at it: page
+    /// `MAX_PAGE` is the last page, and earlier pages still have a next one.
+    /// `total_results` is kept as reported.
+    #[test]
+    fn offset_page_caps_total_pages_at_the_page_limit() {
+        let last = offset_page::<Item>(None, Some(500), None, Some(48_211), Some(964_210))
+            .expect("page in range");
+        assert_eq!(last.total_pages, MAX_PAGE);
+        assert_eq!(last.total_results, 964_210);
+        assert!(!last.has_next);
+        assert_eq!(last.next, None);
+
+        let before =
+            offset_page::<Item>(None, Some(499), None, Some(48_211), None).expect("page in range");
+        assert_eq!(before.total_pages, MAX_PAGE);
+        assert_eq!(before.next_page(), Some(500));
+    }
+
+    /// `single_page` leaves no next page whatever totals TMDB reported.
+    #[test]
+    fn single_page_reports_no_next_page() {
+        let page =
+            offset_page::<Item>(None, Some(1), None, Some(37), Some(740)).expect("page in range");
+        assert!(page.has_next);
+
+        let page = single_page(page);
+        assert!(!page.has_next);
+        assert_eq!(page.next, None);
+        assert_eq!(page.total_pages, 1);
+        assert_eq!(page.total_results, 740);
     }
 
     /// A page number or total that does not fit a `u32` is a typed error

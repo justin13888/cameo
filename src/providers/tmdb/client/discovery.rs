@@ -7,7 +7,7 @@ use crate::{
     generated::tmdb::{self, types},
     providers::tmdb::{
         builders::{DiscoverMoviesBuilder, DiscoverTvBuilder},
-        convert::TmdbPaged,
+        convert::{TmdbPaged, single_page},
         error::TmdbError,
     },
     unified::models::{UnifiedMovie, UnifiedTvShow},
@@ -22,7 +22,8 @@ impl TmdbClient {
     ///
     /// TMDB trending endpoints are not paginated, so this method takes no
     /// page argument and always returns the first (and only) page of
-    /// trending results.
+    /// trending results: the page reports `has_next == false` and
+    /// `total_pages == 1`, whatever TMDB's body claims.
     #[tracing::instrument(skip(self))]
     pub async fn trending_movies(
         &self,
@@ -38,7 +39,7 @@ impl TmdbClient {
         let body = self
             .execute(|| self.inner.trending_movies(tw.clone(), params.clone()))
             .await?;
-        Ok(body.into_page(None)?.map(Into::into))
+        Ok(single_page(body.into_page(None)?).map(Into::into))
     }
 
     /// Get trending TV shows.
@@ -47,7 +48,8 @@ impl TmdbClient {
     ///
     /// TMDB trending endpoints are not paginated, so this method takes no
     /// page argument and always returns the first (and only) page of
-    /// trending results.
+    /// trending results: the page reports `has_next == false` and
+    /// `total_pages == 1`, whatever TMDB's body claims.
     #[tracing::instrument(skip(self))]
     pub async fn trending_tv(
         &self,
@@ -63,7 +65,7 @@ impl TmdbClient {
         let body = self
             .execute(|| self.inner.trending_tv(tw.clone(), params.clone()))
             .await?;
-        Ok(body.into_page(None)?.map(Into::into))
+        Ok(single_page(body.into_page(None)?).map(Into::into))
     }
 
     // ── Popular / Top Rated ──

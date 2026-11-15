@@ -11,6 +11,7 @@ mod watch_providers;
 
 use super::{
     config::{TmdbAuth, TmdbConfig},
+    convert::MAX_PAGE,
     error::{RequestErrorKind, TmdbError},
 };
 use crate::{
@@ -127,10 +128,10 @@ impl TmdbClient {
         self.config.include_adult
     }
 
-    /// Clamp a page to TMDB's supported `1..=500` range and convert to the
-    /// generated client's `i32` without a wrapping cast.
+    /// Clamp a page to TMDB's supported `1..=MAX_PAGE` range and convert to
+    /// the generated client's `i32` without a wrapping cast.
     fn tmdb_page(page: Option<u32>) -> Option<i32> {
-        page.map(|p| p.clamp(1, 500) as i32)
+        page.map(|p| p.clamp(1, MAX_PAGE) as i32)
     }
 
     /// Wait for a rate-limit slot before issuing a request. Returns once the
