@@ -71,9 +71,6 @@ pub struct TmdbConfig {
     /// Defaults to `https://api.themoviedb.org`. Override for testing against
     /// a mock server. An unparseable URL is rejected at client construction.
     pub base_url: String,
-    /// Image CDN base URL override (defaults to `https://image.tmdb.org/t/p/`).
-    /// Useful for pointing image URLs at a mock or proxy.
-    pub image_base_url: Option<String>,
     /// Default language for requests (e.g. `"en-US"`). Validated as a BCP-47
     /// language tag at client construction.
     pub language: Option<String>,
@@ -107,7 +104,6 @@ impl std::fmt::Debug for TmdbConfig {
         let Self {
             auth,
             base_url,
-            image_base_url,
             language,
             region,
             include_adult,
@@ -119,7 +115,6 @@ impl std::fmt::Debug for TmdbConfig {
         f.debug_struct("TmdbConfig")
             .field("auth", auth)
             .field("base_url", base_url)
-            .field("image_base_url", image_base_url)
             .field("language", language)
             .field("region", region)
             .field("include_adult", include_adult)
@@ -147,7 +142,6 @@ impl TmdbConfig {
         Self {
             auth,
             base_url: TMDB_BASE_URL.to_string(),
-            image_base_url: None,
             language: None,
             region: None,
             include_adult: None,
@@ -169,12 +163,6 @@ impl TmdbConfig {
     /// Override the API base URL (useful for testing against a mock server).
     pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
         self.base_url = base_url.into();
-        self
-    }
-
-    /// Override the image CDN base URL (e.g. to point at a mock or proxy).
-    pub fn with_image_base_url(mut self, url: impl Into<String>) -> Self {
-        self.image_base_url = Some(url.into());
         self
     }
 
@@ -238,13 +226,6 @@ impl TmdbConfig {
         }
         if let Some(region) = &self.region {
             validate_region(region)?;
-        }
-        if let Some(base) = &self.image_base_url
-            && !(base.starts_with("http://") || base.starts_with("https://"))
-        {
-            return Err(format!(
-                "image_base_url must be an http(s) URL, got {base:?}"
-            ));
         }
         Ok(())
     }
