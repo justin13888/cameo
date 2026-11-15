@@ -83,8 +83,7 @@ publish-check:
     cargo doc --no-deps
     cargo publish --dry-run
 
-# Mutation-test one source file or glob (requires cargo-mutants), e.g.
-# `just mutants 'src/unified/date.rs'`; the default runs every module
+# Mutation-test the sources matching a glob (default: all; needs cargo-mutants)
 mutants files="src/**/*.rs":
     cargo mutants --file '{{files}}'
 
