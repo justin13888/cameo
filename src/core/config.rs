@@ -31,4 +31,12 @@ mod tests {
         assert_eq!(map[&TimeWindow::Day], "daily");
         assert_eq!(map[&TimeWindow::Week], "weekly");
     }
+
+    /// `Display` feeds cache keys and TMDB trending paths, so its exact text
+    /// is pinned.
+    #[test]
+    fn time_window_display() {
+        assert_eq!(TimeWindow::Day.to_string(), "day");
+        assert_eq!(TimeWindow::Week.to_string(), "week");
+    }
 }
