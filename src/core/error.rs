@@ -24,7 +24,7 @@ use std::time::Duration;
 /// }
 /// ```
 #[non_exhaustive]
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum ProviderError {
     /// The requested resource was not found.
     #[error("resource not found")]

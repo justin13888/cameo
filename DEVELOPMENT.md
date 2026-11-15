@@ -171,6 +171,13 @@ release-plz derives the next version from commit types:
 | `feat:` | minor (0.x.0) |
 | Any `!` breaking change | major (x.0.0); pre-1.0: minor (0.x.0) |
 
+Pull requests never change `version` in `Cargo.toml`; only the Release PR does.
+CI's *SemVer compatibility* job therefore takes its release type from the commits
+merged since the last `v*` tag plus the pull request's title: a breaking marker
+(`type!:` or a `BREAKING CHANGE:` footer) in any of them allows breaking API
+changes, and otherwise only additive changes pass. A pull request that breaks the
+public API must say so in its title, e.g. `feat!: ...`.
+
 ### Skipping a release
 
 Close the Release PR. release-plz will reopen it on the next push to `master` with accumulated changes.
