@@ -116,6 +116,7 @@ impl UnifiedMovieDetails {
             spoken_languages: Vec::new(),
             video: None,
             belongs_to_collection: None,
+            certifications: Vec::new(),
         }
     }
 
@@ -177,6 +178,11 @@ impl UnifiedMovieDetails {
     /// Set the collection this movie belongs to.
     pub fn with_collection(mut self, value: Collection) -> Self {
         self.belongs_to_collection = Some(value);
+        self
+    }
+    /// Set the certifications (content ratings).
+    pub fn with_certifications(mut self, value: Vec<Certification>) -> Self {
+        self.certifications = value;
         self
     }
 }

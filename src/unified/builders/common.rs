@@ -1,5 +1,5 @@
 //! Builders for models shared across media kinds: [`AlternativeTitle`],
-//! [`Company`] and [`UnifiedSearchResult`].
+//! [`Certification`], [`Company`] and [`UnifiedSearchResult`].
 
 use crate::unified::models::*;
 
@@ -17,6 +17,17 @@ impl AlternativeTitle {
     pub fn with_language(mut self, value: impl Into<String>) -> Self {
         self.language = Some(value.into());
         self
+    }
+}
+
+impl Certification {
+    /// Create a certification: `rating` as assigned in `country` (ISO 3166-1
+    /// alpha-2).
+    pub fn new(country: impl Into<String>, rating: impl Into<String>) -> Self {
+        Self {
+            country: country.into(),
+            rating: rating.into(),
+        }
     }
 }
 

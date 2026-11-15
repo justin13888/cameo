@@ -305,6 +305,8 @@ pub fn anilist_media_detail_to_movie_details(m: AniListMediaDetail) -> Option<Un
         // AniList has no "video entry" concept.
         video: None,
         belongs_to_collection: None,
+        // AniList reports no per-country certifications.
+        certifications: Vec::new(),
     })
 }
 
@@ -403,6 +405,7 @@ pub fn anilist_media_detail_to_tv_details(m: AniListMediaDetail) -> Option<Unifi
         spoken_languages: Vec::new(),
         production_countries: origin_country,
         seasons: Vec::new(),
+        certifications: Vec::new(),
     })
 }
 

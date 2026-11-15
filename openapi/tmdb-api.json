@@ -6938,6 +6938,16 @@
               "integer",
               "null"
             ]
+          },
+          "release_dates": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MovieReleaseDatesResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -12334,6 +12344,16 @@
             "type": [
               "integer",
               "null"
+            ]
+          },
+          "content_ratings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TvSeriesContentRatingsResponse"
+              },
+              {
+                "type": "null"
+              }
             ]
           }
         }

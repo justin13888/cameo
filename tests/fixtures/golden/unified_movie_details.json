@@ -6,6 +6,12 @@
     "poster_url": "https://example.com/c-poster.jpg"
   },
   "budget": 63000000,
+  "certifications": [
+    {
+      "country": "US",
+      "rating": "R"
+    }
+  ],
   "homepage": "https://example.com/fightclub",
   "imdb_id": "tt0137523",
   "movie": {
