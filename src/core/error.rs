@@ -74,7 +74,7 @@ pub enum ProviderError {
 #[cfg(feature = "tmdb")]
 impl From<crate::providers::tmdb::TmdbError> for ProviderError {
     fn from(err: crate::providers::tmdb::TmdbError) -> Self {
-        use crate::providers::tmdb::TmdbError;
+        use crate::providers::tmdb::{TmdbError, error::RequestErrorKind};
         match err {
             // The `TransportError` description is already redacted: it never
             // carries the request URL's `api_key`.
@@ -82,6 +82,12 @@ impl From<crate::providers::tmdb::TmdbError> for ProviderError {
             TmdbError::Deserialization(e) => ProviderError::Deserialization(e.to_string()),
             TmdbError::InvalidConfig(s) => ProviderError::InvalidInput(s),
             TmdbError::UnsupportedSource(_) => ProviderError::Unsupported,
+            TmdbError::Request { kind, message } => match kind {
+                RequestErrorKind::InvalidRequest => ProviderError::InvalidInput(message),
+                RequestErrorKind::PaginationCycle => {
+                    ProviderError::Other(format!("{kind}: {message}"))
+                }
+            },
             TmdbError::Api {
                 status,
                 message,
@@ -224,6 +230,24 @@ mod tests {
                 crate::unified::external_ids::ExternalSource::Mal
             )),
             ProviderError::Unsupported
+        ));
+    }
+
+    #[cfg(feature = "tmdb")]
+    #[test]
+    fn maps_tmdb_request_error_by_kind() {
+        use crate::providers::tmdb::{TmdbError, error::RequestErrorKind};
+        let request = |kind| TmdbError::Request {
+            kind,
+            message: "boom".into(),
+        };
+        assert!(matches!(
+            ProviderError::from(request(RequestErrorKind::InvalidRequest)),
+            ProviderError::InvalidInput(ref m) if m == "boom"
+        ));
+        assert!(matches!(
+            ProviderError::from(request(RequestErrorKind::PaginationCycle)),
+            ProviderError::Other(ref m) if m == "pagination cycle: boom"
         ));
     }
 

@@ -6,10 +6,13 @@ from the code.
 ## Getting started
 
 ```sh
-cargo test --all-features        # run the suite
-cargo clippy --all-targets --all-features -- -D warnings
+cargo test --features full       # run the suite (or `just test`)
+cargo clippy --all-targets --features full -- -D warnings
 cargo fmt --all
 ```
+
+Avoid `--all-features`: it enables `live-tests`, whose tests hit the real TMDB
+API and panic without a `TMDB_API_TOKEN` (run them with `just test-live`).
 
 A [lefthook](https://github.com/evilmartians/lefthook) pre-push hook runs
 formatting, clippy, and the tests across the feature-flag combinations; install
@@ -18,9 +21,10 @@ it with `lefthook install`. Use [conventional commits](https://www.conventionalc
 
 ## Toolchain and MSRV
 
-The crate's **support target is stable Rust `1.89`** (the MSRV — see
-`Cargo.toml` `rust-version` and [docs/STABILITY.md](docs/STABILITY.md)); the
-`msrv` CI job builds and tests on it. `rust-toolchain.toml` pins a specific
+The crate's **support target is stable Rust at its MSRV**, declared once as
+`rust-version` in `Cargo.toml` (policy in [docs/STABILITY.md](docs/STABILITY.md));
+the `msrv` CI job runs `cargo check --all-targets` on it (it does not run the
+tests). `rust-toolchain.toml` pins a specific
 **nightly only** because `rustfmt.toml` uses nightly-only formatting options
 (import grouping) — that pinned nightly makes `cargo fmt` reproducible. Nothing
 else requires nightly; don't introduce nightly language features.
@@ -29,16 +33,9 @@ else requires nightly; don't introduce nightly language features.
 
 The TMDB low-level client under `src/generated/` is **vendored** — generated
 from `openapi/tmdb-api.json` and committed so builds are hermetic. Do not edit
-it by hand. To regenerate after a spec change:
-
-```sh
-./scripts/fetch-openapi.sh        # refresh + patch the vendored OpenAPI spec
-cargo xtask codegen               # regenerate src/generated/tmdb.rs (spargen)
-```
-
-`cargo xtask codegen` is deterministic (pinned via `xtask/Cargo.lock`); the
-`codegen-freshness` CI job fails if the committed output drifts from a fresh
-run, so always commit the regenerated file.
+it by hand; regenerate it with `cargo xtask codegen` and commit the result (the
+`codegen-freshness` CI job fails on drift). The full workflow, including
+refreshing the spec, is in [DEVELOPMENT.md](DEVELOPMENT.md#regenerating-the-tmdb-openapi-spec).
 
 ## Bump the cache version on model changes
 

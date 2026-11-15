@@ -6,14 +6,18 @@ use crate::generated::tmdb as generated;
 
 /// Error type for the TMDB provider.
 ///
-/// Failures fall into three clearly separated categories so callers can react
-/// appropriately without string-matching:
+/// Request failures fall into four clearly separated categories so callers can
+/// react appropriately without string-matching:
 ///
+/// * [`TmdbError::Request`] — the request was never sent, or the client stopped
+///   on its own: it could not be built (e.g. a parameter TMDB cannot carry) or
+///   a pagination `next` link revisited an earlier page. No HTTP response is
+///   involved.
 /// * [`TmdbError::Http`] — a transport failure (connection, DNS, TLS, timeout)
 ///   where **no** HTTP response was received.
 /// * [`TmdbError::Api`] — the server returned an error **status**, carrying the
 ///   real HTTP status, TMDB's decoded `{status_code, status_message}` body, and
-///   any `Retry-After` delay.
+///   any `Retry-After` delay. `status` is always a real HTTP status code.
 /// * [`TmdbError::Deserialization`] — a response body could not be decoded into
 ///   the expected type.
 #[non_exhaustive]
@@ -32,6 +36,8 @@ pub enum TmdbError {
 
     /// The TMDB API returned an error status.
     ///
+    /// Only ever constructed from a received HTTP response: failures that never
+    /// reached the server are [`TmdbError::Request`] or [`TmdbError::Http`].
     /// `status` is the real HTTP response code (e.g. 401, 404, 429) so callers
     /// can distinguish authentication failures from missing resources or rate
     /// limiting by matching on it. `status_code` and `message` are decoded from
@@ -54,6 +60,23 @@ pub enum TmdbError {
     #[error("deserialization error: {0}")]
     Deserialization(#[from] serde_json::Error),
 
+    /// The request failed without any HTTP response being involved.
+    ///
+    /// [`RequestErrorKind::InvalidRequest`]: the request could not be built
+    /// (e.g. a date outside the RFC 3339 range, or a missing credential), so
+    /// nothing was sent. [`RequestErrorKind::PaginationCycle`]: the client
+    /// stopped following TMDB's pagination because a `next` link revisited an
+    /// earlier page. Neither is retryable.
+    ///
+    /// `message` never carries a v3 `api_key` value.
+    #[error("{kind}: {message}")]
+    Request {
+        /// What kind of request failure this is.
+        kind: RequestErrorKind,
+        /// Human-readable description of the failure.
+        message: String,
+    },
+
     /// Invalid configuration (rejected at construction time).
     #[error("invalid configuration: {0}")]
     InvalidConfig(String),
@@ -62,6 +85,27 @@ pub enum TmdbError {
     /// [`TmdbClient::find_by_external_id`](super::TmdbClient::find_by_external_id)).
     #[error("TMDB cannot find titles by {0} id")]
     UnsupportedSource(crate::unified::external_ids::ExternalSource),
+}
+
+/// The kind of a [`TmdbError::Request`] failure.
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum RequestErrorKind {
+    /// The request could not be built, so nothing was sent: the caller's input
+    /// or configuration cannot be expressed as a TMDB request.
+    InvalidRequest,
+    /// A pagination `next` link revisited a page already fetched, so the
+    /// client stopped rather than loop forever.
+    PaginationCycle,
+}
+
+impl fmt::Display for RequestErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            RequestErrorKind::InvalidRequest => "invalid request",
+            RequestErrorKind::PaginationCycle => "pagination cycle",
+        })
+    }
 }
 
 /// A transport failure: no usable HTTP response was received.
@@ -186,17 +230,14 @@ impl TmdbError {
                 Self::transport(TransportKind::Other, &e)
             }
             // We failed to even build the request (e.g. a missing credential).
-            G::RequestConstruction(e) => TmdbError::Api {
-                status: 0,
-                status_code: None,
-                message: redact_api_key(&format!("invalid request: {}", error_chain(&e))),
-                retry_after: None,
+            G::RequestConstruction(e) => TmdbError::Request {
+                kind: RequestErrorKind::InvalidRequest,
+                message: redact_api_key(&error_chain(&e)),
             },
-            G::PaginationCycle { .. } => TmdbError::Api {
-                status: 0,
-                status_code: None,
-                message: "invalid request: pagination cycle".to_string(),
-                retry_after: None,
+            // The revisited URL is left out: it may carry a v3 `api_key`.
+            G::PaginationCycle { .. } => TmdbError::Request {
+                kind: RequestErrorKind::PaginationCycle,
+                message: "a `next` link revisited an earlier page".to_string(),
             },
 
             // A declared error response with a typed body.
@@ -410,6 +451,47 @@ mod tests {
         });
         assert!(matches!(err, TmdbError::Deserialization(_)), "got {err:?}");
         assert!(err.to_string().contains("expected i64"), "{err}");
+    }
+
+    #[test]
+    fn request_construction_is_invalid_request_not_api() {
+        let err = TmdbError::from_generated(
+            generated::Error::<std::convert::Infallible>::request_message(
+                "bad param api_key=SECRET".to_string(),
+            ),
+        );
+        match &err {
+            TmdbError::Request {
+                kind: RequestErrorKind::InvalidRequest,
+                message,
+            } => {
+                assert!(message.contains("bad param"), "{message}");
+                assert!(!message.contains("SECRET"), "{message}");
+            }
+            other => panic!("expected Request, got {other:?}"),
+        }
+        assert!(!err.is_retryable());
+        assert!(err.to_string().starts_with("invalid request: "), "{err}");
+    }
+
+    #[test]
+    fn pagination_cycle_is_request_error_without_url() {
+        let url = reqwest::Url::parse("http://h/3/x?page=2&api_key=SECRET").unwrap();
+        let err = TmdbError::from_generated(
+            generated::Error::<std::convert::Infallible>::PaginationCycle { url },
+        );
+        assert!(
+            matches!(
+                err,
+                TmdbError::Request {
+                    kind: RequestErrorKind::PaginationCycle,
+                    ..
+                }
+            ),
+            "got {err:?}"
+        );
+        assert!(!err.is_retryable());
+        assert!(!err.to_string().contains("SECRET"), "{err}");
     }
 
     #[test]

@@ -62,24 +62,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Architecture
 
-```
-CameoClient (unified facade)
-├── SearchProvider / DetailProvider / DiscoveryProvider / ExternalIdProvider / … traits
-├── Cache layer (optional — SqliteCache or custom CacheBackend)
-├── TmdbClient
-│   └── Generated spargen client (152 TMDB API operations)
-└── AniListClient
-    └── GraphQL client (reqwest POST to graphql.anilist.co)
-```
-
-| Module | Purpose |
-|--------|---------|
-| `cameo::unified` | `CameoClient` facade, traits, unified model types, `Genre` |
-| `cameo::providers::tmdb` | `TmdbClient`, `TmdbConfig`, `ImageUrl`, discover builders |
-| `cameo::providers::anilist` | `AniListClient`, `AniListConfig`, `AniListError`, `DiscoverAnimeBuilder` (filtered discover) |
-| `cameo::cache` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig` |
-| `cameo::core` | `PaginatedResponse`, `into_stream`, `TimeWindow`, `CameoError` |
-| `cameo::generated` | spargen-generated low-level TMDB client (do not use directly) |
+`CameoClient` is a facade over a registry of providers (TMDB and AniList built
+in, others pluggable via the capability traits), with an optional cache layer.
+The module map and data flow are in [DEVELOPMENT.md](DEVELOPMENT.md#module-structure--data-flow);
+the public API is documented on [docs.rs](https://docs.rs/cameo). To plug in
+your own provider, see [docs/providers.md](docs/providers.md).
 
 ## Testing
 
@@ -109,7 +96,7 @@ breaking change, and the deprecation cadence.
 
 ## MSRV
 
-The minimum supported Rust version is **1.89**, the version `rusqlite` 0.41 (the `cache` feature's SQLite backend) declares. This crate also uses [let-chains](https://blog.rust-lang.org/2025/06/26/Rust-1.88.0.html) (`if let A = x && let B = y`), which were stabilized in Rust 1.88. While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
+The minimum supported Rust version is the `rust-version` declared in [`Cargo.toml`](Cargo.toml), set by the `cache` feature's SQLite backend (`rusqlite`); the crate also relies on [let-chains](https://blog.rust-lang.org/2025/06/26/Rust-1.88.0.html) (`if let A = x && let B = y`). While the primary user is [Beam](https://github.com/justin13888/beam), you may file any issues related to this.
 
 ## License
 
