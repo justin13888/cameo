@@ -9,7 +9,7 @@
 
 ## Overview
 
-cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the [TMDB API](https://developer.themoviedb.org/) and [AniList GraphQL API](https://anilist.gitbook.io/anilist-apiv2-docs/) behind a unified, ergonomic interface with type-safe models, cross-database id mapping (IMDb, TVDB, MyAnimeList, Wikidata), transparent SQLite caching, and first-class pagination support.
+cameo is an async Rust SDK for querying movie and TV show metadata. It wraps the [TMDB API](https://developer.themoviedb.org/), the [AniList GraphQL API](https://anilist.gitbook.io/anilist-apiv2-docs/) and the [TheTVDB v4 API](https://thetvdb.github.io/v4-api/) behind a unified, ergonomic interface with type-safe models, cross-database id mapping (IMDb, TVDB, MyAnimeList, Wikidata), transparent SQLite caching, and first-class pagination support.
 
 ## Installation
 
@@ -25,6 +25,7 @@ cameo = "0.4"
 | `tmdb` | yes | TMDB provider support |
 | `cache` | yes | SQLite caching layer (requires `rusqlite`) |
 | `anilist` | yes | AniList GraphQL provider (anime; no API key required) |
+| `tvdb` | yes | TheTVDB v4 provider (series, movies, default-order episodes with absolute numbers; API key required) |
 | `live-tests` | no | Gates tests that hit the real provider APIs (TMDB and AniList) |
 
 For a minimal install without caching: `cameo = { version = "0.4", default-features = false, features = ["tmdb"] }`
@@ -61,8 +62,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Architecture
 
-`CameoClient` is a facade over a registry of providers (TMDB and AniList built
-in, others pluggable via the capability traits), with an optional cache layer.
+`CameoClient` is a facade over a registry of providers (TMDB, AniList and
+TheTVDB built in, others pluggable via the capability traits), with an optional cache layer.
 The module map and data flow are in [DEVELOPMENT.md](DEVELOPMENT.md#module-structure--data-flow);
 the public API is documented on [docs.rs](https://docs.rs/cameo). To plug in
 your own provider, see [docs/providers.md](docs/providers.md).

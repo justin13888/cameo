@@ -15,18 +15,18 @@ declares which capabilities it supports:
 ```rust
 use cameo::{Capability, Provider};
 
-struct TvdbProvider { /* http client, config, … */ }
+struct OmdbProvider { /* http client, config, … */ }
 
-impl Provider for TvdbProvider {
-    fn id(&self) -> &str { "tvdb" }
+impl Provider for OmdbProvider {
+    fn id(&self) -> &str { "omdb" }
     fn capabilities(&self) -> &[Capability] {
         &[Capability::Search, Capability::Details]
     }
 }
 ```
 
-The id is how callers select the provider (`search_movies_with("tvdb", …)`) and
-how ids minted by this provider route back to it (`MediaId::new("tvdb", …)`).
+The id is how callers select the provider (`search_movies_with("omdb", …)`) and
+how ids minted by this provider route back to it (`MediaId::new("omdb", …)`).
 
 ## 2. The two-layer pattern
 
@@ -58,7 +58,7 @@ use cameo::{Page, ProviderError, SearchProvider, UnifiedMovie, UnifiedPerson,
     UnifiedSearchResult, UnifiedTvShow};
 
 #[async_trait]
-impl SearchProvider for TvdbProvider {
+impl SearchProvider for OmdbProvider {
     async fn search_movies(&self, query: &str, page: Option<u32>)
         -> Result<Page<UnifiedMovie>, ProviderError> {
         // 1. call your low-level client
@@ -101,12 +101,12 @@ Register one `Arc` per capability trait you implement — no facade edits:
 
 ```rust
 let client = CameoClient::builder()
-    .register_search_provider(Arc::new(TvdbProvider::new(config)))
-    .with_priority(["tvdb", "tmdb"]) // optional default order
+    .register_search_provider(Arc::new(OmdbProvider::new(config)))
+    .with_priority(["omdb", "tmdb"]) // optional default order
     .build()?;
 
 let results = client.search_movies("Dune", None).await?;      // default priority
-let tvdb = client.search_movies_with("tvdb", "Dune", None).await?; // explicit
+let omdb = client.search_movies_with("omdb", "Dune", None).await?; // explicit
 ```
 
 Detail/season/recommendation/watch/credits/external-id calls route by the
