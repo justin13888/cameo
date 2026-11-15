@@ -29,7 +29,7 @@ rationale). Nothing is left open.
   `PartialDate`); `type_` documents the classification only now that
   `media_format` exists; intra-doc links resolve.
 - **Errors are inspectable (C-GOOD-ERR).** `ProviderError`, `TmdbError`,
-  `AniListError`, `CacheError`, and `CameoClientError` all implement
+  `AniListError`, `CacheError`, `CameoClientError`, and `MediaIdParseError` all implement
   `std::error::Error` (via `thiserror`), are `#[non_exhaustive]`, and preserve
   sources.
 - **`async_trait` re-exported.** External providers implement the capability
