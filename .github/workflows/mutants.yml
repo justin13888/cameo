@@ -1,0 +1,48 @@
+name: Mutation testing
+
+# Runs cargo-mutants over only the lines a pull request changes, so a change
+# that adds code no test constrains fails here. Settings (excluded paths,
+# timeouts) live in .cargo/mutants.toml; `just mutants-diff` runs the same
+# check locally.
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  mutants:
+    name: Mutants (in diff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The diff against the base needs both histories.
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-mutants
+      - name: Diff against the base branch
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: git diff "${BASE_SHA}...HEAD" > "${RUNNER_TEMP}/pr.diff"
+      # Exits non-zero when a mutant in the changed lines survives (missed) or
+      # times out, which fails the pull request.
+      - name: cargo mutants --in-diff
+        run: cargo mutants --no-shuffle --in-diff "${RUNNER_TEMP}/pr.diff"
+      - name: Upload the mutants report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutants.out
+          path: mutants.out
+          if-no-files-found: ignore

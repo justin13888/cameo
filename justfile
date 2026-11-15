@@ -83,6 +83,17 @@ publish-check:
     cargo doc --no-deps
     cargo publish --dry-run
 
+# Mutation-test one source file or glob (requires cargo-mutants), e.g.
+# `just mutants 'src/unified/date.rs'`; the default runs every module
+mutants files="src/**/*.rs":
+    cargo mutants --file '{{files}}'
+
+# Mutation-test only the lines changed since a base ref (what CI runs)
+mutants-diff base="origin/master":
+    mkdir -p target
+    git diff '{{base}}...HEAD' > target/mutants.diff
+    cargo mutants --in-diff target/mutants.diff
+
 # Regenerate TMDB OpenAPI spec
 fetch-openapi:
     ./scripts/fetch-openapi.sh
