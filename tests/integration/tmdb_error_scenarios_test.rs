@@ -198,6 +198,46 @@ async fn connection_closed_without_response_is_transport_error() {
     );
 }
 
+/// A request that cannot be built is a *request* error: nothing is sent, it is
+/// never an API error with a made-up status, and it maps to
+/// `ProviderError::InvalidInput`.
+#[tokio::test]
+async fn unbuildable_request_is_invalid_request_error() {
+    use cameo::providers::tmdb::error::RequestErrorKind;
+
+    let (server, client) = setup_tmdb_client().await;
+
+    let out_of_range = chrono::NaiveDate::from_ymd_opt(10_000, 1, 1).unwrap();
+    let err = client
+        .discover_movies()
+        .primary_release_date_gte(out_of_range)
+        .execute()
+        .await
+        .unwrap_err();
+
+    assert!(
+        server.received_requests().await.unwrap().is_empty(),
+        "nothing should have been sent"
+    );
+    assert!(
+        matches!(
+            err,
+            TmdbError::Request {
+                kind: RequestErrorKind::InvalidRequest,
+                ..
+            }
+        ),
+        "expected Request error, got {err:?}"
+    );
+    assert!(
+        matches!(
+            cameo::ProviderError::from(err),
+            cameo::ProviderError::InvalidInput(_)
+        ),
+        "expected ProviderError::InvalidInput"
+    );
+}
+
 /// A connection failure (nothing listening) is a *transport* error, distinct
 /// from an API-status error.
 #[tokio::test]

@@ -1,5 +1,5 @@
 use cameo::{
-    AlternativeTitle, TitleKind,
+    AlternativeTitle, SeriesStatus, TitleKind,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
     unified::models::UnifiedSearchResult,
 };
@@ -242,7 +242,7 @@ async fn search_tv_shows_maps_episodes_duration_and_status() {
     let show = &result.results[0];
     assert_eq!(show.number_of_episodes, Some(25));
     assert_eq!(show.episode_run_time, Some(23));
-    assert_eq!(show.status.as_deref(), Some("RELEASING"));
+    assert_eq!(show.status, Some(SeriesStatus::ReturningSeries));
 }
 
 #[tokio::test]
