@@ -6,6 +6,10 @@
 //! previously stringly-typed codes are replaced by typed enums so invalid
 //! inputs are unrepresentable.
 
+use chrono::NaiveDate;
+
+use crate::{generated::tmdb as generated, providers::tmdb::error::TmdbError};
+
 /// Join a slice of numeric TMDB ids into TMDB's comma-separated (AND) form.
 pub(crate) fn join_ids(ids: &[u64]) -> String {
     ids.iter().map(u64::to_string).collect::<Vec<_>>().join(",")
@@ -16,6 +20,23 @@ pub(crate) fn join_ids(ids: &[u64]) -> String {
 pub(crate) fn join_genres(genres: &[crate::Genre]) -> String {
     let ids: Vec<u64> = genres.iter().filter_map(crate::Genre::tmdb_id).collect();
     join_ids(&ids)
+}
+
+/// Convert a date filter into the generated client's RFC 3339 `full-date`.
+///
+/// Fails (as an invalid request, before anything is sent) only for a year
+/// outside `-9999..=9999`, which an RFC 3339 date cannot carry.
+pub(crate) fn tmdb_date(date: Option<NaiveDate>) -> Result<Option<generated::Date>, TmdbError> {
+    date.map(|d| {
+        d.format("%Y-%m-%d").to_string().parse().map_err(|_| {
+            TmdbError::from_generated(
+                generated::Error::<std::convert::Infallible>::request_message(format!(
+                    "date {d} is outside the RFC 3339 full-date range"
+                )),
+            )
+        })
+    })
+    .transpose()
 }
 
 /// A movie release type (TMDB `with_release_type`).

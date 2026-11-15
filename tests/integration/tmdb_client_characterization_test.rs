@@ -419,10 +419,10 @@ async fn clones_share_one_rate_limit_budget() {
 // ── Discover builders (outside the retry seam) ────────────────────────────────
 
 /// Discover builders call the generated client directly rather than through
-/// the retry seam: a 5xx is attempted once and maps through the synchronous
-/// error conversion, which does not read TMDB's error body.
+/// the retry seam: a 5xx is attempted once, and the generated client's error
+/// conversion decodes TMDB's `{status_code, status_message}` error body.
 #[tokio::test]
-async fn discover_movies_is_not_retried_and_does_not_decode_the_error_body() {
+async fn discover_movies_is_not_retried_and_decodes_the_error_body() {
     let server = MockServer::start().await;
     mount(
         &server,
@@ -443,17 +443,17 @@ async fn discover_movies_is_not_retried_and_does_not_decode_the_error_body() {
             retry_after,
         } => {
             assert_eq!(status, 500);
-            assert_eq!(status_code, None);
-            assert_eq!(message, "unexpected response: HTTP 500");
+            assert_eq!(status_code, Some(11));
+            assert_eq!(message, "Internal error.");
             assert_eq!(retry_after, None);
         }
         other => panic!("expected Api error, got {other:?}"),
     }
 }
 
-/// See [`discover_movies_is_not_retried_and_does_not_decode_the_error_body`].
+/// See [`discover_movies_is_not_retried_and_decodes_the_error_body`].
 #[tokio::test]
-async fn discover_tv_is_not_retried_and_does_not_decode_the_error_body() {
+async fn discover_tv_is_not_retried_and_decodes_the_error_body() {
     let server = MockServer::start().await;
     mount(
         &server,
@@ -479,8 +479,8 @@ async fn discover_tv_is_not_retried_and_does_not_decode_the_error_body() {
             retry_after,
         } => {
             assert_eq!(status, 429);
-            assert_eq!(status_code, None);
-            assert_eq!(message, "unexpected response: HTTP 429");
+            assert_eq!(status_code, Some(25));
+            assert_eq!(message, "limit");
             assert_eq!(retry_after, Some(Duration::ZERO));
         }
         other => panic!("expected Api error, got {other:?}"),

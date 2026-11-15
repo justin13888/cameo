@@ -53,7 +53,7 @@ User call → CameoClient (src/unified/facade/)
 
 | Path | Purpose |
 |---|---|
-| `src/generated/` | Vendored progenitor output (`tmdb.rs`), committed; regenerate with `cargo xtask codegen`, do not edit directly |
+| `src/generated/` | Vendored spargen output (`tmdb.rs`, runtime support code embedded), committed; regenerate with `cargo xtask codegen`, do not edit directly |
 | `src/core/` | `CameoError`, `TimeWindow`, `PaginatedResponse`, `into_stream` |
 | `src/cache/` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig`, `CacheKey`, `MediaType` |
 | `src/providers/tmdb/` | `TmdbClient` (rate-limited), `TmdbConfig`, `ImageUrl`, discover builders, `TmdbError` |
@@ -70,34 +70,37 @@ For feature flags, see README.md. For test commands, see TESTING.md.
 
 ## Regenerating the TMDB OpenAPI Spec
 
-Prerequisites: `curl`, `jq`, `npx` (Node.js).
+Prerequisites: `curl`, `jq`.
 
 ```bash
 ./scripts/fetch-openapi.sh
 ```
 
 What it does:
-1. Downloads the official TMDB spec from `developer.themoviedb.org`
-2. Downgrades from OpenAPI 3.1.0 → 3.0.3 using a **pinned** `@apiture/openapi-down-convert` (progenitor requires 3.0.x); the version is pinned in the script so its output cannot drift with upstream releases
-3. Applies `scripts/tmdb-spec-patch.jq` — a set of deterministic normalizations (see that file for per-fix rationale):
+1. Downloads the official TMDB spec (OpenAPI 3.1) from `developer.themoviedb.org`. It stays 3.1: spargen reads 3.1 natively and rejects 3.0, so there is no down-convert step
+2. Applies `scripts/tmdb-spec-patch.jq` — a set of deterministic normalizations (see that file for per-fix rationale):
    - renames the TV-season `_id` field to `mongo_id` (avoids a duplicate `id` field in the generated code)
    - coerces integer `vote_average` schemas to `number`
    - coerces string-typed boolean defaults (`"default": "false"`) to real booleans
    - strips `example`/`examples` payloads (ignored by codegen, ~75% of the raw spec size)
-   - drops `default` from object property schemas, so response fields generate as `Option<T>` and accept TMDB's explicit `null`s (operation parameter defaults are kept)
-4. Writes the result to `openapi/tmdb-api.json`
+   - drops `default` from object property schemas (operation parameter defaults are kept)
+   - marks every optional response property nullable (`"type": [T, "null"]`), so it generates as `Option<T>` and accepts TMDB's explicit `null`s — arrays included
+   - hoists each operation's `200` body into `components/schemas/<OperationId>Response` and each enum parameter into `<OperationId><Param>`, so generated types get stable names (`MovieDetailsResponse`, `TrendingMoviesTimeWindow`) instead of hashed ones
+   - points the empty movie-recommendations response at the similar-movies schema
+   - declares the v4 token as an `http` bearer scheme (`v4_bearer`) and adds the v3 key as an `api_key` query scheme (`v3_api_key`); either satisfies every operation
+3. Writes the result to `openapi/tmdb-api.json`
 
 The pipeline is fully deterministic and requires **no manual post-editing**: given the same upstream spec, re-running the script reproduces `openapi/tmdb-api.json` byte-for-byte.
 
 ### Regenerating the vendored client
 
-The generated progenitor client is **vendored** at `src/generated/tmdb.rs` and committed — a normal `cargo build` performs **no** code generation. After changing `openapi/tmdb-api.json`, regenerate the client with the dedicated tool:
+The generated [spargen](https://github.com/getkono/spargen) client is **vendored** at `src/generated/tmdb.rs` and committed — a normal `cargo build` performs **no** code generation. After changing `openapi/tmdb-api.json`, regenerate the client with the dedicated tool:
 
 ```bash
 cargo xtask codegen
 ```
 
-This reads `openapi/tmdb-api.json`, runs progenitor, and rewrites `src/generated/tmdb.rs`. The `xtask/` crate has its own committed `Cargo.lock` with pinned codegen dependencies, so the output is reproducible — a CI freshness check (`.github/workflows/codegen-freshness.yml`) regenerates and fails the PR if the committed `src/generated/` is stale. Commit both `openapi/tmdb-api.json` and `src/generated/tmdb.rs` together.
+This reads `openapi/tmdb-api.json`, runs spargen (pinned in `xtask/Cargo.toml`), and rewrites `src/generated/tmdb.rs`; generation either succeeds or fails with a diagnostic naming the spec construct and its JSON Pointer. No post-generation patch is applied: v3 `api_key` and v4 bearer auth are security schemes the generated client attaches itself (`TmdbClient` registers the configured one with `with_credential`), and the generated client's `Debug` redacts the credential. spargen embeds its runtime in the output, so no spargen crate is a runtime dependency; the `tmdb` feature's `bytes`, `http`, `http-body`, `secrecy` and `time` dependencies (and the `reqwest`/`serde`/`serde_json` floors) are what that runtime needs. The `xtask/` crate has its own committed `Cargo.lock`, so the output is reproducible — a CI freshness check (`.github/workflows/codegen-freshness.yml`) regenerates and fails the PR if the committed `src/generated/` is stale. Commit both `openapi/tmdb-api.json` and `src/generated/tmdb.rs` together.
 
 ---
 
@@ -201,7 +204,8 @@ These apply to types in `src/generated/` (auto-generated from `openapi/tmdb-api.
 |---|---|
 | `PersonDetailsResponse.deathday` | `Option<serde_json::Value>` — TMDB returns null or a date string; parse as string if `Some` |
 | `PersonDetailsResponse.homepage` | `Option<serde_json::Value>` — same pattern as `deathday` |
-| TV season details `mongo_id` field | TMDB's `_id` (MongoDB ObjectId) is renamed to `mongo_id` by `scripts/tmdb-spec-patch.jq` to avoid a progenitor collision with the `id` field |
+| TV season details `mongo_id` field | TMDB's `_id` (MongoDB ObjectId) is renamed to `mongo_id` by `scripts/tmdb-spec-patch.jq` to avoid a collision with the `id` field |
 | `trending_movies` / `trending_tv` | No `page` parameter — these endpoints do not support pagination in the TMDB spec |
-| Scalar response fields are `Option<T>` | `scripts/tmdb-spec-patch.jq` drops the spec's property `default`s (`0`, `true`), which would otherwise generate plain `T` + `#[serde(default)]` — that handles a missing key but rejects the explicit `null` TMDB often sends. Conversions keep unified `Option` fields `None` when TMDB omits or nulls a value, `TmdbClient` fills a missing details id from the requested id, and list/search items without an id are dropped. **Known limitation:** array fields (e.g. `genre_ids`, `results`, `genres`) are still generated as `#[serde(default)] Vec<T>`, so a missing array is fine but an explicit `null` array still fails deserialization of the whole response |
+| Response fields are `Option<T>` | `scripts/tmdb-spec-patch.jq` drops the spec's property `default`s (`0`, `true`) and marks every optional response property nullable, so each field — scalar or array (`genre_ids`, `results`, `genres` are `Option<Vec<T>>`) — reads a missing key and an explicit `null` alike as `None`. spargen decodes a non-nullable optional field strictly and would reject the `null`. Conversions keep unified `Option` fields `None` when TMDB omits or nulls a value, read a missing list as empty, `TmdbClient` fills a missing details id from the requested id, and list/search items without an id are dropped |
+| Parameter types are aliases | spargen names every inline parameter schema by a hash (`Language80018710 = String`); they are plain type aliases, so `TmdbClient` passes `String`/`i32`/`bool` values directly |
 | `vote_average` on TV list types | `scripts/tmdb-spec-patch.jq` coerces the integer-typed `vote_average` schemas to `number`; affects `DiscoverTvResponseResultsItem`, `TvSeriesPopularListResponseResultsItem`, `TvSeriesSimilarResponseResultsItem`, and similar |
