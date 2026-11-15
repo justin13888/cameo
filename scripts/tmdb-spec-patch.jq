@@ -155,7 +155,7 @@ def fix_movie_recommendations:
 #     discarded on deserialization. TMDB keys `results` by ISO 3166-1 country
 #     code, so declare it as an object whose `additionalProperties` are one
 #     shared per-country schema (`WatchProviderCountry`, with its services as
-#     `WatchProviderService`), which generates a `HashMap<String, _>`. Applied
+#     `WatchProviderService`), which generates a `BTreeMap<String, _>`. Applied
 #     after (7), to every hoisted `*WatchProvidersResponse`, and written in the
 #     nullable form (6) gives response properties.
 def watch_provider_country_map:
