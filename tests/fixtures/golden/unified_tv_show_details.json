@@ -1,0 +1,87 @@
+{
+  "created_by": [
+    {
+      "id": 7,
+      "name": "Hiromu Arakawa",
+      "profile_url": "https://example.com/arakawa.jpg"
+    }
+  ],
+  "episode_run_time": [
+    24,
+    25
+  ],
+  "homepage": "https://example.com/fmab",
+  "in_production": false,
+  "last_air_date": "2010",
+  "media_format": "TV",
+  "networks": [
+    {
+      "id": 94,
+      "logo_url": "https://example.com/mbs.png",
+      "name": "MBS",
+      "origin_country": "JP"
+    }
+  ],
+  "number_of_episodes": 64,
+  "number_of_seasons": 1,
+  "production_companies": [
+    {
+      "id": null,
+      "logo_url": null,
+      "name": "Bones",
+      "origin_country": null
+    }
+  ],
+  "production_countries": [
+    "Japan"
+  ],
+  "seasons": [
+    {
+      "air_date": "2009-04-05",
+      "episode_count": 64,
+      "name": "Season 1",
+      "overview": "The first season.",
+      "poster_url": "https://example.com/s1.jpg",
+      "season_number": 1
+    }
+  ],
+  "show": {
+    "adult": false,
+    "alternative_titles": [
+      {
+        "kind": "Native",
+        "language": null,
+        "title": "鋼の錬金術師"
+      }
+    ],
+    "backdrop_url": "https://example.com/banner.jpg",
+    "episode_run_time": 24,
+    "first_air_date": "2009-04",
+    "genres": [
+      "Action",
+      "Mecha"
+    ],
+    "name": "Fullmetal Alchemist: Brotherhood",
+    "number_of_episodes": 64,
+    "origin_country": [
+      "JP"
+    ],
+    "original_language": "ja",
+    "original_name": "Hagane no Renkinjutsushi",
+    "overview": "Two brothers...",
+    "popularity": 1500.5,
+    "poster_url": "https://example.com/cover.jpg",
+    "provider_id": "anilist:5114",
+    "status": "Ended",
+    "vote_average": 9.0,
+    "vote_count": 250000
+  },
+  "spoken_languages": [
+    "Japanese"
+  ],
+  "status": {
+    "Other": "Rumored"
+  },
+  "tagline": "A heart made fullmetal",
+  "type_": "Scripted"
+}

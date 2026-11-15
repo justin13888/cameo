@@ -14,6 +14,7 @@ mod unit {
     mod model_setters_test;
     mod pagination_test;
     mod property_test;
+    mod serde_shape_test;
     #[cfg(feature = "tmdb")]
     mod sort_wire_test;
 }

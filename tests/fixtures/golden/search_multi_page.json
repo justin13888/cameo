@@ -1,0 +1,64 @@
+{
+  "has_next": true,
+  "next": {
+    "Page": 3
+  },
+  "page": 2,
+  "results": [
+    {
+      "Movie": {
+        "adult": null,
+        "alternative_titles": [],
+        "backdrop_url": null,
+        "genres": [],
+        "original_language": null,
+        "original_title": null,
+        "overview": null,
+        "popularity": null,
+        "poster_url": null,
+        "provider_id": "tmdb:550",
+        "release_date": null,
+        "runtime": null,
+        "status": null,
+        "title": "Fight Club",
+        "vote_average": null,
+        "vote_count": null
+      }
+    },
+    {
+      "TvShow": {
+        "adult": null,
+        "alternative_titles": [],
+        "backdrop_url": null,
+        "episode_run_time": null,
+        "first_air_date": null,
+        "genres": [],
+        "name": "Breaking Bad",
+        "number_of_episodes": null,
+        "origin_country": [],
+        "original_language": null,
+        "original_name": null,
+        "overview": null,
+        "popularity": null,
+        "poster_url": null,
+        "provider_id": "tmdb:1396",
+        "status": null,
+        "vote_average": null,
+        "vote_count": null
+      }
+    },
+    {
+      "Person": {
+        "adult": null,
+        "gender": null,
+        "known_for_department": null,
+        "name": "Brad Pitt",
+        "popularity": null,
+        "profile_url": null,
+        "provider_id": "tmdb:287"
+      }
+    }
+  ],
+  "total_pages": 5,
+  "total_results": 93
+}

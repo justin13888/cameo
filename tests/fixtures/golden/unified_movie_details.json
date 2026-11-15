@@ -1,0 +1,71 @@
+{
+  "belongs_to_collection": {
+    "backdrop_url": "https://example.com/c-backdrop.jpg",
+    "id": 1,
+    "name": "Fight Club Collection",
+    "poster_url": "https://example.com/c-poster.jpg"
+  },
+  "budget": 63000000,
+  "homepage": "https://example.com/fightclub",
+  "imdb_id": "tt0137523",
+  "movie": {
+    "adult": false,
+    "alternative_titles": [
+      {
+        "kind": "English",
+        "language": "en",
+        "title": "Fight Club"
+      },
+      {
+        "kind": "Synonym",
+        "language": null,
+        "title": "FC"
+      }
+    ],
+    "backdrop_url": "https://image.tmdb.org/t/p/w1280/backdrop.jpg",
+    "genres": [
+      "Drama",
+      {
+        "Other": {
+          "TmdbId": 4242
+        }
+      },
+      {
+        "Other": {
+          "Named": "cult"
+        }
+      }
+    ],
+    "original_language": "en",
+    "original_title": "Fight Club",
+    "overview": "An insomniac office worker...",
+    "popularity": 73.25,
+    "poster_url": "https://image.tmdb.org/t/p/w500/poster.jpg",
+    "provider_id": "tmdb:550",
+    "release_date": "1999-10-15",
+    "runtime": 139,
+    "status": "Released",
+    "title": "Fight Club",
+    "vote_average": 8.5,
+    "vote_count": 26280
+  },
+  "production_companies": [
+    {
+      "id": 711,
+      "logo_url": "https://example.com/fox.png",
+      "name": "Fox 2000 Pictures",
+      "origin_country": "US"
+    }
+  ],
+  "production_countries": [
+    "United States of America"
+  ],
+  "revenue": 100853753,
+  "runtime": 139,
+  "spoken_languages": [
+    "English"
+  ],
+  "status": "Released",
+  "tagline": "Mischief. Mayhem. Soap.",
+  "video": false
+}
