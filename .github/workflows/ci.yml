@@ -156,8 +156,11 @@ jobs:
         run: |
           last_tag=$(git describe --tags --abbrev=0 --match 'v*' HEAD)
           breaking='^[[:alpha:]]+(\([^)]*\))?!:|^BREAKING[ -]CHANGE:'
-          if { git log --format=%B "${last_tag}..HEAD"; printf '%s\n' "${PR_TITLE}"; } \
-              | grep -Eq "${breaking}"; then
+          # Collected first: under pipefail, `git log | grep -q` can fail with
+          # SIGPIPE when grep exits at the first match.
+          messages="$(git log --format=%B "${last_tag}..HEAD")"
+          messages+=$'\n'"${PR_TITLE}"
+          if grep -Eq "${breaking}" <<<"${messages}"; then
             type=major
           else
             type=minor
