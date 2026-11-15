@@ -9,8 +9,8 @@
 //!
 //! # Contract for every capability method
 //!
-//! The built-in providers keep to these rules, and the facade relies on them
-//! from out-of-crate providers too:
+//! The built-in providers keep to these rules, and an out-of-crate provider
+//! should too, so callers can treat every provider alike:
 //!
 //! - **Ids** — a `MediaId` minted by another provider, or one whose native
 //!   part this provider cannot parse or represent, fails with
@@ -21,9 +21,9 @@
 //!   page number is handled is the provider's own (TMDB clamps it to
 //!   `1..=500`; AniList sends it unchanged).
 //! - **Errors** — every other failure is the provider's own error mapped into
-//!   `ProviderError`: authentication to `Auth`, rate
-//!   limiting to `RateLimited`, transport failures to `Transport`, and
-//!   undecodable bodies to `Deserialization`.
+//!   `ProviderError`: authentication to `Auth`, rate limiting to
+//!   `RateLimited`, transport failures to `Transport`, and undecodable bodies
+//!   to `Deserialization`.
 //!
 //! The built-in clients also have inherent methods with the same names that
 //! take native ids and return their own error type. Method-call syntax picks
