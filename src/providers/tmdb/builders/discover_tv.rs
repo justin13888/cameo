@@ -4,7 +4,7 @@ use super::params::{self, TvShowType, TvStatus};
 use crate::{
     core::pagination::Page,
     generated::tmdb as generated,
-    providers::tmdb::{TmdbClient, builders::TvSortBy, error::TmdbError},
+    providers::tmdb::{TmdbClient, builders::TvSortBy, convert::TmdbPaged, error::TmdbError},
     unified::models::UnifiedTvShow,
 };
 
@@ -243,13 +243,6 @@ impl<'a> DiscoverTvBuilder<'a> {
             .await
             .map_err(TmdbError::from_generated)?
             .into_inner();
-        Ok(crate::providers::tmdb::client::offset_page(
-            page,
-            body.page,
-            body.results,
-            body.total_pages,
-            body.total_results,
-        )?
-        .map(Into::into))
+        Ok(body.into_page(page)?.map(Into::into))
     }
 }
