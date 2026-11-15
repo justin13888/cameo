@@ -5,6 +5,10 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+    # `edited` re-runs the SemVer job when a pull request is retitled, since
+    # it reads the title for a breaking marker. It also fires on body edits,
+    # which re-runs the other jobs too; that cost is accepted.
+    types: [opened, synchronize, reopened, edited]
 
 env:
   CARGO_TERM_COLOR: always
