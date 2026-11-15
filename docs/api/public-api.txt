@@ -3142,7 +3142,7 @@ pub cameo::providers::tmdb::error::TmdbError::Api::retry_after: core::option::Op
 pub cameo::providers::tmdb::error::TmdbError::Api::status: u16
 pub cameo::providers::tmdb::error::TmdbError::Api::status_code: core::option::Option<i64>
 pub cameo::providers::tmdb::error::TmdbError::Deserialization(serde_json::error::Error)
-pub cameo::providers::tmdb::error::TmdbError::Http(reqwest::error::Error)
+pub cameo::providers::tmdb::error::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::providers::tmdb::error::TmdbError::InvalidConfig(alloc::string::String)
 pub cameo::providers::tmdb::error::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
@@ -3157,8 +3157,6 @@ impl core::fmt::Debug for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::fmt::Display for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl<E: core::fmt::Debug + core::marker::Send + core::marker::Sync + 'static> core::convert::From<progenitor_client::progenitor_client::Error<E>> for cameo::providers::tmdb::error::TmdbError
-pub fn cameo::providers::tmdb::error::TmdbError::from(progenitor_client::progenitor_client::Error<E>) -> Self
 impl core::marker::Freeze for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Send for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Sync for cameo::providers::tmdb::error::TmdbError
@@ -3189,6 +3187,53 @@ pub fn cameo::providers::tmdb::error::TmdbError::and<P, B, E>(self, P) -> tower_
 pub fn cameo::providers::tmdb::error::TmdbError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
 impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::error::TmdbError
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::error::TmdbError
+pub struct cameo::providers::tmdb::error::TransportError
+impl cameo::providers::tmdb::error::TransportError
+pub fn cameo::providers::tmdb::error::TransportError::is_connect(&self) -> bool
+pub fn cameo::providers::tmdb::error::TransportError::is_timeout(&self) -> bool
+impl core::clone::Clone for cameo::providers::tmdb::error::TransportError
+pub fn cameo::providers::tmdb::error::TransportError::clone(&self) -> cameo::providers::tmdb::error::TransportError
+impl core::error::Error for cameo::providers::tmdb::error::TransportError
+impl core::fmt::Debug for cameo::providers::tmdb::error::TransportError
+pub fn cameo::providers::tmdb::error::TransportError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::fmt::Display for cameo::providers::tmdb::error::TransportError
+pub fn cameo::providers::tmdb::error::TransportError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+impl core::marker::Freeze for cameo::providers::tmdb::error::TransportError
+impl core::marker::Send for cameo::providers::tmdb::error::TransportError
+impl core::marker::Sync for cameo::providers::tmdb::error::TransportError
+impl core::marker::Unpin for cameo::providers::tmdb::error::TransportError
+impl core::marker::UnsafeUnpin for cameo::providers::tmdb::error::TransportError
+impl core::panic::unwind_safe::RefUnwindSafe for cameo::providers::tmdb::error::TransportError
+impl core::panic::unwind_safe::UnwindSafe for cameo::providers::tmdb::error::TransportError
+impl<T, U> core::convert::Into<U> for cameo::providers::tmdb::error::TransportError where U: core::convert::From<T>
+pub fn cameo::providers::tmdb::error::TransportError::into(self) -> U
+impl<T, U> core::convert::TryFrom<U> for cameo::providers::tmdb::error::TransportError where U: core::convert::Into<T>
+pub type cameo::providers::tmdb::error::TransportError::Error = core::convert::Infallible
+pub fn cameo::providers::tmdb::error::TransportError::try_from(U) -> core::result::Result<T, <T as core::convert::TryFrom<U>>::Error>
+impl<T, U> core::convert::TryInto<U> for cameo::providers::tmdb::error::TransportError where U: core::convert::TryFrom<T>
+pub type cameo::providers::tmdb::error::TransportError::Error = <U as core::convert::TryFrom<T>>::Error
+pub fn cameo::providers::tmdb::error::TransportError::try_into(self) -> core::result::Result<U, <U as core::convert::TryFrom<T>>::Error>
+impl<T> alloc::borrow::ToOwned for cameo::providers::tmdb::error::TransportError where T: core::clone::Clone
+pub type cameo::providers::tmdb::error::TransportError::Owned = T
+pub fn cameo::providers::tmdb::error::TransportError::clone_into(&self, &mut T)
+pub fn cameo::providers::tmdb::error::TransportError::to_owned(&self) -> T
+impl<T> alloc::string::ToString for cameo::providers::tmdb::error::TransportError where T: core::fmt::Display + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::TransportError::to_string(&self) -> alloc::string::String
+impl<T> core::any::Any for cameo::providers::tmdb::error::TransportError where T: 'static + ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::TransportError::type_id(&self) -> core::any::TypeId
+impl<T> core::borrow::Borrow<T> for cameo::providers::tmdb::error::TransportError where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::TransportError::borrow(&self) -> &T
+impl<T> core::borrow::BorrowMut<T> for cameo::providers::tmdb::error::TransportError where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::TransportError::borrow_mut(&mut self) -> &mut T
+impl<T> core::clone::CloneToUninit for cameo::providers::tmdb::error::TransportError where T: core::clone::Clone
+pub unsafe fn cameo::providers::tmdb::error::TransportError::clone_to_uninit(&self, *mut u8)
+impl<T> core::convert::From<T> for cameo::providers::tmdb::error::TransportError
+pub fn cameo::providers::tmdb::error::TransportError::from(T) -> T
+impl<T> tower_http::follow_redirect::policy::PolicyExt for cameo::providers::tmdb::error::TransportError where T: ?core::marker::Sized
+pub fn cameo::providers::tmdb::error::TransportError::and<P, B, E>(self, P) -> tower_http::follow_redirect::policy::and::And<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+pub fn cameo::providers::tmdb::error::TransportError::or<P, B, E>(self, P) -> tower_http::follow_redirect::policy::or::Or<T, P> where T: tower_http::follow_redirect::policy::Policy<B, E>, P: tower_http::follow_redirect::policy::Policy<B, E>
+impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::error::TransportError
+impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::error::TransportError
 pub mod cameo::providers::tmdb::image_url
 #[non_exhaustive] pub enum cameo::providers::tmdb::image_url::BackdropSize
 pub cameo::providers::tmdb::image_url::BackdropSize::Original
@@ -4088,7 +4133,7 @@ pub cameo::providers::tmdb::TmdbError::Api::retry_after: core::option::Option<co
 pub cameo::providers::tmdb::TmdbError::Api::status: u16
 pub cameo::providers::tmdb::TmdbError::Api::status_code: core::option::Option<i64>
 pub cameo::providers::tmdb::TmdbError::Deserialization(serde_json::error::Error)
-pub cameo::providers::tmdb::TmdbError::Http(reqwest::error::Error)
+pub cameo::providers::tmdb::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::providers::tmdb::TmdbError::InvalidConfig(alloc::string::String)
 pub cameo::providers::tmdb::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
@@ -4103,8 +4148,6 @@ impl core::fmt::Debug for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::fmt::Display for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl<E: core::fmt::Debug + core::marker::Send + core::marker::Sync + 'static> core::convert::From<progenitor_client::progenitor_client::Error<E>> for cameo::providers::tmdb::error::TmdbError
-pub fn cameo::providers::tmdb::error::TmdbError::from(progenitor_client::progenitor_client::Error<E>) -> Self
 impl core::marker::Freeze for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Send for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Sync for cameo::providers::tmdb::error::TmdbError
@@ -10807,7 +10850,7 @@ pub cameo::TmdbError::Api::retry_after: core::option::Option<core::time::Duratio
 pub cameo::TmdbError::Api::status: u16
 pub cameo::TmdbError::Api::status_code: core::option::Option<i64>
 pub cameo::TmdbError::Deserialization(serde_json::error::Error)
-pub cameo::TmdbError::Http(reqwest::error::Error)
+pub cameo::TmdbError::Http(cameo::providers::tmdb::error::TransportError)
 pub cameo::TmdbError::InvalidConfig(alloc::string::String)
 pub cameo::TmdbError::UnsupportedSource(cameo::unified::external_ids::ExternalSource)
 impl core::convert::From<cameo::providers::tmdb::error::TmdbError> for cameo::core::error::ProviderError
@@ -10822,8 +10865,6 @@ impl core::fmt::Debug for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::fmt::Display for cameo::providers::tmdb::error::TmdbError
 pub fn cameo::providers::tmdb::error::TmdbError::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
-impl<E: core::fmt::Debug + core::marker::Send + core::marker::Sync + 'static> core::convert::From<progenitor_client::progenitor_client::Error<E>> for cameo::providers::tmdb::error::TmdbError
-pub fn cameo::providers::tmdb::error::TmdbError::from(progenitor_client::progenitor_client::Error<E>) -> Self
 impl core::marker::Freeze for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Send for cameo::providers::tmdb::error::TmdbError
 impl core::marker::Sync for cameo::providers::tmdb::error::TmdbError

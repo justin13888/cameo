@@ -82,7 +82,10 @@ async fn transport_error_is_still_retryable_classified() {
     match err {
         TmdbError::Http(e) => {
             assert!(e.is_connect(), "expected connect error, got {e:?}");
-            assert!(e.url().is_none(), "URL should be stripped");
+            assert!(
+                !e.to_string().contains(SECRET),
+                "key should be redacted: {e}"
+            );
         }
         other => panic!("expected Http, got {other:?}"),
     }

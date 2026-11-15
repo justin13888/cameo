@@ -42,7 +42,7 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
             place_of_birth: p.place_of_birth,
             imdb_id: p.imdb_id,
             homepage: p.homepage.and_then(|v| v.as_str().map(String::from)),
-            also_known_as: p.also_known_as,
+            also_known_as: p.also_known_as.unwrap_or_default(),
         }
     }
 }
@@ -70,6 +70,7 @@ pub(crate) fn multi_search_result(
             genres: item
                 .genre_ids
                 .iter()
+                .flatten()
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
             popularity: item.popularity,
@@ -94,6 +95,7 @@ pub(crate) fn multi_search_result(
             genres: item
                 .genre_ids
                 .iter()
+                .flatten()
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
             popularity: item.popularity,
@@ -136,7 +138,7 @@ mod tests {
             release_date: Some("1999-10-15".to_string()),
             poster_path: None,
             backdrop_path: None,
-            genre_ids: vec![18],
+            genre_ids: Some(vec![18]),
             popularity: Some(1.0),
             vote_average: Some(8.0),
             vote_count: Some(100),
@@ -212,7 +214,7 @@ mod tests {
             popularity: Some(25.3),
             adult: Some(false),
             gender: Some(2),
-            known_for: vec![],
+            known_for: Some(vec![]),
         };
         let unified: UnifiedPerson = raw.into();
         assert_eq!(unified.provider_id, "tmdb:287");

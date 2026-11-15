@@ -62,9 +62,9 @@ compile_error!(
      (the default `full` feature enables both)."
 );
 
-/// Auto-generated low-level API client code (from progenitor).
+/// Auto-generated low-level API client code (from spargen).
 ///
-/// Crate-internal: these progenitor/typify-generated types are an
+/// Crate-internal: these spargen-generated types are an
 /// implementation detail and are **not** part of cameo's public API. The
 /// stable boundary is [`TmdbClient`](providers::tmdb::TmdbClient), which returns
 /// unified models and hand-owned TMDB types.

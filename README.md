@@ -67,7 +67,7 @@ CameoClient (unified facade)
 ├── SearchProvider / DetailProvider / DiscoveryProvider / ExternalIdProvider / … traits
 ├── Cache layer (optional — SqliteCache or custom CacheBackend)
 ├── TmdbClient
-│   └── Generated progenitor client (152 TMDB API operations)
+│   └── Generated spargen client (152 TMDB API operations)
 └── AniListClient
     └── GraphQL client (reqwest POST to graphql.anilist.co)
 ```
@@ -79,7 +79,7 @@ CameoClient (unified facade)
 | `cameo::providers::anilist` | `AniListClient`, `AniListConfig`, `AniListError`, `DiscoverAnimeBuilder` (filtered discover) |
 | `cameo::cache` | `CacheBackend` trait, `SqliteCache`, `CacheTtlConfig` |
 | `cameo::core` | `PaginatedResponse`, `into_stream`, `TimeWindow`, `CameoError` |
-| `cameo::generated` | Progenitor-generated low-level TMDB client (do not use directly) |
+| `cameo::generated` | spargen-generated low-level TMDB client (do not use directly) |
 
 ## Testing
 
