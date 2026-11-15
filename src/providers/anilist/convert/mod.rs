@@ -1,11 +1,15 @@
 //! Conversions from AniList GraphQL response types to unified models.
 
-pub mod credits;
-pub mod media;
-pub mod person;
+pub(crate) mod credits;
+mod format;
+pub(crate) mod media;
+mod page;
+pub(crate) mod person;
 
-pub use media::*;
-pub use person::*;
+pub(crate) use format::{Kind, MOVIE_FORMATS, TV_FORMATS, classify, format_in_value};
+pub(crate) use media::*;
+pub(crate) use page::{media_page, media_page_root, page_from, page_vars, recommendations_page};
+pub(crate) use person::*;
 
 use crate::{
     providers::anilist::response::AniListDate,

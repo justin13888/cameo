@@ -1,7 +1,3 @@
-/// Conversions from AniList GraphQL response types to unified types.
-#[cfg(feature = "anilist")]
-pub mod anilist;
-
 /// Conversions from TheTVDB records to unified types.
 #[cfg(feature = "tvdb")]
 pub mod tvdb;
