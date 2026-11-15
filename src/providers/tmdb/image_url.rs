@@ -144,6 +144,7 @@ impl LogoSize {
 }
 
 /// Helper for constructing TMDB image URLs from file paths.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ImageUrl;
 
 impl ImageUrl {
