@@ -773,26 +773,29 @@ pub mod cameo::providers::anilist::client
 pub struct cameo::providers::anilist::client::AniListClient
 impl cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::config(&self) -> &cameo::providers::anilist::config::AniListConfig
-pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
-pub async fn cameo::providers::anilist::client::AniListClient::external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::find_by_mal_id(&self, i32) -> core::result::Result<core::option::Option<cameo::unified::external_ids::ExternalMatch>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::media_credits(&self, i32) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub fn cameo::providers::anilist::client::AniListClient::new(cameo::providers::anilist::config::AniListConfig) -> core::result::Result<Self, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::anilist::error::AniListError>
+impl cameo::providers::anilist::client::AniListClient
+pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
+pub async fn cameo::providers::anilist::client::AniListClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::trending_movies(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::trending_tv(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
+impl cameo::providers::anilist::client::AniListClient
+pub async fn cameo::providers::anilist::client::AniListClient::external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::find_by_mal_id(&self, i32) -> core::result::Result<core::option::Option<cameo::unified::external_ids::ExternalMatch>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::media_credits(&self, i32) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_show_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::anilist::error::AniListError>
+impl cameo::providers::anilist::client::AniListClient
+pub async fn cameo::providers::anilist::client::AniListClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 impl cameo::unified::traits::CreditsProvider for cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::anilist::client::AniListClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -876,6 +879,7 @@ pub cameo::providers::anilist::config::AniListConfig::retry: cameo::providers::r
 impl cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::new() -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::new_with_base_url(impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::providers::anilist::config::AniListConfig::with_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::with_connect_timeout(self, core::time::Duration) -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::with_per_page(self, u32) -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::with_rate_limit(self, cameo::providers::rate_limit::RateLimit) -> Self
@@ -1643,26 +1647,29 @@ impl<T> tracing::instrument::WithSubscriber for cameo::providers::anilist::disco
 pub struct cameo::providers::anilist::AniListClient
 impl cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::config(&self) -> &cameo::providers::anilist::config::AniListConfig
-pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
-pub async fn cameo::providers::anilist::client::AniListClient::external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::find_by_mal_id(&self, i32) -> core::result::Result<core::option::Option<cameo::unified::external_ids::ExternalMatch>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::media_credits(&self, i32) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub fn cameo::providers::anilist::client::AniListClient::new(cameo::providers::anilist::config::AniListConfig) -> core::result::Result<Self, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::anilist::error::AniListError>
+impl cameo::providers::anilist::client::AniListClient
+pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
+pub async fn cameo::providers::anilist::client::AniListClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::trending_movies(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::trending_tv(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
+impl cameo::providers::anilist::client::AniListClient
+pub async fn cameo::providers::anilist::client::AniListClient::external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::find_by_mal_id(&self, i32) -> core::result::Result<core::option::Option<cameo::unified::external_ids::ExternalMatch>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::media_credits(&self, i32) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_show_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::anilist::error::AniListError>
+impl cameo::providers::anilist::client::AniListClient
+pub async fn cameo::providers::anilist::client::AniListClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 impl cameo::unified::traits::CreditsProvider for cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::anilist::client::AniListClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -1745,6 +1752,7 @@ pub cameo::providers::anilist::AniListConfig::retry: cameo::providers::retry::Re
 impl cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::new() -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::new_with_base_url(impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::providers::anilist::config::AniListConfig::with_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::with_connect_timeout(self, core::time::Duration) -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::with_per_page(self, u32) -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::with_rate_limit(self, cameo::providers::rate_limit::RateLimit) -> Self
@@ -2980,41 +2988,48 @@ pub mod cameo::providers::tmdb::client
 pub struct cameo::providers::tmdb::client::TmdbClient
 impl cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::config(&self) -> &cameo::providers::tmdb::config::TmdbConfig
+pub fn cameo::providers::tmdb::client::TmdbClient::new(cameo::providers::tmdb::config::TmdbConfig) -> core::result::Result<Self, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_movies(&self) -> cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'_>
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_tv(&self) -> cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'_>
-pub async fn cameo::providers::tmdb::client::TmdbClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_images(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbImages, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
-pub fn cameo::providers::tmdb::client::TmdbClient::new(cameo::providers::tmdb::config::TmdbConfig) -> core::result::Result<Self, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::similar_movies(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::similar_tv_shows(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::trending_movies(&self, cameo::core::config::TimeWindow) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::trending_tv(&self, cameo::core::config::TimeWindow) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::tv_episode_details(&self, i32, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_images(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbImages, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self, i32, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::similar_movies(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::similar_tv_shows(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_episode_details(&self, i32, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self, i32, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::providers::tmdb::error::TmdbError>
 impl cameo::unified::traits::CreditsProvider for cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -3147,7 +3162,7 @@ impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::config::Tmdb
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::config::TmdbAuth
 #[non_exhaustive] pub struct cameo::providers::tmdb::config::TmdbConfig
 pub cameo::providers::tmdb::config::TmdbConfig::auth: cameo::providers::tmdb::config::TmdbAuth
-pub cameo::providers::tmdb::config::TmdbConfig::base_url: core::option::Option<alloc::string::String>
+pub cameo::providers::tmdb::config::TmdbConfig::base_url: alloc::string::String
 pub cameo::providers::tmdb::config::TmdbConfig::connect_timeout: core::option::Option<core::time::Duration>
 pub cameo::providers::tmdb::config::TmdbConfig::image_base_url: core::option::Option<alloc::string::String>
 pub cameo::providers::tmdb::config::TmdbConfig::include_adult: core::option::Option<bool>
@@ -3157,10 +3172,10 @@ pub cameo::providers::tmdb::config::TmdbConfig::region: core::option::Option<all
 pub cameo::providers::tmdb::config::TmdbConfig::request_timeout: core::option::Option<core::time::Duration>
 pub cameo::providers::tmdb::config::TmdbConfig::retry: cameo::providers::retry::RetryPolicy
 impl cameo::providers::tmdb::config::TmdbConfig
+pub fn cameo::providers::tmdb::config::TmdbConfig::from_auth(cameo::providers::tmdb::config::TmdbAuth) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::new(impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::new_v3(impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::new_with_base_url(impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> Self
-pub fn cameo::providers::tmdb::config::TmdbConfig::with_auth(cameo::providers::tmdb::config::TmdbAuth) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_connect_timeout(self, core::time::Duration) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_image_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
@@ -4635,41 +4650,48 @@ impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::models::
 pub struct cameo::providers::tmdb::TmdbClient
 impl cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::config(&self) -> &cameo::providers::tmdb::config::TmdbConfig
+pub fn cameo::providers::tmdb::client::TmdbClient::new(cameo::providers::tmdb::config::TmdbConfig) -> core::result::Result<Self, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_movies(&self) -> cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'_>
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_tv(&self) -> cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'_>
-pub async fn cameo::providers::tmdb::client::TmdbClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_images(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbImages, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
-pub fn cameo::providers::tmdb::client::TmdbClient::new(cameo::providers::tmdb::config::TmdbConfig) -> core::result::Result<Self, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::similar_movies(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::similar_tv_shows(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::trending_movies(&self, cameo::core::config::TimeWindow) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::trending_tv(&self, cameo::core::config::TimeWindow) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::tv_episode_details(&self, i32, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_images(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbImages, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self, i32, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::similar_movies(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::similar_tv_shows(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_episode_details(&self, i32, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self, i32, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::providers::tmdb::error::TmdbError>
 impl cameo::unified::traits::CreditsProvider for cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -4750,7 +4772,7 @@ impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::client::Tmdb
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::client::TmdbClient
 #[non_exhaustive] pub struct cameo::providers::tmdb::TmdbConfig
 pub cameo::providers::tmdb::TmdbConfig::auth: cameo::providers::tmdb::config::TmdbAuth
-pub cameo::providers::tmdb::TmdbConfig::base_url: core::option::Option<alloc::string::String>
+pub cameo::providers::tmdb::TmdbConfig::base_url: alloc::string::String
 pub cameo::providers::tmdb::TmdbConfig::connect_timeout: core::option::Option<core::time::Duration>
 pub cameo::providers::tmdb::TmdbConfig::image_base_url: core::option::Option<alloc::string::String>
 pub cameo::providers::tmdb::TmdbConfig::include_adult: core::option::Option<bool>
@@ -4760,10 +4782,10 @@ pub cameo::providers::tmdb::TmdbConfig::region: core::option::Option<alloc::stri
 pub cameo::providers::tmdb::TmdbConfig::request_timeout: core::option::Option<core::time::Duration>
 pub cameo::providers::tmdb::TmdbConfig::retry: cameo::providers::retry::RetryPolicy
 impl cameo::providers::tmdb::config::TmdbConfig
+pub fn cameo::providers::tmdb::config::TmdbConfig::from_auth(cameo::providers::tmdb::config::TmdbAuth) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::new(impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::new_v3(impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::new_with_base_url(impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> Self
-pub fn cameo::providers::tmdb::config::TmdbConfig::with_auth(cameo::providers::tmdb::config::TmdbAuth) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_connect_timeout(self, core::time::Duration) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_image_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
@@ -11827,26 +11849,29 @@ impl<T> tracing::instrument::WithSubscriber for cameo::unified::AlternativeTitle
 pub struct cameo::AniListClient
 impl cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::config(&self) -> &cameo::providers::anilist::config::AniListConfig
-pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
-pub async fn cameo::providers::anilist::client::AniListClient::external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::find_by_mal_id(&self, i32) -> core::result::Result<core::option::Option<cameo::unified::external_ids::ExternalMatch>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::media_credits(&self, i32) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub fn cameo::providers::anilist::client::AniListClient::new(cameo::providers::anilist::config::AniListConfig) -> core::result::Result<Self, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::anilist::error::AniListError>
+impl cameo::providers::anilist::client::AniListClient
+pub fn cameo::providers::anilist::client::AniListClient::discover_anime(&self) -> cameo::providers::anilist::discover::DiscoverAnimeBuilder<'_>
+pub async fn cameo::providers::anilist::client::AniListClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::anilist::error::AniListError>
-pub async fn cameo::providers::anilist::client::AniListClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::trending_movies(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::trending_tv(&self, cameo::core::config::TimeWindow, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
+impl cameo::providers::anilist::client::AniListClient
+pub async fn cameo::providers::anilist::client::AniListClient::external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::find_by_mal_id(&self, i32) -> core::result::Result<core::option::Option<cameo::unified::external_ids::ExternalMatch>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::media_credits(&self, i32) -> core::result::Result<cameo::unified::UnifiedCredits, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::anilist::error::AniListError>
 pub async fn cameo::providers::anilist::client::AniListClient::tv_show_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::anilist::error::AniListError>
+impl cameo::providers::anilist::client::AniListClient
+pub async fn cameo::providers::anilist::client::AniListClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::anilist::error::AniListError>
+pub async fn cameo::providers::anilist::client::AniListClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::anilist::error::AniListError>
 impl cameo::unified::traits::CreditsProvider for cameo::providers::anilist::client::AniListClient
 pub fn cameo::providers::anilist::client::AniListClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::anilist::client::AniListClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -11929,6 +11954,7 @@ pub cameo::AniListConfig::retry: cameo::providers::retry::RetryPolicy
 impl cameo::providers::anilist::config::AniListConfig
 pub fn cameo::providers::anilist::config::AniListConfig::new() -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::new_with_base_url(impl core::convert::Into<alloc::string::String>) -> Self
+pub fn cameo::providers::anilist::config::AniListConfig::with_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::with_connect_timeout(self, core::time::Duration) -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::with_per_page(self, u32) -> Self
 pub fn cameo::providers::anilist::config::AniListConfig::with_rate_limit(self, cameo::providers::rate_limit::RateLimit) -> Self
@@ -13064,41 +13090,48 @@ impl<T> tracing::instrument::WithSubscriber for cameo::cache::sqlite::SqliteCach
 pub struct cameo::TmdbClient
 impl cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::config(&self) -> &cameo::providers::tmdb::config::TmdbConfig
+pub fn cameo::providers::tmdb::client::TmdbClient::new(cameo::providers::tmdb::config::TmdbConfig) -> core::result::Result<Self, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_movies(&self) -> cameo::providers::tmdb::builders::discover_movies::DiscoverMoviesBuilder<'_>
 pub fn cameo::providers::tmdb::client::TmdbClient::discover_tv(&self) -> cameo::providers::tmdb::builders::discover_tv::DiscoverTvBuilder<'_>
-pub async fn cameo::providers::tmdb::client::TmdbClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_images(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbImages, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::movie_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
-pub fn cameo::providers::tmdb::client::TmdbClient::new(cameo::providers::tmdb::config::TmdbConfig) -> core::result::Result<Self, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::popular_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::popular_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::similar_movies(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::similar_tv_shows(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::top_rated_movies(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::top_rated_tv_shows(&self, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::trending_movies(&self, cameo::core::config::TimeWindow) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::trending_tv(&self, cameo::core::config::TimeWindow) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::tv_episode_details(&self, i32, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::find_by_external_id(&self, &cameo::unified::external_ids::ExternalId) -> core::result::Result<alloc::vec::Vec<cameo::unified::external_ids::ExternalMatch>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_external_ids(&self, i32) -> core::result::Result<cameo::unified::external_ids::ExternalIds, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_details_with_append(&self, i32, &str) -> core::result::Result<cameo::unified::UnifiedMovieDetails, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_images(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbImages, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::person_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedPersonDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_genres(&self) -> core::result::Result<alloc::vec::Vec<cameo::unified::genre::Genre>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
-pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self, i32, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_certifications(&self, i32) -> core::result::Result<alloc::vec::Vec<cameo::providers::tmdb::models::TmdbCertification>, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_credits(&self, i32) -> core::result::Result<cameo::providers::tmdb::models::TmdbCredits, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_series_details(&self, i32) -> core::result::Result<cameo::unified::UnifiedTvShowDetails, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::similar_movies(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::similar_tv_shows(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_recommendations(&self, i32, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::movie_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
 pub async fn cameo::providers::tmdb::client::TmdbClient::tv_watch_providers(&self, i32) -> core::result::Result<cameo::unified::UnifiedWatchProviders, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_movies(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedMovie>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_multi(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedSearchResult>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_people(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedPerson>, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::search_tv_shows(&self, &str, core::option::Option<u32>) -> core::result::Result<cameo::core::pagination::Page<cameo::unified::UnifiedTvShow>, cameo::providers::tmdb::error::TmdbError>
+impl cameo::providers::tmdb::client::TmdbClient
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_episode_details(&self, i32, u32, u32) -> core::result::Result<cameo::unified::UnifiedEpisode, cameo::providers::tmdb::error::TmdbError>
+pub async fn cameo::providers::tmdb::client::TmdbClient::tv_season_details(&self, i32, u32) -> core::result::Result<cameo::unified::UnifiedSeasonDetails, cameo::providers::tmdb::error::TmdbError>
 impl cameo::unified::traits::CreditsProvider for cameo::providers::tmdb::client::TmdbClient
 pub fn cameo::providers::tmdb::client::TmdbClient::movie_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
 pub fn cameo::providers::tmdb::client::TmdbClient::tv_show_credits<'life0, 'life1, 'async_trait>(&'life0 self, &'life1 cameo::unified::media_id::MediaId) -> core::pin::Pin<alloc::boxed::Box<(dyn core::future::future::Future<Output = core::result::Result<cameo::unified::UnifiedCredits, cameo::core::error::ProviderError>> + core::marker::Send + 'async_trait)>> where Self: 'async_trait, 'life0: 'async_trait, 'life1: 'async_trait
@@ -13179,7 +13212,7 @@ impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::client::Tmdb
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::client::TmdbClient
 #[non_exhaustive] pub struct cameo::TmdbConfig
 pub cameo::TmdbConfig::auth: cameo::providers::tmdb::config::TmdbAuth
-pub cameo::TmdbConfig::base_url: core::option::Option<alloc::string::String>
+pub cameo::TmdbConfig::base_url: alloc::string::String
 pub cameo::TmdbConfig::connect_timeout: core::option::Option<core::time::Duration>
 pub cameo::TmdbConfig::image_base_url: core::option::Option<alloc::string::String>
 pub cameo::TmdbConfig::include_adult: core::option::Option<bool>
@@ -13189,10 +13222,10 @@ pub cameo::TmdbConfig::region: core::option::Option<alloc::string::String>
 pub cameo::TmdbConfig::request_timeout: core::option::Option<core::time::Duration>
 pub cameo::TmdbConfig::retry: cameo::providers::retry::RetryPolicy
 impl cameo::providers::tmdb::config::TmdbConfig
+pub fn cameo::providers::tmdb::config::TmdbConfig::from_auth(cameo::providers::tmdb::config::TmdbAuth) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::new(impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::new_v3(impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::new_with_base_url(impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> Self
-pub fn cameo::providers::tmdb::config::TmdbConfig::with_auth(cameo::providers::tmdb::config::TmdbAuth) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_connect_timeout(self, core::time::Duration) -> Self
 pub fn cameo::providers::tmdb::config::TmdbConfig::with_image_base_url(self, impl core::convert::Into<alloc::string::String>) -> Self
