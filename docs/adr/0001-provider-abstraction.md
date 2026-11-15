@@ -4,12 +4,14 @@ Status: **accepted** (2026-07)
 
 ## Context
 
-The extension seam is the crux of v1, and today it does not exist: the concrete
-providers do **not** implement the unified traits — only `CameoClient` does — so
-the traits are just the facade's interface, not an extension point. The traits
-use bare `async fn` (not object-safe, non-`Send` futures), each carries an
-associated `type Error`, unified models carry `provider_id: String` while detail
-lookups take a raw `i32`, and pagination hardwires TMDB's page/total shape.
+### State before this decision
+
+The extension seam is the crux of v1, and at the time of this decision it did
+not exist: the concrete providers did **not** implement the unified traits — only `CameoClient` did — so
+the traits were just the facade's interface, not an extension point. The traits
+used bare `async fn` (not object-safe, non-`Send` futures), each carried an
+associated `type Error`, unified models carried `provider_id: String` while detail
+lookups took a raw `i32`, and pagination hardwired TMDB's page/total shape.
 
 This ADR settles the interlocking decisions once so the implementation issues
 (#26–#31, #36) can proceed against a fixed target.
@@ -94,7 +96,7 @@ than `Option`, for ergonomics; iteration relies on the authoritative `has_next`
 
 - `into_stream` gains `Send` bounds so the stream can cross `tokio::spawn`.
 - AniList populates `has_next` from `hasNextPage` (not reconstructed from nullable
-  totals); TMDB uses checked page conversion and enforces the 500-page cap.
+  totals); TMDB uses checked page conversion and clamps requests to 500.
 
 ## Decision 5 — Capability discovery
 

@@ -6,8 +6,11 @@
 //! - `Provider(ProviderError)` — a provider-level, provider-agnostic error
 //!
 //! Usage:
-//!   cargo run --example error_handling           # build-time only
+//!   cargo run --example error_handling           # skips demos needing a valid token
 //!   TMDB_API_TOKEN=... cargo run --example error_handling   # all demos
+//!
+//! Every run makes network calls: the API-error demo always sends a request
+//! with a deliberately invalid token.
 
 use cameo::{CameoClient, MediaId, ProviderError, TmdbConfig, unified::CameoClientError};
 

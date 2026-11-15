@@ -1,6 +1,6 @@
 /// Shared configuration types.
 pub mod config;
-/// Unified error type for the crate.
+/// Provider-agnostic error type.
 pub mod error;
 /// Pagination helpers.
 pub mod pagination;
