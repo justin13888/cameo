@@ -11,14 +11,28 @@ use proptest::prelude::*;
 proptest! {
     /// A fully-specified date survives Display -> FromStr unchanged.
     #[test]
-    fn partial_date_full_round_trips(y in 0i32..9999, m in 1u8..=12, d in 1u8..=31) {
+    fn partial_date_full_round_trips(y in any::<i32>(), m in 1u8..=12, d in 1u8..=31) {
         let date = PartialDate::ymd(y, m, d).expect("valid ymd");
         prop_assert_eq!(date.to_string().parse::<PartialDate>().unwrap(), date);
     }
 
+    /// Every precision, including negative years, survives a JSON round-trip.
+    #[test]
+    fn partial_date_json_round_trips(
+        y in any::<i32>(),
+        m in proptest::option::of(1u8..=12),
+        d in 1u8..=31,
+        with_day in any::<bool>(),
+    ) {
+        let day = m.and(with_day.then_some(d));
+        let date = PartialDate::new(y, m, day).expect("valid components");
+        let json = serde_json::to_string(&date).expect("serialize");
+        prop_assert_eq!(serde_json::from_str::<PartialDate>(&json).expect("deserialize"), date);
+    }
+
     /// A year-month date stays partial across the round-trip (no day padding).
     #[test]
-    fn partial_date_year_month_round_trips(y in 0i32..9999, m in 1u8..=12) {
+    fn partial_date_year_month_round_trips(y in any::<i32>(), m in 1u8..=12) {
         let date = PartialDate::year_month(y, m).expect("valid ym");
         let back = date.to_string().parse::<PartialDate>().unwrap();
         prop_assert_eq!(back, date);
@@ -27,7 +41,7 @@ proptest! {
 
     /// A year-only date stays year-only.
     #[test]
-    fn partial_date_year_only_round_trips(y in 0i32..9999) {
+    fn partial_date_year_only_round_trips(y in any::<i32>()) {
         let date = PartialDate::from_year(y);
         let back = date.to_string().parse::<PartialDate>().unwrap();
         prop_assert_eq!(back, date);
