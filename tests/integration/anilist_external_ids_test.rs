@@ -134,6 +134,28 @@ async fn find_by_unknown_mal_id_is_empty() {
 }
 
 #[tokio::test]
+async fn find_by_mal_id_upstream_error_is_not_an_empty_match() {
+    // A 5xx GraphQL error that nulls `Media` is an outage, not "no match".
+    let body = json!({
+        "data": { "Media": null },
+        "errors": [{ "message": "Internal Server Error.", "status": 500 }]
+    });
+    let (_server, client) = mock_client(json!({ "idMal": 5114 }), body).await;
+
+    let err = client.find_by_mal_id(5114).await.unwrap_err();
+    assert!(matches!(err, AniListError::GraphQL { .. }), "{err:?}");
+
+    let err = client
+        .find_by_external_id(&ExternalId::mal(5114))
+        .await
+        .unwrap_err();
+    assert!(
+        matches!(err, ProviderError::Api { status: 500, .. }),
+        "{err:?}"
+    );
+}
+
+#[tokio::test]
 async fn find_by_non_mal_source_is_unsupported() {
     let (server, client) = mock_client(json!({}), not_found()).await;
 
