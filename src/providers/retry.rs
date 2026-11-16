@@ -167,6 +167,53 @@ mod tests {
     }
 
     #[test]
+    fn jitter_fraction_is_a_unit_interval_sample() {
+        let samples: Vec<f64> = (0..64).map(|_| jitter_fraction()).collect();
+        for f in &samples {
+            assert!((0.0..1.0).contains(f), "{f} outside [0, 1)");
+        }
+        assert!(
+            samples.iter().any(|f| *f != samples[0]),
+            "64 samples were all {}",
+            samples[0]
+        );
+    }
+
+    /// The `Retry-After` jitter is strictly under 250ms and varies per call.
+    #[test]
+    fn retry_after_jitter_is_under_250ms_and_varies() {
+        let policy = RetryPolicy::default();
+        let delays: Vec<Duration> = (0..64)
+            .map(|_| policy.backoff(0, Some(Duration::ZERO)))
+            .collect();
+        for d in &delays {
+            assert!(*d < Duration::from_millis(250), "jitter {d:?}");
+        }
+        assert!(
+            delays.iter().any(|d| *d != delays[0]),
+            "jitter never varied"
+        );
+    }
+
+    /// Equal jitter: the random half never reaches the full capped delay, and
+    /// it varies per call.
+    #[test]
+    fn exponential_jitter_stays_below_the_cap_and_varies() {
+        let policy = RetryPolicy::new(10, Duration::from_millis(100), Duration::from_secs(1));
+        let delays: Vec<Duration> = (0..64).map(|_| policy.backoff(1, None)).collect();
+        for d in &delays {
+            assert!(
+                *d >= Duration::from_millis(100) && *d < Duration::from_millis(200),
+                "{d:?}"
+            );
+        }
+        assert!(
+            delays.iter().any(|d| *d != delays[0]),
+            "jitter never varied"
+        );
+    }
+
+    #[test]
     fn exponential_backoff_grows_and_caps() {
         let policy = RetryPolicy::new(10, Duration::from_millis(100), Duration::from_millis(800));
         // Equal jitter keeps each delay within [capped/2, capped].
@@ -250,6 +297,8 @@ mod tests {
         let calls = std::cell::Cell::new(0u32);
         let outcome = run(policy, &unlimited(), "test", || {
             let n = calls.get() + 1;
+            // Fail fast, rather than hang, if the retry budget stops binding.
+            assert!(n <= 100, "attempted {n} times: retrying without bound");
             calls.set(n);
             async move { if n <= failures { Err(err()) } else { Ok(n) } }
         })
