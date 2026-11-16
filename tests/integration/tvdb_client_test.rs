@@ -500,6 +500,7 @@ async fn series_details_convert_to_the_unified_model() {
     );
     assert_eq!(d.show.original_language.as_deref(), Some("en"));
     assert_eq!(d.show.episode_run_time, Some(47));
+    assert_eq!(d.episode_run_time, vec![47]);
     assert_eq!(d.status, Some(SeriesStatus::Ended));
     assert_eq!(d.in_production, Some(false));
     assert_eq!(d.tagline.as_deref(), Some("Remember my name"));
