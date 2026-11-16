@@ -36,6 +36,30 @@ set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
 
 ---
 
+## Mutation Testing
+
+[cargo-mutants](https://mutants.rs) changes the library's code one small edit at a
+time (a `+` becomes `-`, a function returns `Default::default()`, a match arm is
+deleted) and runs the tests against each edit. A mutant the tests still pass on
+("missed") marks behaviour no test constrains. Install it with
+`cargo install --locked cargo-mutants`; its settings live in
+`.cargo/mutants.toml`, which excludes the generated client under `src/generated/`.
+
+```bash
+# Every mutant in one file or glob; the report lands in mutants.out/
+just mutants 'src/providers/tmdb/**/*.rs'
+
+# Only the mutants on lines changed since a base ref
+just mutants-diff origin/master
+```
+
+CI (`.github/workflows/mutants.yml`) runs the in-diff form on every pull request
+with a 30-minute limit and fails it when a mutant on a changed line is missed or
+times out. When it fails, add a test that fails against that mutant, or, where
+the mutant cannot change observable behaviour, say why in the pull request.
+
+---
+
 ## Coverage Matrix
 
 ### TmdbClient

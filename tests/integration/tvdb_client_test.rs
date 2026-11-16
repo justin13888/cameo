@@ -500,6 +500,7 @@ async fn series_details_convert_to_the_unified_model() {
     );
     assert_eq!(d.show.original_language.as_deref(), Some("en"));
     assert_eq!(d.show.episode_run_time, Some(47));
+    assert_eq!(d.episode_run_time, vec![47]);
     assert_eq!(d.status, Some(SeriesStatus::Ended));
     assert_eq!(d.in_production, Some(false));
     assert_eq!(d.tagline.as_deref(), Some("Remember my name"));
@@ -571,6 +572,79 @@ async fn movie_details_use_the_configured_language() {
     let ids = client.movie_external_ids(&MediaId::tvdb(12)).await.unwrap();
     assert_eq!(ids.imdb.as_deref(), Some("tt5311514"));
     assert_eq!(ids.tvdb, None, "a movie id is not a series id");
+}
+
+/// `record` with each top-level `(field, value)` overwritten.
+fn patched(mut record: Value, fields: &[(&str, Value)]) -> Value {
+    for (field, value) in fields {
+        record[*field] = value.clone();
+    }
+    record
+}
+
+/// A client whose server answers `route` with `record`.
+async fn client_serving(server: &MockServer, route: &str, record: Value) -> TvdbClient {
+    mount_login(server, "T", 1).await;
+    Mock::given(method("GET"))
+        .and(path(route))
+        .respond_with(ok(record))
+        .mount(server)
+        .await;
+    TvdbClient::new(config(server)).unwrap()
+}
+
+#[tokio::test]
+async fn movie_zero_amounts_are_unknown_and_the_tagline_follows_the_language() {
+    let server = MockServer::start().await;
+    let record = patched(
+        movie_json(),
+        &[
+            ("budget", json!("5000")),
+            ("boxOffice", json!("0")),
+            ("runtime", json!(0)),
+            (
+                "translations",
+                json!({ "nameTranslations": [
+                    { "language": "jpn", "name": "君の名は。", "tagline": "Japanese tagline" },
+                    { "language": "eng", "name": "Your Name.", "tagline": "English tagline" }
+                ] }),
+            ),
+        ],
+    );
+    let client = client_serving(&server, "/movies/12/extended", record).await;
+
+    let d = client.movie_details(&MediaId::tvdb(12)).await.unwrap();
+
+    assert_eq!(d.budget, Some(5000));
+    assert_eq!(d.revenue, None, "a zero box office is unknown");
+    assert_eq!(d.runtime, None, "a zero runtime is unknown");
+    assert_eq!(d.movie.runtime, None);
+    assert_eq!(d.tagline.as_deref(), Some("English tagline"));
+}
+
+#[tokio::test]
+async fn series_zero_runtime_is_unknown() {
+    let server = MockServer::start().await;
+    let record = patched(series_json(), &[("averageRuntime", json!(0))]);
+    let client = client_serving(&server, "/series/81189/extended", record).await;
+
+    let d = client.tv_show_details(&MediaId::tvdb(81189)).await.unwrap();
+
+    assert_eq!(d.show.episode_run_time, None);
+    assert_eq!(d.episode_run_time, Vec::<u32>::new());
+}
+
+/// Without a reported default order, the `official` order's seasons are used.
+#[tokio::test]
+async fn seasons_fall_back_to_the_official_order() {
+    let server = MockServer::start().await;
+    let record = patched(series_json(), &[("defaultSeasonType", Value::Null)]);
+    let client = client_serving(&server, "/series/81189/extended", record).await;
+
+    let d = client.tv_show_details(&MediaId::tvdb(81189)).await.unwrap();
+
+    let seasons: Vec<u32> = d.seasons.iter().map(|s| s.season_number).collect();
+    assert_eq!(seasons, vec![0, 1, 2]);
 }
 
 // ── Episodes ──────────────────────────────────────────────────────────────────

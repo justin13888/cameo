@@ -23,6 +23,13 @@ fn episode_reads_absolute_numbers_and_flags() {
     assert_eq!(special.absolute_number, None);
     assert_eq!(special.is_movie, Some(true));
     assert!(special.is_special());
+
+    // A real boolean flag reads as itself.
+    let flagged: TvdbEpisode = serde_json::from_value(json!({
+        "id": 3, "seasonNumber": 1, "number": 1, "isMovie": true
+    }))
+    .expect("boolean flag");
+    assert_eq!(flagged.is_movie, Some(true));
 }
 
 #[test]

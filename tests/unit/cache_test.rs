@@ -8,6 +8,11 @@ fn make_cache() -> SqliteCache {
     SqliteCache::in_memory().expect("in-memory SQLite cache")
 }
 
+#[test]
+fn debug_names_the_cache_without_exposing_its_connections() {
+    assert_eq!(format!("{:?}", make_cache()), "SqliteCache { .. }");
+}
+
 #[tokio::test]
 async fn get_returns_none_for_missing_key() {
     let cache = make_cache();
@@ -389,4 +394,22 @@ fn tv_active_overrides_old_status() {
         ttl, cfg.active_content_details_ttl,
         "in_production=true overrides old/ended status"
     );
+}
+
+#[test]
+fn movie_released_exactly_at_old_threshold_is_not_old() {
+    let cfg = CacheTtlConfig::default();
+    // "Old" means strictly more than the threshold's days ago.
+    let release = days_ago(cfg.old_content_threshold_days as i64);
+    let ttl = cfg.movie_details_ttl(Some(&release), Some("Released"));
+    assert_eq!(ttl, cfg.details);
+}
+
+#[test]
+fn tv_ended_first_aired_exactly_at_old_threshold_is_not_old() {
+    let cfg = CacheTtlConfig::default();
+    // "Old" means strictly more than the threshold's days ago.
+    let first_air = days_ago(cfg.old_content_threshold_days as i64);
+    let ttl = cfg.tv_show_details_ttl(Some(&first_air), None, Some("Ended"), false);
+    assert_eq!(ttl, cfg.details);
 }

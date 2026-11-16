@@ -134,6 +134,41 @@ async fn detail_fetch_populates_both_detail_and_item_caches() {
     );
 }
 
+#[tokio::test]
+async fn tv_and_person_detail_fetches_are_readable_from_the_detail_cache() {
+    let server = MockServer::start().await;
+    let client = setup(&server).await;
+
+    for (route, fixture) in [
+        (
+            "/3/tv/1396",
+            include_str!("../fixtures/tv_details_response.json"),
+        ),
+        (
+            "/3/person/287",
+            include_str!("../fixtures/person_details_response.json"),
+        ),
+    ] {
+        Mock::given(method("GET"))
+            .and(path(route))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(fixture, "application/json"))
+            .mount(&server)
+            .await;
+    }
+
+    let show = client.tv_show_details(&MediaId::tmdb(1396)).await.unwrap();
+    assert_eq!(
+        client.cached_tv_show_details(&MediaId::tmdb(1396)).await,
+        Some(show)
+    );
+
+    let person = client.person_details(&MediaId::tmdb(287)).await.unwrap();
+    assert_eq!(
+        client.cached_person_details(&MediaId::tmdb(287)).await,
+        Some(person)
+    );
+}
+
 /// What a cache hit returns equals the uncached result field for field, for
 /// both the search page and the item it indexed.
 #[tokio::test]

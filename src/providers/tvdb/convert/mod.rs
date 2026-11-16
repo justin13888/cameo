@@ -216,9 +216,80 @@ mod tests {
 
     #[test]
     fn iso639_maps_known_codes_only() {
-        assert_eq!(iso639_1("eng"), Some("en"));
-        assert_eq!(iso639_1("jpn"), Some("ja"));
+        let table = [
+            ("ara", "ar"),
+            ("bul", "bg"),
+            ("cat", "ca"),
+            ("ces", "cs"),
+            ("dan", "da"),
+            ("deu", "de"),
+            ("ell", "el"),
+            ("eng", "en"),
+            ("fin", "fi"),
+            ("fra", "fr"),
+            ("heb", "he"),
+            ("hin", "hi"),
+            ("hrv", "hr"),
+            ("hun", "hu"),
+            ("ind", "id"),
+            ("ita", "it"),
+            ("jpn", "ja"),
+            ("kor", "ko"),
+            ("msa", "ms"),
+            ("nld", "nl"),
+            ("nor", "no"),
+            ("pol", "pl"),
+            ("por", "pt"),
+            ("pt", "pt"),
+            ("ron", "ro"),
+            ("rus", "ru"),
+            ("slk", "sk"),
+            ("slv", "sl"),
+            ("spa", "es"),
+            ("srp", "sr"),
+            ("swe", "sv"),
+            ("tha", "th"),
+            ("tur", "tr"),
+            ("ukr", "uk"),
+            ("vie", "vi"),
+            ("zho", "zh"),
+        ];
+        for (code, expected) in table {
+            assert_eq!(iso639_1(code), Some(expected), "{code}");
+        }
         assert_eq!(iso639_1("xyz"), None);
+    }
+
+    /// Name translations are classed by alias flag, original language and
+    /// English, in that order; blank names and aliases are skipped.
+    #[test]
+    fn alternative_titles_classify_each_variant() {
+        let translations: TvdbTranslations = from_json(json!({
+            "nameTranslations": [
+                { "language": "jpn", "name": "進撃の巨人" },
+                { "language": "eng", "name": "Attack on Titan" },
+                { "language": "fra", "name": "L'Attaque des Titans" },
+                { "language": "deu", "name": "AoT DE", "isAlias": true },
+                { "language": "spa", "name": "  " }
+            ],
+            "alias": ["Shingeki", " "]
+        }));
+        let aliases: Vec<TvdbAlias> = from_json(json!([
+            { "language": "eng", "name": "AoT" },
+            { "name": " " }
+        ]));
+
+        assert_eq!(
+            alternative_titles(&translations, &aliases, Some("jpn")),
+            vec![
+                AlternativeTitle::new("進撃の巨人", TitleKind::Native).with_language("ja"),
+                AlternativeTitle::new("Attack on Titan", TitleKind::English).with_language("en"),
+                AlternativeTitle::new("L'Attaque des Titans", TitleKind::Other).with_language("fr"),
+                AlternativeTitle::new("AoT DE", TitleKind::Synonym).with_language("de"),
+                AlternativeTitle::new("AoT", TitleKind::Synonym).with_language("en"),
+                AlternativeTitle::new("Shingeki", TitleKind::Synonym),
+            ]
+        );
     }
 
     #[test]

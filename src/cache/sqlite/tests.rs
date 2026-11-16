@@ -241,3 +241,31 @@ async fn write_enforces_max_entries_by_evicting_soonest_expiring() {
         .unwrap();
     assert_eq!((soonest, next), (0, 1));
 }
+
+/// Every 1000th read (after the first) purges expired rows on the write
+/// connection, so they are reclaimed even when nothing writes.
+#[tokio::test]
+async fn every_thousandth_read_reclaims_expired_rows() {
+    let now = Arc::new(std::sync::atomic::AtomicU64::new(1_000));
+    let cache = SqliteCache::in_memory().unwrap().with_clock(mock(&now));
+    // Expires at 1_010; the read-time purge uses the wall clock, long past it.
+    cache
+        .set(detail(1), serde_json::json!({}), Duration::from_secs(10))
+        .await
+        .unwrap();
+
+    for _ in 0..1000 {
+        cache.get(&detail(2)).await.unwrap();
+    }
+    assert_eq!(row_count(&cache), 1, "reads 0..=999 must not purge");
+
+    // Read number 1000 spawns the purge without awaiting it.
+    cache.get(&detail(2)).await.unwrap();
+    for _ in 0..200 {
+        if row_count(&cache) == 0 {
+            return;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    panic!("the expired row survived the 1000th read's purge");
+}

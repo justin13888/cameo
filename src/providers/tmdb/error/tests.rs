@@ -256,3 +256,35 @@ fn maps_tmdb_request_error_by_kind() {
         ProviderError::Other(ref m) if m == "pagination cycle: boom"
     ));
 }
+
+/// A test error with a fixed text and an optional source.
+#[derive(Debug)]
+struct Chained(&'static str, Option<Box<Chained>>);
+
+impl fmt::Display for Chained {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.0)
+    }
+}
+
+impl std::error::Error for Chained {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.1
+            .as_deref()
+            .map(|e| e as &(dyn std::error::Error + 'static))
+    }
+}
+
+/// `error_chain` appends each source's text once, skipping a source whose
+/// text its parent already ends with.
+#[test]
+fn error_chain_joins_distinct_sources_once() {
+    let err = Chained(
+        "outer",
+        Some(Box::new(Chained(
+            "middle: inner",
+            Some(Box::new(Chained("inner", None))),
+        ))),
+    );
+    assert_eq!(error_chain(&err), "outer: middle: inner");
+}

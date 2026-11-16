@@ -56,7 +56,10 @@ async fn movie_details_returns_correct_fields() {
         Some("2016-08-26")
     );
     // Poster URL from coverImage.extraLarge
-    assert!(result.movie.poster_url.is_some());
+    assert_eq!(
+        result.movie.poster_url.as_deref(),
+        Some("https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1535.jpg")
+    );
     // vote_average (86 / 10)
     assert_eq!(result.movie.vote_average, Some(8.6));
     // Runtime
@@ -174,6 +177,11 @@ async fn tv_show_details_returns_correct_fields() {
     assert_eq!(result.show.provider_id, "anilist:16498");
     assert_eq!(result.show.name, "Attack on Titan");
     assert_eq!(result.show.vote_average, Some(8.4));
+    // The extra-large cover is preferred over the large one.
+    assert_eq!(
+        result.show.poster_url.as_deref(),
+        Some("https://example.com/cover_xl.jpg")
+    );
     // Romaji is kept alongside the English headline name; empty synonyms are
     // skipped.
     assert_eq!(

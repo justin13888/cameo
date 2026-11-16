@@ -215,4 +215,32 @@ mod tests {
             );
         }
     }
+
+    fn client() -> TvdbClient {
+        TvdbClient::new(crate::providers::tvdb::TvdbConfig::new("key")).expect("valid config")
+    }
+
+    #[test]
+    fn advertises_exactly_its_implemented_capabilities() {
+        assert_eq!(
+            client().capabilities(),
+            [
+                Capability::Search,
+                Capability::Details,
+                Capability::Seasons,
+                Capability::ExternalIds,
+            ]
+        );
+    }
+
+    /// Reverse lookup is not implemented, which is unsupported rather than
+    /// an empty match.
+    #[tokio::test]
+    async fn find_by_external_id_is_unsupported() {
+        let err = client()
+            .find_by_external_id(&crate::unified::external_ids::ExternalId::imdb("tt1"))
+            .await
+            .unwrap_err();
+        assert_eq!(err, ProviderError::Unsupported);
+    }
 }

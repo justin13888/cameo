@@ -22,6 +22,8 @@ just test-live    # run live tests (requires TMDB_API_TOKEN in .env)
 just doc          # build and open docs
 just build        # build with default features
 just build-features anilist  # AniList only
+just mutants 'src/unified/date.rs'  # mutation-test one file or glob (needs cargo-mutants)
+just mutants-diff # mutation-test only the lines changed since origin/master
 
 # Run examples directly (just recipes don't cover examples)
 TMDB_API_TOKEN=xxx cargo run --example facade_showcase -- 'Inception'

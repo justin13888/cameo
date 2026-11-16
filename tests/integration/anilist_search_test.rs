@@ -1,5 +1,5 @@
 use cameo::{
-    AlternativeTitle, SeriesStatus, TitleKind,
+    AlternativeTitle, RetryPolicy, SeriesStatus, TitleKind,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
     unified::UnifiedSearchResult,
 };
@@ -345,7 +345,10 @@ async fn rate_limit_error_exposes_retry_after() {
         )
         .mount(&server)
         .await;
-    let client = AniListClient::new(AniListConfig::new_with_base_url(server.uri())).unwrap();
+    // Retrying would honor the 12-second Retry-After three times over; the
+    // retry loop itself is covered by retry_test.rs.
+    let config = AniListConfig::new_with_base_url(server.uri()).with_retry(RetryPolicy::disabled());
+    let client = AniListClient::new(config).unwrap();
 
     let err = client.search_multi("test", None).await.unwrap_err();
 

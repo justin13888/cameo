@@ -118,6 +118,32 @@ async fn media_credits_walks_every_page_of_each_connection() {
     assert_eq!(crew, vec!["Crew 1"]);
 }
 
+/// A connection that never runs out is walked for exactly 20 pages, then the
+/// rest is dropped.
+#[tokio::test]
+async fn media_credits_stops_after_the_twentieth_page() {
+    let server = MockServer::start().await;
+    for page in 1..=20 {
+        let id = i32::try_from(page).unwrap();
+        mount_page(
+            &server,
+            page,
+            credits_page(
+                vec![],
+                false,
+                vec![json!({ "role": "Animator", "node": staff(id, &format!("Crew {id}")) })],
+                true,
+            ),
+        )
+        .await;
+    }
+
+    let credits = client(&server).media_credits(5114).await.unwrap();
+
+    assert_eq!(credits.crew.len(), 20);
+    assert_eq!(credits.crew[19].name, "Crew 20");
+}
+
 #[tokio::test]
 async fn media_credits_not_found() {
     let server = MockServer::start().await;

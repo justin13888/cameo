@@ -321,4 +321,20 @@ mod tests {
                 .is_none()
         );
     }
+
+    #[test]
+    fn only_a_full_date_is_complete() {
+        assert!(PartialDate::ymd(2022, 4, 1).unwrap().is_complete());
+        assert!(!PartialDate::year_month(2022, 4).unwrap().is_complete());
+        assert!(!PartialDate::from_year(2022).is_complete());
+    }
+
+    #[test]
+    fn parse_error_names_the_input_and_the_accepted_forms() {
+        let err = "2022/04".parse::<PartialDate>().unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "invalid partial date \"2022/04\" (expected YYYY, YYYY-MM, or YYYY-MM-DD)"
+        );
+    }
 }

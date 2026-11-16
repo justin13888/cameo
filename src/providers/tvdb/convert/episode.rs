@@ -77,7 +77,8 @@ mod tests {
             { "id": 3, "seasonNumber": 1, "number": 2, "absoluteNumber": 2, "aired": "2008-01-27" },
             { "id": 2, "seasonNumber": 1, "number": 1, "absoluteNumber": 1, "aired": "2008-01-20",
               "name": "Pilot", "runtime": 58, "image": "https://img/1.jpg" },
-            { "id": 9, "seasonNumber": 0, "number": 1, "absoluteNumber": 0, "name": "Special" }
+            { "id": 9, "seasonNumber": 0, "number": 1, "absoluteNumber": 0, "name": "Special",
+              "runtime": 0 }
         ]));
         let season = season_details(MediaId::tvdb(81189), 1, &episodes).expect("season 1");
         let numbers: Vec<u32> = season.episodes.iter().map(|e| e.episode_number).collect();
@@ -95,6 +96,10 @@ mod tests {
 
         let specials = season_details(MediaId::tvdb(81189), 0, &episodes).expect("specials");
         assert_eq!(specials.episodes.len(), 1);
+        assert_eq!(
+            specials.episodes[0].runtime, None,
+            "a zero runtime is unknown"
+        );
         assert!(season_details(MediaId::tvdb(81189), 7, &episodes).is_none());
     }
 }
