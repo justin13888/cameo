@@ -26,6 +26,15 @@ fn paged_reads_next_and_totals() {
     };
     let page = paged(1, Vec::<u8>::new(), &huge);
     assert_eq!((page.total_pages, page.total_results), (u32::MAX, u32::MAX));
+
+    // A zero page size cannot divide the total: the page count is unknown.
+    let zero = Links {
+        next: None,
+        total_items: Some(10),
+        page_size: Some(0),
+    };
+    let page = paged(1, Vec::<u8>::new(), &zero);
+    assert_eq!((page.total_pages, page.total_results), (0, 10));
 }
 
 #[test]

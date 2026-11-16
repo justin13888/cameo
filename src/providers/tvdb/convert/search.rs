@@ -168,7 +168,7 @@ mod tests {
             "overviews": { "eng": "Humans fight titans." },
             "overview": "原文", "primary_language": "jpn",
             "first_air_time": "2013-04-07", "status": "Ended",
-            "genres": ["Anime", "Action"], "aliases": ["AoT"], "country": "jpn"
+            "genres": ["Anime", "Action"], "aliases": ["AoT", " "], "country": "jpn"
         }));
         let show = search_to_tv_show(&r, "eng").expect("valid");
         assert_eq!(show.provider_id, MediaId::tvdb(267440));
@@ -178,6 +178,11 @@ mod tests {
         assert_eq!(show.original_language.as_deref(), Some("ja"));
         assert_eq!(show.status, Some(SeriesStatus::Ended));
         assert!(show.genres.contains(&Genre::Action));
+        // Blank aliases are skipped.
+        assert_eq!(
+            show.alternative_titles,
+            vec![AlternativeTitle::new("AoT", TitleKind::Synonym)]
+        );
         assert_eq!(
             show.first_air_date.map(|d| d.to_string()).as_deref(),
             Some("2013-04-07")
