@@ -1,3 +1,5 @@
+#[cfg(feature = "cache")]
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 #[cfg(feature = "cache")]
@@ -154,23 +156,32 @@ impl CameoClientBuilder {
         self
     }
 
-    /// Enable caching with the default SQLite backend.
+    /// Enable caching with the default SQLite backend at the default location.
     ///
-    /// The database lives in the platform cache directory (or the temporary
-    /// directory when there is none). If it cannot be opened, an in-memory
-    /// cache is used instead; if that fails too, caching stays disabled. Each
-    /// fallback logs a `tracing` warning rather than failing the builder.
+    /// The database lives at `cameo/cache.db` in the platform cache directory
+    /// (or at `cameo_cache.db` in the temporary directory when there is none).
+    /// Otherwise this behaves as [`with_cache_at`](Self::with_cache_at),
+    /// including its fallbacks.
     #[cfg(feature = "cache")]
     pub fn with_cache(self) -> Self {
-        let path = dirs::cache_dir()
-            .map(|d| d.join("cameo").join("cache.db"))
-            .unwrap_or_else(|| std::env::temp_dir().join("cameo_cache.db"));
+        self.with_cache_at(default_cache_path())
+    }
+
+    /// Enable caching with the default SQLite backend stored at `path`.
+    ///
+    /// Missing parent directories of `path` are created. If the database
+    /// cannot be opened, an in-memory cache is used instead; if that fails
+    /// too, caching stays disabled. Each fallback logs a `tracing` warning
+    /// rather than failing the builder.
+    #[cfg(feature = "cache")]
+    pub fn with_cache_at(self, path: impl AsRef<Path>) -> Self {
+        let path = path.as_ref();
         if let Some(parent) = path.parent()
             && let Err(e) = std::fs::create_dir_all(parent)
         {
             tracing::warn!(error = %e, dir = %parent.display(), "cache directory creation failed");
         }
-        let backend = SqliteCache::new(&path).or_else(|e| {
+        let backend = SqliteCache::new(path).or_else(|e| {
             tracing::warn!(
                 error = %e,
                 path = %path.display(),
@@ -291,5 +302,65 @@ impl CameoClientBuilder {
         }
 
         Ok(client)
+    }
+}
+
+#[cfg(all(feature = "cache", test))]
+thread_local! {
+    /// Replaces [`default_cache_path`]'s answer on this thread, so a unit test
+    /// can call `with_cache()` without touching the platform cache directory.
+    static DEFAULT_CACHE_PATH_OVERRIDE: std::cell::RefCell<Option<PathBuf>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// Where `with_cache()` stores its database: `cameo/cache.db` in the platform
+/// cache directory, or `cameo_cache.db` in the temporary directory when there
+/// is none.
+#[cfg(feature = "cache")]
+fn default_cache_path() -> PathBuf {
+    #[cfg(test)]
+    if let Some(path) = DEFAULT_CACHE_PATH_OVERRIDE.with_borrow(Clone::clone) {
+        return path;
+    }
+    dirs::cache_dir()
+        .map(|d| d.join("cameo").join("cache.db"))
+        .unwrap_or_else(|| std::env::temp_dir().join("cameo_cache.db"))
+}
+
+#[cfg(all(feature = "cache", test))]
+mod tests {
+    use super::*;
+
+    /// `with_cache()` opens its database at the default path and keeps what
+    /// the builder held before the call.
+    #[test]
+    fn with_cache_opens_the_default_path_and_keeps_the_builder() {
+        let dir =
+            std::env::temp_dir().join(format!("cameo-builder-with-cache-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let path = dir.join("nested").join("cache.db");
+        DEFAULT_CACHE_PATH_OVERRIDE.with_borrow_mut(|p| *p = Some(path.clone()));
+
+        let builder = CameoClientBuilder::default()
+            .with_priority(["a"])
+            .with_cache();
+
+        DEFAULT_CACHE_PATH_OVERRIDE.with_borrow_mut(|p| *p = None);
+        assert_eq!(builder.priority, ["a"]);
+        assert!(builder.cache_backend.is_some());
+        assert!(path.is_file(), "database created at {}", path.display());
+        drop(builder);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Without an override the default path is the documented location.
+    #[test]
+    fn default_cache_path_is_the_documented_location() {
+        let path = default_cache_path();
+        let expected = match dirs::cache_dir() {
+            Some(dir) => dir.join("cameo").join("cache.db"),
+            None => std::env::temp_dir().join("cameo_cache.db"),
+        };
+        assert_eq!(path, expected);
     }
 }

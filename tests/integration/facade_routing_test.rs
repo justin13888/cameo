@@ -959,6 +959,62 @@ mod cache {
         );
     }
 
+    /// A per-test directory under the temporary directory, removed on drop.
+    struct TempDir(std::path::PathBuf);
+
+    impl TempDir {
+        fn new(name: &str) -> Self {
+            let dir =
+                std::env::temp_dir().join(format!("cameo-facade-{name}-{}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).expect("temp dir");
+            Self(dir)
+        }
+    }
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    /// `with_cache_at` creates missing parent directories, opens the SQLite
+    /// database there, and keeps the providers registered before it.
+    #[tokio::test]
+    async fn with_cache_at_opens_the_database_at_the_path() {
+        let dir = TempDir::new("with-cache-at");
+        let path = dir.0.join("nested").join("cache.db");
+        let fake = Fake::new("a");
+        let client = register_all(CameoClient::builder(), &fake)
+            .with_cache_at(&path)
+            .build()
+            .expect("providers registered before with_cache_at are kept");
+
+        assert!(path.is_file(), "database created at {}", path.display());
+        client.movie_details(&a_id(9)).await.expect("details");
+        client.movie_details(&a_id(9)).await.expect("details");
+        assert_eq!(fake.calls(), ["a.movie_details"]);
+    }
+
+    /// When the database cannot be opened, an in-memory cache answers instead.
+    #[tokio::test]
+    async fn with_cache_at_falls_back_to_memory_when_the_path_cannot_open() {
+        let dir = TempDir::new("with-cache-at-fallback");
+        let blocker = dir.0.join("not-a-dir");
+        std::fs::write(&blocker, b"").expect("blocker file");
+        let path = blocker.join("cache.db");
+        let fake = Fake::new("a");
+        let client = register_all(CameoClient::builder(), &fake)
+            .with_cache_at(&path)
+            .build()
+            .expect("configured");
+
+        assert!(!path.exists());
+        client.movie_details(&a_id(9)).await.expect("details");
+        client.movie_details(&a_id(9)).await.expect("details");
+        assert_eq!(fake.calls(), ["a.movie_details"], "served from memory");
+    }
+
     /// Without a backend nothing is cached and every lookup is `None`.
     #[tokio::test]
     async fn no_backend_means_no_caching() {
