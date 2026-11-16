@@ -5,6 +5,31 @@ use cameo::{
 use serde_json::{Value, json};
 use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
+#[test]
+fn config_setters_set_their_field_and_keep_the_rest() {
+    use std::time::Duration;
+
+    use cameo::{RateLimit, RetryPolicy};
+
+    let base = AniListConfig::new_with_base_url("http://mock.test/graphql");
+    assert_eq!(
+        base,
+        AniListConfig::default().with_base_url("http://mock.test/graphql")
+    );
+
+    let config = base
+        .with_rate_limit(RateLimit::Unlimited)
+        .with_retry(RetryPolicy::disabled())
+        .with_connect_timeout(Duration::from_secs(3))
+        .with_request_timeout(Duration::from_secs(7));
+    assert_eq!(config.base_url, "http://mock.test/graphql");
+    assert_eq!(config.per_page, AniListConfig::default().per_page);
+    assert_eq!(config.rate_limit, RateLimit::Unlimited);
+    assert_eq!(config.retry, RetryPolicy::disabled());
+    assert_eq!(config.connect_timeout, Some(Duration::from_secs(3)));
+    assert_eq!(config.request_timeout, Some(Duration::from_secs(7)));
+}
+
 fn mock_media_item(id: i32, title: &str, format: &str) -> Value {
     json!({
         "id": id,

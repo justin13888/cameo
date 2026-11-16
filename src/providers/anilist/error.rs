@@ -401,4 +401,14 @@ mod tests {
         assert!(!gql(serde_json::json!([{ "message": "a", "status": 65_965 }])).is_retryable());
         assert!(!gql(serde_json::json!([{ "message": "a", "status": -500 }])).is_retryable());
     }
+
+    /// Connect failures and timeouts are transient; other transport failures are not.
+    #[test]
+    fn transport_retryability_follows_the_failure_kind() {
+        use crate::core::error::TransportKind;
+        let http = |kind| AniListError::Http(TransportError::new(kind, "x".into()));
+        assert!(http(TransportKind::Connect).is_retryable());
+        assert!(http(TransportKind::Timeout).is_retryable());
+        assert!(!http(TransportKind::Other).is_retryable());
+    }
 }

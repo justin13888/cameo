@@ -111,6 +111,9 @@ mod tests {
         assert_eq!(normalize_occupation("Director"), "Directing");
         assert_eq!(normalize_occupation("music"), "Music");
         assert_eq!(normalize_occupation("Composer"), "Music");
+        assert_eq!(normalize_occupation("Animation Director"), "Animation");
+        assert_eq!(normalize_occupation("animator"), "Animation");
+        assert_eq!(normalize_occupation("Character Design"), "Art");
     }
 
     #[test]
