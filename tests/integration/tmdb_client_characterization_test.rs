@@ -184,6 +184,97 @@ async fn movie_details_with_append_sends_append_to_response() {
     );
 }
 
+#[tokio::test]
+async fn config_language_is_forwarded_to_detail_endpoints() {
+    let server = MockServer::start().await;
+    for (route, body) in [
+        (
+            "/3/movie/550",
+            include_str!("../fixtures/movie_details_response.json"),
+        ),
+        (
+            "/3/tv/1396",
+            include_str!("../fixtures/tv_details_response.json"),
+        ),
+        (
+            "/3/person/287",
+            include_str!("../fixtures/person_details_response.json"),
+        ),
+        (
+            "/3/movie/550/images",
+            include_str!("../fixtures/movie_images_response.json"),
+        ),
+        (
+            "/3/tv/1396/season/1",
+            include_str!("../fixtures/tv_season_details_response.json"),
+        ),
+        (
+            "/3/tv/1396/season/1/episode/1",
+            include_str!("../fixtures/tv_episode_details_response.json"),
+        ),
+    ] {
+        mount(&server, route, json(body), 1).await;
+    }
+    let client = client(&server, |c| c.with_language("de-DE"));
+
+    client.movie_details(550).await.unwrap();
+    client.tv_show_details(1396).await.unwrap();
+    client.person_details(287).await.unwrap();
+    client.movie_images(550).await.unwrap();
+    client.season_details(1396, 1).await.unwrap();
+    client.episode_details(1396, 1, 1).await.unwrap();
+
+    assert_eq!(
+        sent_queries(&server).await,
+        vec![query(&[("language", "de-DE")]); 6]
+    );
+}
+
+// ── Response shaping ──────────────────────────────────────────────────────────
+
+/// `fixture` with each `(field, value)` overwritten.
+fn patched(fixture: &str, fields: &[(&str, serde_json::Value)]) -> String {
+    let mut body: serde_json::Value = serde_json::from_str(fixture).expect("fixture is JSON");
+    for (field, value) in fields {
+        body[*field] = value.clone();
+    }
+    body.to_string()
+}
+
+#[tokio::test]
+async fn zero_budget_is_unknown_and_positive_revenue_is_kept() {
+    let server = MockServer::start().await;
+    let body = patched(
+        include_str!("../fixtures/movie_details_response.json"),
+        &[
+            ("budget", serde_json::json!(0)),
+            ("revenue", serde_json::json!(12_345)),
+        ],
+    );
+    mount(&server, "/3/movie/550", json(&body), 1).await;
+    let client = client(&server, |c| c);
+
+    let details = client.movie_details(550).await.unwrap();
+
+    assert_eq!(details.budget, None, "TMDB sends 0 for an unknown budget");
+    assert_eq!(details.revenue, Some(12_345));
+}
+
+#[tokio::test]
+async fn zero_episode_runtime_is_unknown() {
+    let server = MockServer::start().await;
+    let body = patched(
+        include_str!("../fixtures/tv_episode_details_response.json"),
+        &[("runtime", serde_json::json!(0))],
+    );
+    mount(&server, "/3/tv/1396/season/1/episode/1", json(&body), 1).await;
+    let client = client(&server, |c| c);
+
+    let episode = client.episode_details(1396, 1, 1).await.unwrap();
+
+    assert_eq!(episode.runtime, None, "TMDB sends 0 for an unknown runtime");
+}
+
 // ── Trending ──────────────────────────────────────────────────────────────────
 
 #[tokio::test]
