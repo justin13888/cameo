@@ -22,6 +22,9 @@ This is a Rust library crate exposing a typed, ergonomic client for movie/TV met
 The module map and data flow live in `DEVELOPMENT.md` (Module Structure & Data Flow).
 
 - There is no `build.rs`: the TMDB client in `src/generated/tmdb.rs` is vendored
-  spargen output, regenerated from `openapi/tmdb-api.json` with `cargo xtask codegen`.
-  Never edit it by hand.
+  spargen output, regenerated from `openapi/tmdb-api.json` with `cargo xtask codegen`
+  (`xtask/src/main.rs`). Never edit it by hand.
+- `openapi/tmdb-api.json` is itself generated: `scripts/fetch-openapi.sh` downloads the
+  upstream spec and applies `scripts/tmdb-spec-patch.jq`. Fix the spec in that patch,
+  never in the JSON. Commit the spec and `src/generated/` together.
 - Implementing a new provider: see `docs/providers.md`.
