@@ -3,7 +3,7 @@
 //! shapes responses) so a refactor that changes it fails here.
 //!
 //! These pin current behaviour, including behaviour other issues intend to
-//! change (e.g. discover builders bypassing the retry seam); such an issue
+//! change; such an issue
 //! updates the assertion here as part of its change.
 
 use std::{
@@ -12,7 +12,7 @@ use std::{
 };
 
 use cameo::{
-    RateLimit, RetryPolicy, TimeWindow, UnifiedSearchResult,
+    DiscoveryProvider, RateLimit, RetryPolicy, TimeWindow, UnifiedSearchResult,
     providers::tmdb::{TmdbClient, TmdbConfig, TmdbError},
 };
 use wiremock::{
@@ -184,6 +184,97 @@ async fn movie_details_with_append_sends_append_to_response() {
     );
 }
 
+#[tokio::test]
+async fn config_language_is_forwarded_to_detail_endpoints() {
+    let server = MockServer::start().await;
+    for (route, body) in [
+        (
+            "/3/movie/550",
+            include_str!("../fixtures/movie_details_response.json"),
+        ),
+        (
+            "/3/tv/1396",
+            include_str!("../fixtures/tv_details_response.json"),
+        ),
+        (
+            "/3/person/287",
+            include_str!("../fixtures/person_details_response.json"),
+        ),
+        (
+            "/3/movie/550/images",
+            include_str!("../fixtures/movie_images_response.json"),
+        ),
+        (
+            "/3/tv/1396/season/1",
+            include_str!("../fixtures/tv_season_details_response.json"),
+        ),
+        (
+            "/3/tv/1396/season/1/episode/1",
+            include_str!("../fixtures/tv_episode_details_response.json"),
+        ),
+    ] {
+        mount(&server, route, json(body), 1).await;
+    }
+    let client = client(&server, |c| c.with_language("de-DE"));
+
+    client.movie_details(550).await.unwrap();
+    client.tv_show_details(1396).await.unwrap();
+    client.person_details(287).await.unwrap();
+    client.movie_images(550).await.unwrap();
+    client.season_details(1396, 1).await.unwrap();
+    client.episode_details(1396, 1, 1).await.unwrap();
+
+    assert_eq!(
+        sent_queries(&server).await,
+        vec![query(&[("language", "de-DE")]); 6]
+    );
+}
+
+// ── Response shaping ──────────────────────────────────────────────────────────
+
+/// `fixture` with each `(field, value)` overwritten.
+fn patched(fixture: &str, fields: &[(&str, serde_json::Value)]) -> String {
+    let mut body: serde_json::Value = serde_json::from_str(fixture).expect("fixture is JSON");
+    for (field, value) in fields {
+        body[*field] = value.clone();
+    }
+    body.to_string()
+}
+
+#[tokio::test]
+async fn zero_budget_is_unknown_and_positive_revenue_is_kept() {
+    let server = MockServer::start().await;
+    let body = patched(
+        include_str!("../fixtures/movie_details_response.json"),
+        &[
+            ("budget", serde_json::json!(0)),
+            ("revenue", serde_json::json!(12_345)),
+        ],
+    );
+    mount(&server, "/3/movie/550", json(&body), 1).await;
+    let client = client(&server, |c| c);
+
+    let details = client.movie_details(550).await.unwrap();
+
+    assert_eq!(details.budget, None, "TMDB sends 0 for an unknown budget");
+    assert_eq!(details.revenue, Some(12_345));
+}
+
+#[tokio::test]
+async fn zero_episode_runtime_is_unknown() {
+    let server = MockServer::start().await;
+    let body = patched(
+        include_str!("../fixtures/tv_episode_details_response.json"),
+        &[("runtime", serde_json::json!(0))],
+    );
+    mount(&server, "/3/tv/1396/season/1/episode/1", json(&body), 1).await;
+    let client = client(&server, |c| c);
+
+    let episode = client.episode_details(1396, 1, 1).await.unwrap();
+
+    assert_eq!(episode.runtime, None, "TMDB sends 0 for an unknown runtime");
+}
+
 // ── Trending ──────────────────────────────────────────────────────────────────
 
 #[tokio::test]
@@ -205,12 +296,41 @@ async fn trending_day_hits_day_window_and_sends_no_page() {
     .await;
     let client = client(&server, |c| c);
 
-    // The page argument is ignored: TMDB trending is not paginated.
-    let movies = client
-        .trending_movies(TimeWindow::Day, Some(3))
+    // TMDB trending is not paginated: the inherent methods take no page.
+    let movies = client.trending_movies(TimeWindow::Day).await.unwrap();
+    let shows = client.trending_tv_shows(TimeWindow::Day).await.unwrap();
+
+    assert_eq!(movies.page, 1);
+    assert_eq!(shows.page, 1);
+    assert_eq!(sent_queries(&server).await, vec![query(&[]), query(&[])]);
+}
+
+#[tokio::test]
+async fn trending_trait_impl_ignores_page_and_sends_no_page() {
+    let server = MockServer::start().await;
+    mount(
+        &server,
+        "/3/trending/movie/day",
+        json(include_str!("../fixtures/trending_movies_response.json")),
+        1,
+    )
+    .await;
+    mount(
+        &server,
+        "/3/trending/tv/day",
+        json(include_str!("../fixtures/trending_tv_response.json")),
+        1,
+    )
+    .await;
+    let client = client(&server, |c| c);
+
+    // The trait keeps `page` for other providers; TMDB ignores it.
+    let movies = DiscoveryProvider::trending_movies(&client, TimeWindow::Day, Some(3))
         .await
         .unwrap();
-    let shows = client.trending_tv(TimeWindow::Day, Some(3)).await.unwrap();
+    let shows = DiscoveryProvider::trending_tv_shows(&client, TimeWindow::Day, Some(3))
+        .await
+        .unwrap();
 
     assert_eq!(movies.page, 1);
     assert_eq!(shows.page, 1);
@@ -227,13 +347,16 @@ async fn movie_recommendations_without_totals_or_results_defaults_from_requested
 
     let requested = client.movie_recommendations(550, Some(4)).await.unwrap();
     assert_eq!(requested.page, 4);
-    assert_eq!(requested.total_pages, 4);
+    // Omitted totals are unknown, which `Page` documents as `0`.
+    assert_eq!(requested.total_pages, 0);
     assert_eq!(requested.total_results, 0);
+    assert!(!requested.has_next);
     assert!(requested.results.is_empty());
 
     let unrequested = client.movie_recommendations(550, None).await.unwrap();
     assert_eq!(unrequested.page, 1);
-    assert_eq!(unrequested.total_pages, 1);
+    assert_eq!(unrequested.total_pages, 0);
+    assert!(!unrequested.has_next);
     assert_eq!(unrequested.total_results, 0);
     assert!(unrequested.results.is_empty());
 }
@@ -360,7 +483,7 @@ async fn season_details_take_show_id_and_season_number_from_the_request() {
     .await;
     let client = client(&server, |c| c);
 
-    let season = client.tv_season_details(42, 3).await.unwrap();
+    let season = client.season_details(42, 3).await.unwrap();
 
     assert_eq!(season.show_id, "tmdb:42");
     assert_eq!(season.season_number, 3);
@@ -416,19 +539,19 @@ async fn clones_share_one_rate_limit_budget() {
     );
 }
 
-// ── Discover builders (outside the retry seam) ────────────────────────────────
+// ── Discover builders (through the retry seam) ────────────────────────────────
 
-/// Discover builders call the generated client directly rather than through
-/// the retry seam: a 5xx is attempted once, and the generated client's error
-/// conversion decodes TMDB's `{status_code, status_message}` error body.
+/// Discover builders run through the same retry seam as every other endpoint:
+/// a 5xx is retried until the budget is spent (two retries, three attempts),
+/// and the final error decodes TMDB's `{status_code, status_message}` body.
 #[tokio::test]
-async fn discover_movies_is_not_retried_and_decodes_the_error_body() {
+async fn discover_movies_is_retried_and_decodes_the_error_body() {
     let server = MockServer::start().await;
     mount(
         &server,
         "/3/discover/movie",
         ResponseTemplate::new(500).set_body_raw(SERVER_ERROR, "application/json"),
-        1,
+        3,
     )
     .await;
     let client = client(&server, |c| c.with_retry(TWO_RETRIES));
@@ -451,9 +574,10 @@ async fn discover_movies_is_not_retried_and_decodes_the_error_body() {
     }
 }
 
-/// See [`discover_movies_is_not_retried_and_decodes_the_error_body`].
+/// See [`discover_movies_is_retried_and_decodes_the_error_body`]; a 429 is
+/// retried the same way, and its `Retry-After` survives on the final error.
 #[tokio::test]
-async fn discover_tv_is_not_retried_and_decodes_the_error_body() {
+async fn discover_tv_is_retried_and_decodes_the_error_body() {
     let server = MockServer::start().await;
     mount(
         &server,
@@ -464,7 +588,7 @@ async fn discover_tv_is_not_retried_and_decodes_the_error_body() {
                 r#"{"status_code":25,"status_message":"limit"}"#,
                 "application/json",
             ),
-        1,
+        3,
     )
     .await;
     let client = client(&server, |c| c.with_retry(TWO_RETRIES));

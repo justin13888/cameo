@@ -1,12 +1,17 @@
 //! Cache key types for the cameo cache layer.
 
 /// The media type of a cached item.
+///
+/// Serializes as the same string the cache key uses: `"movie"`, `"tv"`, or
+/// `"person"`.
 #[non_exhaustive]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum MediaType {
     /// Movie media type.
     Movie,
     /// TV show media type.
+    #[serde(rename = "tv")]
     TvShow,
     /// Person (cast/crew) media type.
     Person,

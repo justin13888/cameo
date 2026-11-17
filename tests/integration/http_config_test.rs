@@ -115,9 +115,17 @@ mod anilist {
         let client = AniListClient::new(config).unwrap();
 
         let err = client.search_tv_shows("anything", None).await.unwrap_err();
+        let AniListError::Http(transport) = &err else {
+            panic!("expected transport (timeout) error, got {err:?}");
+        };
+        assert!(transport.is_timeout(), "{transport:?}");
+        // The original HTTP-client error stays reachable, without its URL.
+        let original = std::error::Error::source(transport)
+            .and_then(|e| e.downcast_ref::<reqwest::Error>())
+            .unwrap_or_else(|| panic!("no reqwest source: {transport:?}"));
         assert!(
-            matches!(err, AniListError::Http(_)),
-            "expected transport (timeout) error, got {err:?}"
+            original.is_timeout() && original.url().is_none(),
+            "{original:?}"
         );
     }
 }

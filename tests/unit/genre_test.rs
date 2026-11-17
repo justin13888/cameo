@@ -1,4 +1,4 @@
-use cameo::unified::genre::{Genre, UnknownGenre};
+use cameo::unified::{Genre, UnknownGenre};
 
 // ── from_tmdb_id ──
 

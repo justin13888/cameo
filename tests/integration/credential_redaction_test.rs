@@ -3,8 +3,7 @@
 //! must have their URL stripped; config/client `Debug` must redact secrets.
 
 use cameo::{
-    RetryPolicy,
-    core::error::ProviderError,
+    ProviderError, RetryPolicy,
     providers::tmdb::{TmdbAuth, TmdbClient, TmdbConfig, TmdbError},
     unified::CameoClient,
 };
@@ -93,8 +92,8 @@ async fn transport_error_is_still_retryable_classified() {
 
 #[tokio::test]
 async fn discover_builder_errors_omit_v3_key() {
-    // The discover builders map errors through the synchronous `From` impl,
-    // a separate path from the main request seam.
+    // The discover builders' error path: connect failure, then an API error
+    // body, both through the client's request seam.
     let client = TmdbClient::new(configs(CLOSED)[0].clone()).unwrap();
     let err = client.discover_movies().execute().await.unwrap_err();
     assert_no_secret(&err);

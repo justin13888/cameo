@@ -13,17 +13,58 @@ marked otherwise is part of the stable API and follows [SemVer](https://semver.o
   `Page`, …) and their public methods/builders;
 - the provider capability traits (`SearchProvider`, `DetailProvider`, …) and the
   `CameoClient` facade;
-- the low-level `TmdbClient` / `AniListClient` surfaces, their configs, and the
+- the low-level `TmdbClient` / `AniListClient` / `TvdbClient` surfaces, their configs, and the
   hand-owned result types they return;
 - the cache contract (`CacheBackend`, `CacheKey`, `CacheError`).
+
+### Canonical paths
+
+Each public item is reachable through its area module, and the most common
+items also through the crate root. These are the only public paths:
+
+| Module | Holds |
+| --- | --- |
+| `cameo` (crate root) | the common items of every module below |
+| `cameo::unified` | models, `Genre`, `PartialDate`, `MediaId`, the provider traits, `CameoClient`, and `TimeWindow` |
+| `cameo::core` | `Page`, `PageToken`, `into_stream`, `ProviderError`, `TransportError`, `DecodeError`, `TimeWindow` |
+| `cameo::providers` | `RateLimit`, `RetryPolicy` |
+| `cameo::providers::tmdb` | `TmdbClient`, its config, errors, discover builders, image URL helpers, and result types |
+| `cameo::providers::anilist` | `AniListClient`, its config, errors, and the anime discovery builder |
+| `cameo::providers::tvdb` | `TvdbClient`, its config, errors, and records |
+| `cameo::cache` | `CacheBackend`, `CacheKey`, `CacheError`, `CacheTtlConfig`, `SqliteCache` |
+
+The modules that hold the definitions (`unified::models`, `core::pagination`,
+`providers::tmdb::client`, `cache::key`, …) are private, so moving an item
+between files is never a public change.
 
 **Not** part of the stable API (may change in any release):
 
 - anything gated behind the `live-tests` feature or documented as internal;
 - exact error *messages* (the error *variants* are stable; their `Display`
   strings are not);
-- the on-disk cache format and `CACHE_SCHEMA_VERSION` (the cache self-migrates);
+- the on-disk cache format (self-migrating);
 - the vendored `generated` module — it is `pub(crate)` and unreachable.
+
+## Public dependencies
+
+A type from another crate that appears in cameo's public API makes that
+crate's breaking releases cameo's breaking releases. cameo therefore keeps
+third-party types out of its API unless they are the deliberate vocabulary of
+the API:
+
+- **Deliberately public:** `serde` (the models derive `Serialize` /
+  `Deserialize`), `serde_json::Value` (the `CacheBackend` value contract and
+  `AniListGqlError`'s `path` / `extensions`), `chrono` (dates and timestamps),
+  `futures`' `Stream` trait (returned by `into_stream`), and `async_trait`
+  (re-exported for trait implementers). A major release of
+  one of these is a breaking cameo release.
+- **Kept private:** the HTTP client (`reqwest`) and the JSON parser's error
+  type (`serde_json::Error`). Errors from them are wrapped in cameo's own
+  `TransportError` and `DecodeError`, which classify and describe the failure
+  and return the original from `std::error::Error::source()` where one can be
+  kept. Downcasting that source to the dependency's type is possible, but it
+  is not part of the stable API: the source's type may change when the
+  dependency does, without a breaking cameo release.
 
 ## `#[non_exhaustive]`
 
@@ -32,9 +73,11 @@ types, configs, `Capability`, …) are `#[non_exhaustive]`. This lets us **add**
 variants and fields in a minor release without it being breaking. Consequently:
 
 - match on these enums with a `_` arm;
-- construct these structs via their `new()` + `with_*` builders, not struct
-  literals; a config with no required fields (e.g. `CacheTtlConfig`) starts
-  from `Default::default()` instead of `new()`.
+- construct input models and configs via their `new()` + `with_*` builders,
+  not struct literals; a config with no required fields (e.g.
+  `CacheTtlConfig`) starts from `Default::default()` instead of `new()`.
+  Output-only types (provider responses and error details) are not
+  constructed by callers at all.
 
 ## What counts as a breaking change
 

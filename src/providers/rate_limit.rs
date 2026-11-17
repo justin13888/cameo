@@ -1,9 +1,7 @@
-//! A real per-provider request-rate limiter.
+//! A per-provider request-rate limiter.
 //!
-//! Replaces the old concurrency semaphore, which only bounded *simultaneous*
-//! in-flight requests (permits were released as soon as a response returned, so
-//! fast responses trivially exceeded a provider's real throughput limit). This
-//! is a token bucket: it bounds the *sustained request rate* and paces bursts.
+//! This is a token bucket: it bounds the *sustained request rate* and paces
+//! bursts, rather than only the number of simultaneous in-flight requests.
 //!
 //! Time is read through [`tokio::time`], so tests can drive it deterministically
 //! with `#[tokio::test(start_paused = true)]` — no wall-clock sleeps.
@@ -193,5 +191,39 @@ mod tests {
         // The 4th must wait ~333ms for a refill.
         limiter.acquire().await;
         assert!(start.elapsed() >= Duration::from_millis(300));
+    }
+
+    /// An idle bucket refills at `max_requests` per `per`: a full window of
+    /// idleness restores the whole burst.
+    #[tokio::test(start_paused = true)]
+    async fn idle_window_refills_the_whole_burst() {
+        let limiter = RateLimiter::new(RateLimit::per(5, Duration::from_secs(1)));
+        for _ in 0..5 {
+            limiter.acquire().await;
+        }
+        tokio::time::advance(Duration::from_secs(1)).await;
+        let start = tokio::time::Instant::now();
+        for _ in 0..5 {
+            limiter.acquire().await;
+        }
+        assert_eq!(start.elapsed(), Duration::ZERO);
+    }
+
+    /// A partly refilled bucket waits only for the missing fraction of a token.
+    #[tokio::test(start_paused = true)]
+    async fn partial_refill_waits_only_for_the_deficit() {
+        let limiter = RateLimiter::new(RateLimit::per(5, Duration::from_secs(1)));
+        for _ in 0..5 {
+            limiter.acquire().await;
+        }
+        // Half of the 200ms token interval has accrued.
+        tokio::time::advance(Duration::from_millis(100)).await;
+        let start = tokio::time::Instant::now();
+        limiter.acquire().await;
+        let waited = start.elapsed();
+        assert!(
+            waited >= Duration::from_millis(90) && waited <= Duration::from_millis(110),
+            "waited {waited:?} for half a token"
+        );
     }
 }

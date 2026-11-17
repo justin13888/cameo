@@ -48,7 +48,7 @@ async fn tv_series_credits_deserializes_response() {
         .mount(&server)
         .await;
 
-    let credits = client.tv_series_credits(1396).await.unwrap();
+    let credits = client.tv_show_credits(1396).await.unwrap();
 
     assert_eq!(credits.cast.len(), 1);
     assert_eq!(credits.cast[0].id, 17419);

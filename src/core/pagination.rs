@@ -123,7 +123,7 @@ impl<T> Page<T> {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use cameo::core::pagination::{into_stream, Page};
+/// use cameo::{Page, into_stream};
 /// use futures::StreamExt;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {

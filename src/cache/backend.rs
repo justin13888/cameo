@@ -5,6 +5,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 
 use super::key::CacheKey;
+use crate::core::error::DecodeError;
 
 /// Error returned by [`CacheBackend`] operations.
 ///
@@ -20,8 +21,11 @@ use super::key::CacheKey;
 #[derive(Debug, thiserror::Error)]
 pub enum CacheError {
     /// The value could not be serialized to or deserialized from its stored form.
+    ///
+    /// Where a JSON (de)serializer error produced it, that error is the
+    /// [`DecodeError`]'s [`source`](std::error::Error::source).
     #[error("cache serialization error: {0}")]
-    Serialization(#[from] serde_json::Error),
+    Serialization(#[source] DecodeError),
     /// The underlying store failed (I/O, connection, corruption, …).
     #[error("cache backend error: {0}")]
     Backend(Box<dyn std::error::Error + Send + Sync>),
@@ -31,6 +35,11 @@ impl CacheError {
     /// Wrap an arbitrary store error as [`CacheError::Backend`].
     pub fn backend<E: std::error::Error + Send + Sync + 'static>(error: E) -> Self {
         CacheError::Backend(Box::new(error))
+    }
+
+    /// Wrap a JSON (de)serializer error as [`CacheError::Serialization`].
+    pub(crate) fn json(error: serde_json::Error) -> Self {
+        CacheError::Serialization(DecodeError::json(error))
     }
 }
 
@@ -44,9 +53,18 @@ impl CacheError {
 ///   a deliberate choice: `Value` is serde-native, self-describing, and keeps
 ///   the trait object-safe without a generic parameter.
 /// - **Keys** — a [`CacheKey`] identifies an entry. Derive a stable string from
-///   [`CacheKey::key_type`] + [`CacheKey::key_id`]; both already embed the
-///   provider/version namespace, so distinct providers and schema versions
-///   never collide.
+///   [`CacheKey::key_type`] + [`CacheKey::key_id`]; `key_id` embeds the
+///   provider namespace (the [`MediaId`](crate::MediaId) prefix, or the
+///   serving provider's id for search and discovery pages), so distinct
+///   providers never collide.
+/// - **Versioning** — keys carry **no** schema version. When cameo changes the
+///   shape of a stored model, an entry written by an older version may fail
+///   to deserialize (the facade then treats it as a miss) or may deserialize
+///   with fields left at their defaults. A backend whose entries outlive a
+///   cameo upgrade must therefore version its own storage
+///   (e.g. a version in a key prefix or table name, flushed on change), as
+///   [`SqliteCache`](super::SqliteCache) does with SQLite's
+///   `PRAGMA user_version`.
 /// - **TTL** — [`set`](CacheBackend::set) is given a time-to-live; expired
 ///   entries must be reported as `None` by [`get`](CacheBackend::get).
 /// - **Errors** — return [`CacheError`]; they are logged and treated as a miss,

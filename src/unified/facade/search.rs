@@ -7,7 +7,16 @@ use crate::{
 };
 
 impl CameoClient {
-    /// Search for movies via the configured provider(s).
+    /// Search for movies with the highest-priority search provider.
+    ///
+    /// `page: None` is the first page. With a cache configured, a result is
+    /// served from and stored under the query trimmed and lowercased, so
+    /// `"Dune"` and `" dune "` share an entry.
+    ///
+    /// # Errors
+    ///
+    /// [`CameoClientError::Unsupported`] when no configured provider can
+    /// search, and [`CameoClientError::Provider`] when the provider fails.
     pub async fn search_movies(
         &self,
         query: &str,
@@ -15,7 +24,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
-            provider: self.search_ns(),
+            provider: Self::cache_ns(&self.search),
             media_type: Some(MediaType::Movie),
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -30,23 +39,20 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_search_ttl()).await;
-            for item in &result.results {
-                self.cache_put(
-                    CacheKey::Item {
-                        media_type: MediaType::Movie,
-                        provider_id: item.provider_id.to_string(),
-                    },
-                    item,
-                    self.cache_items_ttl(),
-                )
+            self.cache_put(key, &result, self.cache_ttl(|t| t.search))
                 .await;
-            }
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }
 
-    /// Search for TV shows via the configured provider(s).
+    /// Search for TV shows with the highest-priority search provider.
+    ///
+    /// Paged and cached as [`search_movies`](Self::search_movies) is.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies`](Self::search_movies).
     pub async fn search_tv_shows(
         &self,
         query: &str,
@@ -54,7 +60,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
-            provider: self.search_ns(),
+            provider: Self::cache_ns(&self.search),
             media_type: Some(MediaType::TvShow),
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -69,23 +75,20 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_search_ttl()).await;
-            for item in &result.results {
-                self.cache_put(
-                    CacheKey::Item {
-                        media_type: MediaType::TvShow,
-                        provider_id: item.provider_id.to_string(),
-                    },
-                    item,
-                    self.cache_items_ttl(),
-                )
+            self.cache_put(key, &result, self.cache_ttl(|t| t.search))
                 .await;
-            }
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }
 
-    /// Search for people via the configured provider(s).
+    /// Search for people with the highest-priority search provider.
+    ///
+    /// Paged and cached as [`search_movies`](Self::search_movies) is.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies`](Self::search_movies).
     pub async fn search_people(
         &self,
         query: &str,
@@ -93,7 +96,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedPerson>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
-            provider: self.search_ns(),
+            provider: Self::cache_ns(&self.search),
             media_type: Some(MediaType::Person),
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -108,23 +111,21 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_search_ttl()).await;
-            for item in &result.results {
-                self.cache_put(
-                    CacheKey::Item {
-                        media_type: MediaType::Person,
-                        provider_id: item.provider_id.to_string(),
-                    },
-                    item,
-                    self.cache_items_ttl(),
-                )
+            self.cache_put(key, &result, self.cache_ttl(|t| t.search))
                 .await;
-            }
+            self.cache_items(&result.results).await;
         }
         Ok(result)
     }
 
-    /// Multi-search across movies, TV shows, and people.
+    /// Multi-search across movies, TV shows, and people with the
+    /// highest-priority search provider.
+    ///
+    /// Paged and cached as [`search_movies`](Self::search_movies) is.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies`](Self::search_movies).
     pub async fn search_multi(
         &self,
         query: &str,
@@ -132,7 +133,7 @@ impl CameoClient {
     ) -> Result<Page<UnifiedSearchResult>, CameoClientError> {
         #[cfg(feature = "cache")]
         let key = CacheKey::Search {
-            provider: self.search_ns(),
+            provider: Self::cache_ns(&self.search),
             media_type: None,
             query: query.to_string(),
             page: page.unwrap_or(1),
@@ -147,26 +148,16 @@ impl CameoClient {
             .await?;
         #[cfg(feature = "cache")]
         {
-            self.cache_put(key, &result, self.cache_search_ttl()).await;
-            for item in &result.results {
-                let (media_type, provider_id) = match item {
-                    UnifiedSearchResult::Movie(m) => (MediaType::Movie, m.provider_id.to_string()),
-                    UnifiedSearchResult::TvShow(t) => {
-                        (MediaType::TvShow, t.provider_id.to_string())
-                    }
-                    UnifiedSearchResult::Person(p) => {
-                        (MediaType::Person, p.provider_id.to_string())
-                    }
-                };
-                self.cache_put(
-                    CacheKey::Item {
-                        media_type,
-                        provider_id,
-                    },
-                    item,
-                    self.cache_items_ttl(),
-                )
+            self.cache_put(key, &result, self.cache_ttl(|t| t.search))
                 .await;
+            // Index the wrapped model, not the wrapper: `cached_*` reads the
+            // item entry as the bare summary model.
+            for item in &result.results {
+                match item {
+                    UnifiedSearchResult::Movie(m) => self.cache_item(m).await,
+                    UnifiedSearchResult::TvShow(t) => self.cache_item(t).await,
+                    UnifiedSearchResult::Person(p) => self.cache_item(p).await,
+                }
             }
         }
         Ok(result)
@@ -174,57 +165,75 @@ impl CameoClient {
 }
 
 /// Per-call provider selection: search with a specific provider by id (e.g.
-/// `"anilist"`), overriding the default priority. These bypass the cache since
-/// the result is provider-scoped.
+/// `"anilist"`), overriding the default priority. These neither read nor write
+/// the cache. Search is the only capability with a per-call override.
 impl CameoClient {
     /// Search for movies with a specific provider (e.g. `"anilist"`).
+    ///
+    /// # Errors
+    ///
+    /// [`CameoClientError::Unsupported`] when no configured search provider
+    /// has the id `provider`, and [`CameoClientError::Provider`] when that
+    /// provider fails.
     pub async fn search_movies_with(
         &self,
-        provider_id: &str,
+        provider: &str,
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, CameoClientError> {
         Ok(self
-            .select(&self.search, provider_id)?
+            .select(&self.search, provider)?
             .search_movies(query, page)
             .await?)
     }
 
     /// Search for TV shows with a specific provider.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies_with`](Self::search_movies_with).
     pub async fn search_tv_shows_with(
         &self,
-        provider_id: &str,
+        provider: &str,
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, CameoClientError> {
         Ok(self
-            .select(&self.search, provider_id)?
+            .select(&self.search, provider)?
             .search_tv_shows(query, page)
             .await?)
     }
 
     /// Search for people with a specific provider.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies_with`](Self::search_movies_with).
     pub async fn search_people_with(
         &self,
-        provider_id: &str,
+        provider: &str,
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedPerson>, CameoClientError> {
         Ok(self
-            .select(&self.search, provider_id)?
+            .select(&self.search, provider)?
             .search_people(query, page)
             .await?)
     }
 
     /// Multi-search with a specific provider.
+    ///
+    /// # Errors
+    ///
+    /// As [`search_movies_with`](Self::search_movies_with).
     pub async fn search_multi_with(
         &self,
-        provider_id: &str,
+        provider: &str,
         query: &str,
         page: Option<u32>,
     ) -> Result<Page<UnifiedSearchResult>, CameoClientError> {
         Ok(self
-            .select(&self.search, provider_id)?
+            .select(&self.search, provider)?
             .search_multi(query, page)
             .await?)
     }

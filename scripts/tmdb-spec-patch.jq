@@ -147,5 +147,64 @@ def fix_movie_recommendations:
       | del(.components.schemas.MovieRecommendationsResponse)
     else . end;
 
+# (10) Declare watch-provider `results` as a per-country map.
+#     The spec spells `results` out as an object with one property per country
+#     it happens to list (95 for movies, 88 for TV series), each with its own
+#     inline schema. That generates a fixed-field struct with one type per
+#     country, and a country TMDB returns that the spec does not list is
+#     discarded on deserialization. TMDB keys `results` by ISO 3166-1 country
+#     code, so declare it as an object whose `additionalProperties` are one
+#     shared per-country schema (`WatchProviderCountry`, with its services as
+#     `WatchProviderService`), which generates a `BTreeMap<String, _>`. Applied
+#     after (7), to every hoisted `*WatchProvidersResponse`, and written in the
+#     nullable form (6) gives response properties.
+def watch_provider_country_map:
+  {"type": "object",
+   "properties": {
+     "logo_path": {"type": ["string", "null"]},
+     "provider_id": {"type": ["integer", "null"]},
+     "provider_name": {"type": ["string", "null"]},
+     "display_priority": {"type": ["integer", "null"]}}} as $service
+  | {"type": ["array", "null"], "items": {"$ref": "#/components/schemas/WatchProviderService"}}
+    as $services
+  | .components.schemas.WatchProviderService = $service
+  | .components.schemas.WatchProviderCountry = {
+      "type": "object",
+      "properties": {
+        "link": {"type": ["string", "null"]},
+        "flatrate": $services,
+        "free": $services,
+        "rent": $services,
+        "buy": $services}}
+  | .components.schemas |= with_entries(
+      if (.key | endswith("WatchProvidersResponse"))
+         and (.value.properties.results | type) == "object"
+      then .value.properties.results = {
+             "type": ["object", "null"],
+             "additionalProperties": {"$ref": "#/components/schemas/WatchProviderCountry"}}
+      else . end);
+
+# (11) Declare the certification blocks `append_to_response` adds to details.
+#     `/movie/{id}?append_to_response=release_dates` and
+#     `/tv/{id}?append_to_response=content_ratings` embed the sub-resource's
+#     body under that key, but the details schemas do not declare it, so the
+#     generated types drop it on deserialization. Declare `release_dates` on
+#     `MovieDetailsResponse` and `content_ratings` on `TvSeriesDetailsResponse`
+#     as optional, nullable references to the sub-resource's own hoisted
+#     schema (every property of which is optional, so the embedded body, which
+#     carries no `id`, reads as it). Applied after (7), and only while the
+#     upstream details schemas still lack the key.
+def append_certification_blocks:
+  def append_block($details; $key; $schema):
+    if .components.schemas[$details] != null
+       and .components.schemas[$schema] != null
+       and (.components.schemas[$details].properties | has($key) | not)
+    then .components.schemas[$details].properties[$key] = {
+           "anyOf": [{"$ref": ("#/components/schemas/" + $schema)}, {"type": "null"}]}
+    else . end;
+  append_block("MovieDetailsResponse"; "release_dates"; "MovieReleaseDatesResponse")
+  | append_block("TvSeriesDetailsResponse"; "content_ratings"; "TvSeriesContentRatingsResponse");
+
 rename_id | fix_vote_average | fix_bool_defaults | strip_examples | strip_property_defaults
 | nullable_responses | name_schemas | fix_movie_recommendations | declare_security
+| watch_provider_country_map | append_certification_blocks

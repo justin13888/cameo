@@ -18,7 +18,7 @@ clippy:
 clippy-all:
     #!/usr/bin/env sh
     set -e
-    for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tmdb,anilist,cache"; do
+    for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tvdb" "tmdb,anilist,tvdb,cache"; do
         echo "==> clippy --features $features"
         cargo clippy --all-targets --no-default-features --features "$features" -- -D warnings
     done
@@ -26,6 +26,10 @@ clippy-all:
 # Auto-fix clippy lints
 clippy-fix:
     cargo clippy --fix --allow-dirty --allow-staged --all-targets -- -D warnings
+
+# Check that hand-written sources under src/ stay within the file-length limit
+file-length:
+    ./scripts/check-file-length.sh
 
 # Build (default features)
 build:
@@ -47,7 +51,7 @@ test-features features:
 test-all-features:
     #!/usr/bin/env sh
     set -e
-    for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tmdb,anilist,cache"; do
+    for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tvdb" "tmdb,anilist,tvdb,cache"; do
         echo "==> test --features $features"
         cargo test --no-default-features --features "$features"
     done
@@ -78,6 +82,16 @@ publish-check:
     cargo test --features full
     cargo doc --no-deps
     cargo publish --dry-run
+
+# Mutation-test the sources matching a glob (default: all; needs cargo-mutants)
+mutants files="src/**/*.rs":
+    cargo mutants --file '{{files}}'
+
+# Mutation-test only the lines changed since a base ref (what CI runs)
+mutants-diff base="origin/master":
+    mkdir -p target
+    git diff '{{base}}...HEAD' > target/mutants.diff
+    cargo mutants --in-diff target/mutants.diff
 
 # Regenerate TMDB OpenAPI spec
 fetch-openapi:

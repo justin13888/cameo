@@ -3,12 +3,18 @@
 use std::time::Duration;
 
 use cameo::{
-    MediaId, PartialDate, UnifiedMovie, UnifiedMovieDetails, UnifiedTvShow, UnifiedTvShowDetails,
+    MediaId, PartialDate, SeriesStatus, UnifiedMovie, UnifiedMovieDetails, UnifiedTvShow,
+    UnifiedTvShowDetails,
     cache::{CacheBackend, CacheKey, CacheTtlConfig, MediaType, SqliteCache},
 };
 
 fn make_cache() -> SqliteCache {
     SqliteCache::in_memory().expect("in-memory SQLite cache")
+}
+
+#[test]
+fn debug_names_the_cache_without_exposing_its_connections() {
+    assert_eq!(format!("{:?}", make_cache()), "SqliteCache { .. }");
 }
 
 #[tokio::test]
@@ -253,7 +259,7 @@ fn movie(release_date: Option<PartialDate>, status: Option<&str>) -> UnifiedMovi
 fn tv(
     first_air_date: Option<PartialDate>,
     last_air_date: Option<PartialDate>,
-    status: Option<&str>,
+    status: Option<SeriesStatus>,
     in_production: Option<bool>,
 ) -> UnifiedTvShowDetails {
     let mut base = UnifiedTvShow::new(MediaId::tmdb(1399), "Game of Thrones");
@@ -345,7 +351,7 @@ fn tv_active_in_production_gets_short_ttl() {
     let ttl = cfg.tv_show_details_ttl(&tv(
         Some(days_ago(1000)),
         None,
-        Some("Returning Series"),
+        Some(SeriesStatus::ReturningSeries),
         Some(true),
     ));
     assert_eq!(ttl, cfg.active_content_details_ttl);
@@ -362,7 +368,7 @@ fn tv_recently_aired_gets_short_ttl() {
     let ttl = cfg.tv_show_details_ttl(&tv(
         Some(days_ago(2000)),
         Some(last_air),
-        Some("Returning Series"),
+        Some(SeriesStatus::ReturningSeries),
         Some(false),
     ));
     assert_eq!(ttl, cfg.active_content_details_ttl);
@@ -377,7 +383,7 @@ fn tv_old_ended_gets_long_ttl() {
     let ttl = cfg.tv_show_details_ttl(&tv(
         Some(first_air),
         Some(last_air),
-        Some("Ended"),
+        Some(SeriesStatus::Ended),
         Some(false),
     ));
     assert_eq!(
@@ -390,7 +396,12 @@ fn tv_old_ended_gets_long_ttl() {
 fn tv_canceled_old_gets_long_ttl() {
     let cfg = CacheTtlConfig::default();
     let first_air = days_ago(1500);
-    let ttl = cfg.tv_show_details_ttl(&tv(Some(first_air), None, Some("Canceled"), Some(false)));
+    let ttl = cfg.tv_show_details_ttl(&tv(
+        Some(first_air),
+        None,
+        Some(SeriesStatus::Cancelled),
+        Some(false),
+    ));
     assert_eq!(ttl, cfg.old_content_details_ttl);
 }
 
@@ -403,7 +414,7 @@ fn tv_returning_series_gets_medium_ttl() {
     let ttl = cfg.tv_show_details_ttl(&tv(
         Some(first_air),
         Some(last_air),
-        Some("Returning Series"),
+        Some(SeriesStatus::ReturningSeries),
         Some(false),
     ));
     assert_eq!(ttl, cfg.recent_content_details_ttl);
@@ -417,7 +428,7 @@ fn tv_recent_first_air_gets_medium_ttl() {
     let ttl = cfg.tv_show_details_ttl(&tv(
         Some(first_air),
         Some(last_air),
-        Some("Ended"),
+        Some(SeriesStatus::Ended),
         Some(false),
     ));
     assert_eq!(ttl, cfg.recent_content_details_ttl);
@@ -435,7 +446,12 @@ fn tv_active_overrides_old_status() {
     let cfg = CacheTtlConfig::default();
     // Even though show is old, if in_production=true it should use active TTL
     let first_air = days_ago(2000);
-    let ttl = cfg.tv_show_details_ttl(&tv(Some(first_air), None, Some("Ended"), Some(true)));
+    let ttl = cfg.tv_show_details_ttl(&tv(
+        Some(first_air),
+        None,
+        Some(SeriesStatus::Ended),
+        Some(true),
+    ));
     assert_eq!(
         ttl, cfg.active_content_details_ttl,
         "in_production=true overrides old/ended status"
@@ -496,7 +512,7 @@ fn movie_status_falls_back_to_base_movie_status() {
 fn tv_year_only_old_ended_gets_long_ttl() {
     let cfg = CacheTtlConfig::default();
     let first_air = PartialDate::from_year(this_year() - 10);
-    let ttl = cfg.tv_show_details_ttl(&tv(Some(first_air), None, Some("FINISHED"), None));
+    let ttl = cfg.tv_show_details_ttl(&tv(Some(first_air), None, Some(SeriesStatus::Ended), None));
     assert_eq!(ttl, cfg.old_content_details_ttl);
 }
 
@@ -505,7 +521,7 @@ fn tv_status_falls_back_to_base_show_status() {
     let cfg = CacheTtlConfig::default();
     let base = UnifiedTvShow::new(MediaId::tmdb(1399), "Game of Thrones")
         .with_first_air_date(days_ago(2000))
-        .with_status("Ended");
+        .with_status(SeriesStatus::Ended);
     let ttl = cfg.tv_show_details_ttl(&UnifiedTvShowDetails::new(base));
     assert_eq!(ttl, cfg.old_content_details_ttl);
 }
@@ -513,7 +529,12 @@ fn tv_status_falls_back_to_base_show_status() {
 #[test]
 fn tv_unknown_in_production_falls_through_to_date_rules() {
     let cfg = CacheTtlConfig::default();
-    let ttl = cfg.tv_show_details_ttl(&tv(Some(days_ago(2000)), None, Some("Ended"), None));
+    let ttl = cfg.tv_show_details_ttl(&tv(
+        Some(days_ago(2000)),
+        None,
+        Some(SeriesStatus::Ended),
+        None,
+    ));
     assert_eq!(ttl, cfg.old_content_details_ttl);
 }
 
@@ -554,4 +575,27 @@ fn ttl_setters_leave_other_fields_at_default() {
         cfg.old_content_threshold_days,
         default.old_content_threshold_days
     );
+}
+
+#[test]
+fn movie_released_exactly_at_old_threshold_is_not_old() {
+    let cfg = CacheTtlConfig::default();
+    // "Old" means strictly more than the threshold's days ago.
+    let release = days_ago(cfg.old_content_threshold_days as i64);
+    let ttl = cfg.movie_details_ttl(&movie(Some(release), Some("Released")));
+    assert_eq!(ttl, cfg.details);
+}
+
+#[test]
+fn tv_ended_first_aired_exactly_at_old_threshold_is_not_old() {
+    let cfg = CacheTtlConfig::default();
+    // "Old" means strictly more than the threshold's days ago.
+    let first_air = days_ago(cfg.old_content_threshold_days as i64);
+    let ttl = cfg.tv_show_details_ttl(&tv(
+        Some(first_air),
+        None,
+        Some(SeriesStatus::Ended),
+        Some(false),
+    ));
+    assert_eq!(ttl, cfg.details);
 }

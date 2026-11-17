@@ -1,6 +1,5 @@
 use cameo::{
-    MediaId,
-    core::error::ProviderError,
+    MediaId, ProviderError,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
     unified::RecommendationProvider,
 };

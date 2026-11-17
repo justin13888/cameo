@@ -4,9 +4,13 @@
 //! implementation. Use [`CacheTtlConfig`] to control how long different
 //! response types are cached.
 
-pub mod backend;
-pub mod key;
-pub mod sqlite;
+//!
+//! The leaf modules are private; every item is re-exported here and from the
+//! crate root, which is its canonical path.
+
+pub(crate) mod backend;
+pub(crate) mod key;
+pub(crate) mod sqlite;
 
 use std::time::Duration;
 
@@ -15,7 +19,7 @@ use chrono::{NaiveDate, Utc};
 pub use key::{CacheKey, MediaType};
 pub use sqlite::SqliteCache;
 
-use crate::unified::{PartialDate, UnifiedMovieDetails, UnifiedTvShowDetails};
+use crate::unified::{PartialDate, SeriesStatus, UnifiedMovieDetails, UnifiedTvShowDetails};
 
 /// TTL configuration for the cache layer.
 ///
@@ -36,7 +40,8 @@ use crate::unified::{PartialDate, UnifiedMovieDetails, UnifiedTvShowDetails};
 /// assert_eq!(ttl.old_content_threshold_days, 730);
 /// ```
 #[non_exhaustive]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use = "a CacheTtlConfig does nothing unless passed to CameoClientBuilder::with_cache_ttl"]
 pub struct CacheTtlConfig {
     /// Fallback TTL for detail responses when no age policy matches.
     pub details: Duration,
@@ -216,10 +221,13 @@ impl CacheTtlConfig {
     /// Selection logic (first match wins):
     /// 1. `in_production` is `true` *or* `last_air_date` is within the past 90
     ///    days → [`active_content_details_ttl`](CacheTtlConfig::active_content_details_ttl)
-    /// 2. Status is "Ended" or "Canceled" **and** `first_air_date` is older
+    /// 2. Status is [`SeriesStatus::Ended`] or [`SeriesStatus::Cancelled`]
+    ///    **and** `first_air_date` is older
     ///    than [`old_content_threshold_days`](CacheTtlConfig::old_content_threshold_days)
     ///    → [`old_content_details_ttl`](CacheTtlConfig::old_content_details_ttl)
-    /// 3. Status indicates continuing/planned *or* `first_air_date` is within
+    /// 3. Status is [`SeriesStatus::ReturningSeries`],
+    ///    [`SeriesStatus::InProduction`] or [`SeriesStatus::Planned`] *or*
+    ///    `first_air_date` is within
     ///    [`recent_content_threshold_days`](CacheTtlConfig::recent_content_threshold_days)
     ///    → [`recent_content_details_ttl`](CacheTtlConfig::recent_content_details_ttl)
     /// 4. Fallback → [`details`](CacheTtlConfig::details)
@@ -233,7 +241,7 @@ impl CacheTtlConfig {
     /// [`in_production`](UnifiedTvShowDetails::in_production) counts as
     /// `false`, so it falls through to the date- and status-based rules.
     pub fn tv_show_details_ttl(&self, details: &UnifiedTvShowDetails) -> Duration {
-        let status = details.status.as_deref().or(details.show.status.as_deref());
+        let status = details.status.as_ref().or(details.show.status.as_ref());
         let in_production = details.in_production.unwrap_or(false);
         let last_air_days = details.last_air_date.and_then(Self::days_since);
         let recently_aired = last_air_days.map(|d| d <= 90).unwrap_or(false);
@@ -245,7 +253,7 @@ impl CacheTtlConfig {
         let first_air_days = details.show.first_air_date.and_then(Self::days_since);
         let is_ended = matches!(
             status,
-            Some("Ended") | Some("Canceled") | Some("FINISHED") | Some("CANCELLED")
+            Some(SeriesStatus::Ended) | Some(SeriesStatus::Cancelled)
         );
         let is_old = first_air_days
             .map(|d| d > self.old_content_threshold_days as i64)
@@ -257,11 +265,9 @@ impl CacheTtlConfig {
 
         let is_returning = matches!(
             status,
-            Some("Returning Series")
-                | Some("In Production")
-                | Some("Planned")
-                | Some("RELEASING")
-                | Some("NOT_YET_RELEASED")
+            Some(SeriesStatus::ReturningSeries)
+                | Some(SeriesStatus::InProduction)
+                | Some(SeriesStatus::Planned)
         );
         let is_recent = first_air_days
             .map(|d| d <= self.recent_content_threshold_days as i64)

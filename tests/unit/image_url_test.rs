@@ -1,4 +1,4 @@
-use cameo::providers::tmdb::image_url::{
+use cameo::providers::tmdb::{
     BackdropSize, ImageUrl, LogoSize, PosterSize, ProfileSize, StillSize,
 };
 

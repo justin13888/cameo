@@ -67,25 +67,59 @@ impl Provider for AniListClient {
     }
 }
 
-/// Extract the numeric AniList id from a [`MediaId`], handling namespaced staff
-/// ids (`anilist:staff:95061`) as well as plain media ids (`anilist:1`).
-fn anilist_id(id: &MediaId) -> Result<i32, ProviderError> {
-    if id.provider() != "anilist" {
-        return Err(ProviderError::InvalidInput(format!(
-            "expected an anilist id, got {id}"
-        )));
+/// Namespace prefix of an AniList staff id's native part (`staff:95061`).
+const STAFF_PREFIX: &str = "staff:";
+
+/// Extract the numeric AniList *media* id from a plain media id (`anilist:1`).
+///
+/// Returns [`ProviderError::InvalidInput`] for an id from another provider, a
+/// namespaced id such as a staff id (`anilist:staff:95061`), or a number
+/// outside AniList's `i32` range.
+fn anilist_media_id(id: &MediaId) -> Result<i32, ProviderError> {
+    require_anilist(id)?;
+    match id.native() {
+        NativeId::Num(n) => to_i32(*n, id),
+        NativeId::Text(_) => Err(ProviderError::InvalidInput(format!(
+            "expected an AniList media id (anilist:<n>), got {id}"
+        ))),
     }
+}
+
+/// Extract the numeric AniList *staff* id from a staff id
+/// (`anilist:staff:95061`).
+///
+/// Returns [`ProviderError::InvalidInput`] for an id from another provider, a
+/// plain media id (`anilist:1`), any other namespace, or a number outside
+/// AniList's `i32` range.
+fn anilist_staff_id(id: &MediaId) -> Result<i32, ProviderError> {
+    require_anilist(id)?;
     let numeric = match id.native() {
-        NativeId::Num(n) => *n,
-        // e.g. "staff:95061" -> 95061
         NativeId::Text(s) => s
-            .rsplit(':')
-            .next()
-            .and_then(|part| part.parse::<u64>().ok())
-            .ok_or_else(|| {
-                ProviderError::InvalidInput(format!("not a numeric AniList id: {id}"))
-            })?,
+            .strip_prefix(STAFF_PREFIX)
+            .and_then(|n| n.parse::<u64>().ok()),
+        NativeId::Num(_) => None,
     };
+    let numeric = numeric.ok_or_else(|| {
+        ProviderError::InvalidInput(format!(
+            "expected an AniList staff id (anilist:staff:<n>), got {id}"
+        ))
+    })?;
+    to_i32(numeric, id)
+}
+
+/// Reject an id that does not belong to AniList.
+fn require_anilist(id: &MediaId) -> Result<(), ProviderError> {
+    if id.provider() == "anilist" {
+        Ok(())
+    } else {
+        Err(ProviderError::InvalidInput(format!(
+            "expected an anilist id, got {id}"
+        )))
+    }
+}
+
+/// Narrow a parsed AniList id to the `i32` AniList's API takes.
+fn to_i32(numeric: u64, id: &MediaId) -> Result<i32, ProviderError> {
     i32::try_from(numeric)
         .map_err(|_| ProviderError::InvalidInput(format!("AniList id out of range: {id}")))
 }
@@ -128,15 +162,15 @@ impl SearchProvider for AniListClient {
 #[async_trait]
 impl DetailProvider for AniListClient {
     async fn movie_details(&self, id: &MediaId) -> Result<UnifiedMovieDetails, ProviderError> {
-        Ok(AniListClient::movie_details(self, anilist_id(id)?).await?)
+        Ok(AniListClient::movie_details(self, anilist_media_id(id)?).await?)
     }
 
     async fn tv_show_details(&self, id: &MediaId) -> Result<UnifiedTvShowDetails, ProviderError> {
-        Ok(AniListClient::tv_show_details(self, anilist_id(id)?).await?)
+        Ok(AniListClient::tv_show_details(self, anilist_media_id(id)?).await?)
     }
 
     async fn person_details(&self, id: &MediaId) -> Result<UnifiedPersonDetails, ProviderError> {
-        Ok(AniListClient::person_details(self, anilist_id(id)?).await?)
+        Ok(AniListClient::person_details(self, anilist_staff_id(id)?).await?)
     }
 }
 
@@ -155,7 +189,7 @@ impl DiscoveryProvider for AniListClient {
         time_window: TimeWindow,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(AniListClient::trending_tv(self, time_window, page).await?)
+        Ok(AniListClient::trending_tv_shows(self, time_window, page).await?)
     }
 
     async fn popular_movies(&self, page: Option<u32>) -> Result<Page<UnifiedMovie>, ProviderError> {
@@ -189,11 +223,11 @@ impl DiscoveryProvider for AniListClient {
 #[async_trait]
 impl CreditsProvider for AniListClient {
     async fn movie_credits(&self, id: &MediaId) -> Result<UnifiedCredits, ProviderError> {
-        Ok(AniListClient::media_credits(self, anilist_id(id)?).await?)
+        Ok(AniListClient::media_credits(self, anilist_media_id(id)?).await?)
     }
 
     async fn tv_show_credits(&self, id: &MediaId) -> Result<UnifiedCredits, ProviderError> {
-        Ok(AniListClient::media_credits(self, anilist_id(id)?).await?)
+        Ok(AniListClient::media_credits(self, anilist_media_id(id)?).await?)
     }
 }
 
@@ -206,11 +240,11 @@ impl ExternalIdProvider for AniListClient {
     }
 
     async fn movie_external_ids(&self, id: &MediaId) -> Result<ExternalIds, ProviderError> {
-        Ok(AniListClient::external_ids(self, anilist_id(id)?).await?)
+        Ok(AniListClient::external_ids(self, anilist_media_id(id)?).await?)
     }
 
     async fn tv_external_ids(&self, id: &MediaId) -> Result<ExternalIds, ProviderError> {
-        Ok(AniListClient::external_ids(self, anilist_id(id)?).await?)
+        Ok(AniListClient::external_ids(self, anilist_media_id(id)?).await?)
     }
 
     async fn find_by_external_id(
@@ -238,7 +272,7 @@ impl RecommendationProvider for AniListClient {
         id: &MediaId,
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, ProviderError> {
-        Ok(AniListClient::movie_recommendations(self, anilist_id(id)?, page).await?)
+        Ok(AniListClient::movie_recommendations(self, anilist_media_id(id)?, page).await?)
     }
 
     async fn tv_recommendations(
@@ -246,7 +280,7 @@ impl RecommendationProvider for AniListClient {
         id: &MediaId,
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(AniListClient::tv_recommendations(self, anilist_id(id)?, page).await?)
+        Ok(AniListClient::tv_recommendations(self, anilist_media_id(id)?, page).await?)
     }
 
     /// AniList has no "similar titles" list distinct from recommendations.
@@ -265,5 +299,86 @@ impl RecommendationProvider for AniListClient {
         _page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
         Err(ProviderError::Unsupported)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::providers::anilist::config::AniListConfig;
+
+    fn is_invalid_input<T: std::fmt::Debug>(result: Result<T, ProviderError>) -> bool {
+        matches!(result, Err(ProviderError::InvalidInput(_)))
+    }
+
+    /// A client whose base URL nothing listens on: every test below must fail
+    /// before any request is sent.
+    fn offline_client() -> AniListClient {
+        let config = AniListConfig::new_with_base_url("http://127.0.0.1:9/graphql");
+        AniListClient::new(config).expect("valid config")
+    }
+
+    #[test]
+    fn media_id_accepts_plain_media_ids() {
+        assert_eq!(anilist_media_id(&MediaId::anilist(1)).ok(), Some(1));
+    }
+
+    #[test]
+    fn media_id_rejects_staff_ids() {
+        assert!(is_invalid_input(anilist_media_id(&MediaId::anilist_staff(
+            95061
+        ))));
+    }
+
+    #[test]
+    fn media_id_rejects_other_providers_and_out_of_range_ids() {
+        assert!(is_invalid_input(anilist_media_id(&MediaId::tmdb(1))));
+        let too_big = u64::try_from(i32::MAX).expect("positive") + 1;
+        assert!(is_invalid_input(anilist_media_id(&MediaId::anilist(
+            too_big
+        ))));
+    }
+
+    #[test]
+    fn staff_id_accepts_staff_ids() {
+        assert_eq!(
+            anilist_staff_id(&MediaId::anilist_staff(95061)).ok(),
+            Some(95061)
+        );
+    }
+
+    #[test]
+    fn staff_id_rejects_media_ids() {
+        assert!(is_invalid_input(anilist_staff_id(&MediaId::anilist(1))));
+    }
+
+    #[test]
+    fn staff_id_rejects_other_namespaces_and_providers() {
+        let character = MediaId::new("anilist", NativeId::Text("character:5".to_owned()));
+        assert!(is_invalid_input(anilist_staff_id(&character)));
+        let bare = MediaId::new("anilist", NativeId::Text("staff:".to_owned()));
+        assert!(is_invalid_input(anilist_staff_id(&bare)));
+        let tmdb_staff = MediaId::new("tmdb", NativeId::Text("staff:1".to_owned()));
+        assert!(is_invalid_input(anilist_staff_id(&tmdb_staff)));
+    }
+
+    #[tokio::test]
+    async fn media_details_reject_a_staff_id() {
+        let client = offline_client();
+        let staff = MediaId::anilist_staff(95061);
+        assert!(is_invalid_input(
+            DetailProvider::movie_details(&client, &staff).await
+        ));
+        assert!(is_invalid_input(
+            DetailProvider::tv_show_details(&client, &staff).await
+        ));
+    }
+
+    #[tokio::test]
+    async fn person_details_reject_a_media_id() {
+        let client = offline_client();
+        assert!(is_invalid_input(
+            DetailProvider::person_details(&client, &MediaId::anilist(1)).await
+        ));
     }
 }

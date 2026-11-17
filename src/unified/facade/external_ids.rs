@@ -34,8 +34,7 @@ impl CameoClient {
     /// # Errors
     ///
     /// [`CameoClientError::Unsupported`] when no configured provider accepts
-    /// `id.source`, [`CameoClientError::NotConfigured`] when nothing is
-    /// configured, or [`CameoClientError::Provider`] when all queried
+    /// `id.source`, or [`CameoClientError::Provider`] when all queried
     /// providers fail.
     ///
     /// ```no_run

@@ -1,9 +1,12 @@
 use cameo::{
-    core::config::TimeWindow,
+    TimeWindow,
     providers::anilist::{AniListClient, AniListConfig},
 };
 use serde_json::{Value, json};
-use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+use wiremock::{
+    Mock, MockServer, ResponseTemplate,
+    matchers::{body_partial_json, method},
+};
 
 fn media_item(id: i32, title: &str, format: &str) -> Value {
     json!({
@@ -80,14 +83,17 @@ async fn trending_movies_week_returns_results() {
     assert_eq!(result.results[0].title, "Weekly Movie");
 }
 
-// ── trending_tv ───────────────────────────────────────────────────────────────
+// ── trending_tv_shows ─────────────────────────────────────────────────────────
 
 #[tokio::test]
 async fn trending_tv_day_returns_results() {
     let body = page_response(vec![media_item(10, "Trending TV", "TV")], 1);
     let (_server, client) = mock_client(body).await;
 
-    let result = client.trending_tv(TimeWindow::Day, None).await.unwrap();
+    let result = client
+        .trending_tv_shows(TimeWindow::Day, None)
+        .await
+        .unwrap();
 
     assert_eq!(result.results.len(), 1);
     assert_eq!(result.results[0].name, "Trending TV");
@@ -98,12 +104,15 @@ async fn trending_tv_maps_episode_fields_and_status() {
     let (_server, client) =
         mock_client(page_response(vec![media_item(10, "Trending TV", "TV")], 1)).await;
 
-    let result = client.trending_tv(TimeWindow::Day, None).await.unwrap();
+    let result = client
+        .trending_tv_shows(TimeWindow::Day, None)
+        .await
+        .unwrap();
 
     let show = &result.results[0];
     assert_eq!(show.number_of_episodes, Some(12));
     assert_eq!(show.episode_run_time, Some(24));
-    assert_eq!(show.status.as_deref(), Some("FINISHED"));
+    assert_eq!(show.status, Some(cameo::SeriesStatus::Ended));
 }
 
 #[tokio::test]
@@ -111,7 +120,10 @@ async fn trending_tv_week_returns_results() {
     let body = page_response(vec![media_item(11, "Weekly TV", "TV")], 1);
     let (_server, client) = mock_client(body).await;
 
-    let result = client.trending_tv(TimeWindow::Week, None).await.unwrap();
+    let result = client
+        .trending_tv_shows(TimeWindow::Week, None)
+        .await
+        .unwrap();
 
     assert_eq!(result.results.len(), 1);
     assert_eq!(result.results[0].name, "Weekly TV");
@@ -139,14 +151,43 @@ async fn popular_movies_returns_results() {
 
 #[tokio::test]
 async fn popular_movies_respects_pagination() {
-    let body = page_response(vec![media_item(1, "Movie", "MOVIE")], 100);
-    let (_server, client) = mock_client(body).await;
+    let mut body = page_response(vec![media_item(1, "Movie", "MOVIE")], 100);
+    body["data"]["Page"]["pageInfo"]["currentPage"] = json!(2);
+    let server = MockServer::start().await;
+    // Only a request asking for page 2 is answered, exactly once.
+    Mock::given(method("POST"))
+        .and(body_partial_json(json!({ "variables": { "page": 2 } })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(body))
+        .expect(1)
+        .mount(&server)
+        .await;
+    let client = AniListClient::new(AniListConfig::new_with_base_url(server.uri())).unwrap();
 
     let result = client.popular_movies(Some(2)).await.unwrap();
 
-    // Total from the mock — pagination metadata is passed through
+    // The requested page is sent and the response's metadata passed through.
+    assert_eq!(result.page, 2);
     assert_eq!(result.total_results, 100);
     assert_eq!(result.total_pages, 5);
+    assert!(result.has_next_page());
+}
+
+#[tokio::test]
+async fn popular_movies_omitted_totals_read_as_zero() {
+    let mut body = page_response(vec![media_item(1, "Movie", "MOVIE")], 100);
+    let page_info = &mut body["data"]["Page"]["pageInfo"];
+    page_info["lastPage"] = Value::Null;
+    page_info["total"] = Value::Null;
+    page_info["hasNextPage"] = json!(true);
+    let (_server, client) = mock_client(body).await;
+
+    let result = client.popular_movies(None).await.unwrap();
+
+    // Unknown totals read as 0; `has_next` still comes from `hasNextPage`.
+    assert_eq!(result.total_pages, 0);
+    assert_eq!(result.total_results, 0);
+    assert!(result.has_next_page());
+    assert_eq!(result.results.len(), 1);
 }
 
 // ── top_rated_movies ──────────────────────────────────────────────────────────
@@ -210,8 +251,8 @@ async fn top_rated_tv_shows_returns_results() {
 async fn live_discovery_smoke() {
     let c = AniListClient::new(AniListConfig::new()).unwrap();
 
-    // trending_tv — exercises trending path
-    let trending = c.trending_tv(TimeWindow::Week, None).await.unwrap();
+    // trending_tv_shows — exercises trending path
+    let trending = c.trending_tv_shows(TimeWindow::Week, None).await.unwrap();
     assert!(!trending.results.is_empty());
 
     tokio::time::sleep(tokio::time::Duration::from_millis(750)).await;

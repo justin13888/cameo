@@ -5,6 +5,10 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+    # `edited` re-runs the SemVer job when a pull request is retitled, since
+    # it reads the title for a breaking marker. It also fires on body edits,
+    # which re-runs the other jobs too; that cost is accepted.
+    types: [opened, synchronize, reopened, edited]
 
 env:
   CARGO_TERM_COLOR: always
@@ -26,6 +30,24 @@ jobs:
       - name: Format check
         run: cargo fmt --all -- --check
 
+  file-length:
+    name: File length
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The base branch's baseline is what this pull request's may not grow
+      # past; on a push to master there is no base, and the growth check is
+      # skipped.
+      - name: Fetch base branch
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: git fetch --no-tags --depth=1 origin "${BASE_REF}"
+      - name: Check file length
+        env:
+          FILE_LENGTH_BASE_REF: ${{ github.event_name == 'pull_request' && 'FETCH_HEAD' || '' }}
+        run: ./scripts/check-file-length.sh
+
   check:
     name: Check (${{ matrix.features }})
     runs-on: ubuntu-latest
@@ -38,7 +60,8 @@ jobs:
           - "anilist,cache"       # AniList + cache, no TMDB
           - "tmdb"                # TMDB without cache
           - "tmdb,anilist"        # TMDB + AniList, no cache
-          - "tmdb,anilist,cache"  # all features
+          - "tvdb"                # TheTVDB only, no TMDB, no cache
+          - "tmdb,anilist,tvdb,cache"  # all features
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -57,6 +80,13 @@ jobs:
 
       - name: Test
         run: cargo test --no-default-features --features "${{ matrix.features }}"
+
+      # The Docs job builds only --all-features; an intra-doc link to an item
+      # gated behind a disabled feature only breaks on a feature subset.
+      - name: Docs
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+        run: cargo doc --no-deps --no-default-features --features "${{ matrix.features }}"
 
   doc-test:
     name: Doc tests
@@ -138,9 +168,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Compares the public API against the last published release and fails on
-      # SemVer violations not permitted by the version bump. Breaking changes are
-      # allowed only alongside a major (pre-1.0: minor) version bump.
+        with:
+          # The release tags and the commit messages since the last one decide
+          # the release type below.
+          fetch-depth: 0
+      # Pull requests never bump the version: release-plz's release pull request
+      # does, from the Conventional Commits merged since the last release. So the
+      # check takes its release type from those same commits instead of from
+      # Cargo.toml. A breaking marker (`type!:` or a `BREAKING CHANGE:` footer)
+      # in any commit since the last `v*` tag, or in this pull request's title
+      # (the squash-merge subject), allows breaking changes; otherwise only
+      # additive changes pass.
+      - name: Derive release type from commits
+        id: release-type
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          last_tag=$(git describe --tags --abbrev=0 --match 'v*' HEAD)
+          breaking='^[[:alpha:]]+(\([^)]*\))?!:|^BREAKING[ -]CHANGE:'
+          # Collected first: under pipefail, `git log | grep -q` can fail with
+          # SIGPIPE when grep exits at the first match.
+          messages="$(git log --format=%B "${last_tag}..HEAD")"
+          messages+=$'\n'"${PR_TITLE}"
+          if grep -Eq "${breaking}" <<<"${messages}"; then
+            type=major
+          else
+            type=minor
+          fi
+          echo "Release type for the changes since ${last_tag}: ${type}"
+          echo "type=${type}" >> "${GITHUB_OUTPUT}"
       - uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
           feature-group: all-features
+          release-type: ${{ steps.release-type.outputs.type }}

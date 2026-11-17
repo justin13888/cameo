@@ -1,10 +1,34 @@
 use cameo::{
-    core::config::TimeWindow,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
-    unified::models::UnifiedSearchResult,
+    unified::{TimeWindow, UnifiedSearchResult},
 };
 use serde_json::{Value, json};
 use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+
+#[test]
+fn config_setters_set_their_field_and_keep_the_rest() {
+    use std::time::Duration;
+
+    use cameo::{RateLimit, RetryPolicy};
+
+    let base = AniListConfig::new_with_base_url("http://mock.test/graphql");
+    assert_eq!(
+        base,
+        AniListConfig::default().with_base_url("http://mock.test/graphql")
+    );
+
+    let config = base
+        .with_rate_limit(RateLimit::Unlimited)
+        .with_retry(RetryPolicy::disabled())
+        .with_connect_timeout(Duration::from_secs(3))
+        .with_request_timeout(Duration::from_secs(7));
+    assert_eq!(config.base_url, "http://mock.test/graphql");
+    assert_eq!(config.per_page, AniListConfig::default().per_page);
+    assert_eq!(config.rate_limit, RateLimit::Unlimited);
+    assert_eq!(config.retry, RetryPolicy::disabled());
+    assert_eq!(config.connect_timeout, Some(Duration::from_secs(3)));
+    assert_eq!(config.request_timeout, Some(Duration::from_secs(7)));
+}
 
 fn mock_media_item(id: i32, title: &str, format: &str) -> Value {
     json!({
@@ -221,9 +245,62 @@ async fn test_graphql_errors_propagate() {
 async fn test_trending_movies_ignores_time_window() {
     let media = vec![mock_media_item(1, "Trending Movie", "MOVIE")];
     let body = mock_page_response(media, 1);
-    let (_server, client) = setup_server_with_response(body).await;
+    let (server, client) = setup_server_with_response(body).await;
 
-    // Both time windows should work — AniList ignores the window.
+    // AniList has no time window: both windows send the same request and
+    // yield the same results.
     let day = client.trending_movies(TimeWindow::Day, None).await.unwrap();
+    let week = client
+        .trending_movies(TimeWindow::Week, None)
+        .await
+        .unwrap();
     assert_eq!(day.results.len(), 1);
+    assert_eq!(day.results, week.results);
+
+    let requests = server.received_requests().await.expect("recording enabled");
+    assert_eq!(requests.len(), 2);
+    let bodies: Vec<Value> = requests
+        .iter()
+        .map(|r| serde_json::from_slice(&r.body).expect("JSON request body"))
+        .collect();
+    assert_eq!(
+        bodies[0], bodies[1],
+        "the time window leaked into the request"
+    );
+}
+
+#[test]
+fn new_rejects_per_page_out_of_range() {
+    for per_page in [0, 51] {
+        let mut config = AniListConfig::new();
+        config.per_page = per_page;
+        let err = AniListClient::new(config).expect_err("out-of-range per_page");
+        assert!(
+            matches!(&err, AniListError::InvalidConfig(msg) if msg.contains("per_page")),
+            "{err:?}"
+        );
+    }
+}
+
+#[test]
+fn new_rejects_empty_or_unparseable_base_url() {
+    for base_url in ["", "not a url", "ftp://graphql.anilist.co"] {
+        let err = AniListClient::new(AniListConfig::new().with_base_url(base_url))
+            .expect_err("bad base_url");
+        assert!(
+            matches!(&err, AniListError::InvalidConfig(msg) if msg.contains("base_url")),
+            "{base_url:?}: {err:?}"
+        );
+    }
+}
+
+#[test]
+fn new_accepts_boundary_per_page_and_custom_base_url() {
+    for per_page in [1, 50] {
+        let mut config = AniListConfig::new().with_base_url("http://127.0.0.1:1");
+        config.per_page = per_page;
+        let client = AniListClient::new(config).expect("valid config");
+        assert_eq!(client.config().per_page, per_page);
+        assert_eq!(client.config().base_url, "http://127.0.0.1:1");
+    }
 }

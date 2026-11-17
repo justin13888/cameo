@@ -8,8 +8,7 @@ impl CameoClient {
     /// # Errors
     ///
     /// [`CameoClientError::Unsupported`] when no configured credits provider
-    /// minted `id`, [`CameoClientError::NotConfigured`] when nothing is
-    /// configured, or [`CameoClientError::Provider`] when the lookup fails.
+    /// minted `id`, or [`CameoClientError::Provider`] when the lookup fails.
     ///
     /// ```no_run
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {

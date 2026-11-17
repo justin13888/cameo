@@ -1,7 +1,7 @@
 use cameo::{
     AlternativeTitle, TitleKind,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
-    unified::genre::Genre,
+    unified::Genre,
 };
 use serde_json::json;
 use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
@@ -56,7 +56,10 @@ async fn movie_details_returns_correct_fields() {
         Some("2016-08-26")
     );
     // Poster URL from coverImage.extraLarge
-    assert!(result.movie.poster_url.is_some());
+    assert_eq!(
+        result.movie.poster_url.as_deref(),
+        Some("https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1535.jpg")
+    );
     // vote_average (86 / 10)
     assert_eq!(result.movie.vote_average, Some(8.6));
     // Runtime
@@ -174,6 +177,11 @@ async fn tv_show_details_returns_correct_fields() {
     assert_eq!(result.show.provider_id, "anilist:16498");
     assert_eq!(result.show.name, "Attack on Titan");
     assert_eq!(result.show.vote_average, Some(8.4));
+    // The extra-large cover is preferred over the large one.
+    assert_eq!(
+        result.show.poster_url.as_deref(),
+        Some("https://example.com/cover_xl.jpg")
+    );
     // Romaji is kept alongside the English headline name; empty synonyms are
     // skipped.
     assert_eq!(
@@ -210,6 +218,27 @@ async fn tv_show_details_releasing_is_in_production() {
     let result = client.tv_show_details(16498).await.unwrap();
 
     assert_eq!(result.in_production, Some(true));
+    assert_eq!(result.status, Some(cameo::SeriesStatus::ReturningSeries));
+    assert_eq!(result.show.status, result.status);
+}
+
+#[tokio::test]
+async fn tv_show_details_maps_every_anilist_status() {
+    for (raw, expected) in [
+        ("FINISHED", cameo::SeriesStatus::Ended),
+        ("NOT_YET_RELEASED", cameo::SeriesStatus::Planned),
+        ("CANCELLED", cameo::SeriesStatus::Cancelled),
+        ("HIATUS", cameo::SeriesStatus::Hiatus),
+        // An unknown value is kept verbatim rather than dropped.
+        (
+            "SOME_NEW_STATUS",
+            cameo::SeriesStatus::Other("SOME_NEW_STATUS".to_string()),
+        ),
+    ] {
+        let (_server, client) = mock_client(tv_details_body_with_status(json!(raw))).await;
+        let result = client.tv_show_details(16498).await.unwrap();
+        assert_eq!(result.status, Some(expected), "status {raw}");
+    }
 }
 
 #[tokio::test]
@@ -219,6 +248,7 @@ async fn tv_show_details_unknown_status_leaves_in_production_unknown() {
     let result = client.tv_show_details(16498).await.unwrap();
 
     assert_eq!(result.in_production, None);
+    assert_eq!(result.status, None);
 }
 
 #[tokio::test]

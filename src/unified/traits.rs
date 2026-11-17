@@ -6,6 +6,31 @@
 //! provider-agnostic [`Page`](crate::Page). Concrete providers
 //! (`TmdbClient`, `AniListClient`, and out-of-crate providers) implement them,
 //! so `Arc<dyn SearchProvider>` and friends are constructible.
+//!
+//! # Contract for every capability method
+//!
+//! The built-in providers keep to these rules, and an out-of-crate provider
+//! should too, so callers can treat every provider alike:
+//!
+//! - **Ids** — a `MediaId` minted by another provider, or one whose native
+//!   part this provider cannot parse or represent, fails with
+//!   [`InvalidInput`](crate::ProviderError::InvalidInput) before anything is
+//!   sent. A well-formed id naming no record fails with
+//!   [`NotFound`](crate::ProviderError::NotFound).
+//! - **Pages** — `page: None` asks for the first page. How an out-of-range
+//!   page number is handled is the provider's own (TMDB clamps it to
+//!   `1..=500`; AniList sends it unchanged).
+//! - **Errors** — every other failure is the provider's own error mapped into
+//!   `ProviderError`: authentication to `Auth`, rate limiting to
+//!   `RateLimited`, transport failures to `Transport`, and undecodable bodies
+//!   to `Deserialization`.
+//!
+//! The built-in clients also have inherent methods with the same names that
+//! take native ids and return their own error type. Method-call syntax picks
+//! the inherent method, so call the trait form fully qualified, e.g.
+//! `DetailProvider::movie_details(&client, &id)`; the "Inherent methods and
+//! the capability traits" section of `TmdbClient` and `AniListClient` has the
+//! details.
 
 use async_trait::async_trait;
 
@@ -22,8 +47,11 @@ use crate::core::{error::ProviderError, pagination::Page};
 
 /// A capability a provider may support. Used by the facade to distinguish
 /// "no provider configured" from "no configured provider supports this".
+///
+/// Serializes as a `snake_case` string (e.g. `"watch_availability"`).
 #[non_exhaustive]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Capability {
     /// Search for movies, TV shows, and people.
     Search,

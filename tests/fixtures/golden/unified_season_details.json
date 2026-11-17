@@ -1,0 +1,19 @@
+{
+  "air_date": "2008-01-20",
+  "episodes": [
+    {
+      "air_date": "2008-01-20",
+      "episode_number": 1,
+      "name": "Pilot",
+      "overview": "Walter White...",
+      "runtime": 58,
+      "still_url": "https://example.com/still.jpg",
+      "vote_average": 8.25
+    }
+  ],
+  "name": "Season 1",
+  "overview": "High school chemistry teacher...",
+  "poster_url": "https://example.com/s1.jpg",
+  "season_number": 1,
+  "show_id": "tmdb:1396"
+}

@@ -8,7 +8,7 @@
 //! Usage: cargo run --example tmdb_lowlevel [query]
 //!   (reads TMDB_API_TOKEN from .env or the environment)
 
-use cameo::providers::tmdb::{TmdbClient, TmdbConfig, builders::MovieSortBy};
+use cameo::providers::tmdb::{MovieSortBy, TmdbClient, TmdbConfig};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -107,8 +107,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ── Trending ──────────────────────────────────────────────────────────────
 
     println!("\n=== trending_movies (week) ===");
-    use cameo::core::config::TimeWindow;
-    let trending = client.trending_movies(TimeWindow::Week, None).await?;
+    use cameo::TimeWindow;
+    let trending = client.trending_movies(TimeWindow::Week).await?;
     println!("  {} trending movies", trending.total_results);
     for m in trending.results.iter().take(5) {
         let pop = m

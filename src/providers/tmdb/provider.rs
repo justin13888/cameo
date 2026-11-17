@@ -7,11 +7,13 @@
 
 use async_trait::async_trait;
 
-use super::client::TmdbClient;
+use super::{
+    client::TmdbClient,
+    convert::credits::{tmdb_movie_credits_to_unified, tmdb_tv_credits_to_unified},
+};
 use crate::{
     core::{config::TimeWindow, error::ProviderError, pagination::Page},
     unified::{
-        conversions::tmdb::credits::{tmdb_movie_credits_to_unified, tmdb_tv_credits_to_unified},
         external_ids::{ExternalId, ExternalIds, ExternalMatch, ExternalSource},
         media_id::MediaId,
         models::{
@@ -57,14 +59,17 @@ impl Provider for TmdbClient {
 
 /// Extract the numeric TMDB id from a [`MediaId`], rejecting non-TMDB or
 /// non-numeric ids as [`ProviderError::InvalidInput`].
-fn tmdb_id(id: &MediaId) -> Result<i32, ProviderError> {
+///
+/// The range TMDB can carry is checked by the inherent method the id is passed
+/// to, whose [`TmdbError::Request`](super::error::TmdbError::Request) maps to
+/// [`ProviderError::InvalidInput`] as well.
+fn tmdb_id(id: &MediaId) -> Result<u64, ProviderError> {
     if id.provider() != "tmdb" {
         return Err(ProviderError::InvalidInput(format!(
             "expected a tmdb id, got {id}"
         )));
     }
     id.as_u64()
-        .and_then(|n| i32::try_from(n).ok())
         .ok_or_else(|| ProviderError::InvalidInput(format!("not a valid TMDB numeric id: {id}")))
 }
 
@@ -110,7 +115,7 @@ impl DetailProvider for TmdbClient {
     }
 
     async fn tv_show_details(&self, id: &MediaId) -> Result<UnifiedTvShowDetails, ProviderError> {
-        Ok(TmdbClient::tv_series_details(self, tmdb_id(id)?).await?)
+        Ok(TmdbClient::tv_show_details(self, tmdb_id(id)?).await?)
     }
 
     async fn person_details(&self, id: &MediaId) -> Result<UnifiedPersonDetails, ProviderError> {
@@ -120,20 +125,24 @@ impl DetailProvider for TmdbClient {
 
 #[async_trait]
 impl DiscoveryProvider for TmdbClient {
+    /// TMDB trending is not paginated: `page` is ignored and the first
+    /// (and only) page is returned.
     async fn trending_movies(
         &self,
         time_window: TimeWindow,
-        page: Option<u32>,
+        _page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, ProviderError> {
-        Ok(TmdbClient::trending_movies(self, time_window, page).await?)
+        Ok(TmdbClient::trending_movies(self, time_window).await?)
     }
 
+    /// TMDB trending is not paginated: `page` is ignored and the first
+    /// (and only) page is returned.
     async fn trending_tv_shows(
         &self,
         time_window: TimeWindow,
-        page: Option<u32>,
+        _page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, ProviderError> {
-        Ok(TmdbClient::trending_tv(self, time_window, page).await?)
+        Ok(TmdbClient::trending_tv_shows(self, time_window).await?)
     }
 
     async fn popular_movies(&self, page: Option<u32>) -> Result<Page<UnifiedMovie>, ProviderError> {
@@ -204,7 +213,7 @@ impl SeasonProvider for TmdbClient {
         show_id: &MediaId,
         season_number: u32,
     ) -> Result<UnifiedSeasonDetails, ProviderError> {
-        Ok(TmdbClient::tv_season_details(self, tmdb_id(show_id)?, season_number).await?)
+        Ok(TmdbClient::season_details(self, tmdb_id(show_id)?, season_number).await?)
     }
 
     async fn episode_details(
@@ -214,7 +223,7 @@ impl SeasonProvider for TmdbClient {
         episode_number: u32,
     ) -> Result<UnifiedEpisode, ProviderError> {
         Ok(
-            TmdbClient::tv_episode_details(self, tmdb_id(show_id)?, season_number, episode_number)
+            TmdbClient::episode_details(self, tmdb_id(show_id)?, season_number, episode_number)
                 .await?,
         )
     }

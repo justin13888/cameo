@@ -3,31 +3,20 @@
 //! AniList requires no API token — all data is freely accessible.
 //!
 //! Usage:
-//!   cargo run --example anilist_showcase --features anilist -- "Your Name"
+//!   cargo run --example anilist_showcase -- "Your Name"
 //!   cargo run --example anilist_showcase --no-default-features --features anilist
 
-#[cfg(feature = "anilist")]
 use cameo::{
     AniListClient, AniListConfig,
-    core::config::TimeWindow,
-    unified::{CameoClient, models::UnifiedSearchResult},
+    unified::{CameoClient, TimeWindow, UnifiedSearchResult},
 };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = dotenvy::dotenv();
-    #[cfg(not(feature = "anilist"))]
-    {
-        eprintln!("This example requires the `anilist` feature.");
-        eprintln!("Run with: cargo run --example anilist_showcase --features anilist");
-        std::process::exit(1);
-    }
-
-    #[cfg(feature = "anilist")]
     run().await
 }
 
-#[cfg(feature = "anilist")]
 async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
     let query = args.get(1).map(String::as_str).unwrap_or("Spirited Away");
@@ -121,8 +110,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         println!("  {}  ★ {score}", m.title);
     }
 
-    println!("\n=== trending_tv (week) ===");
-    let trending_tv = client.trending_tv(TimeWindow::Week, None).await?;
+    println!("\n=== trending_tv_shows (week) ===");
+    let trending_tv = client.trending_tv_shows(TimeWindow::Week, None).await?;
     println!("  {} trending anime series", trending_tv.total_results);
     for t in trending_tv.results.iter().take(5) {
         let score = t

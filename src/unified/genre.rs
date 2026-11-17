@@ -139,6 +139,67 @@ impl Genre {
         }
     }
 
+    /// The TMDB genre id for this genre, the inverse of [`Genre::from_tmdb_id`].
+    ///
+    /// Returns `None` for genres TMDB has no id for: the anime-specific
+    /// variants ([`Genre::Mecha`], [`Genre::SliceOfLife`], ...), a
+    /// [`UnknownGenre::Named`] genre, and a [`UnknownGenre::TmdbId`] holding a
+    /// negative (invalid) id. A non-negative unknown id is returned verbatim, so
+    /// `Genre::from_tmdb_id(n).tmdb_id() == Some(n as u64)` for every `n >= 0`.
+    ///
+    /// Movie and TV genres use different TMDB ids (e.g. [`Genre::Action`] is a
+    /// movie genre; TV uses [`Genre::ActionAdventure`]).
+    ///
+    /// ```
+    /// use cameo::Genre;
+    /// assert_eq!(Genre::Action.tmdb_id(), Some(28));
+    /// assert_eq!(Genre::SciFiFantasy.tmdb_id(), Some(10765));
+    /// assert_eq!(Genre::Mecha.tmdb_id(), None);
+    /// ```
+    pub fn tmdb_id(&self) -> Option<u64> {
+        Some(match self {
+            // Movie-only
+            Genre::Action => 28,
+            Genre::Adventure => 12,
+            Genre::Fantasy => 14,
+            Genre::History => 36,
+            Genre::Horror => 27,
+            Genre::Music => 10402,
+            Genre::Romance => 10749,
+            Genre::ScienceFiction => 878,
+            Genre::Thriller => 53,
+            Genre::TvMovie => 10770,
+            Genre::War => 10752,
+            // TV-only
+            Genre::ActionAdventure => 10759,
+            Genre::Kids => 10762,
+            Genre::News => 10763,
+            Genre::Reality => 10764,
+            Genre::SciFiFantasy => 10765,
+            Genre::Soap => 10766,
+            Genre::Talk => 10767,
+            Genre::WarPolitics => 10768,
+            // Shared
+            Genre::Animation => 16,
+            Genre::Comedy => 35,
+            Genre::Crime => 80,
+            Genre::Documentary => 99,
+            Genre::Drama => 18,
+            Genre::Family => 10751,
+            Genre::Mystery => 9648,
+            Genre::Western => 37,
+            // Anime-specific genres have no TMDB id.
+            Genre::Mecha
+            | Genre::MahouShoujo
+            | Genre::SliceOfLife
+            | Genre::Sports
+            | Genre::Supernatural
+            | Genre::Ecchi
+            | Genre::Other(UnknownGenre::Named(_)) => return None,
+            Genre::Other(UnknownGenre::TmdbId(id)) => return u64::try_from(*id).ok(),
+        })
+    }
+
     /// Convert a genre name string to a [`Genre`] (case-insensitive).
     ///
     /// Returns `Genre::Other(UnknownGenre::Named(s))` for unrecognized names.
@@ -271,82 +332,4 @@ impl fmt::Display for Genre {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{Genre, UnknownGenre};
-
-    #[test]
-    fn from_anilist_genre_common() {
-        assert_eq!(Genre::from_anilist_genre("Action"), Genre::Action);
-        assert_eq!(Genre::from_anilist_genre("adventure"), Genre::Adventure);
-        assert_eq!(Genre::from_anilist_genre("Comedy"), Genre::Comedy);
-        assert_eq!(Genre::from_anilist_genre("Drama"), Genre::Drama);
-        assert_eq!(Genre::from_anilist_genre("Fantasy"), Genre::Fantasy);
-        assert_eq!(Genre::from_anilist_genre("Horror"), Genre::Horror);
-        assert_eq!(Genre::from_anilist_genre("Music"), Genre::Music);
-        assert_eq!(Genre::from_anilist_genre("Mystery"), Genre::Mystery);
-        assert_eq!(Genre::from_anilist_genre("Romance"), Genre::Romance);
-        assert_eq!(Genre::from_anilist_genre("Sci-Fi"), Genre::ScienceFiction);
-        assert_eq!(Genre::from_anilist_genre("Thriller"), Genre::Thriller);
-    }
-
-    #[test]
-    fn from_anilist_genre_anime_specific() {
-        assert_eq!(Genre::from_anilist_genre("Mecha"), Genre::Mecha);
-        assert_eq!(
-            Genre::from_anilist_genre("Mahou Shoujo"),
-            Genre::MahouShoujo
-        );
-        assert_eq!(
-            Genre::from_anilist_genre("Slice of Life"),
-            Genre::SliceOfLife
-        );
-        assert_eq!(Genre::from_anilist_genre("Sports"), Genre::Sports);
-        assert_eq!(
-            Genre::from_anilist_genre("Supernatural"),
-            Genre::Supernatural
-        );
-        assert_eq!(Genre::from_anilist_genre("Ecchi"), Genre::Ecchi);
-    }
-
-    #[test]
-    fn from_anilist_genre_fallback() {
-        assert_eq!(
-            Genre::from_anilist_genre("Isekai"),
-            Genre::Other(UnknownGenre::Named("isekai".to_string()))
-        );
-        assert_eq!(
-            Genre::from_anilist_genre("Harem"),
-            Genre::Other(UnknownGenre::Named("harem".to_string()))
-        );
-    }
-
-    #[test]
-    fn from_tmdb_id_unknown_preserves_id() {
-        assert_eq!(
-            Genre::from_tmdb_id(99999),
-            Genre::Other(UnknownGenre::TmdbId(99999))
-        );
-        assert_eq!(
-            Genre::from_tmdb_id(0),
-            Genre::Other(UnknownGenre::TmdbId(0))
-        );
-        // Negative ids are preserved verbatim, not collapsed to 0.
-        assert_eq!(
-            Genre::from_tmdb_id(-5),
-            Genre::Other(UnknownGenre::TmdbId(-5))
-        );
-        assert_ne!(Genre::from_tmdb_id(-5), Genre::from_tmdb_id(0));
-        // The id survives in the display name rather than becoming "Unknown".
-        assert_eq!(Genre::from_tmdb_id(4242).name(), "TMDB genre 4242");
-    }
-
-    #[test]
-    fn name_anime_specific() {
-        assert_eq!(Genre::Mecha.name(), "Mecha");
-        assert_eq!(Genre::MahouShoujo.name(), "Mahou Shoujo");
-        assert_eq!(Genre::SliceOfLife.name(), "Slice of Life");
-        assert_eq!(Genre::Sports.name(), "Sports");
-        assert_eq!(Genre::Supernatural.name(), "Supernatural");
-        assert_eq!(Genre::Ecchi.name(), "Ecchi");
-    }
-}
+mod tests;

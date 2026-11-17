@@ -1,8 +1,7 @@
 //! A typed, provider-qualified media identifier.
 //!
-//! Replaces the old `provider_id: String` / raw `i32` split: [`MediaId`]
-//! preserves which provider an id came from and round-trips the canonical
-//! `"provider:native"` string form used across the API and cache.
+//! [`MediaId`] preserves which provider an id came from and round-trips the
+//! canonical `"provider:native"` string form used across the API and cache.
 
 use std::{borrow::Cow, fmt, str::FromStr};
 
@@ -32,7 +31,8 @@ impl fmt::Display for NativeId {
     }
 }
 
-/// A provider-qualified media identifier, e.g. `tmdb:550` or `anilist:staff:95061`.
+/// A provider-qualified media identifier, e.g. `tmdb:550`, `tvdb:81189` or
+/// `anilist:staff:95061`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MediaId {
     provider: Cow<'static, str>,
@@ -41,6 +41,7 @@ pub struct MediaId {
 
 /// Error returned when a string cannot be parsed as a [`MediaId`].
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[non_exhaustive]
 pub enum MediaIdParseError {
     /// The string did not contain a `provider:native` separator.
     #[error("media id `{0}` is missing a ':' separator")]
@@ -69,6 +70,14 @@ impl MediaId {
         Self::new("anilist", NativeId::Num(id))
     }
 
+    /// A numeric TheTVDB series or movie id (`tvdb:<id>`).
+    ///
+    /// TheTVDB numbers series and movies separately, so the same id can name
+    /// one of each; the facade's split movie/TV calls say which is meant.
+    pub fn tvdb(id: u64) -> Self {
+        Self::new("tvdb", NativeId::Num(id))
+    }
+
     /// An AniList staff id (`anilist:staff:<id>`).
     pub fn anilist_staff(id: u64) -> Self {
         Self::new("anilist", NativeId::Text(format!("staff:{id}")))
@@ -94,6 +103,12 @@ impl MediaId {
 
     /// Parse a `"provider:native"` string. Splits on the **first** `:`, so a
     /// namespaced native part such as `"staff:95061"` is preserved.
+    ///
+    /// The native part becomes [`NativeId::Num`] only when it is a canonical
+    /// decimal that fits a `u64`: ASCII digits, no sign, and no leading zero
+    /// (except `"0"` itself). Anything else, such as `"007"` or `"+550"`, is
+    /// kept verbatim as [`NativeId::Text`], so a parsed id always displays as
+    /// the string it was parsed from.
     pub fn parse(s: &str) -> Result<Self, MediaIdParseError> {
         let (provider, native) = s
             .split_once(':')
@@ -101,12 +116,21 @@ impl MediaId {
         if provider.is_empty() || native.is_empty() {
             return Err(MediaIdParseError::Empty(s.to_string()));
         }
-        let native = match native.parse::<u64>() {
-            Ok(n) => NativeId::Num(n),
-            Err(_) => NativeId::Text(native.to_string()),
+        let native = match parse_canonical_u64(native) {
+            Some(n) => NativeId::Num(n),
+            None => NativeId::Text(native.to_string()),
         };
         Ok(Self::new(provider.to_string(), native))
     }
+}
+
+/// Parse `s` as a `u64` only when it is the canonical decimal rendering of
+/// that number: non-empty ASCII digits with no sign and no leading zero
+/// (except `"0"`).
+fn parse_canonical_u64(s: &str) -> Option<u64> {
+    let canonical =
+        !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit()) && (s == "0" || !s.starts_with('0'));
+    if canonical { s.parse().ok() } else { None }
 }
 
 impl fmt::Display for MediaId {
@@ -134,10 +158,9 @@ impl PartialEq<str> for MediaId {
         }
         match &self.native {
             NativeId::Text(s) => native == s,
-            // Numeric ids render as canonical decimal (no leading zeros / sign).
-            NativeId::Num(n) => {
-                native.parse::<u64>() == Ok(*n) && (native == "0" || !native.starts_with('0'))
-            }
+            // Numeric ids render as canonical decimal (no sign, no leading
+            // zero), so only that exact rendering compares equal.
+            NativeId::Num(n) => parse_canonical_u64(native) == Some(*n),
         }
     }
 }
@@ -177,6 +200,17 @@ mod tests {
     }
 
     #[test]
+    fn round_trips_tvdb() {
+        let id = MediaId::tvdb(81189);
+        assert_eq!(id.to_string(), "tvdb:81189");
+        assert_eq!(MediaId::parse("tvdb:81189").unwrap(), id);
+        assert_eq!("tvdb:81189".parse::<MediaId>().unwrap(), id);
+        assert_eq!(id.provider(), "tvdb");
+        assert_eq!(id.as_u64(), Some(81189));
+        assert_eq!(id, "tvdb:81189");
+    }
+
+    #[test]
     fn round_trips_namespaced() {
         let id = MediaId::anilist_staff(95061);
         assert_eq!(id.to_string(), "anilist:staff:95061");
@@ -206,5 +240,31 @@ mod tests {
     #[test]
     fn compares_to_str() {
         assert_eq!(MediaId::tmdb(550), "tmdb:550");
+        assert_eq!(MediaId::tmdb(0), "tmdb:0");
+    }
+
+    #[test]
+    fn non_canonical_numbers_stay_text() {
+        for s in [
+            "anilist:007",
+            "tmdb:+550",
+            "tmdb:00",
+            "tmdb:18446744073709551616",
+        ] {
+            let id = MediaId::parse(s).unwrap();
+            assert_eq!(id.as_u64(), None, "{s}");
+            assert_eq!(id.to_string(), s);
+        }
+        assert_eq!(MediaId::parse("tmdb:0").unwrap(), MediaId::tmdb(0));
+    }
+
+    #[test]
+    fn compares_to_str_only_against_canonical_rendering() {
+        let id = MediaId::tmdb(550);
+        assert_ne!(id, "tmdb:+550");
+        assert_ne!(id, "tmdb:0550");
+        assert_ne!(id, "tmdb: 550");
+        assert_ne!(MediaId::tmdb(0), "tmdb:00");
+        assert_ne!(MediaId::tmdb(0), "tmdb:+0");
     }
 }

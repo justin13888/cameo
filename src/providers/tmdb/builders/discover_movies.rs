@@ -11,7 +11,7 @@ use crate::{
 /// Builder for discovering movies with flexible filters.
 ///
 /// The ~15 filters shared with [`DiscoverTvBuilder`](super::DiscoverTvBuilder)
-/// come from the shared setter core in [`super::params`]; the
+/// come from the shared setter core in the builders' `params` module; the
 /// setters below are movie-specific. Provider ID filters take `&[u64]` slices
 /// and coded filters take typed enums.
 ///
@@ -19,11 +19,12 @@ use crate::{
 ///
 /// ```no_run
 /// # async fn example(client: &cameo::providers::tmdb::TmdbClient) -> Result<(), cameo::providers::tmdb::TmdbError> {
-/// use cameo::providers::tmdb::builders::MovieSortBy;
+/// use cameo::Genre;
+/// use cameo::providers::tmdb::MovieSortBy;
 /// let results = client
 ///     .discover_movies()
 ///     .sort_by(MovieSortBy::PopularityDesc)
-///     .with_genres(&[28]) // Action
+///     .with_genre_list(&[Genre::Action])
 ///     .primary_release_year(2024)
 ///     .execute()
 ///     .await?;
@@ -228,12 +229,17 @@ impl<'a> DiscoverMoviesBuilder<'a> {
 
     /// Execute the discover query and return a single page of unified movies.
     ///
+    /// The request is rate limited and retried under the client's
+    /// [`TmdbConfig::retry`](crate::providers::tmdb::TmdbConfig::retry)
+    /// policy, like every other endpoint.
+    ///
     /// # Errors
     ///
-    /// Returns [`TmdbError::Api`] on non-2xx HTTP responses and
-    /// [`TmdbError::Http`] on network failures.
+    /// Returns [`TmdbError::Api`] (with TMDB's decoded `status_code` and
+    /// `status_message`) on a non-2xx response once retries are spent,
+    /// [`TmdbError::Http`] on network failures, and [`TmdbError::Request`]
+    /// when a date filter cannot be encoded.
     pub async fn execute(self) -> Result<Page<UnifiedMovie>, TmdbError> {
-        let page = self.page;
         let query = generated::DiscoverMovieParams {
             certification: self.certification,
             certification_gte: self.certification_gte,
@@ -274,21 +280,6 @@ impl<'a> DiscoverMoviesBuilder<'a> {
             without_watch_providers: self.without_watch_providers,
             year: self.year,
         };
-        self.client.acquire_rate_limit().await;
-        let body = self
-            .client
-            .inner()
-            .discover_movie(query)
-            .await
-            .map_err(TmdbError::from_generated)?
-            .into_inner();
-        Ok(crate::providers::tmdb::client::offset_page(
-            page,
-            body.page,
-            body.results,
-            body.total_pages,
-            body.total_results,
-        )
-        .map(Into::into))
+        self.client.discover_movies_page(query).await
     }
 }

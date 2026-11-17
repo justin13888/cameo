@@ -15,47 +15,59 @@ declares which capabilities it supports:
 ```rust
 use cameo::{Capability, Provider};
 
-struct TvdbProvider { /* http client, config, … */ }
+struct OmdbProvider { /* http client, config, … */ }
 
-impl Provider for TvdbProvider {
-    fn id(&self) -> &str { "tvdb" }
+impl Provider for OmdbProvider {
+    fn id(&self) -> &str { "omdb" }
     fn capabilities(&self) -> &[Capability] {
         &[Capability::Search, Capability::Details]
     }
 }
 ```
 
-The id is how callers select the provider (`search_movies_with("tvdb", …)`) and
-how ids minted by this provider route back to it (`MediaId::new("tvdb", …)`).
+The id is how callers select the provider (`search_movies_with("omdb", …)`) and
+how ids minted by this provider route back to it (`MediaId::new("omdb", …)`).
 
 ## 2. The two-layer pattern
 
 Mirror the built-in providers: keep an inherent low-level client that speaks the
 upstream API and returns **stable, hand-owned types** (or unified models), then
 adapt it to the capability traits. The trait impls should be thin — convert to
-unified models and map errors. `TmdbClient` (inherent methods) +
-`impl SearchProvider for TmdbClient` (`src/providers/tmdb/`) is the reference.
+unified models and map errors. `TmdbClient`'s inherent methods
+(`src/providers/tmdb/client/`) and its trait impls
+(`src/providers/tmdb/provider.rs`) are the reference.
+
+When an inherent method and a trait method share a name (`TmdbClient`'s
+`movie_details(u64)` and `DetailProvider::movie_details(&MediaId)`, for
+example; each provider's inherent methods take its own native id type, such as
+`i32` on `AniListClient`), method-call syntax picks the inherent one. Callers reach the trait
+form fully qualified: `DetailProvider::movie_details(&client, &id)`.
 
 ## 3. Config contract
 
 Take configuration as a `Config` struct with a `new(...)` constructor and
-`with_*` setters, validated at client construction with a clear error. Never
-require callers to build a `#[non_exhaustive]` struct literal.
+`with_*` setters. Either reject invalid values with a clear error when the
+client is constructed (as `TmdbClient::new` does for the credential, rate limit,
+language, region, and URLs, and `AniListClient::new` does for `per_page`, the
+base URL, and the rate limit). A setter may also clamp a value into range (as
+`AniListConfig::with_per_page` clamps `per_page` to 1..=50), but public fields
+can be set directly, so validate at construction as well. Name constructors
+`new*` or `from_*` and keep `with_*` for chained setters. Never require callers
+to build a `#[non_exhaustive]` struct literal.
 
 ## 4. Implement the capability traits
 
-Each capability is one `#[async_trait]` trait. Implement the ones you declared.
-Because they use `#[async_trait]`, reuse cameo's re-export so you need no extra
-dependency:
+Each capability is one `#[async_trait]` trait. Implement every required method
+of the ones you declared. Because they use `#[async_trait]`, reuse cameo's
+re-export so you need no extra dependency:
 
 ```rust
-use std::sync::Arc;
 use cameo::async_trait::async_trait;
-use cameo::{MediaId, Page, SearchProvider, UnifiedMovie, UnifiedTvShow,
-    UnifiedPerson, UnifiedSearchResult, core::error::ProviderError};
+use cameo::{Page, ProviderError, SearchProvider, UnifiedMovie, UnifiedPerson,
+    UnifiedSearchResult, UnifiedTvShow};
 
 #[async_trait]
-impl SearchProvider for TvdbProvider {
+impl SearchProvider for OmdbProvider {
     async fn search_movies(&self, query: &str, page: Option<u32>)
         -> Result<Page<UnifiedMovie>, ProviderError> {
         // 1. call your low-level client
@@ -63,9 +75,23 @@ impl SearchProvider for TvdbProvider {
         // 3. map any error to ProviderError
         Ok(Page::with_has_next(1, Vec::new(), false, 0, 0))
     }
-    // search_tv_shows / search_people / search_multi …
+    async fn search_tv_shows(&self, query: &str, page: Option<u32>)
+        -> Result<Page<UnifiedTvShow>, ProviderError> {
+        Ok(Page::with_has_next(1, Vec::new(), false, 0, 0))
+    }
+    async fn search_people(&self, query: &str, page: Option<u32>)
+        -> Result<Page<UnifiedPerson>, ProviderError> {
+        Ok(Page::with_has_next(1, Vec::new(), false, 0, 0))
+    }
+    async fn search_multi(&self, query: &str, page: Option<u32>)
+        -> Result<Page<UnifiedSearchResult>, ProviderError> {
+        Ok(Page::with_has_next(1, Vec::new(), false, 0, 0))
+    }
 }
 ```
+
+The compiled version of this sample is `StubProvider` in
+`tests/integration/registry_test.rs`.
 
 Build the unified values with the model builders (`UnifiedMovie::new(id, title)
 .with_*(…)`) — the models are `#[non_exhaustive]`, so struct literals won't
@@ -76,7 +102,16 @@ compile outside cameo. Mint ids with `MediaId::new(self.id(), NativeId::…)`.
 Return [`ProviderError`]: map not-found to `NotFound`, auth failures to `Auth`,
 rate limits to `RateLimited { retry_after }`, unsupported operations to
 `Unsupported`, and anything else to the appropriate variant. The facade
-translates these into `CameoClientError` for callers.
+wraps these in `CameoClientError::Provider` for callers.
+
+The built-in providers also keep to two input rules, which callers of the
+traits rely on:
+
+- A `MediaId` minted by another provider, or one whose native part you cannot
+  parse, fails with `InvalidInput` before anything is sent.
+- `page: None` means the first page. Clamp or pass through an out-of-range
+  page as your upstream API needs (TMDB clamps to `1..=500`; AniList sends the
+  page unchanged), and document which.
 
 ## 6. Register with the facade
 
@@ -84,12 +119,12 @@ Register one `Arc` per capability trait you implement — no facade edits:
 
 ```rust
 let client = CameoClient::builder()
-    .register_search_provider(Arc::new(TvdbProvider::new(config)))
-    .with_priority(["tvdb", "tmdb"]) // optional default order
+    .register_search_provider(Arc::new(OmdbProvider::new(config)))
+    .with_priority(["omdb", "tmdb"]) // optional default order
     .build()?;
 
 let results = client.search_movies("Dune", None).await?;      // default priority
-let tvdb = client.search_movies_with("tvdb", "Dune", None).await?; // explicit
+let omdb = client.search_movies_with("omdb", "Dune", None).await?; // explicit
 ```
 
 Detail/season/recommendation/watch/credits/external-id calls route by the

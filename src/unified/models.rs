@@ -2,52 +2,16 @@ use serde::{Deserialize, Serialize};
 
 use super::{date::PartialDate, genre::Genre, media_id::MediaId};
 
-/// A person's gender.
-///
-/// Replaces the provider-specific magic numbers (TMDB's `0/1/2/3`) with a
-/// typed, `#[non_exhaustive]` enum. An absent or unspecified gender is
-/// represented by `Option::None` at the use site rather than a fabricated
-/// value.
-#[non_exhaustive]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Gender {
-    /// The provider explicitly reports the gender as unspecified.
-    NotSpecified,
-    /// Female.
-    Female,
-    /// Male.
-    Male,
-    /// Non-binary.
-    NonBinary,
-}
+/// People, their gender, and the cast and crew credited on a title.
+mod person;
+/// The release status and format of a TV series.
+mod series;
 
-impl Gender {
-    /// Map a TMDB numeric gender code (`1` female, `2` male, `3` non-binary).
-    ///
-    /// Returns `None` for `0` (TMDB's "not set") or any unknown code, so an
-    /// unknown gender is absent rather than fabricated.
-    pub fn from_tmdb(code: i64) -> Option<Self> {
-        match code {
-            1 => Some(Gender::Female),
-            2 => Some(Gender::Male),
-            3 => Some(Gender::NonBinary),
-            _ => None,
-        }
-    }
-
-    /// Map an AniList gender string (`"Female"`, `"Male"`, `"Non-binary"`).
-    ///
-    /// A recognized-but-other string maps to [`Gender::NotSpecified`]; only an
-    /// absent value (handled by the caller) yields `None`.
-    pub fn from_anilist(value: &str) -> Self {
-        match value {
-            "Female" => Gender::Female,
-            "Male" => Gender::Male,
-            "Non-binary" => Gender::NonBinary,
-            _ => Gender::NotSpecified,
-        }
-    }
-}
+pub use person::{
+    Gender, UnifiedCastCredit, UnifiedCredits, UnifiedCrewCredit, UnifiedPerson,
+    UnifiedPersonDetails,
+};
+pub use series::{SeriesStatus, SeriesType};
 
 /// A collection (franchise) a movie belongs to.
 #[non_exhaustive]
@@ -137,6 +101,18 @@ pub struct AlternativeTitle {
     pub language: Option<String>,
 }
 
+/// A title's certification (content rating) in one country, such as `PG-13`
+/// in the US or `TV-MA` for a US TV series.
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Certification {
+    /// ISO 3166-1 alpha-2 code of the country the rating applies in, e.g.
+    /// `"US"`.
+    pub country: String,
+    /// The rating that country's rating board assigned, e.g. `"R"`.
+    pub rating: String,
+}
+
 /// A movie in the unified model.
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -219,6 +195,12 @@ pub struct UnifiedMovieDetails {
     pub video: Option<bool>,
     /// The collection (franchise) this movie belongs to, if any.
     pub belongs_to_collection: Option<Collection>,
+    /// Certifications (content ratings), at most one per country.
+    ///
+    /// Empty unless the provider returned them with the details. TMDB returns
+    /// them only when the `release_dates` append is requested (see
+    /// `TmdbClient::movie_details_with_append`).
+    pub certifications: Vec<Certification>,
 }
 
 /// A TV show in the unified model.
@@ -270,13 +252,13 @@ pub struct UnifiedTvShow {
     /// with the **first** entry of that list. TMDB list endpoints do not return
     /// run times, so TMDB summaries leave this `None`.
     pub episode_run_time: Option<u32>,
-    /// Release status as reported by the provider (e.g. TMDB `"Ended"`,
-    /// AniList `"RELEASING"`), if present in summary results.
+    /// Release status (e.g. TMDB `"Ended"` and AniList `"FINISHED"` both map
+    /// to [`SeriesStatus::Ended`]), if present in summary results.
     ///
     /// Same semantics as [`UnifiedTvShowDetails::status`]; detail conversions
     /// fill both with the same value. TMDB list endpoints do not return a
     /// status, so TMDB summaries leave this `None`.
-    pub status: Option<String>,
+    pub status: Option<SeriesStatus>,
 }
 
 /// Detailed TV show information in the unified model.
@@ -296,8 +278,9 @@ pub struct UnifiedTvShowDetails {
     /// `None` means unknown: the provider did not report the flag (the key was
     /// absent or `null`) or reported no status to derive it from.
     pub in_production: Option<bool>,
-    /// Release status.
-    pub status: Option<String>,
+    /// Release status; an unrecognized provider value is kept in
+    /// [`SeriesStatus::Other`].
+    pub status: Option<SeriesStatus>,
     /// Homepage URL.
     pub homepage: Option<String>,
     /// Networks that air the show.
@@ -306,8 +289,10 @@ pub struct UnifiedTvShowDetails {
     pub production_companies: Vec<Company>,
     /// Last air date (may be partial, e.g. year-only from some providers).
     pub last_air_date: Option<PartialDate>,
-    /// Show classification (e.g. "Scripted", "Reality", "Documentary").
-    pub type_: Option<String>,
+    /// Show classification (e.g. [`SeriesType::Scripted`]); an unrecognized
+    /// provider value is kept in [`SeriesType::Other`]. AniList has no such
+    /// classification and leaves this `None`.
+    pub type_: Option<SeriesType>,
     /// Provider media format (e.g. AniList's "TV", "OVA", "MOVIE").
     pub media_format: Option<String>,
     /// Creators of the show.
@@ -320,6 +305,12 @@ pub struct UnifiedTvShowDetails {
     pub production_countries: Vec<String>,
     /// The show's seasons.
     pub seasons: Vec<UnifiedSeason>,
+    /// Certifications (content ratings), at most one per country.
+    ///
+    /// Empty unless the provider returned them with the details. TMDB returns
+    /// them only when the `content_ratings` append is requested (see
+    /// `TmdbClient::tv_show_details_with_append`).
+    pub certifications: Vec<Certification>,
 }
 
 /// Summary information about a single season of a TV show.
@@ -338,106 +329,6 @@ pub struct UnifiedSeason {
     pub episode_count: Option<u32>,
     /// Full poster image URL.
     pub poster_url: Option<String>,
-}
-
-/// A person in the unified model.
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct UnifiedPerson {
-    /// Provider-qualified person id (e.g. `tmdb:287`).
-    pub provider_id: MediaId,
-    /// Person's name.
-    pub name: String,
-    /// Known-for department (e.g. "Acting", "Directing").
-    pub known_for_department: Option<String>,
-    /// Full profile image URL.
-    pub profile_url: Option<String>,
-    /// Popularity score.
-    pub popularity: Option<f64>,
-    /// Gender, if the provider reports one.
-    pub gender: Option<Gender>,
-    /// Whether this person is associated with adult content, if reported.
-    pub adult: Option<bool>,
-}
-
-/// Detailed person information in the unified model.
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct UnifiedPersonDetails {
-    /// Base person info.
-    pub person: UnifiedPerson,
-    /// Biography.
-    pub biography: Option<String>,
-    /// Birthday (may be partial, e.g. year-only from some providers).
-    pub birthday: Option<PartialDate>,
-    /// Death day (may be partial), if applicable.
-    pub deathday: Option<PartialDate>,
-    /// Place of birth.
-    pub place_of_birth: Option<String>,
-    /// IMDB ID.
-    pub imdb_id: Option<String>,
-    /// Homepage URL.
-    pub homepage: Option<String>,
-    /// Other names the person is known by.
-    pub also_known_as: Vec<String>,
-}
-
-/// The cast and crew credited on a movie or TV show.
-///
-/// Returned by [`CameoClient::movie_credits`](crate::unified::CameoClient::movie_credits)
-/// and [`CameoClient::tv_show_credits`](crate::unified::CameoClient::tv_show_credits).
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct UnifiedCredits {
-    /// Provider-qualified id of the title these credits belong to (e.g. `tmdb:550`).
-    pub provider_id: MediaId,
-    /// Cast credits, in the provider's billing order.
-    pub cast: Vec<UnifiedCastCredit>,
-    /// Crew credits, in the provider's order.
-    pub crew: Vec<UnifiedCrewCredit>,
-}
-
-/// One cast credit: a person playing (or voicing) a character.
-///
-/// A person credited for several characters appears once per character.
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct UnifiedCastCredit {
-    /// Provider-qualified person id (e.g. `tmdb:287`, `anilist:staff:95061`),
-    /// usable with [`person_details`](crate::unified::CameoClient::person_details).
-    pub person_id: MediaId,
-    /// The person's name.
-    pub name: String,
-    /// Full profile image URL of the person.
-    pub profile_url: Option<String>,
-    /// The character played or voiced, if credited.
-    pub character: Option<String>,
-    /// Billing order (`0` = top-billed), if the provider reports one.
-    pub order: Option<u32>,
-    /// The person's gender, if the provider reports it.
-    pub gender: Option<Gender>,
-}
-
-/// One crew credit: a person in a production role.
-///
-/// A person credited for several jobs appears once per job.
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct UnifiedCrewCredit {
-    /// Provider-qualified person id (e.g. `tmdb:7467`, `anilist:staff:95061`),
-    /// usable with [`person_details`](crate::unified::CameoClient::person_details).
-    pub person_id: MediaId,
-    /// The person's name.
-    pub name: String,
-    /// Full profile image URL of the person.
-    pub profile_url: Option<String>,
-    /// The specific job (e.g. TMDB `"Director"`, AniList `"Key Animation (ep 5)"`).
-    pub job: Option<String>,
-    /// The department the job belongs to (e.g. `"Directing"`), if the
-    /// provider reports one. AniList reports none.
-    pub department: Option<String>,
-    /// The person's gender, if the provider reports it.
-    pub gender: Option<Gender>,
 }
 
 /// A search result that can be a movie, TV show, or person.

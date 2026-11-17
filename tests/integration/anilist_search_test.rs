@@ -1,7 +1,7 @@
 use cameo::{
-    AlternativeTitle, TitleKind,
+    AlternativeTitle, RetryPolicy, SeriesStatus, TitleKind,
     providers::anilist::{AniListClient, AniListConfig, AniListError},
-    unified::models::UnifiedSearchResult,
+    unified::UnifiedSearchResult,
 };
 use serde_json::{Value, json};
 use wiremock::{
@@ -242,7 +242,7 @@ async fn search_tv_shows_maps_episodes_duration_and_status() {
     let show = &result.results[0];
     assert_eq!(show.number_of_episodes, Some(25));
     assert_eq!(show.episode_run_time, Some(23));
-    assert_eq!(show.status.as_deref(), Some("RELEASING"));
+    assert_eq!(show.status, Some(SeriesStatus::ReturningSeries));
 }
 
 #[tokio::test]
@@ -305,6 +305,23 @@ async fn search_multi_returns_mixed_types() {
 }
 
 #[tokio::test]
+async fn search_multi_omits_formats_outside_movie_and_tv_lists() {
+    let body = page_response(
+        vec![
+            media_item(1, "Music Video", "MUSIC"),
+            media_item(2, "Series B", "ONA"),
+        ],
+        2,
+    );
+    let (_server, client) = mock_client(body).await;
+
+    let result = client.search_multi("test", None).await.unwrap();
+
+    assert_eq!(result.results.len(), 1);
+    assert!(matches!(result.results[0], UnifiedSearchResult::TvShow(_)));
+}
+
+#[tokio::test]
 async fn search_multi_graphql_error_propagates() {
     let body = json!({ "errors": [{ "message": "Internal Server Error.", "status": 500 }] });
     let (_server, client) = mock_client(body).await;
@@ -328,7 +345,10 @@ async fn rate_limit_error_exposes_retry_after() {
         )
         .mount(&server)
         .await;
-    let client = AniListClient::new(AniListConfig::new_with_base_url(server.uri())).unwrap();
+    // Retrying would honor the 12-second Retry-After three times over; the
+    // retry loop itself is covered by retry_test.rs.
+    let config = AniListConfig::new_with_base_url(server.uri()).with_retry(RetryPolicy::disabled());
+    let client = AniListClient::new(config).unwrap();
 
     let err = client.search_multi("test", None).await.unwrap_err();
 

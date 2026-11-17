@@ -1,4 +1,7 @@
-use cameo::providers::tmdb::{TmdbClient, TmdbConfig};
+use cameo::{
+    SeriesStatus, SeriesType,
+    providers::tmdb::{TmdbClient, TmdbConfig},
+};
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path, query_param},
@@ -56,13 +59,14 @@ async fn tv_series_details_deserializes_response() {
         .mount(&server)
         .await;
 
-    let details = client.tv_series_details(1396).await.unwrap();
+    let details = client.tv_show_details(1396).await.unwrap();
 
     assert!(details.show.provider_id == "tmdb:1396");
     assert_eq!(details.show.name, "Breaking Bad");
     assert_eq!(details.number_of_seasons, Some(5));
     assert_eq!(details.number_of_episodes, Some(62));
-    assert_eq!(details.status.as_deref(), Some("Ended"));
+    assert_eq!(details.status, Some(SeriesStatus::Ended));
+    assert_eq!(details.type_, Some(SeriesType::Scripted));
     assert_eq!(
         details.show.genres,
         vec![cameo::Genre::Drama, cameo::Genre::Crime]
@@ -84,7 +88,7 @@ async fn tv_genres_deserializes_response() {
         .mount(&server)
         .await;
 
-    let genres = client.tv_genres().await.unwrap();
+    let genres = client.tv_show_genres().await.unwrap();
 
     assert_eq!(
         genres,
@@ -117,7 +121,7 @@ async fn tv_genres_drops_genres_without_id() {
         .mount(&server)
         .await;
 
-    let genres = client.tv_genres().await.unwrap();
+    let genres = client.tv_show_genres().await.unwrap();
 
     assert_eq!(genres, vec![cameo::Genre::Drama]);
 }
@@ -136,7 +140,7 @@ async fn trending_tv_deserializes_response() {
         .await;
 
     let page = client
-        .trending_tv(cameo::TimeWindow::Week, None)
+        .trending_tv_shows(cameo::TimeWindow::Week)
         .await
         .unwrap();
 
@@ -157,7 +161,7 @@ fn client() -> TmdbClient {
 #[tokio::test]
 async fn live_tv_series_details_breaking_bad() {
     let c = client();
-    let details = c.tv_series_details(1396).await.unwrap(); // Breaking Bad
+    let details = c.tv_show_details(1396).await.unwrap(); // Breaking Bad
 
     assert!(details.show.provider_id == "tmdb:1396");
     assert_eq!(details.show.name, "Breaking Bad");
@@ -169,14 +173,14 @@ async fn live_tv_series_details_breaking_bad() {
 #[tokio::test]
 async fn live_trending_tv_returns_page() {
     let c = client();
-    let resp = c.trending_tv(cameo::TimeWindow::Week, None).await.unwrap();
+    let resp = c.trending_tv_shows(cameo::TimeWindow::Week).await.unwrap();
     assert!(!resp.results.is_empty());
 }
 
 #[cfg(feature = "live-tests")]
 #[tokio::test]
 async fn live_discover_tv_with_filters() {
-    use cameo::providers::tmdb::builders::TvSortBy;
+    use cameo::providers::tmdb::TvSortBy;
 
     let c = client();
     let resp = c
@@ -198,7 +202,7 @@ async fn tv_details_with_body(body: serde_json::Value) -> cameo::UnifiedTvShowDe
         .respond_with(ResponseTemplate::new(200).set_body_json(body))
         .mount(&server)
         .await;
-    client.tv_series_details(1396).await.unwrap()
+    client.tv_show_details(1396).await.unwrap()
 }
 
 fn tv_details_json() -> serde_json::Map<String, serde_json::Value> {
@@ -330,7 +334,7 @@ async fn tv_series_details_in_production_true_is_some_true() {
 async fn search_tv_with_body(
     body: serde_json::Value,
     page: Option<u32>,
-) -> cameo::core::pagination::Page<cameo::UnifiedTvShow> {
+) -> cameo::Page<cameo::UnifiedTvShow> {
     let (server, client) = setup_mock_client().await;
     Mock::given(method("GET"))
         .and(path("/3/search/tv"))

@@ -1,0 +1,20 @@
+{
+  "provider_id": "tmdb:550",
+  "results": {
+    "US": {
+      "buy": [],
+      "flatrate": [
+        {
+          "logo_url": "https://example.com/n.png",
+          "name": "Netflix"
+        }
+      ],
+      "rent": [
+        {
+          "logo_url": null,
+          "name": "Apple TV"
+        }
+      ]
+    }
+  }
+}

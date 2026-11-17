@@ -2,9 +2,8 @@
 
 use cameo::{
     MediaId,
-    core::config::TimeWindow,
     providers::tmdb::TmdbConfig,
-    unified::{CameoClient, models::UnifiedSearchResult},
+    unified::{CameoClient, TimeWindow, UnifiedSearchResult},
 };
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
@@ -173,6 +172,29 @@ async fn facade_tv_external_ids_dispatches_to_tmdb() {
 
     assert_eq!(ids.tmdb, Some(1396));
     assert_eq!(ids.tvdb, Some(81189));
+}
+
+#[tokio::test]
+async fn facade_movie_external_ids_dispatches_to_tmdb() {
+    let server = MockServer::start().await;
+    let client = setup(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/3/movie/550/external_ids"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../fixtures/movie_external_ids_response.json"),
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let ids = client
+        .movie_external_ids(&MediaId::tmdb(550))
+        .await
+        .unwrap();
+
+    assert_eq!(ids.tmdb, Some(550));
+    assert_eq!(ids.imdb.as_deref(), Some("tt0137523"));
 }
 
 #[tokio::test]
@@ -420,7 +442,7 @@ mod anilist_tests {
             matches!(
                 result,
                 Err(CameoClientError::Provider(
-                    cameo::core::error::ProviderError::Unsupported
+                    cameo::ProviderError::Unsupported
                 ))
             ),
             "expected Provider(Unsupported), got: {result:?}"

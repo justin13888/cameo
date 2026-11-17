@@ -1,11 +1,67 @@
 //! Retry policy for transient provider failures.
 //!
 //! Retries 429/5xx and connect/transport errors with jittered exponential
-//! backoff, honoring a server-supplied `Retry-After` when present. The retry
-//! loops live in each provider (they classify their own errors) and re-acquire
-//! the rate limiter before every attempt, so retries cannot stampede.
+//! backoff, honoring a server-supplied `Retry-After` when present. Both
+//! providers run their requests through one crate-internal loop, which
+//! classifies each provider's errors through a crate-internal trait. The loop re-acquires the rate limiter
+//! before every attempt, so retries cannot stampede.
 
-use std::time::Duration;
+use std::{fmt, future::Future, time::Duration};
+
+use super::rate_limit::RateLimiter;
+
+/// A provider error the retry loop can classify.
+pub(crate) trait Retryable: fmt::Display {
+    /// Whether this failure is transient and worth retrying.
+    fn is_retryable(&self) -> bool;
+
+    /// The server-supplied `Retry-After` delay, if any.
+    fn retry_after(&self) -> Option<Duration>;
+}
+
+/// Run `attempt` under `limiter`, retrying transient failures per `policy`.
+///
+/// Every attempt (the first and each retry) first waits for a rate-limit
+/// slot. A failure is retried while `policy` permits another retry and the
+/// error [`is_retryable`](Retryable::is_retryable), after a
+/// [`backoff`](RetryPolicy::backoff) that honors its
+/// [`retry_after`](Retryable::retry_after). Each retry logs
+/// `"{label}: retrying transient error"` at debug level. The last error is
+/// returned unchanged.
+pub(crate) async fn run<T, E, F, Fut>(
+    policy: RetryPolicy,
+    limiter: &RateLimiter,
+    label: &str,
+    mut attempt: F,
+) -> Result<T, E>
+where
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<T, E>>,
+    E: Retryable,
+{
+    let mut retry_index = 0u32;
+    loop {
+        limiter.acquire().await;
+        match attempt().await {
+            Ok(value) => return Ok(value),
+            Err(err) => {
+                if policy.should_retry(retry_index) && err.is_retryable() {
+                    let delay = policy.backoff(retry_index, err.retry_after());
+                    tracing::debug!(
+                        retry = retry_index,
+                        ?delay,
+                        error = %err,
+                        "{label}: retrying transient error"
+                    );
+                    tokio::time::sleep(delay).await;
+                    retry_index += 1;
+                    continue;
+                }
+                return Err(err);
+            }
+        }
+    }
+}
 
 /// A hard ceiling on how long we will wait for a single `Retry-After`, so a
 /// pathological value cannot hang a request indefinitely.
@@ -111,6 +167,53 @@ mod tests {
     }
 
     #[test]
+    fn jitter_fraction_is_a_unit_interval_sample() {
+        let samples: Vec<f64> = (0..64).map(|_| jitter_fraction()).collect();
+        for f in &samples {
+            assert!((0.0..1.0).contains(f), "{f} outside [0, 1)");
+        }
+        assert!(
+            samples.iter().any(|f| *f != samples[0]),
+            "64 samples were all {}",
+            samples[0]
+        );
+    }
+
+    /// The `Retry-After` jitter is strictly under 250ms and varies per call.
+    #[test]
+    fn retry_after_jitter_is_under_250ms_and_varies() {
+        let policy = RetryPolicy::default();
+        let delays: Vec<Duration> = (0..64)
+            .map(|_| policy.backoff(0, Some(Duration::ZERO)))
+            .collect();
+        for d in &delays {
+            assert!(*d < Duration::from_millis(250), "jitter {d:?}");
+        }
+        assert!(
+            delays.iter().any(|d| *d != delays[0]),
+            "jitter never varied"
+        );
+    }
+
+    /// Equal jitter: the random half never reaches the full capped delay, and
+    /// it varies per call.
+    #[test]
+    fn exponential_jitter_stays_below_the_cap_and_varies() {
+        let policy = RetryPolicy::new(10, Duration::from_millis(100), Duration::from_secs(1));
+        let delays: Vec<Duration> = (0..64).map(|_| policy.backoff(1, None)).collect();
+        for d in &delays {
+            assert!(
+                *d >= Duration::from_millis(100) && *d < Duration::from_millis(200),
+                "{d:?}"
+            );
+        }
+        assert!(
+            delays.iter().any(|d| *d != delays[0]),
+            "jitter never varied"
+        );
+    }
+
+    #[test]
     fn exponential_backoff_grows_and_caps() {
         let policy = RetryPolicy::new(10, Duration::from_millis(100), Duration::from_millis(800));
         // Equal jitter keeps each delay within [capped/2, capped].
@@ -122,6 +225,131 @@ mod tests {
                 capped_ms
             );
         }
+    }
+
+    proptest::proptest! {
+        /// Without `Retry-After`, every delay lies in `[capped / 2, capped]`
+        /// where `capped = min(base * 2^retry, max_delay)`.
+        #[test]
+        fn exponential_backoff_stays_within_equal_jitter_bounds(
+            base_ms in 0u64..10_000,
+            max_ms in 0u64..120_000,
+            retry_index in 0u32..64,
+        ) {
+            let base = Duration::from_millis(base_ms);
+            let max = Duration::from_millis(max_ms);
+            let policy = RetryPolicy::new(u32::MAX, base, max);
+            let capped = base.saturating_mul(2u32.saturating_pow(retry_index)).min(max);
+            let delay = policy.backoff(retry_index, None);
+            proptest::prop_assert!(delay >= capped / 2, "{delay:?} < {capped:?} / 2");
+            proptest::prop_assert!(delay <= capped, "{delay:?} > {capped:?}");
+        }
+
+        /// A `Retry-After` is honoured with under 250ms of jitter, and never
+        /// exceeds the 300s cap.
+        #[test]
+        fn retry_after_stays_within_jitter_and_cap(
+            retry_after_ms in 0u64..1_000_000,
+            retry_index in 0u32..64,
+        ) {
+            let retry_after = Duration::from_millis(retry_after_ms);
+            let delay = RetryPolicy::default().backoff(retry_index, Some(retry_after));
+            let floor = retry_after.min(RETRY_AFTER_CAP);
+            let ceiling = (retry_after + Duration::from_millis(250)).min(RETRY_AFTER_CAP);
+            proptest::prop_assert!(delay >= floor, "{delay:?} < {floor:?}");
+            proptest::prop_assert!(delay <= ceiling, "{delay:?} > {ceiling:?}");
+        }
+    }
+
+    /// A test error: retryable or not, with an optional `Retry-After`.
+    #[derive(Debug, PartialEq, Eq)]
+    struct TestError {
+        retryable: bool,
+        retry_after: Option<Duration>,
+    }
+
+    impl fmt::Display for TestError {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.write_str("test error")
+        }
+    }
+
+    impl Retryable for TestError {
+        fn is_retryable(&self) -> bool {
+            self.retryable
+        }
+        fn retry_after(&self) -> Option<Duration> {
+            self.retry_after
+        }
+    }
+
+    fn unlimited() -> RateLimiter {
+        RateLimiter::new(crate::providers::rate_limit::RateLimit::Unlimited)
+    }
+
+    /// Runs `run` with an attempt that fails with `err()` on its first
+    /// `failures` calls, then succeeds; returns the outcome and the call count.
+    async fn run_failing(
+        policy: RetryPolicy,
+        failures: u32,
+        err: fn() -> TestError,
+    ) -> (Result<u32, TestError>, u32) {
+        let calls = std::cell::Cell::new(0u32);
+        let outcome = run(policy, &unlimited(), "test", || {
+            let n = calls.get() + 1;
+            // Fail fast, rather than hang, if the retry budget stops binding.
+            assert!(n <= 100, "attempted {n} times: retrying without bound");
+            calls.set(n);
+            async move { if n <= failures { Err(err()) } else { Ok(n) } }
+        })
+        .await;
+        (outcome, calls.get())
+    }
+
+    fn transient() -> TestError {
+        TestError {
+            retryable: true,
+            retry_after: None,
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn run_retries_transient_errors_until_success() {
+        let (outcome, calls) = run_failing(RetryPolicy::default(), 2, transient).await;
+        assert_eq!(outcome, Ok(3));
+        assert_eq!(calls, 3);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn run_stops_after_max_retries_with_last_error() {
+        let policy = RetryPolicy::new(2, Duration::from_millis(10), Duration::from_millis(10));
+        let (outcome, calls) = run_failing(policy, u32::MAX, transient).await;
+        assert_eq!(outcome, Err(transient()));
+        assert_eq!(calls, 3, "initial attempt plus two retries");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn run_does_not_retry_non_retryable_errors() {
+        let fatal = || TestError {
+            retryable: false,
+            retry_after: None,
+        };
+        let (outcome, calls) = run_failing(RetryPolicy::default(), u32::MAX, fatal).await;
+        assert_eq!(outcome, Err(fatal()));
+        assert_eq!(calls, 1);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn run_waits_for_retry_after_before_retrying() {
+        let limited = || TestError {
+            retryable: true,
+            retry_after: Some(Duration::from_secs(5)),
+        };
+        let start = tokio::time::Instant::now();
+        let (outcome, calls) = run_failing(RetryPolicy::default(), 1, limited).await;
+        assert_eq!(outcome, Ok(2));
+        assert_eq!(calls, 2);
+        assert!(start.elapsed() >= Duration::from_secs(5));
     }
 
     #[test]
