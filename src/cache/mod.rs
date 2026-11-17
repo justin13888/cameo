@@ -19,11 +19,26 @@ use chrono::{NaiveDate, Utc};
 pub use key::{CacheKey, MediaType};
 pub use sqlite::SqliteCache;
 
+use crate::unified::{PartialDate, SeriesStatus, UnifiedMovieDetails, UnifiedTvShowDetails};
+
 /// TTL configuration for the cache layer.
 ///
 /// Different response types have different staleness tolerances.
 /// Age-aware TTL fields allow stable/old content to be cached longer while
 /// keeping volatile or recently-released content fresher.
+///
+/// Start from [`Default`] and override fields with the `with_*` setters:
+///
+/// ```
+/// use std::time::Duration;
+/// use cameo::cache::CacheTtlConfig;
+///
+/// let ttl = CacheTtlConfig::default()
+///     .with_search(Duration::from_secs(300))
+///     .with_old_content_threshold_days(730);
+/// assert_eq!(ttl.search, Duration::from_secs(300));
+/// assert_eq!(ttl.old_content_threshold_days, 730);
+/// ```
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use = "a CacheTtlConfig does nothing unless passed to CameoClientBuilder::with_cache_ttl"]
@@ -72,15 +87,88 @@ impl Default for CacheTtlConfig {
 }
 
 impl CacheTtlConfig {
-    fn parse_date(s: &str) -> Option<NaiveDate> {
-        NaiveDate::parse_from_str(s, "%Y-%m-%d").ok()
+    /// Set the fallback TTL for detail responses ([`details`](Self::details)).
+    pub fn with_details(mut self, value: Duration) -> Self {
+        self.details = value;
+        self
     }
 
-    fn days_since(date: NaiveDate) -> i64 {
-        (Utc::now().date_naive() - date).num_days()
+    /// Set the TTL for search result pages ([`search`](Self::search)).
+    pub fn with_search(mut self, value: Duration) -> Self {
+        self.search = value;
+        self
+    }
+
+    /// Set the TTL for discovery/listing result pages
+    /// ([`discovery`](Self::discovery)).
+    pub fn with_discovery(mut self, value: Duration) -> Self {
+        self.discovery = value;
+        self
+    }
+
+    /// Set the TTL for items indexed from list results ([`items`](Self::items)).
+    pub fn with_items(mut self, value: Duration) -> Self {
+        self.items = value;
+        self
+    }
+
+    /// Set the age in days past which content counts as old
+    /// ([`old_content_threshold_days`](Self::old_content_threshold_days)).
+    pub fn with_old_content_threshold_days(mut self, value: u32) -> Self {
+        self.old_content_threshold_days = value;
+        self
+    }
+
+    /// Set the age in days within which content counts as recent
+    /// ([`recent_content_threshold_days`](Self::recent_content_threshold_days)).
+    pub fn with_recent_content_threshold_days(mut self, value: u32) -> Self {
+        self.recent_content_threshold_days = value;
+        self
+    }
+
+    /// Set the TTL for old, stable content
+    /// ([`old_content_details_ttl`](Self::old_content_details_ttl)).
+    pub fn with_old_content_details_ttl(mut self, value: Duration) -> Self {
+        self.old_content_details_ttl = value;
+        self
+    }
+
+    /// Set the TTL for recent or in-production content
+    /// ([`recent_content_details_ttl`](Self::recent_content_details_ttl)).
+    pub fn with_recent_content_details_ttl(mut self, value: Duration) -> Self {
+        self.recent_content_details_ttl = value;
+        self
+    }
+
+    /// Set the TTL for actively-airing TV shows
+    /// ([`active_content_details_ttl`](Self::active_content_details_ttl)).
+    pub fn with_active_content_details_ttl(mut self, value: Duration) -> Self {
+        self.active_content_details_ttl = value;
+        self
+    }
+
+    /// Days elapsed since the earliest day of `date`'s period.
+    ///
+    /// A year-only date counts as January 1st and a year-month date as the
+    /// 1st of that month. A full date naming an impossible day (e.g.
+    /// February 30th) counts as the 1st of its month. Returns `None` only when
+    /// the year is outside the range [`NaiveDate`] can represent.
+    fn days_since(date: PartialDate) -> Option<i64> {
+        let month = u32::from(date.month().unwrap_or(1));
+        let day = u32::from(date.day().unwrap_or(1));
+        let earliest = NaiveDate::from_ymd_opt(date.year(), month, day)
+            .or_else(|| NaiveDate::from_ymd_opt(date.year(), month, 1))?;
+        Some((Utc::now().date_naive() - earliest).num_days())
     }
 
     /// Compute the appropriate cache TTL for a movie detail entry.
+    ///
+    /// The release date is the base movie's
+    /// [`release_date`](crate::unified::models::UnifiedMovie::release_date); a
+    /// partial date counts as the earliest day of its period (a year-only
+    /// `2022` counts as 2022-01-01). The status is
+    /// [`UnifiedMovieDetails::status`], falling back to the base movie's
+    /// [`status`](crate::unified::models::UnifiedMovie::status).
     ///
     /// Selection logic (first match wins):
     /// 1. Status is "Released" **and** release date is older than
@@ -90,10 +178,12 @@ impl CacheTtlConfig {
     ///    [`recent_content_threshold_days`](CacheTtlConfig::recent_content_threshold_days)
     ///    → [`recent_content_details_ttl`](CacheTtlConfig::recent_content_details_ttl)
     /// 3. Fallback → [`details`](CacheTtlConfig::details)
-    pub fn movie_details_ttl(&self, release_date: Option<&str>, status: Option<&str>) -> Duration {
-        let release_days = release_date
-            .and_then(Self::parse_date)
-            .map(Self::days_since);
+    pub fn movie_details_ttl(&self, details: &UnifiedMovieDetails) -> Duration {
+        let status = details
+            .status
+            .as_deref()
+            .or(details.movie.status.as_deref());
+        let release_days = details.movie.release_date.and_then(Self::days_since);
 
         // Recognize both TMDB ("Released") and AniList ("FINISHED") statuses so
         // the age-aware policy applies to both providers, not just TMDB.
@@ -131,39 +221,39 @@ impl CacheTtlConfig {
     /// Selection logic (first match wins):
     /// 1. `in_production` is `true` *or* `last_air_date` is within the past 90
     ///    days → [`active_content_details_ttl`](CacheTtlConfig::active_content_details_ttl)
-    /// 2. Status is "Ended" or "Canceled" **and** `first_air_date` is older
+    /// 2. Status is [`SeriesStatus::Ended`] or [`SeriesStatus::Cancelled`]
+    ///    **and** `first_air_date` is older
     ///    than [`old_content_threshold_days`](CacheTtlConfig::old_content_threshold_days)
     ///    → [`old_content_details_ttl`](CacheTtlConfig::old_content_details_ttl)
-    /// 3. Status indicates continuing/planned *or* `first_air_date` is within
+    /// 3. Status is [`SeriesStatus::ReturningSeries`],
+    ///    [`SeriesStatus::InProduction`] or [`SeriesStatus::Planned`] *or*
+    ///    `first_air_date` is within
     ///    [`recent_content_threshold_days`](CacheTtlConfig::recent_content_threshold_days)
     ///    → [`recent_content_details_ttl`](CacheTtlConfig::recent_content_details_ttl)
     /// 4. Fallback → [`details`](CacheTtlConfig::details)
     ///
-    /// [`UnifiedTvShowDetails::in_production`](crate::unified::models::UnifiedTvShowDetails::in_production)
-    /// is an `Option<bool>`; pass `in_production.unwrap_or(false)` so an unknown
-    /// production state falls through to the date- and status-based rules.
-    pub fn tv_show_details_ttl(
-        &self,
-        first_air_date: Option<&str>,
-        last_air_date: Option<&str>,
-        status: Option<&str>,
-        in_production: bool,
-    ) -> Duration {
-        let last_air_days = last_air_date
-            .and_then(Self::parse_date)
-            .map(Self::days_since);
+    /// The dates are [`UnifiedTvShowDetails::last_air_date`] and the base
+    /// show's
+    /// [`first_air_date`](crate::unified::models::UnifiedTvShow::first_air_date);
+    /// a partial date counts as the earliest day of its period. The status is
+    /// [`UnifiedTvShowDetails::status`], falling back to the base show's
+    /// [`status`](crate::unified::models::UnifiedTvShow::status). An unknown
+    /// [`in_production`](UnifiedTvShowDetails::in_production) counts as
+    /// `false`, so it falls through to the date- and status-based rules.
+    pub fn tv_show_details_ttl(&self, details: &UnifiedTvShowDetails) -> Duration {
+        let status = details.status.as_ref().or(details.show.status.as_ref());
+        let in_production = details.in_production.unwrap_or(false);
+        let last_air_days = details.last_air_date.and_then(Self::days_since);
         let recently_aired = last_air_days.map(|d| d <= 90).unwrap_or(false);
 
         if in_production || recently_aired {
             return self.active_content_details_ttl;
         }
 
-        let first_air_days = first_air_date
-            .and_then(Self::parse_date)
-            .map(Self::days_since);
+        let first_air_days = details.show.first_air_date.and_then(Self::days_since);
         let is_ended = matches!(
             status,
-            Some("Ended") | Some("Canceled") | Some("FINISHED") | Some("CANCELLED")
+            Some(SeriesStatus::Ended) | Some(SeriesStatus::Cancelled)
         );
         let is_old = first_air_days
             .map(|d| d > self.old_content_threshold_days as i64)
@@ -175,11 +265,9 @@ impl CacheTtlConfig {
 
         let is_returning = matches!(
             status,
-            Some("Returning Series")
-                | Some("In Production")
-                | Some("Planned")
-                | Some("RELEASING")
-                | Some("NOT_YET_RELEASED")
+            Some(SeriesStatus::ReturningSeries)
+                | Some(SeriesStatus::InProduction)
+                | Some(SeriesStatus::Planned)
         );
         let is_recent = first_air_days
             .map(|d| d <= self.recent_content_threshold_days as i64)

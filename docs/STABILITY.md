@@ -74,8 +74,10 @@ variants and fields in a minor release without it being breaking. Consequently:
 
 - match on these enums with a `_` arm;
 - construct input models and configs via their `new()` + `with_*` builders,
-  not struct literals; output-only types (provider responses and error
-  details) are not constructed by callers at all.
+  not struct literals; a config with no required fields (e.g.
+  `CacheTtlConfig`) starts from `Default::default()` instead of `new()`.
+  Output-only types (provider responses and error details) are not
+  constructed by callers at all.
 
 ## What counts as a breaking change
 

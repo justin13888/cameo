@@ -206,6 +206,10 @@ impl CameoClientBuilder {
     }
 
     /// Customize cache TTLs.
+    ///
+    /// Build the config from [`CacheTtlConfig::default`] and its `with_*`
+    /// setters, e.g.
+    /// `CacheTtlConfig::default().with_search(Duration::from_secs(300))`.
     #[cfg(feature = "cache")]
     pub fn with_cache_ttl(mut self, ttl: CacheTtlConfig) -> Self {
         self.cache_ttl = Some(ttl);
