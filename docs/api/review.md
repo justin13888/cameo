@@ -1,4 +1,4 @@
-# v1 public API review
+# Public API review
 
 A pre-1.0 pass over the entire public surface against the
 [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) and

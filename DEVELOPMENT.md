@@ -168,19 +168,22 @@ When you're ready to ship, merge the Release PR that release-plz keeps open.
 
 ### Versioning
 
-release-plz derives the next version from commit types:
+cameo stays on `0.x` by design and never releases 1.0 (see
+[docs/STABILITY.md](docs/STABILITY.md)). release-plz derives the next version
+from commit types:
 
 | Commit type | Bump |
 |---|---|
-| `fix:` | patch (0.1.x) |
-| `feat:` | minor (0.x.0) |
-| Any `!` breaking change | major (x.0.0); pre-1.0: minor (0.x.0) |
+| `fix:` | patch (0.y.z) |
+| `feat:` | patch (0.y.z) |
+| Any `!` breaking change | minor (0.y.0) |
 
 Pull requests never change `version` in `Cargo.toml`; only the Release PR does.
 CI's *SemVer compatibility* job therefore takes its release type from the commits
 merged since the last `v*` tag plus the pull request's title: a breaking marker
-(`type!:` or a `BREAKING CHANGE:` footer) in any of them allows breaking API
-changes, and otherwise only additive changes pass. A pull request that breaks the
+(`type!:` or a `BREAKING CHANGE:` footer) in any of them checks the change as a
+`minor` (breaking, on `0.x`) release; otherwise it is checked as a `patch`
+release, so only additive changes pass. A pull request that breaks the
 public API must say so in its title, e.g. `feat!: ...`.
 
 ### Skipping a release
