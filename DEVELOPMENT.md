@@ -181,9 +181,9 @@ from commit types:
 Pull requests never change `version` in `Cargo.toml`; only the Release PR does.
 CI's *SemVer compatibility* job therefore takes its release type from the commits
 merged since the last `v*` tag plus the pull request's title: a breaking marker
-(`type!:` or a `BREAKING CHANGE:` footer) in any of them checks the change as a
-`minor` (breaking, on `0.x`) release; otherwise it is checked as a `patch`
-release, so only additive changes pass. A pull request that breaks the
+(`type!:` or a `BREAKING CHANGE:` footer) in any of them allows breaking API
+changes (a `0.(y+1)` release), and otherwise only additive changes pass (a
+`0.y.(z+1)` release). A pull request that breaks the
 public API must say so in its title, e.g. `feat!: ...`.
 
 ### Skipping a release
