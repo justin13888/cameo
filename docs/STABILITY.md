@@ -1,13 +1,30 @@
 # Stability policy
 
-This document defines what cameo's public API promises once **1.0** ships, and
-how it evolves. Before 1.0, minor `0.x` releases may contain breaking changes,
-but we already develop against these rules.
+This document defines what cameo's public API promises and how it evolves.
+
+## Our promise: cameo stays on `0.x`
+
+cameo keeps growing new providers and clients, so it intentionally keeps a `0.x`
+version rather than freezing a 1.0 surface. **There is no planned 1.0.** The
+`0.` prefix is the signal, and this is the promise behind it:
+
+- **We try our best to keep every change non-breaking.** Fixes, additive
+  features, and new providers ship as patch releases (`0.y.z → 0.y.(z+1)`),
+  which a `cameo = "0.y"` requirement picks up automatically.
+- **Big improvements or feature additions may require a breaking bump**
+  (`0.y → 0.(y+1)`). We take one only when it buys a real improvement; the
+  change is marked `!` in its commit and pull-request title and listed in
+  `CHANGELOG.md`, so upgrading is a deliberate, documented step.
+
+This follows Cargo's SemVer rules for `0.x` crates, where the minor number is the
+compatibility boundary. CI enforces it: `cargo semver-checks` rejects a breaking
+API change unless a breaking marker has been declared since the last release.
 
 ## Stable surface
 
 Everything reachable from the crate root (`cameo::…`) that is not explicitly
-marked otherwise is part of the stable API and follows [SemVer](https://semver.org/):
+marked otherwise is part of the stable API and follows the promise above and
+[SemVer](https://semver.org/):
 
 - the unified models (`Unified*`, `Genre`, `Gender`, `PartialDate`, `MediaId`,
   `Page`, …) and their public methods/builders;
@@ -70,7 +87,7 @@ the API:
 
 Public enums and structs that model external data (models, `Genre`, error
 types, configs, `Capability`, …) are `#[non_exhaustive]`. This lets us **add**
-variants and fields in a minor release without it being breaking. Consequently:
+variants and fields in a patch release without it being breaking. Consequently:
 
 - match on these enums with a `_` arm;
 - construct input models and configs via their `new()` + `with_*` builders,
@@ -81,7 +98,7 @@ variants and fields in a minor release without it being breaking. Consequently:
 
 ## What counts as a breaking change
 
-Requires a major version bump (post-1.0):
+Requires a breaking (`0.y → 0.(y+1)`) release:
 
 - removing or renaming a public item, or changing a function signature;
 - adding a required method to a public trait, or otherwise making an existing
@@ -97,13 +114,13 @@ Explicitly **not** breaking:
 
 ## Deprecation process
 
-Post-1.0, items are removed only after a deprecation period: an item is marked
-`#[deprecated(since = "x.y", note = "use … instead")]` for **at least one minor
-release** before removal in the next major. Deprecations are called out in
+Where practical, items are removed only after a deprecation period: an item is
+marked `#[deprecated(since = "0.y.z", note = "use … instead")]` for **at least
+one release** before removal in the next breaking release. Deprecations are called out in
 `CHANGELOG.md`.
 
 ## MSRV
 
 The minimum supported Rust version is stated in the README and `Cargo.toml`
-(`rust-version`). An MSRV increase is treated as a minor-version change, not a
-patch, and is noted in the changelog.
+(`rust-version`). An MSRV increase ships only in a breaking (`0.(y+1)`)
+release, never in a patch, and is noted in the changelog.

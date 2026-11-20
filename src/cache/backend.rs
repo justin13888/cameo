@@ -9,7 +9,7 @@ use crate::core::error::DecodeError;
 
 /// Error returned by [`CacheBackend`] operations.
 ///
-/// This is the **v1 error contract**: it is `#[non_exhaustive]` (new kinds may
+/// This is the **error contract**: it is `#[non_exhaustive]` (new kinds may
 /// be added without a breaking release) and callers can match on the kind —
 /// serialization problems are distinguished from backend/store failures. The
 /// [`Backend`](CacheError::Backend) variant carries the underlying error as its
@@ -45,7 +45,7 @@ impl CacheError {
 
 /// A pluggable cache backend.
 ///
-/// # v1 contract
+/// # Contract
 ///
 /// - **Value representation** — values are opaque [`serde_json::Value`]s. The
 ///   facade owns typed (de)serialization; a backend treats the value as a blob

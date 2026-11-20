@@ -1,6 +1,6 @@
 //! Provider extension traits.
 //!
-//! Per ADR 0001 these are the v1 extension seam: object-safe and `Send` (via
+//! Per ADR 0001 these are the extension seam: object-safe and `Send` (via
 //! `#[async_trait]`), returning the unified [`ProviderError`](crate::ProviderError),
 //! taking [`MediaId`](crate::MediaId) parameters, and yielding the
 //! provider-agnostic [`Page`](crate::Page). Concrete providers

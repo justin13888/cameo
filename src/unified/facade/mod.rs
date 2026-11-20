@@ -45,7 +45,7 @@ pub use error::CameoClientError;
 ///   merges the matches in priority order.
 ///
 /// Results are otherwise **not merged** across providers; cross-provider
-/// merging or de-duplication is out of scope for v1.
+/// merging or de-duplication is out of scope.
 ///
 /// # Errors
 ///

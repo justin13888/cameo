@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-cameo is pre-1.0; security fixes land on the latest published `0.x` release.
+cameo is versioned `0.x` by design; security fixes land on the latest published `0.y` release.
 
 ## Reporting a vulnerability
 

@@ -90,7 +90,11 @@ Prerequisites: `rustup`, `lefthook`, [`just`](https://github.com/casey/just) (co
 
 ## Stability
 
-See [docs/STABILITY.md](docs/STABILITY.md) for the API stability policy: what
+cameo intentionally stays on `0.x`: we try our best to keep every change
+non-breaking (patch releases), and only big improvements or feature additions
+take a breaking `0.y → 0.(y+1)` bump. There is no planned 1.0.
+
+See [docs/STABILITY.md](docs/STABILITY.md) for the full policy: what
 the stable surface is, how `#[non_exhaustive]` is used, what counts as a
 breaking change, and the deprecation cadence.
 

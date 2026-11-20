@@ -1,4 +1,4 @@
-//! The v1 extension seam: concrete providers are usable as `dyn` trait objects,
+//! The extension seam: concrete providers are usable as `dyn` trait objects,
 //! carry capability metadata, and are `Send + Sync` (spawnable).
 
 use std::sync::Arc;

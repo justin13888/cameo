@@ -178,7 +178,10 @@ jobs:
       # Cargo.toml. A breaking marker (`type!:` or a `BREAKING CHANGE:` footer)
       # in any commit since the last `v*` tag, or in this pull request's title
       # (the squash-merge subject), allows breaking changes; otherwise only
-      # additive changes pass.
+      # additive changes pass. `release-type` names the SemVer level of the
+      # change, and cargo-semver-checks shifts it onto 0.x itself: `major` is a
+      # 0.(y+1) release and `minor` is a 0.y.(z+1) release, so `minor` already
+      # rejects breaking changes on 0.x.
       - name: Derive release type from commits
         id: release-type
         env:
