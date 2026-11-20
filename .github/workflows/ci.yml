@@ -175,10 +175,12 @@ jobs:
       # Pull requests never bump the version: release-plz's release pull request
       # does, from the Conventional Commits merged since the last release. So the
       # check takes its release type from those same commits instead of from
-      # Cargo.toml. A breaking marker (`type!:` or a `BREAKING CHANGE:` footer)
-      # in any commit since the last `v*` tag, or in this pull request's title
-      # (the squash-merge subject), allows breaking changes; otherwise only
-      # additive changes pass.
+      # Cargo.toml. cameo stays on 0.x (docs/STABILITY.md), where the minor
+      # number is the compatibility boundary: a breaking marker (`type!:` or a
+      # `BREAKING CHANGE:` footer) in any commit since the last `v*` tag, or in
+      # this pull request's title (the squash-merge subject), checks a `minor`
+      # release, which allows breaking changes; otherwise it checks a `patch`
+      # release, so only additive changes pass.
       - name: Derive release type from commits
         id: release-type
         env:
@@ -191,9 +193,9 @@ jobs:
           messages="$(git log --format=%B "${last_tag}..HEAD")"
           messages+=$'\n'"${PR_TITLE}"
           if grep -Eq "${breaking}" <<<"${messages}"; then
-            type=major
+            type="minor"
           else
-            type=minor
+            type="patch"
           fi
           echo "Release type for the changes since ${last_tag}: ${type}"
           echo "type=${type}" >> "${GITHUB_OUTPUT}"
