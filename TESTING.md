@@ -60,7 +60,9 @@ time (a `+` becomes `-`, a function returns `Default::default()`, a match arm is
 deleted) and runs the tests against each edit. A mutant the tests still pass on
 ("missed") marks behaviour no test constrains. Install it with
 `cargo install --locked cargo-mutants`; its settings live in
-`.cargo/mutants.toml`, which excludes the generated client under `src/generated/`.
+`.cargo/mutants.toml`, which excludes the generated client under `src/generated/`
+and runs each mutant's tests under cargo-nextest (so nextest must be installed too;
+doctests are not part of a mutant's run).
 
 ```bash
 # Every mutant in one file or glob; the report lands in mutants.out/
@@ -68,12 +70,28 @@ just mutants 'src/providers/tmdb/**/*.rs'
 
 # Only the mutants on lines changed since a base ref
 just mutants-diff origin/master
+
+# One shard of the whole tree (shard 3 of 16, counting from 0), as weekly CI runs it
+just mutants-shard 3 16
 ```
 
-CI (`.github/workflows/mutants.yml`) runs the in-diff form on every pull request
-with a 30-minute limit and fails it when a mutant on a changed line is missed or
-times out. When it fails, add a test that fails against that mutant, or, where
-the mutant cannot change observable behaviour, say why in the pull request.
+Each mutant costs a build and a test run, so CI splits the work into shards that
+run in parallel, dealing mutants out round-robin (`--sharding round-robin`):
+
+- **Every pull request** (`.github/workflows/mutants.yml`) runs the in-diff form
+  over 8 shards, each limited to 60 minutes. The `Mutants (in diff)` check fails
+  when any shard does: a mutant on a changed line was missed or timed out. Each
+  shard uploads its report as `mutants.out-shard-K`. A new push cancels the run
+  for the previous head.
+- **Weekly, and on demand** (`.github/workflows/mutants-full.yml`, "Run
+  workflow" in the Actions tab), the whole tree (about 1,700 mutants) runs over
+  16 shards, each limited to 5 hours. It blocks nothing; its per-shard reports
+  (`mutants.out-full-shard-K`) list what survives across the codebase.
+
+To change a shard count, change both the `SHARDS` variable and the matrix in the
+workflow. When the pull-request check fails, download the failing shard's report,
+then add a test that fails against that mutant, or, where the mutant cannot
+change observable behaviour, say why in the pull request.
 
 ---
 

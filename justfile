@@ -99,6 +99,11 @@ mutants-diff base="origin/master":
     git diff '{{base}}...HEAD' > target/mutants.diff
     cargo mutants --in-diff target/mutants.diff
 
+# Mutation-test one shard of the whole tree, as the weekly CI run does
+# (shard k of n, counting from 0; e.g. `just mutants-shard 3 16`)
+mutants-shard k n:
+    cargo mutants --no-shuffle --shard '{{k}}/{{n}}' --sharding round-robin
+
 # Regenerate TMDB OpenAPI spec
 fetch-openapi:
     ./scripts/fetch-openapi.sh

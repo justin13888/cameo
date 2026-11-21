@@ -2,8 +2,13 @@ name: Mutation testing
 
 # Runs cargo-mutants over only the lines a pull request changes, so a change
 # that adds code no test constrains fails here. Settings (excluded paths,
-# timeouts) live in .cargo/mutants.toml; `just mutants-diff` runs the same
-# check locally.
+# timeouts, nextest as the test tool) live in .cargo/mutants.toml;
+# `just mutants-diff` runs the same check locally, and `just mutants-shard`
+# reproduces one shard.
+#
+# A large diff can mean hundreds of mutants, each needing a build and a test
+# run, so the work is split round-robin across SHARDS parallel jobs (each with
+# its own time limit) and one job, `Mutants (in diff)`, reports the outcome.
 on:
   pull_request:
     branches: [master]
@@ -11,14 +16,27 @@ on:
 permissions:
   contents: read
 
+# A new push supersedes the run for the previous head: cancel it rather than
+# let hour-long shards pile up.
+concurrency:
+  group: mutants-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
+  # Keep in step with the matrix below.
+  SHARDS: 8
 
 jobs:
-  mutants:
-    name: Mutants (in diff)
+  shard:
+    name: Mutants (in diff, shard ${{ matrix.shard }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
+    strategy:
+      # Every shard reports its own missed mutants, even when another fails.
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,21 +46,41 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: "true"
+          # Every shard builds the same tree; share one cache between them.
+          shared-key: mutants
       - uses: taiki-e/install-action@v2
         with:
-          tool: cargo-mutants
+          tool: cargo-mutants,cargo-nextest
       - name: Diff against the base branch
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: git diff "${BASE_SHA}...HEAD" > "${RUNNER_TEMP}/pr.diff"
       # Exits non-zero when a mutant in the changed lines survives (missed) or
-      # times out, which fails the pull request.
-      - name: cargo mutants --in-diff
-        run: cargo mutants --no-shuffle --in-diff "${RUNNER_TEMP}/pr.diff"
+      # times out. A shard that gets no mutants exits 0.
+      - name: cargo mutants --in-diff (shard ${{ matrix.shard }})
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: >-
+          cargo mutants --no-shuffle --in-diff "${RUNNER_TEMP}/pr.diff"
+          --shard "${SHARD}/${SHARDS}" --sharding round-robin
       - name: Upload the mutants report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mutants.out
+          name: mutants.out-shard-${{ matrix.shard }}
           path: mutants.out
           if-no-files-found: ignore
+
+  # One stable check for the whole run, whatever the shard count.
+  result:
+    name: Mutants (in diff)
+    needs: shard
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every shard passed
+        env:
+          SHARDS_RESULT: ${{ needs.shard.result }}
+        run: |
+          echo "shards: ${SHARDS_RESULT}"
+          test "${SHARDS_RESULT}" = success
