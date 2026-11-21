@@ -6,16 +6,21 @@ from the code.
 ## Getting started
 
 ```sh
-cargo test --features full       # run the suite (or `just test`)
+cargo install --locked cargo-nextest   # once; the test runner (https://nexte.st)
+cargo nextest run --features full      # run the suite (or `just test`)
+cargo test --doc --features full       # doctests (nextest does not run them)
 cargo clippy --all-targets --features full -- -D warnings
 cargo fmt --all
 ```
 
-Avoid `--all-features`: it enables `live-tests`, whose tests hit the real TMDB
-API and panic without a `TMDB_API_TOKEN` (run them with `just test-live`).
+`cargo nextest run --all-features` is safe: the live tests that `live-tests`
+compiles in hit the real TMDB and AniList APIs and need a `TMDB_API_TOKEN`, so
+`.config/nextest.toml` filters them out unless you run `just test-live`. Plain
+`cargo test --all-features` has no such filter and runs them.
 
 A [lefthook](https://github.com/evilmartians/lefthook) pre-push hook runs
-formatting, clippy, and the tests across the feature-flag combinations; install
+formatting, clippy, and the tests and doctests across the feature-flag
+combinations; install
 it with `lefthook install`. Use [conventional commits](https://www.conventionalcommits.org/)
 (`type: description`).
 

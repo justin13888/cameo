@@ -79,7 +79,7 @@ the cache-version rule, and [SECURITY.md](SECURITY.md) for reporting
 vulnerabilities and handling API tokens. Copy [`.env.example`](.env.example) to
 `.env` to run the examples.
 
-Prerequisites: `rustup`, `lefthook`, [`just`](https://github.com/casey/just) (command runner)
+Prerequisites: `rustup`, `lefthook`, [`just`](https://github.com/casey/just) (command runner), [`cargo-nextest`](https://nexte.st) (test runner: `cargo install --locked cargo-nextest`)
 
 1. Clone the repo and run `just setup` to install hooks and build, then `just test` to verify your environment
 2. Run `just` to see all available recipes
