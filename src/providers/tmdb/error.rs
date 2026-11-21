@@ -18,8 +18,8 @@ use crate::{
 ///
 /// * [`TmdbError::Request`] — the request was never sent, or the client stopped
 ///   on its own: it could not be built (e.g. a parameter TMDB cannot carry) or
-///   a pagination `next` link revisited an earlier page. No HTTP response is
-///   involved.
+///   a pagination `next` link revisited an earlier page or pointed at another
+///   origin. No HTTP response is involved.
 /// * [`TmdbError::Http`] — a transport failure (connection, DNS, TLS, timeout)
 ///   where **no** HTTP response was received.
 /// * [`TmdbError::Api`] — the server returned an error **status**, carrying the
@@ -202,8 +202,9 @@ impl TmdbError {
     /// Map a generated-client error into a structured [`TmdbError`], decoding
     /// the TMDB error body and `Retry-After` header for error responses.
     ///
-    /// spargen retains the (capped) body of every error response, so the
-    /// mapping is synchronous. Its own `Display` is not used for transport
+    /// spargen retains the (capped) body of every error response it reads (a
+    /// body over a configured size limit is dropped unread), so the mapping is
+    /// synchronous. Its own `Display` is not used for transport
     /// failures: the underlying `reqwest::Error` prints the request URL, which
     /// carries a v3 `api_key`, so the description is redacted first.
     pub(crate) fn from_generated<E: fmt::Debug>(err: generated::Error<E>) -> Self {
@@ -242,21 +243,12 @@ impl TmdbError {
                 message: "a `next` link pointed at another origin".to_string(),
             },
             // A response arrived, but its body exceeded the configured limit
-            // and was abandoned unread: an error status is still an API error,
-            // and a success body that cannot be read cannot be decoded.
-            G::BodyTooLarge { limit, status } => {
-                let message = format!("response body exceeded the {limit}-byte limit");
-                if status.is_success() {
-                    TmdbError::Deserialization(DecodeError::new(message))
-                } else {
-                    TmdbError::Api {
-                        status: status.as_u16(),
-                        status_code: None,
-                        message,
-                        retry_after: None,
-                    }
-                }
-            }
+            // and was abandoned unread, so it cannot be decoded. Not an `Api`
+            // error even under an error status: the same limit refuses the
+            // same response again, so a 429/5xx must not read as retryable.
+            G::BodyTooLarge { limit, status } => TmdbError::Deserialization(DecodeError::new(
+                format!("response body (HTTP {status}) exceeded the {limit}-byte limit"),
+            )),
 
             // A declared error response with a typed body.
             G::Api(rv) => {

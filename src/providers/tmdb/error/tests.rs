@@ -123,36 +123,29 @@ fn pagination_origin_change_stops_like_a_cycle_without_urls() {
     assert!(!err.to_string().contains("evil"), "{err}");
 }
 
-/// A body over the size limit was received but not read: under an error
-/// status it is still that API error, under a success status it cannot be
-/// decoded.
+/// A body over the size limit was received but not read, so it cannot be
+/// decoded, whatever its status. The same limit refuses the same response
+/// again, so even a 429/5xx is not retryable.
 #[test]
-fn body_too_large_keeps_the_received_status() {
-    let err =
-        TmdbError::from_generated::<std::convert::Infallible>(generated::Error::BodyTooLarge {
-            limit: 1024,
-            status: reqwest::StatusCode::SERVICE_UNAVAILABLE,
-        });
-    assert!(
-        matches!(
-            err,
-            TmdbError::Api {
-                status: 503,
-                status_code: None,
-                ref message,
-                retry_after: None,
-            } if message.contains("1024")
-        ),
-        "got {err:?}"
-    );
-
-    let err =
-        TmdbError::from_generated::<std::convert::Infallible>(generated::Error::BodyTooLarge {
-            limit: 1024,
-            status: reqwest::StatusCode::OK,
-        });
-    assert!(matches!(err, TmdbError::Deserialization(_)), "got {err:?}");
-    assert!(err.to_string().contains("1024"), "{err}");
+fn body_too_large_is_an_unretryable_decode_failure() {
+    for status in [
+        reqwest::StatusCode::OK,
+        reqwest::StatusCode::TOO_MANY_REQUESTS,
+        reqwest::StatusCode::SERVICE_UNAVAILABLE,
+    ] {
+        let err =
+            TmdbError::from_generated::<std::convert::Infallible>(generated::Error::BodyTooLarge {
+                limit: 1024,
+                status,
+            });
+        assert!(matches!(err, TmdbError::Deserialization(_)), "got {err:?}");
+        assert!(!err.is_retryable(), "{err:?}");
+        let text = err.to_string();
+        assert!(
+            text.contains("1024") && text.contains(status.as_str()),
+            "{text}"
+        );
+    }
 }
 
 #[test]
