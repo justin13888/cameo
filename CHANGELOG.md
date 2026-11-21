@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/justin13888/cameo/releases/tag/v0.5.0) - 2026-11-21
+
+### Added
+
+- Bump spargen to 0.8.0 and replace chrono with jiff ([#188](https://github.com/justin13888/cameo/pull/188)) [**breaking**]
+- CacheTtlConfig setters and typed details TTL helpers ([#132](https://github.com/justin13888/cameo/pull/132)) [**breaking**]
+- Add CameoClientBuilder::with_cache_at for a caller-chosen cache path ([#185](https://github.com/justin13888/cameo/pull/185))
+- Take u64 ids with checked conversion on TmdbClient methods ([#175](https://github.com/justin13888/cameo/pull/175)) [**breaking**]
+- Fill unified details certifications from the release_dates / content_ratings append ([#169](https://github.com/justin13888/cameo/pull/169))
+- Add a TheTVDB v4 provider ([#159](https://github.com/justin13888/cameo/pull/159))
+- Validate AniList config and align provider base_url shapes ([#165](https://github.com/justin13888/cameo/pull/165)) [**breaking**]
+- Add movie and TV series certification lookups ([#154](https://github.com/justin13888/cameo/pull/154))
+- Cache movie and TV details for the age-aware TTL ([#152](https://github.com/justin13888/cameo/pull/152))
+- Derive common traits consistently across sibling public types ([#140](https://github.com/justin13888/cameo/pull/140)) [**breaking**]
+
+### Fixed
+
+- Reject ids whose namespace does not match the requested entity ([#173](https://github.com/justin13888/cameo/pull/173)) [**breaking**]
+- Route discover builders through the client's retry seam ([#171](https://github.com/justin13888/cameo/pull/171))
+- Stop pages advertising pages past TMDB's 500-page limit ([#167](https://github.com/justin13888/cameo/pull/167)) [**breaking**]
+- Parse MediaId native parts as numbers only when canonical ([#155](https://github.com/justin13888/cameo/pull/155)) [**breaking**]
+- Index wrapped models in the item cache after search_multi ([#151](https://github.com/justin13888/cameo/pull/151))
+- Skip invalid native ids and reject out-of-range page fields ([#145](https://github.com/justin13888/cameo/pull/145)) [**breaking**]
+- Mark MediaIdParseError #[non_exhaustive] ([#146](https://github.com/justin13888/cameo/pull/146)) [**breaking**]
+- Parse the leading sign of negative PartialDate years ([#143](https://github.com/justin13888/cameo/pull/143))
+- Report omitted page totals as 0, as Page documents ([#141](https://github.com/justin13888/cameo/pull/141)) [**breaking**]
+- Omit formats outside the movie and TV lists from mixed results ([#138](https://github.com/justin13888/cameo/pull/138))
+
+### Changed
+
+- Mark AniListConfig, CameoClientBuilder and CacheTtlConfig #[must_use] ([#179](https://github.com/justin13888/cameo/pull/179)) [**breaking**]
+- Hide reqwest and serde_json errors behind TransportError and DecodeError ([#178](https://github.com/justin13888/cameo/pull/178)) [**breaking**]
+- Hide reqwest and serde_json errors behind TransportError and DecodeError ([#177](https://github.com/justin13888/cameo/pull/177)) [**breaking**]
+- Unify TmdbClient and AniListClient TV method names on the trait vocabulary ([#174](https://github.com/justin13888/cameo/pull/174)) [**breaking**]
+- Remove the unused TmdbConfig image_base_url setting ([#172](https://github.com/justin13888/cameo/pull/172)) [**breaking**]
+- Rename register_watch_provider to register_watch_availability_provider ([#170](https://github.com/justin13888/cameo/pull/170)) [**breaking**]
+- Give every public item one canonical path by making leaf modules private ([#168](https://github.com/justin13888/cameo/pull/168)) [**breaking**]
+- Split the eight baselined Rust sources below the file-length limit ([#166](https://github.com/justin13888/cameo/pull/166))
+- Read watch-provider results as a per-country map ([#161](https://github.com/justin13888/cameo/pull/161))
+- Split AniListClient into client/ modules and move conversions under providers/anilist/convert ([#162](https://github.com/justin13888/cameo/pull/162))
+- Split TmdbClient by endpoint family and move conversions under providers/tmdb ([#158](https://github.com/justin13888/cameo/pull/158))
+- Make Gender provider parsers crate-private and return None for unknown values ([#137](https://github.com/justin13888/cameo/pull/137)) [**breaking**]
+- Share one retry loop and HTTP error helpers ([#157](https://github.com/justin13888/cameo/pull/157))
+- Take &MediaId in CameoClient cache lookups ([#156](https://github.com/justin13888/cameo/pull/156)) [**breaking**]
+- Split the CameoClient facade into error, builder and cache modules ([#149](https://github.com/justin13888/cameo/pull/149))
+- Split model builders into per-family modules ([#142](https://github.com/justin13888/cameo/pull/142))
+
+### Documentation
+
+- Remove td task management instructions from agent guide
+- Commit to permanent 0.x versioning ([#187](https://github.com/justin13888/cameo/pull/187))
+- State errors and edge cases in doc comments and match them to their functions ([#180](https://github.com/justin13888/cameo/pull/180))
+- Stop linking feature-gated builder methods from CameoClientBuilder docs ([#182](https://github.com/justin13888/cameo/pull/182))
+- Correct public-API documentation drift ([#150](https://github.com/justin13888/cameo/pull/150))
+
+
 ## [0.2.0](https://github.com/justin13888/cameo/releases/tag/v0.2.0) - 2026-07-03
 
 ### Added
