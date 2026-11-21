@@ -52,6 +52,6 @@ rationale). Nothing is left open.
   `TmdbClient`'s id parameters are the exception: they take `u64`, the type its
   results and discover filters carry, and reject an id above `i32::MAX` (TMDB's
   wire width) with `TmdbError::Request` instead of wrapping or clamping it.
-- **`PartialDate` is not `chrono::NaiveDate`.** Providers routinely return
-  year-only or year-month dates; a full `NaiveDate` cannot represent them. Lossy
+- **`PartialDate` is not `jiff::civil::Date`.** Providers routinely return
+  year-only or year-month dates; a full `jiff::civil::Date` cannot represent them. Lossy
   conversion is offered explicitly instead of imposed.
