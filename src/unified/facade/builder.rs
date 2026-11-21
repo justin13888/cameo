@@ -339,10 +339,8 @@ mod tests {
     /// the builder held before the call.
     #[test]
     fn with_cache_opens_the_default_path_and_keeps_the_builder() {
-        let dir =
-            std::env::temp_dir().join(format!("cameo-builder-with-cache-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        let path = dir.join("nested").join("cache.db");
+        let dir = crate::test_support::TempDir::new("builder-with-cache");
+        let path = dir.path().join("nested").join("cache.db");
         DEFAULT_CACHE_PATH_OVERRIDE.with_borrow_mut(|p| *p = Some(path.clone()));
 
         let builder = CameoClientBuilder::default()
@@ -353,8 +351,8 @@ mod tests {
         assert_eq!(builder.priority, ["a"]);
         assert!(builder.cache_backend.is_some());
         assert!(path.is_file(), "database created at {}", path.display());
+        // Close the database before `dir` is removed.
         drop(builder);
-        let _ = std::fs::remove_dir_all(&dir);
     }
 
     /// Without an override the default path is the documented location.

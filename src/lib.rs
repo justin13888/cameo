@@ -108,6 +108,9 @@ pub mod providers;
 /// Unified cross-provider types, traits, and facade client.
 pub mod unified;
 
+#[cfg(all(test, feature = "cache"))]
+mod test_support;
+
 // Re-export the most common types.
 pub use core::{
     config::TimeWindow,

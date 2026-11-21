@@ -175,14 +175,18 @@ mod tmdb {
         }
     }
 
+    /// The timeout covers connecting and sending too, and the attempt count
+    /// is read from the server, so it is wide (500ms) for each attempt to
+    /// reach the server even under heavy parallel load; the 10s delay keeps
+    /// the response from racing it.
     #[tokio::test]
     async fn request_timeout_is_retried_until_the_budget_is_spent() {
         let template = ResponseTemplate::new(200)
             .set_body_raw(EMPTY_SEARCH, "application/json")
-            .set_delay(Duration::from_millis(300));
+            .set_delay(Duration::from_secs(10));
         let (_server, client) = search_server(template, 3, |c| {
             c.with_retry(TWO_RETRIES)
-                .with_request_timeout(Duration::from_millis(50))
+                .with_request_timeout(Duration::from_millis(500))
         })
         .await;
 

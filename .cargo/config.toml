@@ -2,3 +2,14 @@
 # pulling its dependencies into the cameo library's build graph.
 [alias]
 xtask = "run --manifest-path xtask/Cargo.toml --"
+
+# reqwest is built with `system-proxy`, and a proxy taken from HTTP_PROXY or
+# ALL_PROXY has no built-in localhost bypass, so without these every
+# wiremock-backed test would send its requests through the developer's or CI
+# runner's proxy. Cargo sets them for everything it runs (test binaries under
+# `cargo test`, nextest and cargo-mutants included); `force` overrides a
+# NO_PROXY already in the environment. Live tests reach real hosts, which these
+# do not name, so they still use the proxy.
+[env]
+NO_PROXY = { value = "127.0.0.1,localhost", force = true }
+no_proxy = { value = "127.0.0.1,localhost", force = true }

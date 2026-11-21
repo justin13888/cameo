@@ -38,8 +38,8 @@ async fn run_blocking_passes_the_work_result_through() {
 /// A schema-version mismatch flushes stale entries when the DB is reopened.
 #[tokio::test]
 async fn schema_version_bump_invalidates_old_entries() {
-    let path = std::env::temp_dir().join(format!("cameo_schema_ver_{}.db", std::process::id()));
-    let _ = std::fs::remove_file(&path);
+    let dir = crate::test_support::TempDir::new("schema-version");
+    let path = dir.path().join("cache.db");
     let key = CacheKey::Detail {
         media_type: MediaType::Movie,
         provider_id: "tmdb:1".to_string(),
@@ -68,8 +68,6 @@ async fn schema_version_bump_invalidates_old_entries() {
     // Reopening detects the mismatch and flushes every entry.
     let cache = SqliteCache::new(&path).unwrap();
     assert!(cache.get(&key).await.unwrap().is_none());
-
-    let _ = std::fs::remove_file(&path);
 }
 
 fn mock(now: &Arc<std::sync::atomic::AtomicU64>) -> Clock {
@@ -259,9 +257,12 @@ async fn every_thousandth_read_reclaims_expired_rows() {
     }
     assert_eq!(row_count(&cache), 1, "reads 0..=999 must not purge");
 
-    // Read number 1000 spawns the purge without awaiting it.
+    // Read number 1000 spawns the purge without awaiting it. The deadline only
+    // bounds a broken purge: under heavy parallel load the blocking thread can
+    // be slow to run, and the loop exits as soon as the row is gone.
     cache.get(&detail(2)).await.unwrap();
-    for _ in 0..200 {
+    let deadline = std::time::Instant::now() + Duration::from_secs(10);
+    while std::time::Instant::now() < deadline {
         if row_count(&cache) == 0 {
             return;
         }
