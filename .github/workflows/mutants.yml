@@ -3,8 +3,7 @@ name: Mutation testing
 # Runs cargo-mutants over only the lines a pull request changes, so a change
 # that adds code no test constrains fails here. Settings (excluded paths,
 # timeouts, nextest as the test tool) live in .cargo/mutants.toml;
-# `just mutants-diff` runs the same check locally, and `just mutants-shard`
-# reproduces one shard.
+# `just mutants-diff` runs the same check locally (all shards' mutants at once).
 #
 # A large diff can mean hundreds of mutants, each needing a build and a test
 # run, so the work is split round-robin across SHARDS parallel jobs (each with
@@ -46,7 +45,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: "true"
-          # Every shard builds the same tree; share one cache between them.
+          # Every shard (and the weekly full run) builds the same tree; share
+          # one cache. It only speeds up the mutant builds because they run
+          # --in-place, in ./target, rather than in a scratch copy.
           shared-key: mutants
       - uses: taiki-e/install-action@v2
         with:
@@ -56,12 +57,14 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: git diff "${BASE_SHA}...HEAD" > "${RUNNER_TEMP}/pr.diff"
       # Exits non-zero when a mutant in the changed lines survives (missed) or
-      # times out. A shard that gets no mutants exits 0.
+      # times out. A shard that gets no mutants exits 0. --in-place mutates
+      # this throwaway checkout instead of copying it, so builds reuse the
+      # cached ./target.
       - name: cargo mutants --in-diff (shard ${{ matrix.shard }})
         env:
           SHARD: ${{ matrix.shard }}
         run: >-
-          cargo mutants --no-shuffle --in-diff "${RUNNER_TEMP}/pr.diff"
+          cargo mutants --no-shuffle --in-place --in-diff "${RUNNER_TEMP}/pr.diff"
           --shard "${SHARD}/${SHARDS}" --sharding round-robin
       - name: Upload the mutants report
         if: always()
@@ -71,7 +74,11 @@ jobs:
           path: mutants.out
           if-no-files-found: ignore
 
-  # One stable check for the whole run, whatever the shard count.
+  # One stable check for the whole run, whatever the shard count. It runs even
+  # when the shards were cancelled (a newer push superseded them), and then
+  # fails, which marks only that superseded commit red; `always()` rather than
+  # `!cancelled()` so that, if this check is ever made required, a cancelled
+  # run cannot count as passing.
   result:
     name: Mutants (in diff)
     needs: shard

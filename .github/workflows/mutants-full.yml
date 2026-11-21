@@ -13,9 +13,9 @@ name: Mutation testing (full tree)
 # shards start nearing that limit.
 on:
   schedule:
-    # Mondays 06:17 UTC. Off the hour, because GitHub delays scheduled runs
-    # most at the top of the hour.
-    - cron: "17 6 * * 1"
+    # Saturdays 06:17 UTC: on a weekend, so its 16 runners don't hold up pull
+    # request CI, and off the hour, when GitHub delays scheduled runs most.
+    - cron: "17 6 * * 6"
   workflow_dispatch:
 
 permissions:
@@ -47,17 +47,18 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: "true"
+          # Shared with the pull request shards; see mutants.yml.
           shared-key: mutants
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-mutants,cargo-nextest
       # Exits non-zero when any mutant in this shard is missed or times out;
-      # the report says which.
+      # the report says which. --in-place: see mutants.yml.
       - name: cargo mutants (shard ${{ matrix.shard }})
         env:
           SHARD: ${{ matrix.shard }}
         run: >-
-          cargo mutants --no-shuffle
+          cargo mutants --no-shuffle --in-place
           --shard "${SHARD}/${SHARDS}" --sharding round-robin
       - name: Upload the mutants report
         if: always()

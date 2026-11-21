@@ -83,7 +83,7 @@ run in parallel, dealing mutants out round-robin (`--sharding round-robin`):
   when any shard does: a mutant on a changed line was missed or timed out. Each
   shard uploads its report as `mutants.out-shard-K`. A new push cancels the run
   for the previous head.
-- **Weekly, and on demand** (`.github/workflows/mutants-full.yml`, "Run
+- **Weekly (Saturdays), and on demand** (`.github/workflows/mutants-full.yml`, "Run
   workflow" in the Actions tab), the whole tree (about 1,700 mutants) runs over
   16 shards, each limited to 5 hours. It blocks nothing; its per-shard reports
   (`mutants.out-full-shard-K`) list what survives across the codebase.

@@ -20,6 +20,8 @@ timeout_multiplier = 3.0
 # run just like a missed mutant.
 minimum_test_timeout = 60
 
-# Each mutant's tests run under cargo-nextest (.config/nextest.toml): one
-# process per test, and the `live_*` tests filtered out like any default run.
+# Each mutant's tests run under cargo-nextest (.config/nextest.toml), one
+# process per test. Doctests are not part of a mutant's run. The `live_*` tests
+# need the `live-tests` feature, which cargo-mutants never enables, so they are
+# not even built.
 test_tool = "nextest"
