@@ -52,6 +52,7 @@ reqwest = { version = "0.13.5", default-features = false, features = [
 ] }
 # Async — `rt` is required for tokio::task::spawn_blocking (used by the SQLite
 # cache) and `time`/`sync` for rate limiting and the cache mutex.
+# 1.53.3 is past RUSTSEC-2026-0386 (spargen 0.8.0 raised its floor to it).
 tokio = { version = "1.53.3", features = ["time", "sync", "rt"] }
 futures = "0.3"
 async-stream = "0.3"
