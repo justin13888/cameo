@@ -44,15 +44,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: "true"
-          # Saved here (every shard builds the tree) and restored by the pull
-          # request shards, which never save it; see mutants.yml.
-          shared-key: mutants
+      # Before rust-cache, so a failed install ends the job before the cache's
+      # save step is registered and cannot save an unbuilt target/.
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-mutants,cargo-nextest
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # A shard with a missed mutant fails, so save on failure too; the
+          # baseline build has run by then.
+          cache-on-failure: "true"
+          # Saved by the first full-run shard to finish and restored by the
+          # pull request shards, which never save it; see mutants.yml.
+          shared-key: mutants
       # Exits non-zero when any mutant in this shard is missed or times out;
       # the report says which. --in-place: see mutants.yml.
       - name: cargo mutants (shard ${{ matrix.shard }})
