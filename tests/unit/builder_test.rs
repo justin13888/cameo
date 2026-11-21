@@ -10,7 +10,7 @@ use cameo::{
     },
     unified::{CameoClient, CameoClientError},
 };
-use chrono::NaiveDate;
+use jiff::civil::Date;
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
@@ -60,8 +60,8 @@ fn query(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
 const DISCOVER_MOVIES: &str = include_str!("../fixtures/discover_movies_response.json");
 const DISCOVER_TV: &str = include_str!("../fixtures/discover_tv_response.json");
 
-fn date(y: i32, m: u32, d: u32) -> NaiveDate {
-    NaiveDate::from_ymd_opt(y, m, d).expect("valid date")
+fn date(y: i16, m: i8, d: i8) -> Date {
+    Date::new(y, m, d).expect("valid date")
 }
 
 #[tokio::test]

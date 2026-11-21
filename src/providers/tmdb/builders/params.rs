@@ -5,8 +5,6 @@
 //! each builder. Provider ID filters take `&[u64]` slices (joined internally) and
 //! codes are typed enums so invalid inputs are unrepresentable.
 
-use chrono::NaiveDate;
-
 use crate::{generated::tmdb as generated, providers::tmdb::error::TmdbError};
 
 /// Join a slice of numeric TMDB ids into TMDB's comma-separated (AND) form.
@@ -24,16 +22,22 @@ pub(crate) fn join_genres(genres: &[crate::Genre]) -> String {
 /// Convert a date filter into the generated client's RFC 3339 `full-date`.
 ///
 /// Fails (as an invalid request, before anything is sent) only for a year
-/// outside `-9999..=9999`, which an RFC 3339 date cannot carry.
-pub(crate) fn tmdb_date(date: Option<NaiveDate>) -> Result<Option<generated::Date>, TmdbError> {
+/// before 0: an RFC 3339 `full-date` year is four digits (`0000..=9999`),
+/// while a [`jiff::civil::Date`] also holds years down to `-9999`.
+pub(crate) fn tmdb_date(
+    date: Option<jiff::civil::Date>,
+) -> Result<Option<generated::Date>, TmdbError> {
     date.map(|d| {
-        d.format("%Y-%m-%d").to_string().parse().map_err(|_| {
-            TmdbError::from_generated(
-                generated::Error::<std::convert::Infallible>::request_message(format!(
-                    "date {d} is outside the RFC 3339 full-date range"
-                )),
+        if d.year() < 0 {
+            return Err(TmdbError::from_generated(generated::Error::<
+                std::convert::Infallible,
+            >::request_message(
+                format!(
+                "date {d} is outside the RFC 3339 full-date range"
             )
-        })
+            )));
+        }
+        Ok(generated::Date(d))
     })
     .transpose()
 }
@@ -383,5 +387,36 @@ mod tests {
         assert_eq!(TvStatus::Pilot.code(), "5");
         assert_eq!(TvShowType::Scripted.code(), "4");
         assert_eq!(TvShowType::Video.code(), "6");
+    }
+
+    /// Every year an RFC 3339 `full-date` can write (`0000..=9999`) passes
+    /// through as is; an earlier one is refused before anything is sent.
+    #[test]
+    fn tmdb_date_accepts_exactly_the_rfc_3339_years() {
+        assert!(tmdb_date(None).expect("no date").is_none());
+        for d in [
+            jiff::civil::date(0, 1, 1),
+            jiff::civil::date(2024, 2, 29),
+            jiff::civil::date(9999, 12, 31),
+        ] {
+            let wire = tmdb_date(Some(d)).expect("in range").expect("some");
+            assert_eq!(wire.0, d);
+        }
+        for d in [
+            jiff::civil::date(-1, 12, 31),
+            jiff::civil::date(-9999, 1, 1),
+        ] {
+            let err = tmdb_date(Some(d)).expect_err("before year 0");
+            assert!(
+                matches!(
+                    err,
+                    TmdbError::Request {
+                        kind: crate::providers::tmdb::RequestErrorKind::InvalidRequest,
+                        ..
+                    }
+                ),
+                "got {err:?}"
+            );
+        }
     }
 }

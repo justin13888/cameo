@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use jiff::civil::Date;
 
 use super::params::{self, TvShowType, TvStatus};
 use crate::{
@@ -36,10 +36,10 @@ use crate::{
 #[must_use = "a discover query does nothing until .execute() is awaited"]
 pub struct DiscoverTvBuilder<'a> {
     client: &'a TmdbClient,
-    air_date_gte: Option<NaiveDate>,
-    air_date_lte: Option<NaiveDate>,
-    first_air_date_gte: Option<NaiveDate>,
-    first_air_date_lte: Option<NaiveDate>,
+    air_date_gte: Option<Date>,
+    air_date_lte: Option<Date>,
+    first_air_date_gte: Option<Date>,
+    first_air_date_lte: Option<Date>,
     first_air_date_year: Option<i32>,
     include_adult: Option<bool>,
     include_null_first_air_dates: Option<bool>,
@@ -127,25 +127,25 @@ impl<'a> DiscoverTvBuilder<'a> {
     }
 
     /// Filter by first air date on or after.
-    pub fn first_air_date_gte(mut self, date: NaiveDate) -> Self {
+    pub fn first_air_date_gte(mut self, date: Date) -> Self {
         self.first_air_date_gte = Some(date);
         self
     }
 
     /// Filter by first air date on or before.
-    pub fn first_air_date_lte(mut self, date: NaiveDate) -> Self {
+    pub fn first_air_date_lte(mut self, date: Date) -> Self {
         self.first_air_date_lte = Some(date);
         self
     }
 
     /// Air date on or after.
-    pub fn air_date_gte(mut self, date: NaiveDate) -> Self {
+    pub fn air_date_gte(mut self, date: Date) -> Self {
         self.air_date_gte = Some(date);
         self
     }
 
     /// Air date on or before.
-    pub fn air_date_lte(mut self, date: NaiveDate) -> Self {
+    pub fn air_date_lte(mut self, date: Date) -> Self {
         self.air_date_lte = Some(date);
         self
     }

@@ -39,6 +39,9 @@ fn codegen() -> Result<(), Box<dyn std::error::Error>> {
     std::env::set_current_dir(repo_root())?;
 
     let build = spargen::Spec::new(SPEC)
+        // cameo's public date vocabulary is jiff, so the generated `Date`
+        // wraps a `jiff::civil::Date` and no second date crate is needed.
+        .with_datetime(spargen::DateTimeBackend::Jiff)
         .build(OUT)
         // Not a build script: emit no `cargo:` directives and skip the
         // consumer-manifest audit, silently.

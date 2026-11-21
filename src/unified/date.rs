@@ -119,23 +119,24 @@ impl PartialDate {
         self.day.is_some()
     }
 
-    /// Convert to a [`chrono::NaiveDate`] when fully specified and a real
-    /// calendar date; returns `None` for partial dates or impossible days
-    /// (e.g. February 30th).
-    pub fn to_naive_date(&self) -> Option<chrono::NaiveDate> {
-        let month = self.month?;
-        let day = self.day?;
-        chrono::NaiveDate::from_ymd_opt(self.year, month as u32, day as u32)
+    /// Convert to a [`jiff::civil::Date`] when fully specified and a real
+    /// calendar date; returns `None` for partial dates, impossible days
+    /// (e.g. February 30th), and years outside `-9999..=9999`, the range a
+    /// `jiff::civil::Date` holds.
+    pub fn to_date(&self) -> Option<jiff::civil::Date> {
+        let year = i16::try_from(self.year).ok()?;
+        let month = i8::try_from(self.month?).ok()?;
+        let day = i8::try_from(self.day?).ok()?;
+        jiff::civil::Date::new(year, month, day).ok()
     }
 }
 
-impl From<chrono::NaiveDate> for PartialDate {
-    fn from(date: chrono::NaiveDate) -> Self {
-        use chrono::Datelike;
+impl From<jiff::civil::Date> for PartialDate {
+    fn from(date: jiff::civil::Date) -> Self {
         Self {
-            year: date.year(),
-            month: Some(date.month() as u8),
-            day: Some(date.day() as u8),
+            year: i32::from(date.year()),
+            month: Some(date.month().unsigned_abs()),
+            day: Some(date.day().unsigned_abs()),
         }
     }
 }
@@ -302,24 +303,30 @@ mod tests {
     }
 
     #[test]
-    fn chrono_interop() {
+    fn jiff_interop() {
         let full = PartialDate::ymd(2022, 4, 1).unwrap();
-        let naive = full.to_naive_date().unwrap();
-        assert_eq!(PartialDate::from(naive), full);
+        let date = full.to_date().unwrap();
+        assert_eq!(date, jiff::civil::date(2022, 4, 1));
+        assert_eq!(PartialDate::from(date), full);
         // Partial dates have no single calendar day.
         assert!(
             PartialDate::year_month(2022, 4)
                 .unwrap()
-                .to_naive_date()
+                .to_date()
                 .is_none()
         );
         // Impossible calendar days are rejected even when fully specified.
-        assert!(
-            PartialDate::ymd(2022, 2, 30)
-                .unwrap()
-                .to_naive_date()
-                .is_none()
+        assert!(PartialDate::ymd(2022, 2, 30).unwrap().to_date().is_none());
+        // Years a `jiff::civil::Date` cannot hold are rejected, not wrapped.
+        assert!(PartialDate::ymd(10_000, 1, 1).unwrap().to_date().is_none());
+        assert!(PartialDate::ymd(-10_000, 1, 1).unwrap().to_date().is_none());
+        // Negative years round-trip through `From` and `to_date`.
+        let ancient = jiff::civil::date(-9999, 1, 1);
+        assert_eq!(
+            PartialDate::from(ancient),
+            PartialDate::ymd(-9999, 1, 1).unwrap()
         );
+        assert_eq!(PartialDate::from(ancient).to_date(), Some(ancient));
     }
 
     #[test]

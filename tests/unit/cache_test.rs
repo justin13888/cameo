@@ -239,9 +239,19 @@ fn search_key_normalizes_whitespace_and_case() {
 
 // ── Age-aware TTL policy ───────────────────────────────────────────────────────
 
+/// Today's date in UTC, the clock the TTL policy reads.
+fn today() -> jiff::civil::Date {
+    jiff::Timestamp::now()
+        .to_zoned_datetime(jiff::tz::TimeZone::UTC)
+        .date()
+}
+
 fn days_ago(n: i64) -> PartialDate {
-    use chrono::{Duration, Utc};
-    PartialDate::from(Utc::now().date_naive() - Duration::days(n))
+    PartialDate::from(
+        today()
+            .checked_sub(jiff::Span::new().days(n))
+            .expect("in range"),
+    )
 }
 
 fn movie(release_date: Option<PartialDate>, status: Option<&str>) -> UnifiedMovieDetails {
@@ -461,8 +471,7 @@ fn tv_active_overrides_old_status() {
 // ── Partial dates and status fallback ──────────────────────────────────────────
 
 fn this_year() -> i32 {
-    use chrono::Datelike;
-    chrono::Utc::now().date_naive().year()
+    i32::from(today().year())
 }
 
 #[test]
@@ -478,11 +487,12 @@ fn movie_year_only_old_release_gets_long_ttl() {
 fn movie_year_month_counts_as_first_of_month() {
     // Threshold sits between the 1st and the last day of a past month, so the
     // result depends on which day of the month the date is taken as.
-    let first = PartialDate::from(chrono::Utc::now().date_naive() - chrono::Duration::days(400));
+    let first = days_ago(400);
     let month = first.month().expect("full date has a month");
-    let start = chrono::NaiveDate::from_ymd_opt(first.year(), u32::from(month), 1)
+    let start = PartialDate::ymd(first.year(), month, 1)
+        .and_then(|d| d.to_date())
         .expect("valid first of month");
-    let days_to_start = (chrono::Utc::now().date_naive() - start).num_days();
+    let days_to_start = i64::from((today() - start).get_days());
     let threshold = u32::try_from(days_to_start - 1).expect("positive threshold");
     let cfg = CacheTtlConfig::default().with_old_content_threshold_days(threshold);
     let year_month = PartialDate::year_month(first.year(), month).expect("valid month");

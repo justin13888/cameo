@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use jiff::civil::Date;
 
 use super::params::{self, MovieReleaseType};
 use crate::{
@@ -43,12 +43,12 @@ pub struct DiscoverMoviesBuilder<'a> {
     include_video: Option<bool>,
     language: Option<String>,
     page: Option<i32>,
-    primary_release_date_gte: Option<NaiveDate>,
-    primary_release_date_lte: Option<NaiveDate>,
+    primary_release_date_gte: Option<Date>,
+    primary_release_date_lte: Option<Date>,
     primary_release_year: Option<i32>,
     region: Option<String>,
-    release_date_gte: Option<NaiveDate>,
-    release_date_lte: Option<NaiveDate>,
+    release_date_gte: Option<Date>,
+    release_date_lte: Option<Date>,
     sort_by: Option<MovieSortBy>,
     vote_average_gte: Option<f32>,
     vote_average_lte: Option<f32>,
@@ -142,13 +142,13 @@ impl<'a> DiscoverMoviesBuilder<'a> {
     }
 
     /// Primary release date on or after.
-    pub fn primary_release_date_gte(mut self, date: NaiveDate) -> Self {
+    pub fn primary_release_date_gte(mut self, date: Date) -> Self {
         self.primary_release_date_gte = Some(date);
         self
     }
 
     /// Primary release date on or before.
-    pub fn primary_release_date_lte(mut self, date: NaiveDate) -> Self {
+    pub fn primary_release_date_lte(mut self, date: Date) -> Self {
         self.primary_release_date_lte = Some(date);
         self
     }
@@ -216,13 +216,13 @@ impl<'a> DiscoverMoviesBuilder<'a> {
     }
 
     /// Release date on or after (any release type).
-    pub fn release_date_gte(mut self, date: NaiveDate) -> Self {
+    pub fn release_date_gte(mut self, date: Date) -> Self {
         self.release_date_gte = Some(date);
         self
     }
 
     /// Release date on or before (any release type).
-    pub fn release_date_lte(mut self, date: NaiveDate) -> Self {
+    pub fn release_date_lte(mut self, date: Date) -> Self {
         self.release_date_lte = Some(date);
         self
     }
