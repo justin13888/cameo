@@ -2,7 +2,7 @@
 
 use super::{TmdbClient, requested_id, wire_int};
 use crate::{
-    generated::tmdb,
+    generated::tmdb::{self, Nullable},
     providers::tmdb::{convert::tv::season_details_from, error::TmdbError},
     unified::{
         media_id::MediaId,
@@ -37,7 +37,9 @@ impl TmdbClient {
                     .tv_season_details(wire_series_id, wire_season, params.clone())
             })
             .await?;
-        body.season_number.get_or_insert(i64::from(season_number));
+        if !body.season_number.is_value() {
+            body.season_number = Nullable::Value(i64::from(season_number));
+        }
         Ok(season_details_from(body, show_id))
     }
 
@@ -68,7 +70,9 @@ impl TmdbClient {
                     .tv_episode_details(series_id, wire_season, wire_episode, params.clone())
             })
             .await?;
-        body.episode_number.get_or_insert(i64::from(episode_number));
+        if !body.episode_number.is_value() {
+            body.episode_number = Nullable::Value(i64::from(episode_number));
+        }
         Ok(body.into())
     }
 }

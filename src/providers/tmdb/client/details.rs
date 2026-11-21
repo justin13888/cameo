@@ -266,9 +266,10 @@ impl TmdbClient {
             .await?;
         Ok(resp
             .genres
+            .into_option()
             .into_iter()
             .flatten()
-            .filter_map(|g| g.id.map(Genre::from_tmdb_id))
+            .filter_map(|g| g.id.into_option().map(Genre::from_tmdb_id))
             .collect())
     }
 
@@ -289,9 +290,10 @@ impl TmdbClient {
             .await?;
         Ok(resp
             .genres
+            .into_option()
             .into_iter()
             .flatten()
-            .filter_map(|g| g.id.map(Genre::from_tmdb_id))
+            .filter_map(|g| g.id.into_option().map(Genre::from_tmdb_id))
             .collect())
     }
 

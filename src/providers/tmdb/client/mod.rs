@@ -15,18 +15,10 @@ use super::{
     error::{RequestErrorKind, TmdbError},
 };
 use crate::{
-    generated::tmdb::{self, Credential, SecretString},
+    generated::tmdb::{self, Nullable, SecretString},
     providers::{rate_limit::RateLimiter, retry},
     unified::conversions::native_id,
 };
-
-/// The security scheme a v4 bearer token is registered under
-/// (`scripts/tmdb-spec-patch.jq` declares it).
-const V4_BEARER_SCHEME: &str = "v4_bearer";
-
-/// The security scheme a v3 API key is registered under
-/// (`scripts/tmdb-spec-patch.jq` declares it).
-const V3_API_KEY_SCHEME: &str = "v3_api_key";
 
 /// High-level TMDB API client wrapping the generated (spargen) client.
 ///
@@ -164,14 +156,8 @@ impl TmdbClient {
         // token travels as `Authorization: Bearer`, a v3 key as the `api_key`
         // query parameter. The generated client redacts either in `Debug`.
         let inner = match &config.auth {
-            TmdbAuth::V4Bearer(token) => inner.with_credential(
-                V4_BEARER_SCHEME,
-                Credential::Bearer(SecretString::from(token.clone())),
-            ),
-            TmdbAuth::V3ApiKey(key) => inner.with_credential(
-                V3_API_KEY_SCHEME,
-                Credential::ApiKey(SecretString::from(key.clone())),
-            ),
+            TmdbAuth::V4Bearer(token) => inner.with_v4_bearer(SecretString::from(token.clone())),
+            TmdbAuth::V3ApiKey(key) => inner.with_v3_api_key(SecretString::from(key.clone())),
         };
         let rate_limiter = RateLimiter::new(config.rate_limit);
 
@@ -235,9 +221,9 @@ impl TmdbClient {
 
 /// The id a details response is converted under: the id TMDB reported when it
 /// is valid, otherwise (missing, zero, or negative) the requested id.
-fn details_id(reported: &mut Option<i64>, requested: i32) {
-    if reported.and_then(native_id).is_none() {
-        *reported = Some(i64::from(requested));
+fn details_id(reported: &mut Nullable<i64>, requested: i32) {
+    if reported.as_option().copied().and_then(native_id).is_none() {
+        *reported = Nullable::Value(i64::from(requested));
     }
 }
 
@@ -280,6 +266,14 @@ mod tests {
 
     const SECRET: &str = "SECRETKEY123";
 
+    /// The security scheme a v4 bearer token is registered under
+    /// (`scripts/tmdb-spec-patch.jq` declares it).
+    const V4_BEARER_SCHEME: &str = "v4_bearer";
+
+    /// The security scheme a v3 API key is registered under
+    /// (`scripts/tmdb-spec-patch.jq` declares it).
+    const V3_API_KEY_SCHEME: &str = "v3_api_key";
+
     /// The generated client's `Debug` must not expose the credential for
     /// either auth scheme, while still showing which scheme is registered.
     #[test]
@@ -316,14 +310,19 @@ mod tests {
     /// valid one is kept.
     #[test]
     fn details_id_replaces_only_invalid_ids() {
-        for reported in [None, Some(0), Some(-5)] {
+        for reported in [
+            Nullable::Absent,
+            Nullable::Null,
+            Nullable::Value(0),
+            Nullable::Value(-5),
+        ] {
             let mut id = reported;
             details_id(&mut id, 550);
-            assert_eq!(id, Some(550), "reported {reported:?}");
+            assert_eq!(id, Nullable::Value(550), "reported {reported:?}");
         }
-        let mut id = Some(603);
+        let mut id = Nullable::Value(603);
         details_id(&mut id, 550);
-        assert_eq!(id, Some(603));
+        assert_eq!(id, Nullable::Value(603));
     }
 
     /// A value TMDB can carry converts unchanged; one above `i32::MAX` is

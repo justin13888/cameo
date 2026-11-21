@@ -789,9 +789,9 @@ checksum = "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90"
 
 [[package]]
 name = "spargen"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "568c527c062bcbf7bafc33ba952b66932ab186e82232f5b237cca609b841ab2a"
+checksum = "27652f6a64ef6230e4cf7aab286a07f0d60fd47f911b68c5502fbc28ffbcc7d3"
 dependencies = [
  "camino",
  "cfg-expr",

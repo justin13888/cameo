@@ -11,46 +11,49 @@ impl From<types::MovieImagesResponse> for TmdbImages {
         TmdbImages {
             backdrops: i
                 .backdrops
+                .into_option()
                 .into_iter()
                 .flatten()
                 .map(|b| {
                     image_from(
                         resolve_backdrop(&b.file_path),
-                        b.width,
-                        b.height,
-                        b.aspect_ratio,
-                        b.vote_average,
-                        b.vote_count,
+                        b.width.into_option(),
+                        b.height.into_option(),
+                        b.aspect_ratio.into_option(),
+                        b.vote_average.into_option(),
+                        b.vote_count.into_option(),
                     )
                 })
                 .collect(),
             posters: i
                 .posters
+                .into_option()
                 .into_iter()
                 .flatten()
                 .map(|p| {
                     image_from(
                         resolve_poster(&p.file_path),
-                        p.width,
-                        p.height,
-                        p.aspect_ratio,
-                        p.vote_average,
-                        p.vote_count,
+                        p.width.into_option(),
+                        p.height.into_option(),
+                        p.aspect_ratio.into_option(),
+                        p.vote_average.into_option(),
+                        p.vote_count.into_option(),
                     )
                 })
                 .collect(),
             logos: i
                 .logos
+                .into_option()
                 .into_iter()
                 .flatten()
                 .map(|l| {
                     image_from(
                         resolve_logo(&l.file_path),
-                        l.width,
-                        l.height,
-                        l.aspect_ratio,
-                        l.vote_average,
-                        l.vote_count,
+                        l.width.into_option(),
+                        l.height.into_option(),
+                        l.aspect_ratio.into_option(),
+                        l.vote_average.into_option(),
+                        l.vote_count.into_option(),
                     )
                 })
                 .collect(),

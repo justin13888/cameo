@@ -14,7 +14,7 @@
 //! CI freshness check relies on.
 //!
 //! No post-generation patch is applied: spargen's generated `Client` carries
-//! v3 `api_key` query auth natively (`with_credential`), and its `Debug`
+//! v3 `api_key` query auth natively (`with_v3_api_key`), and its `Debug`
 //! redacts the registered credential.
 
 use std::path::{Path, PathBuf};
@@ -42,7 +42,7 @@ fn codegen() -> Result<(), Box<dyn std::error::Error>> {
         .build(OUT)
         // Not a build script: emit no `cargo:` directives and skip the
         // consumer-manifest audit, silently.
-        .cargo(spargen::CargoIntegration::Off);
+        .with_cargo(spargen::CargoIntegration::Off);
     let report = spargen::generate(&build);
     for warning in report.warnings() {
         eprintln!("{warning}");

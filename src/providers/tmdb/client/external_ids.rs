@@ -31,7 +31,7 @@ impl TmdbClient {
             .execute(|| self.inner.movie_external_ids(wire_id))
             .await?;
         let mut ids = ExternalIds::new().with_tmdb(movie_id);
-        ids.imdb = non_empty(body.imdb_id);
+        ids.imdb = non_empty(body.imdb_id.into_option());
         // The spec leaves the movie `wikidata_id` untyped; it is a string or null.
         ids.wikidata = non_empty(
             body.wikidata_id
@@ -59,9 +59,9 @@ impl TmdbClient {
             .execute(|| self.inner.tv_series_external_ids(wire_id))
             .await?;
         let mut ids = ExternalIds::new().with_tmdb(series_id);
-        ids.imdb = non_empty(body.imdb_id);
-        ids.tvdb = body.tvdb_id.and_then(native_id);
-        ids.wikidata = non_empty(body.wikidata_id);
+        ids.imdb = non_empty(body.imdb_id.into_option());
+        ids.tvdb = body.tvdb_id.into_option().and_then(native_id);
+        ids.wikidata = non_empty(body.wikidata_id.into_option());
         Ok(ids)
     }
 
@@ -91,24 +91,24 @@ impl TmdbClient {
             other => return Err(TmdbError::UnsupportedSource(other)),
         };
         let params = tmdb::FindByIdParams {
+            external_source: source,
             language: self.language(),
         };
         let body = self
-            .execute(|| {
-                self.inner
-                    .find_by_id(id.id.as_str(), source.clone(), params.clone())
-            })
+            .execute(|| self.inner.find_by_id(id.id.as_str(), params.clone()))
             .await?;
         let movies = body
             .movie_results
-            .iter()
+            .as_option()
+            .into_iter()
             .flatten()
-            .filter_map(|m| m.id.and_then(native_id))
+            .filter_map(|m| m.id.into_option().and_then(native_id))
             .map(|n| ExternalMatch::movie(MediaId::tmdb(n)));
         // `tv_results` is untyped in the spec; only the `id` is needed.
         let shows = body
             .tv_results
-            .iter()
+            .as_option()
+            .into_iter()
             .flatten()
             .filter_map(|v| v.get("id").and_then(serde_json::Value::as_i64))
             .filter_map(native_id)

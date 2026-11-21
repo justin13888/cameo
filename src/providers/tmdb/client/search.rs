@@ -27,14 +27,16 @@ impl TmdbClient {
         page: Option<u32>,
     ) -> Result<Page<UnifiedMovie>, TmdbError> {
         let params = tmdb::SearchMovieParams {
+            query: query.to_owned(),
             include_adult: self.include_adult(),
             language: self.language(),
+            primary_release_year: None,
             page: Self::tmdb_page(page),
             region: self.region(),
-            ..Default::default()
+            year: None,
         };
         let body = self
-            .execute(|| self.inner.search_movie(query, params.clone()))
+            .execute(|| self.inner.search_movie(params.clone()))
             .await?;
         Ok(body.into_page(Self::tmdb_page(page))?.map(Into::into))
     }
@@ -54,13 +56,15 @@ impl TmdbClient {
         page: Option<u32>,
     ) -> Result<Page<UnifiedTvShow>, TmdbError> {
         let params = tmdb::SearchTvParams {
+            query: query.to_owned(),
+            first_air_date_year: None,
             include_adult: self.include_adult(),
             language: self.language(),
             page: Self::tmdb_page(page),
-            ..Default::default()
+            year: None,
         };
         let body = self
-            .execute(|| self.inner.search_tv(query, params.clone()))
+            .execute(|| self.inner.search_tv(params.clone()))
             .await?;
         Ok(body.into_page(Self::tmdb_page(page))?.map(Into::into))
     }
@@ -80,12 +84,13 @@ impl TmdbClient {
         page: Option<u32>,
     ) -> Result<Page<UnifiedPerson>, TmdbError> {
         let params = tmdb::SearchPersonParams {
+            query: query.to_owned(),
             include_adult: self.include_adult(),
             language: self.language(),
             page: Self::tmdb_page(page),
         };
         let body = self
-            .execute(|| self.inner.search_person(query, params.clone()))
+            .execute(|| self.inner.search_person(params.clone()))
             .await?;
         Ok(body.into_page(Self::tmdb_page(page))?.map(Into::into))
     }
@@ -107,12 +112,13 @@ impl TmdbClient {
         page: Option<u32>,
     ) -> Result<Page<UnifiedSearchResult>, TmdbError> {
         let params = tmdb::SearchMultiParams {
+            query: query.to_owned(),
             include_adult: self.include_adult(),
             language: self.language(),
             page: Self::tmdb_page(page),
         };
         let body = self
-            .execute(|| self.inner.search_multi(query, params.clone()))
+            .execute(|| self.inner.search_multi(params.clone()))
             .await?;
         Ok(body
             .into_page(Self::tmdb_page(page))?

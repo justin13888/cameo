@@ -79,7 +79,7 @@ pub enum TmdbError {
     /// (e.g. a date outside the RFC 3339 range, or a missing credential), so
     /// nothing was sent. [`RequestErrorKind::PaginationCycle`]: the client
     /// stopped following TMDB's pagination because a `next` link revisited an
-    /// earlier page. Neither is retryable.
+    /// earlier page or pointed at another origin. Neither is retryable.
     ///
     /// `message` never carries a v3 `api_key` value.
     #[error("{kind}: {message}")]
@@ -121,8 +121,9 @@ pub enum RequestErrorKind {
     /// The request could not be built, so nothing was sent: the caller's input
     /// or configuration cannot be expressed as a TMDB request.
     InvalidRequest,
-    /// A pagination `next` link revisited a page already fetched, so the
-    /// client stopped rather than loop forever.
+    /// The client stopped following a pagination `next` link on its own: the
+    /// link revisited a page already fetched (it would loop forever) or
+    /// pointed at another origin than the first page's.
     PaginationCycle,
 }
 
@@ -233,6 +234,29 @@ impl TmdbError {
                 kind: RequestErrorKind::PaginationCycle,
                 message: "a `next` link revisited an earlier page".to_string(),
             },
+            // The client stopped following pagination on its own, as for a
+            // cycle; nothing was sent to the other origin. The URLs are left
+            // out: they may carry a v3 `api_key`.
+            G::PaginationOriginChanged { .. } => TmdbError::Request {
+                kind: RequestErrorKind::PaginationCycle,
+                message: "a `next` link pointed at another origin".to_string(),
+            },
+            // A response arrived, but its body exceeded the configured limit
+            // and was abandoned unread: an error status is still an API error,
+            // and a success body that cannot be read cannot be decoded.
+            G::BodyTooLarge { limit, status } => {
+                let message = format!("response body exceeded the {limit}-byte limit");
+                if status.is_success() {
+                    TmdbError::Deserialization(DecodeError::new(message))
+                } else {
+                    TmdbError::Api {
+                        status: status.as_u16(),
+                        status_code: None,
+                        message,
+                        retry_after: None,
+                    }
+                }
+            }
 
             // A declared error response with a typed body.
             G::Api(rv) => {

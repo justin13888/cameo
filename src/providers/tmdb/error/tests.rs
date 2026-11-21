@@ -99,6 +99,62 @@ fn pagination_cycle_is_request_error_without_url() {
     assert!(!err.to_string().contains("SECRET"), "{err}");
 }
 
+/// A `next` link to another origin stops pagination like a cycle does, and
+/// neither URL (which may carry a v3 key) reaches the message.
+#[test]
+fn pagination_origin_change_stops_like_a_cycle_without_urls() {
+    let from = reqwest::Url::parse("https://h/3/x?api_key=SECRET").unwrap();
+    let to = reqwest::Url::parse("https://evil/3/x?api_key=SECRET").unwrap();
+    let err = TmdbError::from_generated(
+        generated::Error::<std::convert::Infallible>::PaginationOriginChanged { from, to },
+    );
+    assert!(
+        matches!(
+            err,
+            TmdbError::Request {
+                kind: RequestErrorKind::PaginationCycle,
+                ..
+            }
+        ),
+        "got {err:?}"
+    );
+    assert!(!err.is_retryable());
+    assert!(!err.to_string().contains("SECRET"), "{err}");
+    assert!(!err.to_string().contains("evil"), "{err}");
+}
+
+/// A body over the size limit was received but not read: under an error
+/// status it is still that API error, under a success status it cannot be
+/// decoded.
+#[test]
+fn body_too_large_keeps_the_received_status() {
+    let err =
+        TmdbError::from_generated::<std::convert::Infallible>(generated::Error::BodyTooLarge {
+            limit: 1024,
+            status: reqwest::StatusCode::SERVICE_UNAVAILABLE,
+        });
+    assert!(
+        matches!(
+            err,
+            TmdbError::Api {
+                status: 503,
+                status_code: None,
+                ref message,
+                retry_after: None,
+            } if message.contains("1024")
+        ),
+        "got {err:?}"
+    );
+
+    let err =
+        TmdbError::from_generated::<std::convert::Infallible>(generated::Error::BodyTooLarge {
+            limit: 1024,
+            status: reqwest::StatusCode::OK,
+        });
+    assert!(matches!(err, TmdbError::Deserialization(_)), "got {err:?}");
+    assert!(err.to_string().contains("1024"), "{err}");
+}
+
 #[test]
 fn timeout_is_retryable_transport_error() {
     let err = TmdbError::from_generated::<std::convert::Infallible>(generated::Error::Timeout(

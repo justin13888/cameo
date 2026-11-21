@@ -51,3 +51,24 @@ async fn tv_episode_details_null_episode_number_falls_back_to_requested() {
     assert_eq!(ep.episode_number, 4);
     assert_eq!(ep.vote_average, None);
 }
+
+/// An absent episode number falls back to the requested one, as a `null` does.
+#[tokio::test]
+async fn tv_episode_details_absent_episode_number_falls_back_to_requested() {
+    let (server, client) = setup_mock_client().await;
+    let mut body: serde_json::Value =
+        serde_json::from_str(include_str!("../fixtures/tv_episode_details_response.json")).unwrap();
+    body.as_object_mut()
+        .expect("fixture is an object")
+        .remove("episode_number");
+
+    Mock::given(method("GET"))
+        .and(path("/3/tv/1396/season/1/episode/5"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(body))
+        .mount(&server)
+        .await;
+
+    let ep = client.episode_details(1396, 1, 5).await.unwrap();
+
+    assert_eq!(ep.episode_number, 5);
+}
