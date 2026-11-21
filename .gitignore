@@ -25,7 +25,6 @@ xtask/target/
 .sidecar-pr
 .sidecar-start.sh
 .sidecar-base
-.td-root
 
 # cargo-mutants output (`just mutants`)
 mutants.out*/
