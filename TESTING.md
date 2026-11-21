@@ -236,5 +236,5 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 1. **Every new public method** → wiremock test with fixture (or inline JSON for AniList).
 2. **Conversion logic** (e.g. new `Into` impl, new genre variant) → `#[cfg(test)]` unit test beside the conversion in `src/unified/conversions/`, or in `tests/unit/genre_test.rs` for genre mapping.
 3. **Facade dispatch** → one test per dispatch category (not per method). Test that the right provider is called and the result converts correctly.
-4. **Live tests** → smoke-only. Assert results are non-empty; never assert specific titles or IDs that could change.
+4. **Live tests** → smoke-only. Assert results are non-empty; never assert specific titles or IDs that could change. Gate them with `#[cfg(feature = "live-tests")]` and name them `live_*`. The nextest profiles in `.config/nextest.toml` select live tests by that name (`test(/::live_/)`), so a live test with another name runs in every default run and fails without network or a token. No other test may start with `live_`.
 5. **Fixtures** → capture from real API, trim to 1–2 results, name as `{resource}_response.json`.
