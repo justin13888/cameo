@@ -44,11 +44,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          cache-on-failure: "true"
-          # Every shard (and the weekly full run) builds the same tree; share
-          # one cache. It only speeds up the mutant builds because they run
+          # Every shard builds the same tree as the weekly full run; restore
+          # its cache. It only speeds up the mutant builds because they run
           # --in-place, in ./target, rather than in a scratch copy.
           shared-key: mutants
+          # Restore only: a shard that gets no mutants builds nothing and
+          # finishes first, so letting shards save would race an empty
+          # target/ into the shared key. The full run, whose every shard
+          # builds, is what saves it.
+          save-if: "false"
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-mutants,cargo-nextest

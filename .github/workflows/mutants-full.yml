@@ -47,7 +47,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: "true"
-          # Shared with the pull request shards; see mutants.yml.
+          # Saved here (every shard builds the tree) and restored by the pull
+          # request shards, which never save it; see mutants.yml.
           shared-key: mutants
       - uses: taiki-e/install-action@v2
         with:

@@ -99,8 +99,9 @@ mutants-diff base="origin/master":
     git diff '{{base}}...HEAD' > target/mutants.diff
     cargo mutants --in-diff target/mutants.diff
 
-# Mutation-test one shard of the whole tree, as the weekly CI run does
-# (shard k of n, counting from 0; e.g. `just mutants-shard 3 16`)
+# Mutation-test one shard of the whole tree: the same mutants as that shard of
+# the weekly CI run (shard k of n, counting from 0; e.g. `just mutants-shard 3 16`).
+# CI adds --in-place, which is safe only on a throwaway checkout.
 mutants-shard k n:
     cargo mutants --no-shuffle --shard '{{k}}/{{n}}' --sharding round-robin
 
