@@ -52,7 +52,7 @@ use crate::{
 /// * [`TmdbError::Http`] when no response was received (connection, DNS, TLS,
 ///   or timeout).
 /// * [`TmdbError::Deserialization`] when a success body does not match the
-///   expected shape, and [`TmdbError::PageOutOfRange`] when a paged response
+///   expected shape (or any body exceeds a configured size limit), and [`TmdbError::PageOutOfRange`] when a paged response
 ///   reports a page number or total that does not fit a `u32`.
 /// * [`TmdbError::Request`] when the request cannot be built, so nothing is
 ///   sent.

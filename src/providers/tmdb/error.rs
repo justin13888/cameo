@@ -26,7 +26,8 @@ use crate::{
 ///   real HTTP status, TMDB's decoded `{status_code, status_message}` body, and
 ///   any `Retry-After` delay. `status` is always a real HTTP status code.
 /// * [`TmdbError::Deserialization`] — a response body could not be decoded into
-///   the expected type.
+///   the expected type, including one over a configured size limit, which is
+///   dropped unread whatever its status.
 #[non_exhaustive]
 #[derive(Debug, thiserror::Error)]
 pub enum TmdbError {
