@@ -300,7 +300,6 @@ mod age_aware_ttl {
         providers::tmdb::TmdbConfig,
         unified::CameoClient,
     };
-    use chrono::{Days, Utc};
     use serde_json::Value;
     use wiremock::{
         Mock, MockServer, ResponseTemplate,
@@ -361,12 +360,12 @@ mod age_aware_ttl {
     }
 
     /// `days` days before today, as `YYYY-MM-DD`.
-    fn days_ago(days: u64) -> String {
-        Utc::now()
-            .date_naive()
-            .checked_sub_days(Days::new(days))
+    fn days_ago(days: i64) -> String {
+        jiff::Timestamp::now()
+            .to_zoned_datetime(jiff::tz::TimeZone::UTC)
+            .date()
+            .checked_sub(jiff::Span::new().days(days))
             .expect("in range")
-            .format("%Y-%m-%d")
             .to_string()
     }
 

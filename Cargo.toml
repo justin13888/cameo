@@ -26,7 +26,7 @@ missing_docs = "warn"
 [features]
 default = ["full"]
 full = ["tmdb", "anilist", "tvdb", "cache"]
-tmdb = ["dep:bytes", "dep:http", "dep:http-body", "dep:secrecy", "dep:time"]
+tmdb = ["dep:bytes", "dep:http", "dep:http-body", "dep:secrecy", "dep:url"]
 anilist = []
 tvdb = []
 cache = ["dep:rusqlite", "dep:dirs"]
@@ -35,12 +35,12 @@ live-tests = [] # Gate for tests that hit the real provider APIs (TMDB and AniLi
 [dependencies]
 # Runtime of the spargen-generated TMDB client (src/generated/tmdb.rs embeds
 # its own support code, so no generator crate is a dependency). The version
-# floors are the ones spargen 0.7.0 tests its output against.
+# floors are the ones spargen 0.8.0 tests its output against.
 bytes = { version = "1.12.1", optional = true }
 http = { version = "1.4.2", optional = true }
 http-body = { version = "1.0.1", optional = true }
 secrecy = { version = "0.10.3", optional = true }
-time = { version = "0.3.55", features = ["formatting", "parsing"], optional = true }
+url = { version = "2.5.8", optional = true }
 # TLS backend pinned to rustls so the dependency tree is deterministic and has
 # no system OpenSSL/native-tls requirement. 0.13.5 is spargen's floor.
 reqwest = { version = "0.13.5", default-features = false, features = [
@@ -52,14 +52,17 @@ reqwest = { version = "0.13.5", default-features = false, features = [
 ] }
 # Async — `rt` is required for tokio::task::spawn_blocking (used by the SQLite
 # cache) and `time`/`sync` for rate limiting and the cache mutex.
-tokio = { version = "1", features = ["time", "sync", "rt"] }
+# 1.53.3 is past RUSTSEC-2026-0386 (spargen's floor since 0.6.0).
+tokio = { version = "1.53.3", features = ["time", "sync", "rt"] }
 futures = "0.3"
 async-stream = "0.3"
 async-trait = "0.1"
 # Serialization
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
-chrono = { version = "0.4", features = ["serde"] }
+# Civil dates in the public API (`PartialDate`, the discover date filters) and
+# in the generated client's RFC 3339 `Date`. 1.0.1 is spargen 0.8.0's floor.
+jiff = { version = "1.0.1", default-features = false, features = ["std"] }
 # Error handling
 thiserror = "2"
 # Logging

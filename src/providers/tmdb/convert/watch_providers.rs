@@ -11,9 +11,9 @@ use crate::{
 impl From<WatchProviderCountry> for UnifiedWatchProviderEntry {
     fn from(c: WatchProviderCountry) -> Self {
         UnifiedWatchProviderEntry {
-            flatrate: unified_services(c.flatrate),
-            rent: unified_services(c.rent),
-            buy: unified_services(c.buy),
+            flatrate: unified_services(c.flatrate.into_option()),
+            rent: unified_services(c.rent.into_option()),
+            buy: unified_services(c.buy.into_option()),
         }
     }
 }
@@ -24,7 +24,7 @@ fn unified_services(list: Option<Vec<WatchProviderService>>) -> Vec<UnifiedStrea
     list.unwrap_or_default()
         .into_iter()
         .filter_map(|s| {
-            let name = s.provider_name?;
+            let name = s.provider_name.into_option()?;
             Some(UnifiedStreamingService {
                 name,
                 logo_url: resolve_logo(&s.logo_path),
@@ -76,7 +76,7 @@ mod tests {
         }))
         .expect("watch providers deserialize");
 
-        let results = parse_watch_provider_results(raw.results.map(|r| r.additional));
+        let results = parse_watch_provider_results(raw.results.into_option().map(|r| r.additional));
 
         assert_eq!(results.len(), 2);
         let us = &results["US"];
@@ -107,8 +107,8 @@ mod tests {
             serde_json::from_value(body).expect("tv deserialize");
 
         for results in [
-            parse_watch_provider_results(movie.results.map(|r| r.additional)),
-            parse_watch_provider_results(tv.results.map(|r| r.additional)),
+            parse_watch_provider_results(movie.results.into_option().map(|r| r.additional)),
+            parse_watch_provider_results(tv.results.into_option().map(|r| r.additional)),
         ] {
             assert_eq!(results.len(), 1);
             assert_eq!(results["ZZ"].flatrate[0].name, "Local");
@@ -126,7 +126,8 @@ mod tests {
             let raw: types::TvSeriesWatchProvidersResponse =
                 serde_json::from_value(body).expect("deserialize");
 
-            let results = parse_watch_provider_results(raw.results.map(|r| r.additional));
+            let results =
+                parse_watch_provider_results(raw.results.into_option().map(|r| r.additional));
 
             assert!(results.is_empty());
         }

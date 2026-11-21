@@ -4,8 +4,9 @@
 //! Image paths become full CDN URLs only through the `resolve_*` helpers
 //! here, so each image kind has one size everywhere.
 //!
-//! Generated TMDB response fields are `Option<T>`, since TMDB may omit them or
-//! send an explicit `null`. The conversions keep that optionality honest:
+//! Generated TMDB response fields are [`Nullable<T>`](crate::generated::tmdb::Nullable),
+//! since TMDB may omit them or send an explicit `null`. The conversions read
+//! both as absent (`into_option`/`as_option`) and keep that optionality honest:
 //!
 //! - Unified `Option` fields (counts, scores, flags such as `adult`, `video`,
 //!   `in_production`, nested company/network/creator ids) are `None` when TMDB
@@ -40,6 +41,7 @@ pub(crate) mod watch_providers;
 pub(crate) use page::{MAX_PAGE, TmdbPaged, single_page};
 
 use crate::{
+    generated::tmdb::Nullable,
     providers::tmdb::image_url::{
         BackdropSize, ImageUrl, LogoSize, PosterSize, ProfileSize, StillSize,
     },
@@ -51,37 +53,47 @@ use crate::{
 /// A missing or invalid id reads as `tmdb:0`, never a wrapped value; the
 /// client screens ids before converting (see the module docs), so that
 /// fallback is not reached through [`TmdbClient`](crate::providers::tmdb::TmdbClient).
-pub(super) fn tmdb_media_id(id: Option<i64>) -> MediaId {
-    MediaId::tmdb(id.and_then(native_id).unwrap_or_default())
+pub(super) fn tmdb_media_id(id: Nullable<i64>) -> MediaId {
+    MediaId::tmdb(id.into_option().and_then(native_id).unwrap_or_default())
 }
 
-pub(super) fn resolve_logo(path: &Option<String>) -> Option<String> {
-    path.as_deref().map(|p| ImageUrl::logo(p, LogoSize::W92))
+pub(super) fn resolve_logo(path: &Nullable<String>) -> Option<String> {
+    path.as_option()
+        .map(String::as_str)
+        .map(|p| ImageUrl::logo(p, LogoSize::W92))
 }
 
 /// Parse a TMDB date string (`YYYY-MM-DD`, occasionally empty or malformed)
 /// into a [`PartialDate`], dropping empty/invalid values to `None`.
-pub(super) fn resolve_date(raw: &Option<String>) -> Option<PartialDate> {
-    raw.as_deref()
-        .filter(|s| !s.is_empty())
-        .and_then(|s| s.parse().ok())
+pub(super) fn resolve_date(raw: &Nullable<String>) -> Option<PartialDate> {
+    parse_date(raw.as_option().map(String::as_str))
 }
 
-pub(super) fn resolve_poster(path: &Option<String>) -> Option<String> {
-    path.as_deref()
+/// [`resolve_date`] over a date string that is already unwrapped.
+pub(super) fn parse_date(raw: Option<&str>) -> Option<PartialDate> {
+    raw.filter(|s| !s.is_empty()).and_then(|s| s.parse().ok())
+}
+
+pub(super) fn resolve_poster(path: &Nullable<String>) -> Option<String> {
+    path.as_option()
+        .map(String::as_str)
         .map(|p| ImageUrl::poster(p, PosterSize::W500))
 }
 
-pub(super) fn resolve_backdrop(path: &Option<String>) -> Option<String> {
-    path.as_deref()
+pub(super) fn resolve_backdrop(path: &Nullable<String>) -> Option<String> {
+    path.as_option()
+        .map(String::as_str)
         .map(|p| ImageUrl::backdrop(p, BackdropSize::W780))
 }
 
-pub(super) fn resolve_profile(path: &Option<String>) -> Option<String> {
-    path.as_deref()
+pub(super) fn resolve_profile(path: &Nullable<String>) -> Option<String> {
+    path.as_option()
+        .map(String::as_str)
         .map(|p| ImageUrl::profile(p, ProfileSize::H632))
 }
 
-pub(super) fn resolve_still(path: &Option<String>) -> Option<String> {
-    path.as_deref().map(|p| ImageUrl::still(p, StillSize::W300))
+pub(super) fn resolve_still(path: &Nullable<String>) -> Option<String> {
+    path.as_option()
+        .map(String::as_str)
+        .map(|p| ImageUrl::still(p, StillSize::W300))
 }

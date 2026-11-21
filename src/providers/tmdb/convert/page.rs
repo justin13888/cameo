@@ -26,7 +26,7 @@ macro_rules! impl_tmdb_list_item {
         $(
             impl TmdbListItem for $ty {
                 fn tmdb_id(&self) -> Option<i64> {
-                    self.id
+                    self.id.as_option().copied()
                 }
             }
         )*
@@ -79,10 +79,10 @@ macro_rules! impl_tmdb_paged {
                 fn into_page(self, requested: Option<i32>) -> Result<Page<$item>, TmdbError> {
                     offset_page(
                         requested,
-                        self.page,
-                        self.results,
-                        self.total_pages,
-                        self.total_results,
+                        self.page.into_option(),
+                        self.results.into_option(),
+                        self.total_pages.into_option(),
+                        self.total_results.into_option(),
                     )
                 }
             }
@@ -311,7 +311,11 @@ mod tests {
         assert_eq!(page.total_pages, 5);
         assert_eq!(page.total_results, 90);
         assert!(page.has_next);
-        let ids: Vec<_> = page.results.iter().map(|m| m.id).collect();
+        let ids: Vec<_> = page
+            .results
+            .iter()
+            .map(|m| m.id.as_option().copied())
+            .collect();
         assert_eq!(ids, [Some(550)]);
     }
 

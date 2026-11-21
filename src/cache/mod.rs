@@ -15,7 +15,7 @@ pub(crate) mod sqlite;
 use std::time::Duration;
 
 pub use backend::{CacheBackend, CacheError};
-use chrono::{NaiveDate, Utc};
+use jiff::{Timestamp, civil::Date, tz::TimeZone};
 pub use key::{CacheKey, MediaType};
 pub use sqlite::SqliteCache;
 
@@ -151,14 +151,21 @@ impl CacheTtlConfig {
     ///
     /// A year-only date counts as January 1st and a year-month date as the
     /// 1st of that month. A full date naming an impossible day (e.g.
-    /// February 30th) counts as the 1st of its month. Returns `None` only when
-    /// the year is outside the range [`NaiveDate`] can represent.
+    /// February 30th) counts as the 1st of its month. "Today" is the current
+    /// UTC date. Returns `None` only when the year is outside `-9999..=9999`,
+    /// the range a [`jiff::civil::Date`] can represent.
     fn days_since(date: PartialDate) -> Option<i64> {
-        let month = u32::from(date.month().unwrap_or(1));
-        let day = u32::from(date.day().unwrap_or(1));
-        let earliest = NaiveDate::from_ymd_opt(date.year(), month, day)
-            .or_else(|| NaiveDate::from_ymd_opt(date.year(), month, 1))?;
-        Some((Utc::now().date_naive() - earliest).num_days())
+        let year = i16::try_from(date.year()).ok()?;
+        // `PartialDate` keeps month in 1..=12 and day in 1..=31, so both fit.
+        let month = i8::try_from(date.month().unwrap_or(1)).ok()?;
+        let day = i8::try_from(date.day().unwrap_or(1)).ok()?;
+        let earliest = Date::new(year, month, day)
+            .or_else(|_| Date::new(year, month, 1))
+            .ok()?;
+        let today = Timestamp::now().to_zoned_datetime(TimeZone::UTC).date();
+        // A span between two dates is counted in days (its largest unit).
+        let elapsed = today.since(earliest).ok()?;
+        Some(i64::from(elapsed.get_days()))
     }
 
     /// Compute the appropriate cache TTL for a movie detail entry.

@@ -275,6 +275,7 @@ async fn facade_find_by_external_id_dispatches_to_tmdb() {
 
     Mock::given(method("GET"))
         .and(path("/3/find/tt0137523"))
+        .and(query_param("external_source", "imdb_id"))
         .respond_with(ResponseTemplate::new(200).set_body_raw(
             include_str!("../fixtures/find_by_imdb_id_response.json"),
             "application/json",

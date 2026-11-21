@@ -212,7 +212,8 @@ async fn unbuildable_request_is_invalid_request_error() {
 
     let (server, client) = setup_tmdb_client().await;
 
-    let out_of_range = chrono::NaiveDate::from_ymd_opt(10_000, 1, 1).unwrap();
+    // RFC 3339 `full-date` years are 0000..=9999; jiff also holds negative years.
+    let out_of_range = jiff::civil::date(-1, 1, 1);
     let err = client
         .discover_movies()
         .primary_release_date_gte(out_of_range)

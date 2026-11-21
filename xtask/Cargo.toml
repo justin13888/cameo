@@ -14,4 +14,4 @@ description = "Repository automation for cameo (TMDB client codegen)."
 [dependencies]
 # Pinned so `cargo xtask codegen` reproduces src/generated/tmdb.rs byte-for-byte
 # (spargen's output is deterministic per version + spec + config).
-spargen = "=0.7.0"
+spargen = "=0.8.0"

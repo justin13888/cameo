@@ -99,6 +99,55 @@ fn pagination_cycle_is_request_error_without_url() {
     assert!(!err.to_string().contains("SECRET"), "{err}");
 }
 
+/// A `next` link to another origin stops pagination like a cycle does, and
+/// neither URL (which may carry a v3 key) reaches the message.
+#[test]
+fn pagination_origin_change_stops_like_a_cycle_without_urls() {
+    let from = reqwest::Url::parse("https://h/3/x?api_key=SECRET").unwrap();
+    let to = reqwest::Url::parse("https://evil/3/x?api_key=SECRET").unwrap();
+    let err = TmdbError::from_generated(
+        generated::Error::<std::convert::Infallible>::PaginationOriginChanged { from, to },
+    );
+    assert!(
+        matches!(
+            err,
+            TmdbError::Request {
+                kind: RequestErrorKind::PaginationCycle,
+                ..
+            }
+        ),
+        "got {err:?}"
+    );
+    assert!(!err.is_retryable());
+    assert!(!err.to_string().contains("SECRET"), "{err}");
+    assert!(!err.to_string().contains("evil"), "{err}");
+}
+
+/// A body over the size limit was received but not read, so it cannot be
+/// decoded, whatever its status. The same limit refuses the same response
+/// again, so even a 429/5xx is not retryable.
+#[test]
+fn body_too_large_is_an_unretryable_decode_failure() {
+    for status in [
+        reqwest::StatusCode::OK,
+        reqwest::StatusCode::TOO_MANY_REQUESTS,
+        reqwest::StatusCode::SERVICE_UNAVAILABLE,
+    ] {
+        let err =
+            TmdbError::from_generated::<std::convert::Infallible>(generated::Error::BodyTooLarge {
+                limit: 1024,
+                status,
+            });
+        assert!(matches!(err, TmdbError::Deserialization(_)), "got {err:?}");
+        assert!(!err.is_retryable(), "{err:?}");
+        let text = err.to_string();
+        assert!(
+            text.contains("1024") && text.contains(status.as_str()),
+            "{text}"
+        );
+    }
+}
+
 #[test]
 fn timeout_is_retryable_transport_error() {
     let err = TmdbError::from_generated::<std::convert::Infallible>(generated::Error::Timeout(

@@ -1,6 +1,8 @@
 //! TMDB person and multi-search type → unified model conversions.
 
-use super::{resolve_backdrop, resolve_date, resolve_poster, resolve_profile, tmdb_media_id};
+use super::{
+    parse_date, resolve_backdrop, resolve_date, resolve_poster, resolve_profile, tmdb_media_id,
+};
 use crate::{
     generated::tmdb::types,
     unified::{conversions::native_id, genre::Genre, media_id::MediaId, models::*},
@@ -10,12 +12,12 @@ impl From<types::SearchPersonResponseResultsItem> for UnifiedPerson {
     fn from(p: types::SearchPersonResponseResultsItem) -> Self {
         UnifiedPerson {
             provider_id: tmdb_media_id(p.id),
-            name: p.name.unwrap_or_default(),
-            known_for_department: p.known_for_department,
+            name: p.name.into_option().unwrap_or_default(),
+            known_for_department: p.known_for_department.into_option(),
             profile_url: resolve_profile(&p.profile_path),
-            popularity: p.popularity,
-            gender: p.gender.and_then(Gender::from_tmdb),
-            adult: p.adult,
+            popularity: p.popularity.into_option(),
+            gender: p.gender.into_option().and_then(Gender::from_tmdb),
+            adult: p.adult.into_option(),
         }
     }
 }
@@ -25,24 +27,20 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
         UnifiedPersonDetails {
             person: UnifiedPerson {
                 provider_id: tmdb_media_id(p.id),
-                name: p.name.unwrap_or_default(),
-                known_for_department: p.known_for_department,
+                name: p.name.into_option().unwrap_or_default(),
+                known_for_department: p.known_for_department.into_option(),
                 profile_url: resolve_profile(&p.profile_path),
-                popularity: p.popularity,
-                gender: p.gender.and_then(Gender::from_tmdb),
-                adult: p.adult,
+                popularity: p.popularity.into_option(),
+                gender: p.gender.into_option().and_then(Gender::from_tmdb),
+                adult: p.adult.into_option(),
             },
-            biography: p.biography,
+            biography: p.biography.into_option(),
             birthday: resolve_date(&p.birthday),
-            deathday: resolve_date(
-                &p.deathday
-                    .as_ref()
-                    .and_then(|v| v.as_str().map(String::from)),
-            ),
-            place_of_birth: p.place_of_birth,
-            imdb_id: p.imdb_id,
+            deathday: parse_date(p.deathday.as_ref().and_then(serde_json::Value::as_str)),
+            place_of_birth: p.place_of_birth.into_option(),
+            imdb_id: p.imdb_id.into_option(),
             homepage: p.homepage.and_then(|v| v.as_str().map(String::from)),
-            also_known_as: p.also_known_as.unwrap_or_default(),
+            also_known_as: p.also_known_as.into_option().unwrap_or_default(),
         }
     }
 }
@@ -57,54 +55,64 @@ impl From<types::PersonDetailsResponse> for UnifiedPersonDetails {
 pub(crate) fn multi_search_result(
     item: types::SearchMultiResponseResultsItem,
 ) -> Option<UnifiedSearchResult> {
-    let id = item.id.and_then(native_id)?;
-    match item.media_type.as_deref() {
+    let id = item.id.into_option().and_then(native_id)?;
+    match item.media_type.as_option().map(String::as_str) {
         Some("movie") => Some(UnifiedSearchResult::Movie(UnifiedMovie {
             provider_id: MediaId::tmdb(id),
-            title: item.title.or(item.name).unwrap_or_default(),
-            original_title: item.original_title,
+            title: item
+                .title
+                .into_option()
+                .or(item.name.into_option())
+                .unwrap_or_default(),
+            original_title: item.original_title.into_option(),
             alternative_titles: Vec::new(),
-            overview: item.overview,
+            overview: item.overview.into_option(),
             release_date: resolve_date(&item.release_date),
             poster_url: resolve_poster(&item.poster_path),
             backdrop_url: resolve_backdrop(&item.backdrop_path),
             genres: item
                 .genre_ids
-                .iter()
+                .as_option()
+                .into_iter()
                 .flatten()
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
-            popularity: item.popularity,
-            vote_average: item.vote_average,
-            vote_count: item.vote_count.map(|c| c.max(0) as u64),
-            original_language: item.original_language,
-            adult: item.adult,
+            popularity: item.popularity.into_option(),
+            vote_average: item.vote_average.into_option(),
+            vote_count: item.vote_count.into_option().map(|c| c.max(0) as u64),
+            original_language: item.original_language.into_option(),
+            adult: item.adult.into_option(),
             // TMDB multi-search returns neither runtime nor status.
             runtime: None,
             status: None,
         })),
         Some("tv") => Some(UnifiedSearchResult::TvShow(UnifiedTvShow {
             provider_id: MediaId::tmdb(id),
-            name: item.name.or(item.title).unwrap_or_default(),
-            original_name: item.original_name,
+            name: item
+                .name
+                .into_option()
+                .or(item.title.into_option())
+                .unwrap_or_default(),
+            original_name: item.original_name.into_option(),
             alternative_titles: Vec::new(),
-            overview: item.overview,
+            overview: item.overview.into_option(),
             // TMDB multi-search reports a single `release_date` for both movies and shows.
             first_air_date: resolve_date(&item.release_date),
             poster_url: resolve_poster(&item.poster_path),
             backdrop_url: resolve_backdrop(&item.backdrop_path),
             genres: item
                 .genre_ids
-                .iter()
+                .as_option()
+                .into_iter()
                 .flatten()
                 .map(|&id| Genre::from_tmdb_id(id))
                 .collect(),
-            popularity: item.popularity,
-            vote_average: item.vote_average,
-            vote_count: item.vote_count.map(|c| c.max(0) as u64),
-            original_language: item.original_language,
+            popularity: item.popularity.into_option(),
+            vote_average: item.vote_average.into_option(),
+            vote_count: item.vote_count.into_option().map(|c| c.max(0) as u64),
+            original_language: item.original_language.into_option(),
             origin_country: Vec::new(),
-            adult: item.adult,
+            adult: item.adult.into_option(),
             // TMDB multi-search returns no episode data or status.
             number_of_episodes: None,
             episode_run_time: None,
@@ -112,12 +120,16 @@ pub(crate) fn multi_search_result(
         })),
         Some("person") => Some(UnifiedSearchResult::Person(UnifiedPerson {
             provider_id: MediaId::tmdb(id),
-            name: item.name.or(item.title).unwrap_or_default(),
+            name: item
+                .name
+                .into_option()
+                .or(item.title.into_option())
+                .unwrap_or_default(),
             known_for_department: None,
             profile_url: resolve_poster(&item.poster_path), // multi uses poster_path
-            popularity: item.popularity,
+            popularity: item.popularity.into_option(),
             gender: None,
-            adult: item.adult,
+            adult: item.adult.into_option(),
         })),
         _ => None,
     }
@@ -126,26 +138,27 @@ pub(crate) fn multi_search_result(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::generated::tmdb::Nullable;
 
     fn multi_item(id: i64, media_type: Option<&str>) -> types::SearchMultiResponseResultsItem {
         types::SearchMultiResponseResultsItem {
-            id: Some(id),
-            media_type: media_type.map(String::from),
-            title: Some("Title".to_string()),
-            name: Some("Name".to_string()),
-            original_title: None,
-            original_name: None,
-            overview: None,
-            release_date: Some("1999-10-15".to_string()),
-            poster_path: None,
-            backdrop_path: None,
-            genre_ids: Some(vec![18]),
-            popularity: Some(1.0),
-            vote_average: Some(8.0),
-            vote_count: Some(100),
-            original_language: Some("en".to_string()),
-            adult: Some(false),
-            video: Some(false),
+            id: Nullable::Value(id),
+            media_type: media_type.map_or(Nullable::Absent, |t| Nullable::Value(t.to_string())),
+            title: Nullable::Value("Title".to_string()),
+            name: Nullable::Value("Name".to_string()),
+            original_title: Nullable::Absent,
+            original_name: Nullable::Absent,
+            overview: Nullable::Absent,
+            release_date: Nullable::Value("1999-10-15".to_string()),
+            poster_path: Nullable::Absent,
+            backdrop_path: Nullable::Absent,
+            genre_ids: Nullable::Value(vec![18]),
+            popularity: Nullable::Value(1.0),
+            vote_average: Nullable::Value(8.0),
+            vote_count: Nullable::Value(100),
+            original_language: Nullable::Value("en".to_string()),
+            adult: Nullable::Value(false),
+            video: Nullable::Value(false),
         }
     }
 
@@ -179,7 +192,7 @@ mod tests {
     #[test]
     fn multi_item_without_id_is_dropped() {
         let mut item = multi_item(550, Some("movie"));
-        item.id = None;
+        item.id = Nullable::Absent;
         assert!(multi_search_result(item).is_none());
     }
 
@@ -200,8 +213,8 @@ mod tests {
     #[test]
     fn multi_item_unknown_adult_and_counts_are_none() {
         let mut item = multi_item(550, Some("movie"));
-        item.adult = None;
-        item.vote_count = None;
+        item.adult = Nullable::Absent;
+        item.vote_count = Nullable::Absent;
         match multi_search_result(item) {
             Some(UnifiedSearchResult::Movie(m)) => {
                 assert_eq!(m.adult, None);
@@ -221,15 +234,15 @@ mod tests {
     #[test]
     fn search_person_to_unified() {
         let raw = types::SearchPersonResponseResultsItem {
-            id: Some(287),
-            name: Some("Brad Pitt".to_string()),
-            original_name: None,
-            known_for_department: Some("Acting".to_string()),
-            profile_path: Some("/kU3B75TyRiCgE270EyZnHjfivoq.jpg".to_string()),
-            popularity: Some(25.3),
-            adult: Some(false),
-            gender: Some(2),
-            known_for: Some(vec![]),
+            id: Nullable::Value(287),
+            name: Nullable::Value("Brad Pitt".to_string()),
+            original_name: Nullable::Absent,
+            known_for_department: Nullable::Value("Acting".to_string()),
+            profile_path: Nullable::Value("/kU3B75TyRiCgE270EyZnHjfivoq.jpg".to_string()),
+            popularity: Nullable::Value(25.3),
+            adult: Nullable::Value(false),
+            gender: Nullable::Value(2),
+            known_for: Nullable::Value(vec![]),
         };
         let unified: UnifiedPerson = raw.into();
         assert_eq!(unified.provider_id, "tmdb:287");

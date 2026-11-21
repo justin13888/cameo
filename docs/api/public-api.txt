@@ -178,8 +178,17 @@ pub cameo::cache::CacheTtlConfig::recent_content_details_ttl: core::time::Durati
 pub cameo::cache::CacheTtlConfig::recent_content_threshold_days: u32
 pub cameo::cache::CacheTtlConfig::search: core::time::Duration
 impl cameo::cache::CacheTtlConfig
-pub fn cameo::cache::CacheTtlConfig::movie_details_ttl(&self, core::option::Option<&str>, core::option::Option<&str>) -> core::time::Duration
-pub fn cameo::cache::CacheTtlConfig::tv_show_details_ttl(&self, core::option::Option<&str>, core::option::Option<&str>, core::option::Option<&str>, bool) -> core::time::Duration
+pub fn cameo::cache::CacheTtlConfig::movie_details_ttl(&self, &cameo::unified::UnifiedMovieDetails) -> core::time::Duration
+pub fn cameo::cache::CacheTtlConfig::tv_show_details_ttl(&self, &cameo::unified::UnifiedTvShowDetails) -> core::time::Duration
+pub fn cameo::cache::CacheTtlConfig::with_active_content_details_ttl(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_details(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_discovery(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_items(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_old_content_details_ttl(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_old_content_threshold_days(self, u32) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_recent_content_details_ttl(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_recent_content_threshold_days(self, u32) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_search(self, core::time::Duration) -> Self
 impl core::clone::Clone for cameo::cache::CacheTtlConfig
 pub fn cameo::cache::CacheTtlConfig::clone(&self) -> cameo::cache::CacheTtlConfig
 impl core::cmp::Eq for cameo::cache::CacheTtlConfig
@@ -2119,11 +2128,11 @@ pub async fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::execute(self) ->
 pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::include_adult(self, bool) -> Self
 pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::include_video(self, bool) -> Self
 pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::page(self, u32) -> Self
-pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::primary_release_date_gte(self, chrono::naive::date::NaiveDate) -> Self
-pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::primary_release_date_lte(self, chrono::naive::date::NaiveDate) -> Self
+pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::primary_release_date_gte(self, jiff::civil::date::Date) -> Self
+pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::primary_release_date_lte(self, jiff::civil::date::Date) -> Self
 pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::primary_release_year(self, i32) -> Self
-pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::release_date_gte(self, chrono::naive::date::NaiveDate) -> Self
-pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::release_date_lte(self, chrono::naive::date::NaiveDate) -> Self
+pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::release_date_gte(self, jiff::civil::date::Date) -> Self
+pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::release_date_lte(self, jiff::civil::date::Date) -> Self
 pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::sort_by(self, cameo::providers::tmdb::MovieSortBy) -> Self
 pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::vote_average_gte(self, f32) -> Self
 pub fn cameo::providers::tmdb::DiscoverMoviesBuilder<'a>::vote_average_lte(self, f32) -> Self
@@ -2190,11 +2199,11 @@ impl<T> tracing::instrument::Instrument for cameo::providers::tmdb::DiscoverMovi
 impl<T> tracing::instrument::WithSubscriber for cameo::providers::tmdb::DiscoverMoviesBuilder<'a>
 pub struct cameo::providers::tmdb::DiscoverTvBuilder<'a>
 impl<'a> cameo::providers::tmdb::DiscoverTvBuilder<'a>
-pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::air_date_gte(self, chrono::naive::date::NaiveDate) -> Self
-pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::air_date_lte(self, chrono::naive::date::NaiveDate) -> Self
+pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::air_date_gte(self, jiff::civil::date::Date) -> Self
+pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::air_date_lte(self, jiff::civil::date::Date) -> Self
 pub async fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::execute(self) -> core::result::Result<cameo::Page<cameo::unified::UnifiedTvShow>, cameo::TmdbError>
-pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::first_air_date_gte(self, chrono::naive::date::NaiveDate) -> Self
-pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::first_air_date_lte(self, chrono::naive::date::NaiveDate) -> Self
+pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::first_air_date_gte(self, jiff::civil::date::Date) -> Self
+pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::first_air_date_lte(self, jiff::civil::date::Date) -> Self
 pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::first_air_date_year(self, i32) -> Self
 pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::include_adult(self, bool) -> Self
 pub fn cameo::providers::tmdb::DiscoverTvBuilder<'a>::include_null_first_air_dates(self, bool) -> Self
@@ -5792,7 +5801,7 @@ pub const fn cameo::PartialDate::from_year(i32) -> Self
 pub const fn cameo::PartialDate::is_complete(&self) -> bool
 pub const fn cameo::PartialDate::month(&self) -> core::option::Option<u8>
 pub const fn cameo::PartialDate::new(i32, core::option::Option<u8>, core::option::Option<u8>) -> core::option::Option<Self>
-pub fn cameo::PartialDate::to_naive_date(&self) -> core::option::Option<chrono::naive::date::NaiveDate>
+pub fn cameo::PartialDate::to_date(&self) -> core::option::Option<jiff::civil::date::Date>
 pub const fn cameo::PartialDate::year(&self) -> i32
 pub const fn cameo::PartialDate::year_month(i32, u8) -> core::option::Option<Self>
 pub const fn cameo::PartialDate::ymd(i32, u8, u8) -> core::option::Option<Self>
@@ -5805,8 +5814,8 @@ impl core::cmp::PartialEq for cameo::PartialDate
 pub fn cameo::PartialDate::eq(&self, &cameo::PartialDate) -> bool
 impl core::cmp::PartialOrd for cameo::PartialDate
 pub fn cameo::PartialDate::partial_cmp(&self, &cameo::PartialDate) -> core::option::Option<core::cmp::Ordering>
-impl core::convert::From<chrono::naive::date::NaiveDate> for cameo::PartialDate
-pub fn cameo::PartialDate::from(chrono::naive::date::NaiveDate) -> Self
+impl core::convert::From<jiff::civil::date::Date> for cameo::PartialDate
+pub fn cameo::PartialDate::from(jiff::civil::date::Date) -> Self
 impl core::fmt::Debug for cameo::PartialDate
 pub fn cameo::PartialDate::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::fmt::Display for cameo::PartialDate
@@ -8688,8 +8697,17 @@ pub cameo::CacheTtlConfig::recent_content_details_ttl: core::time::Duration
 pub cameo::CacheTtlConfig::recent_content_threshold_days: u32
 pub cameo::CacheTtlConfig::search: core::time::Duration
 impl cameo::cache::CacheTtlConfig
-pub fn cameo::cache::CacheTtlConfig::movie_details_ttl(&self, core::option::Option<&str>, core::option::Option<&str>) -> core::time::Duration
-pub fn cameo::cache::CacheTtlConfig::tv_show_details_ttl(&self, core::option::Option<&str>, core::option::Option<&str>, core::option::Option<&str>, bool) -> core::time::Duration
+pub fn cameo::cache::CacheTtlConfig::movie_details_ttl(&self, &cameo::unified::UnifiedMovieDetails) -> core::time::Duration
+pub fn cameo::cache::CacheTtlConfig::tv_show_details_ttl(&self, &cameo::unified::UnifiedTvShowDetails) -> core::time::Duration
+pub fn cameo::cache::CacheTtlConfig::with_active_content_details_ttl(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_details(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_discovery(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_items(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_old_content_details_ttl(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_old_content_threshold_days(self, u32) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_recent_content_details_ttl(self, core::time::Duration) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_recent_content_threshold_days(self, u32) -> Self
+pub fn cameo::cache::CacheTtlConfig::with_search(self, core::time::Duration) -> Self
 impl core::clone::Clone for cameo::cache::CacheTtlConfig
 pub fn cameo::cache::CacheTtlConfig::clone(&self) -> cameo::cache::CacheTtlConfig
 impl core::cmp::Eq for cameo::cache::CacheTtlConfig
@@ -9596,7 +9614,7 @@ pub const fn cameo::PartialDate::from_year(i32) -> Self
 pub const fn cameo::PartialDate::is_complete(&self) -> bool
 pub const fn cameo::PartialDate::month(&self) -> core::option::Option<u8>
 pub const fn cameo::PartialDate::new(i32, core::option::Option<u8>, core::option::Option<u8>) -> core::option::Option<Self>
-pub fn cameo::PartialDate::to_naive_date(&self) -> core::option::Option<chrono::naive::date::NaiveDate>
+pub fn cameo::PartialDate::to_date(&self) -> core::option::Option<jiff::civil::date::Date>
 pub const fn cameo::PartialDate::year(&self) -> i32
 pub const fn cameo::PartialDate::year_month(i32, u8) -> core::option::Option<Self>
 pub const fn cameo::PartialDate::ymd(i32, u8, u8) -> core::option::Option<Self>
@@ -9609,8 +9627,8 @@ impl core::cmp::PartialEq for cameo::PartialDate
 pub fn cameo::PartialDate::eq(&self, &cameo::PartialDate) -> bool
 impl core::cmp::PartialOrd for cameo::PartialDate
 pub fn cameo::PartialDate::partial_cmp(&self, &cameo::PartialDate) -> core::option::Option<core::cmp::Ordering>
-impl core::convert::From<chrono::naive::date::NaiveDate> for cameo::PartialDate
-pub fn cameo::PartialDate::from(chrono::naive::date::NaiveDate) -> Self
+impl core::convert::From<jiff::civil::date::Date> for cameo::PartialDate
+pub fn cameo::PartialDate::from(jiff::civil::date::Date) -> Self
 impl core::fmt::Debug for cameo::PartialDate
 pub fn cameo::PartialDate::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl core::fmt::Display for cameo::PartialDate

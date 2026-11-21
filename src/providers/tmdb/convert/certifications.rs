@@ -47,7 +47,7 @@ const THEATRICAL_RELEASE: i64 = 3;
 pub(crate) fn movie_certifications(
     response: types::MovieReleaseDatesResponse,
 ) -> Vec<TmdbCertification> {
-    movie_results(response.results)
+    movie_results(response.results.into_option())
 }
 
 /// [`movie_certifications`] over the `results` list, which the
@@ -59,13 +59,18 @@ pub(crate) fn movie_results(
         .into_iter()
         .flatten()
         .filter_map(|country| {
-            let mut releases: Vec<_> = country.release_dates.into_iter().flatten().collect();
+            let mut releases: Vec<_> = country
+                .release_dates
+                .into_option()
+                .into_iter()
+                .flatten()
+                .collect();
             // A stable sort keeps TMDB's order among non-theatrical releases.
-            releases.sort_by_key(|r| r.r#type != Some(THEATRICAL_RELEASE));
+            releases.sort_by_key(|r| r.r#type.as_option() != Some(&THEATRICAL_RELEASE));
             let certification = releases
                 .into_iter()
-                .find_map(|r| non_blank(r.certification))?;
-            TmdbCertification::from_parts(country.iso_3166_1, Some(certification))
+                .find_map(|r| non_blank(r.certification.into_option()))?;
+            TmdbCertification::from_parts(country.iso_3166_1.into_option(), Some(certification))
         })
         .collect()
 }
@@ -75,7 +80,7 @@ pub(crate) fn movie_results(
 pub(crate) fn tv_series_certifications(
     response: types::TvSeriesContentRatingsResponse,
 ) -> Vec<TmdbCertification> {
-    tv_series_results(response.results)
+    tv_series_results(response.results.into_option())
 }
 
 /// [`tv_series_certifications`] over the `results` list, which the
@@ -86,7 +91,9 @@ pub(crate) fn tv_series_results(
     results
         .into_iter()
         .flatten()
-        .filter_map(|r| TmdbCertification::from_parts(r.iso_3166_1, r.rating))
+        .filter_map(|r| {
+            TmdbCertification::from_parts(r.iso_3166_1.into_option(), r.rating.into_option())
+        })
         .collect()
 }
 

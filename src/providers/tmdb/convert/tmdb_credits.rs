@@ -31,12 +31,16 @@ fn billing_order(order: Option<i64>) -> Option<u32> {
 /// A movie cast credit, or `None` when it names no valid person id.
 fn movie_cast_member(c: types::MovieCreditsResponseCastItem) -> Option<CastMember> {
     Some(CastMember {
-        id: credit_person_id(c.id, c.name.as_deref(), "cast")?,
-        name: c.name.unwrap_or_default(),
-        character: c.character,
-        order: billing_order(c.order),
-        known_for_department: c.known_for_department,
-        gender: c.gender.and_then(Gender::from_tmdb),
+        id: credit_person_id(
+            c.id.into_option(),
+            c.name.as_option().map(String::as_str),
+            "cast",
+        )?,
+        name: c.name.into_option().unwrap_or_default(),
+        character: c.character.into_option(),
+        order: billing_order(c.order.into_option()),
+        known_for_department: c.known_for_department.into_option(),
+        gender: c.gender.into_option().and_then(Gender::from_tmdb),
         profile_url: resolve_profile(&c.profile_path),
     })
 }
@@ -44,11 +48,15 @@ fn movie_cast_member(c: types::MovieCreditsResponseCastItem) -> Option<CastMembe
 /// A movie crew credit, or `None` when it names no valid person id.
 fn movie_crew_member(c: types::MovieCreditsResponseCrewItem) -> Option<CrewMember> {
     Some(CrewMember {
-        id: credit_person_id(c.id, c.name.as_deref(), "crew")?,
-        name: c.name.unwrap_or_default(),
-        job: c.job,
-        department: c.department,
-        gender: c.gender.and_then(Gender::from_tmdb),
+        id: credit_person_id(
+            c.id.into_option(),
+            c.name.as_option().map(String::as_str),
+            "crew",
+        )?,
+        name: c.name.into_option().unwrap_or_default(),
+        job: c.job.into_option(),
+        department: c.department.into_option(),
+        gender: c.gender.into_option().and_then(Gender::from_tmdb),
         profile_url: resolve_profile(&c.profile_path),
     })
 }
@@ -60,12 +68,14 @@ impl From<types::MovieCreditsResponse> for TmdbCredits {
         TmdbCredits {
             cast: c
                 .cast
+                .into_option()
                 .into_iter()
                 .flatten()
                 .filter_map(movie_cast_member)
                 .collect(),
             crew: c
                 .crew
+                .into_option()
                 .into_iter()
                 .flatten()
                 .filter_map(movie_crew_member)
@@ -81,36 +91,53 @@ impl From<types::TvSeriesAggregateCreditsResponse> for TmdbCredits {
     fn from(c: types::TvSeriesAggregateCreditsResponse) -> Self {
         let cast = c
             .cast
+            .into_option()
             .into_iter()
             .flatten()
             .filter_map(|c| {
                 Some(CastMember {
-                    id: credit_person_id(c.id, c.name.as_deref(), "cast")?,
-                    name: c.name.unwrap_or_default(),
+                    id: credit_person_id(
+                        c.id.into_option(),
+                        c.name.as_option().map(String::as_str),
+                        "cast",
+                    )?,
+                    name: c.name.into_option().unwrap_or_default(),
                     character: c
                         .roles
-                        .iter()
+                        .as_option()
+                        .into_iter()
                         .flatten()
                         .next()
-                        .and_then(|r| r.character.clone()),
-                    order: billing_order(c.order),
-                    known_for_department: c.known_for_department,
-                    gender: c.gender.and_then(Gender::from_tmdb),
+                        .and_then(|r| r.character.clone().into_option()),
+                    order: billing_order(c.order.into_option()),
+                    known_for_department: c.known_for_department.into_option(),
+                    gender: c.gender.into_option().and_then(Gender::from_tmdb),
                     profile_url: resolve_profile(&c.profile_path),
                 })
             })
             .collect();
         let crew = c
             .crew
+            .into_option()
             .into_iter()
             .flatten()
             .filter_map(|c| {
                 Some(CrewMember {
-                    id: credit_person_id(c.id, c.name.as_deref(), "crew")?,
-                    name: c.name.unwrap_or_default(),
-                    job: c.jobs.iter().flatten().next().and_then(|j| j.job.clone()),
-                    department: c.department,
-                    gender: c.gender.and_then(Gender::from_tmdb),
+                    id: credit_person_id(
+                        c.id.into_option(),
+                        c.name.as_option().map(String::as_str),
+                        "crew",
+                    )?,
+                    name: c.name.into_option().unwrap_or_default(),
+                    job: c
+                        .jobs
+                        .as_option()
+                        .into_iter()
+                        .flatten()
+                        .next()
+                        .and_then(|j| j.job.clone().into_option()),
+                    department: c.department.into_option(),
+                    gender: c.gender.into_option().and_then(Gender::from_tmdb),
                     profile_url: resolve_profile(&c.profile_path),
                 })
             })

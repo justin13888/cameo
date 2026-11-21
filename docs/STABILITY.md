@@ -71,7 +71,8 @@ the API:
 
 - **Deliberately public:** `serde` (the models derive `Serialize` /
   `Deserialize`), `serde_json::Value` (the `CacheBackend` value contract and
-  `AniListGqlError`'s `path` / `extensions`), `chrono` (dates and timestamps),
+  `AniListGqlError`'s `path` / `extensions`), `jiff` (civil dates:
+  `PartialDate`'s conversions and the TMDB discover date filters),
   `futures`' `Stream` trait (returned by `into_stream`), and `async_trait`
   (re-exported for trait implementers). A major release of
   one of these is a breaking cameo release.

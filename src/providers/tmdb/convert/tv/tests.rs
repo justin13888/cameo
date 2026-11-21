@@ -1,5 +1,5 @@
 use crate::{
-    generated::tmdb::types,
+    generated::tmdb::{Nullable, types},
     unified::{
         genre::Genre,
         media_id::MediaId,
@@ -292,20 +292,20 @@ fn episode_details_without_number_defaults_to_zero() {
 #[test]
 fn search_tv_to_unified() {
     let raw = types::SearchTvResponseResultsItem {
-        id: Some(1396),
-        name: Some("Breaking Bad".to_string()),
-        original_name: Some("Breaking Bad".to_string()),
-        overview: Some("A high school chemistry teacher...".to_string()),
-        first_air_date: Some("2008-01-20".to_string()),
-        poster_path: Some("/ggFHVNu6YYI5L9pCfOacjizRGt.jpg".to_string()),
-        backdrop_path: Some("/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg".to_string()),
-        genre_ids: Some(vec![18, 80]),
-        origin_country: Some(vec!["US".to_string()]),
-        popularity: Some(282.9),
-        vote_average: Some(9.5),
-        vote_count: Some(14000),
-        original_language: Some("en".to_string()),
-        adult: Some(false),
+        id: Nullable::Value(1396),
+        name: Nullable::Value("Breaking Bad".to_string()),
+        original_name: Nullable::Value("Breaking Bad".to_string()),
+        overview: Nullable::Value("A high school chemistry teacher...".to_string()),
+        first_air_date: Nullable::Value("2008-01-20".to_string()),
+        poster_path: Nullable::Value("/ggFHVNu6YYI5L9pCfOacjizRGt.jpg".to_string()),
+        backdrop_path: Nullable::Value("/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg".to_string()),
+        genre_ids: Nullable::Value(vec![18, 80]),
+        origin_country: Nullable::Value(vec!["US".to_string()]),
+        popularity: Nullable::Value(282.9),
+        vote_average: Nullable::Value(9.5),
+        vote_count: Nullable::Value(14000),
+        original_language: Nullable::Value("en".to_string()),
+        adult: Nullable::Value(false),
     };
     let unified: UnifiedTvShow = raw.into();
     assert_eq!(unified.provider_id, "tmdb:1396");

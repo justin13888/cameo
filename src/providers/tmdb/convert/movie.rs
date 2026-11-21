@@ -14,24 +14,25 @@ macro_rules! impl_movie_from {
             fn from(m: $ty) -> Self {
                 UnifiedMovie {
                     provider_id: tmdb_media_id(m.id),
-                    title: m.title.unwrap_or_default(),
-                    original_title: m.original_title,
+                    title: m.title.into_option().unwrap_or_default(),
+                    original_title: m.original_title.into_option(),
                     alternative_titles: Vec::new(),
-                    overview: m.overview,
+                    overview: m.overview.into_option(),
                     release_date: resolve_date(&m.release_date),
                     poster_url: resolve_poster(&m.poster_path),
                     backdrop_url: resolve_backdrop(&m.backdrop_path),
                     genres: m
                         .genre_ids
-                        .iter()
+                        .as_option()
+                        .into_iter()
                         .flatten()
                         .map(|&id| Genre::from_tmdb_id(id))
                         .collect(),
-                    popularity: m.popularity,
-                    vote_average: m.vote_average,
-                    vote_count: m.vote_count.map(|c| c.max(0) as u64),
-                    original_language: m.original_language,
-                    adult: m.adult,
+                    popularity: m.popularity.into_option(),
+                    vote_average: m.vote_average.into_option(),
+                    vote_count: m.vote_count.into_option().map(|c| c.max(0) as u64),
+                    original_language: m.original_language.into_option(),
+                    adult: m.adult.into_option(),
                     // TMDB list endpoints return neither runtime nor status.
                     runtime: None,
                     status: None,
@@ -51,75 +52,85 @@ impl_movie_from!(types::MovieSimilarResponseResultsItem);
 impl From<types::MovieDetailsResponseProductionCompaniesItem> for Company {
     fn from(c: types::MovieDetailsResponseProductionCompaniesItem) -> Self {
         Company {
-            id: c.id.and_then(|id| u64::try_from(id).ok()),
-            name: c.name.unwrap_or_default(),
+            id: c.id.into_option().and_then(|id| u64::try_from(id).ok()),
+            name: c.name.into_option().unwrap_or_default(),
             logo_url: resolve_logo(&c.logo_path),
-            origin_country: c.origin_country,
+            origin_country: c.origin_country.into_option(),
         }
     }
 }
 
 impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
     fn from(m: types::MovieDetailsResponse) -> Self {
-        let belongs_to_collection = m.belongs_to_collection.as_ref().map(parse_collection);
-        let runtime = m.runtime.filter(|&v| v > 0).map(|v| v as u32);
+        let belongs_to_collection = m
+            .belongs_to_collection
+            .as_ref()
+            .into_option()
+            .map(parse_collection);
+        let runtime = m.runtime.into_option().filter(|&v| v > 0).map(|v| v as u32);
 
         UnifiedMovieDetails {
             movie: UnifiedMovie {
                 provider_id: tmdb_media_id(m.id),
-                title: m.title.unwrap_or_default(),
-                original_title: m.original_title,
+                title: m.title.into_option().unwrap_or_default(),
+                original_title: m.original_title.into_option(),
                 alternative_titles: Vec::new(),
-                overview: m.overview,
+                overview: m.overview.into_option(),
                 release_date: resolve_date(&m.release_date),
                 poster_url: resolve_poster(&m.poster_path),
                 backdrop_url: resolve_backdrop(&m.backdrop_path),
                 genres: m
                     .genres
-                    .iter()
+                    .as_option()
+                    .into_iter()
                     .flatten()
-                    .filter_map(|g| g.id.map(Genre::from_tmdb_id))
+                    .filter_map(|g| g.id.into_option().map(Genre::from_tmdb_id))
                     .collect(),
-                popularity: m.popularity,
-                vote_average: m.vote_average,
-                vote_count: m.vote_count.map(|c| c.max(0) as u64),
-                original_language: m.original_language,
-                adult: m.adult,
+                popularity: m.popularity.into_option(),
+                vote_average: m.vote_average.into_option(),
+                vote_count: m.vote_count.into_option().map(|c| c.max(0) as u64),
+                original_language: m.original_language.into_option(),
+                adult: m.adult.into_option(),
                 // The embedded summary mirrors the detail-level runtime/status.
                 runtime,
-                status: m.status.clone(),
+                status: m.status.clone().into_option(),
             },
-            tagline: m.tagline,
+            tagline: m.tagline.into_option(),
             runtime,
-            budget: m.budget.filter(|&v| v > 0).map(|v| v as u64),
-            revenue: m.revenue.filter(|&v| v > 0).map(|v| v as u64),
-            status: m.status,
-            homepage: m.homepage,
-            imdb_id: m.imdb_id,
+            budget: m.budget.into_option().filter(|&v| v > 0).map(|v| v as u64),
+            revenue: m.revenue.into_option().filter(|&v| v > 0).map(|v| v as u64),
+            status: m.status.into_option(),
+            homepage: m.homepage.into_option(),
+            imdb_id: m.imdb_id.into_option(),
             production_companies: m
                 .production_companies
+                .into_option()
                 .into_iter()
                 .flatten()
                 .map(Company::from)
                 .collect(),
             production_countries: m
                 .production_countries
-                .iter()
+                .as_option()
+                .into_iter()
                 .flatten()
-                .filter_map(|c| c.name.clone())
+                .filter_map(|c| c.name.clone().into_option())
                 .collect(),
             spoken_languages: m
                 .spoken_languages
-                .iter()
+                .as_option()
+                .into_iter()
                 .flatten()
-                .filter_map(|l| l.english_name.clone())
+                .filter_map(|l| l.english_name.clone().into_option())
                 .collect(),
             // Spec default was `true`; an absent/null flag stays unknown.
-            video: m.video,
+            video: m.video.into_option(),
             belongs_to_collection,
             // Present only when the `release_dates` append was requested.
             certifications: certifications::movie_results(
-                m.release_dates.and_then(|block| block.results),
+                m.release_dates
+                    .into_option()
+                    .and_then(|block| block.results.into_option()),
             )
             .into_iter()
             .map(Certification::from)
@@ -131,8 +142,8 @@ impl From<types::MovieDetailsResponse> for UnifiedMovieDetails {
 /// Convert TMDB's `belongs_to_collection` object into a [`Collection`].
 fn parse_collection(v: &types::MovieDetailsResponseBelongsToCollection) -> Collection {
     Collection {
-        id: v.id.and_then(|id| u64::try_from(id).ok()),
-        name: v.name.clone().unwrap_or_default(),
+        id: v.id.into_option().and_then(|id| u64::try_from(id).ok()),
+        name: v.name.clone().into_option().unwrap_or_default(),
         poster_url: resolve_poster(&v.poster_path),
         backdrop_url: resolve_backdrop(&v.backdrop_path),
     }
@@ -141,7 +152,7 @@ fn parse_collection(v: &types::MovieDetailsResponseBelongsToCollection) -> Colle
 #[cfg(test)]
 mod tests {
     use crate::{
-        generated::tmdb::types,
+        generated::tmdb::{Nullable, types},
         unified::{
             genre::Genre,
             models::{UnifiedMovie, UnifiedMovieDetails},
@@ -150,20 +161,20 @@ mod tests {
 
     fn make_search_movie() -> types::SearchMovieResponseResultsItem {
         types::SearchMovieResponseResultsItem {
-            id: Some(550),
-            title: Some("Fight Club".to_string()),
-            original_title: Some("Fight Club".to_string()),
-            overview: Some("A ticking-time-bomb insomniac...".to_string()),
-            release_date: Some("1999-10-15".to_string()),
-            poster_path: Some("/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg".to_string()),
-            backdrop_path: Some("/hZkgoQYus5vegHoetLkCJzb17zJ.jpg".to_string()),
-            genre_ids: Some(vec![18, 53]),
-            popularity: Some(73.433),
-            vote_average: Some(8.4),
-            vote_count: Some(26280),
-            original_language: Some("en".to_string()),
-            adult: Some(false),
-            video: Some(false),
+            id: Nullable::Value(550),
+            title: Nullable::Value("Fight Club".to_string()),
+            original_title: Nullable::Value("Fight Club".to_string()),
+            overview: Nullable::Value("A ticking-time-bomb insomniac...".to_string()),
+            release_date: Nullable::Value("1999-10-15".to_string()),
+            poster_path: Nullable::Value("/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg".to_string()),
+            backdrop_path: Nullable::Value("/hZkgoQYus5vegHoetLkCJzb17zJ.jpg".to_string()),
+            genre_ids: Nullable::Value(vec![18, 53]),
+            popularity: Nullable::Value(73.433),
+            vote_average: Nullable::Value(8.4),
+            vote_count: Nullable::Value(26280),
+            original_language: Nullable::Value("en".to_string()),
+            adult: Nullable::Value(false),
+            video: Nullable::Value(false),
         }
     }
 
@@ -359,7 +370,7 @@ mod tests {
     #[test]
     fn negative_id_is_not_wrapped() {
         let mut raw = make_search_movie();
-        raw.id = Some(-1);
+        raw.id = Nullable::Value(-1);
         let unified: UnifiedMovie = raw.into();
         assert_eq!(unified.provider_id, "tmdb:0");
     }
@@ -367,8 +378,8 @@ mod tests {
     #[test]
     fn search_movie_no_poster() {
         let mut raw = make_search_movie();
-        raw.poster_path = None;
-        raw.backdrop_path = None;
+        raw.poster_path = Nullable::Absent;
+        raw.backdrop_path = Nullable::Absent;
         let unified: UnifiedMovie = raw.into();
         assert!(unified.poster_url.is_none());
         assert!(unified.backdrop_url.is_none());
@@ -377,7 +388,7 @@ mod tests {
     #[test]
     fn search_movie_empty_genre_ids() {
         let mut raw = make_search_movie();
-        raw.genre_ids = Some(vec![]);
+        raw.genre_ids = Nullable::Value(vec![]);
         let unified: UnifiedMovie = raw.into();
         assert!(unified.genres.is_empty());
     }
@@ -385,7 +396,7 @@ mod tests {
     #[test]
     fn search_movie_unknown_genre_id() {
         let mut raw = make_search_movie();
-        raw.genre_ids = Some(vec![99999]);
+        raw.genre_ids = Nullable::Value(vec![99999]);
         let unified: UnifiedMovie = raw.into();
         assert_eq!(
             unified.genres,

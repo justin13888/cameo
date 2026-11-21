@@ -8,7 +8,7 @@
 
 use super::resolve_profile;
 use crate::{
-    generated::tmdb::types,
+    generated::tmdb::{Nullable, types},
     unified::{
         conversions::native_id,
         media_id::MediaId,
@@ -20,7 +20,7 @@ use crate::{
 struct Person {
     id: Option<i64>,
     name: Option<String>,
-    profile_path: Option<String>,
+    profile_path: Nullable<String>,
     gender: Option<i64>,
 }
 
@@ -87,32 +87,42 @@ pub(crate) fn tmdb_movie_credits_to_unified(
 ) -> UnifiedCredits {
     let cast = credits
         .cast
+        .into_option()
         .into_iter()
         .flatten()
         .filter_map(|c| {
             let person = Person {
-                id: c.id,
-                name: c.name,
+                id: c.id.into_option(),
+                name: c.name.into_option(),
                 profile_path: c.profile_path,
-                gender: c.gender,
+                gender: c.gender.into_option(),
             };
             let p = person.resolve(&title, "cast")?;
-            Some(cast_credit(p, c.character, billing_order(c.order)))
+            Some(cast_credit(
+                p,
+                c.character.into_option(),
+                billing_order(c.order.into_option()),
+            ))
         })
         .collect();
     let crew = credits
         .crew
+        .into_option()
         .into_iter()
         .flatten()
         .filter_map(|c| {
             let person = Person {
-                id: c.id,
-                name: c.name,
+                id: c.id.into_option(),
+                name: c.name.into_option(),
                 profile_path: c.profile_path,
-                gender: c.gender,
+                gender: c.gender.into_option(),
             };
             let p = person.resolve(&title, "crew")?;
-            Some(crew_credit(p, c.job, c.department))
+            Some(crew_credit(
+                p,
+                c.job.into_option(),
+                c.department.into_option(),
+            ))
         })
         .collect();
     UnifiedCredits {
@@ -135,19 +145,24 @@ pub(crate) fn tmdb_tv_credits_to_unified(
     credits: types::TvSeriesAggregateCreditsResponse,
 ) -> UnifiedCredits {
     let mut cast = Vec::new();
-    for c in credits.cast.into_iter().flatten() {
+    for c in credits.cast.into_option().into_iter().flatten() {
         let person = Person {
-            id: c.id,
-            name: c.name,
+            id: c.id.into_option(),
+            name: c.name.into_option(),
             profile_path: c.profile_path,
-            gender: c.gender,
+            gender: c.gender.into_option(),
         };
         let Some(p) = person.resolve(&title, "cast") else {
             continue;
         };
-        let order = billing_order(c.order);
-        let mut characters: Vec<Option<String>> =
-            c.roles.into_iter().flatten().map(|r| r.character).collect();
+        let order = billing_order(c.order.into_option());
+        let mut characters: Vec<Option<String>> = c
+            .roles
+            .into_option()
+            .into_iter()
+            .flatten()
+            .map(|r| r.character.into_option())
+            .collect();
         if characters.is_empty() {
             characters.push(None);
         }
@@ -156,22 +171,32 @@ pub(crate) fn tmdb_tv_credits_to_unified(
         }
     }
     let mut crew = Vec::new();
-    for c in credits.crew.into_iter().flatten() {
+    for c in credits.crew.into_option().into_iter().flatten() {
         let person = Person {
-            id: c.id,
-            name: c.name,
+            id: c.id.into_option(),
+            name: c.name.into_option(),
             profile_path: c.profile_path,
-            gender: c.gender,
+            gender: c.gender.into_option(),
         };
         let Some(p) = person.resolve(&title, "crew") else {
             continue;
         };
-        let mut jobs: Vec<Option<String>> = c.jobs.into_iter().flatten().map(|j| j.job).collect();
+        let mut jobs: Vec<Option<String>> = c
+            .jobs
+            .into_option()
+            .into_iter()
+            .flatten()
+            .map(|j| j.job.into_option())
+            .collect();
         if jobs.is_empty() {
             jobs.push(None);
         }
         for job in jobs {
-            crew.push(crew_credit(p.clone(), job, c.department.clone()));
+            crew.push(crew_credit(
+                p.clone(),
+                job,
+                c.department.clone().into_option(),
+            ));
         }
     }
     UnifiedCredits {
