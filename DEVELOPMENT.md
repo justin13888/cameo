@@ -15,10 +15,12 @@ Run `just` to list all available recipes. Key ones:
 ```bash
 just fmt          # format all code
 just clippy       # run clippy lints
-just test         # run tests (default features = `full`: tmdb + anilist + tvdb + cache)
+just test         # run tests with cargo-nextest (default features = `full`: tmdb + anilist + tvdb + cache)
+just test-cargo   # the same with plain `cargo test` (no cargo-nextest needed; includes doctests)
 just test-all     # run tests with `--features full` (same set, stated explicitly)
 just test-all-features  # run tests across every CI feature combination
-just test-live    # run live tests (requires TMDB_API_TOKEN in .env)
+just doc-test     # run doctests (nextest does not run them)
+just test-live    # run live tests one at a time (requires TMDB_API_TOKEN in .env)
 just doc          # build and open docs
 just build        # build with default features
 just build-features anilist  # AniList only
@@ -34,7 +36,8 @@ cargo run --example anilist_showcase --features anilist -- 'Your Name'
 ## Notes
 
 - Lefthook is configured with pre-commit (`fmt` → `clippy-fix` → `check-modified`) and pre-push hooks
-- AniList rate limit: 90 req/min — run live tests with `--test-threads=1`
+- Tests run under [cargo-nextest](https://nexte.st) (`cargo install --locked cargo-nextest`), configured in `.config/nextest.toml`
+- AniList rate limit: 90 req/min — the nextest `live` profile (`just test-live`) runs live tests one at a time
 - See TESTING.md for detailed test documentation
 
 ---

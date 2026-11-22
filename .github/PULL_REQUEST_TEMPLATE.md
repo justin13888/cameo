@@ -4,7 +4,9 @@ What does this change and why? Link any related issue (`Closes #123`).
 
 ## Checklist
 
-- [ ] `cargo test --all-features` passes
+- [ ] `cargo nextest run --all-features` passes (live tests are filtered out;
+      `just test-live` runs them with a `TMDB_API_TOKEN`)
+- [ ] `cargo test --doc --all-features` passes
 - [ ] `cargo clippy --all-targets --all-features -- -D warnings` is clean
 - [ ] `cargo fmt --all` applied
 - [ ] Conventional commit messages (`type: description`)

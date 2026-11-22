@@ -14,24 +14,41 @@
 
 ## Run Commands
 
-```bash
-# Default features (`full` = tmdb + anilist + cache): all unit + wiremock tests
-cargo test
+Tests run under [cargo-nextest](https://nexte.st), which runs every test in its
+own process; install it with `cargo install --locked cargo-nextest`. Its
+settings live in `.config/nextest.toml`:
 
-# Every CI feature combination (what the pre-push hook runs)
+- **`default` profile**: every test except the `live_*` ones, so
+  `cargo nextest run --all-features` passes without a `TMDB_API_TOKEN`. No
+  retries, so a flaky test fails. A test still running after 2 minutes is
+  killed.
+- **`ci` profile**: the same, without stopping at the first failure. CI uses it.
+- **`live` profile**: only the `live_*` tests, one at a time.
+
+nextest does not run doctests: run them with `cargo test --doc` (`just doc-test`).
+Plain `cargo test` still works (`just test-cargo`), but it has no live-test
+filter, so `cargo test --all-features` runs the live tests and they panic
+without a token.
+
+```bash
+# Default features (`full` = tmdb + anilist + tvdb + cache): all unit + wiremock tests
+cargo nextest run
+
+# Doctests
+cargo test --doc --features full
+
+# Every CI feature combination, tests and doctests (what the pre-push hook runs)
 just test-all-features
 
 # AniList only (no TMDB)
-cargo test --no-default-features --features anilist
+cargo nextest run --no-default-features --features anilist
 
-# Live TMDB tests (requires API token)
-TMDB_API_TOKEN=xxx cargo test --features live-tests
+# Every feature; live tests are still filtered out
+cargo nextest run --all-features
 
-# With a .env file (set -a exports all vars to child processes)
-set -a; source .env; set +a && cargo test --features live-tests
-
-# Everything (TMDB + AniList live tests; sequential to avoid AniList rate limits)
-set -a; source .env; set +a && cargo test --all-features -- --test-threads=1
+# Live TMDB + AniList tests, one at a time (requires TMDB_API_TOKEN in env or .env)
+just test-live
+TMDB_API_TOKEN=xxx cargo nextest run --profile live --features full,live-tests
 ```
 
 ---
@@ -219,5 +236,5 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 1. **Every new public method** → wiremock test with fixture (or inline JSON for AniList).
 2. **Conversion logic** (e.g. new `Into` impl, new genre variant) → `#[cfg(test)]` unit test beside the conversion in `src/unified/conversions/`, or in `tests/unit/genre_test.rs` for genre mapping.
 3. **Facade dispatch** → one test per dispatch category (not per method). Test that the right provider is called and the result converts correctly.
-4. **Live tests** → smoke-only. Assert results are non-empty; never assert specific titles or IDs that could change.
+4. **Live tests** → smoke-only. Assert results are non-empty; never assert specific titles or IDs that could change. Gate them with `#[cfg(feature = "live-tests")]` and name them `live_*`. The nextest profiles in `.config/nextest.toml` select live tests by that name (`test(/::live_/)`), so a live test with another name runs in every default run and fails without network or a token. No other test may start with `live_`.
 5. **Fixtures** → capture from real API, trim to 1–2 results, name as `{resource}_response.json`.

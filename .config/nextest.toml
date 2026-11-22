@@ -1,0 +1,27 @@
+# cargo-nextest configuration (https://nexte.st). nextest runs every test in its
+# own process, so a test that leans on state another test left behind, or on
+# luck in scheduling, fails here rather than passing by accident. See
+# TESTING.md for the commands.
+
+# The oldest release this file has been checked against.
+nextest-version = { required = "0.9.140" }
+
+[profile.default]
+# The `live_*` tests (compiled only with the `live-tests` feature) hit the real
+# TMDB and AniList APIs and need TMDB_API_TOKEN, so a plain run, including one
+# with `--all-features`, leaves them out. `--profile live` runs them.
+default-filter = "not test(/::live_/)"
+# No retries: a flaky test is a bug to fix, not a failure to hide.
+retries = 0
+# Flag a test as slow after 30s and kill it after 2 minutes, so a hung test
+# fails the run instead of stalling it until the CI job times out.
+slow-timeout = { period = "30s", terminate-after = 4 }
+
+[profile.ci]
+# Report every failing test in one run rather than stopping at the first.
+fail-fast = false
+
+[profile.live]
+# Only the live tests, one at a time: AniList allows 90 requests a minute.
+default-filter = "test(/::live_/)"
+test-threads = 1

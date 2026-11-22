@@ -39,13 +39,17 @@ build:
 build-features features:
     cargo build --no-default-features --features "{{features}}"
 
-# Run tests (default features)
+# Run tests (default features; needs cargo-nextest, see TESTING.md)
 test:
+    cargo nextest run
+
+# Run tests with plain `cargo test` (no cargo-nextest; includes doctests)
+test-cargo:
     cargo test
 
 # Run tests with specific features
 test-features features:
-    cargo test --no-default-features --features "{{features}}"
+    cargo nextest run --no-default-features --features "{{features}}"
 
 # Run tests across all CI feature combinations
 test-all-features:
@@ -53,16 +57,17 @@ test-all-features:
     set -e
     for features in "tmdb,cache" "anilist" "anilist,cache" "tmdb" "tmdb,anilist" "tvdb" "tmdb,anilist,tvdb,cache"; do
         echo "==> test --features $features"
-        cargo test --no-default-features --features "$features"
+        cargo nextest run --no-default-features --features "$features"
+        cargo test --doc --no-default-features --features "$features"
     done
 
 # Run all tests including AniList
 test-all:
-    cargo test --features full
+    cargo nextest run --features full
 
-# Run live tests (requires TMDB_API_TOKEN in env or .env)
+# Run live tests (requires TMDB_API_TOKEN in env or .env); one at a time
 test-live:
-    set -a; source .env; set +a && cargo test --features full,live-tests -- --test-threads=1
+    set -a; source .env; set +a && cargo nextest run --profile live --features full,live-tests
 
 # Generate docs
 doc:
@@ -79,7 +84,8 @@ doc-test:
 # Pre-publish checks
 publish-check:
     cargo clippy --all-targets --features full -- -D warnings
-    cargo test --features full
+    cargo nextest run --features full
+    cargo test --doc --features full
     cargo doc --no-deps
     cargo publish --dry-run
 
