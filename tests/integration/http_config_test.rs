@@ -40,13 +40,16 @@ mod tmdb {
     }
 
     /// A configured request timeout aborts a slow response as a transport error.
+    ///
+    /// The mock sets no `expect`: the timeout covers connecting and sending,
+    /// so under heavy parallel load it can expire before the server has read
+    /// the request, which is still the timeout this test is about.
     #[tokio::test]
     async fn request_timeout_is_honored() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path("/3/movie/550"))
-            .respond_with(ResponseTemplate::new(200).set_delay(Duration::from_millis(400)))
-            .expect(1)
+            .respond_with(ResponseTemplate::new(200).set_delay(Duration::from_secs(10)))
             .mount(&server)
             .await;
         // Retry disabled: one attempt, no backoff sleep (timeout retries are
@@ -56,11 +59,10 @@ mod tmdb {
             .with_retry(cameo::RetryPolicy::disabled());
         let client = TmdbClient::new(config).unwrap();
 
-        let err = client.movie_details(550).await.unwrap_err();
-        assert!(
-            matches!(err, TmdbError::Http(_)),
-            "expected transport (timeout) error, got {err:?}"
-        );
+        match client.movie_details(550).await.unwrap_err() {
+            TmdbError::Http(e) => assert!(e.is_timeout(), "expected a timeout, got {e:?}"),
+            other => panic!("expected Http timeout, got {other:?}"),
+        }
     }
 }
 
@@ -106,12 +108,14 @@ mod anilist {
             .respond_with(
                 ResponseTemplate::new(200)
                     .set_body_json(empty_page())
-                    .set_delay(Duration::from_millis(400)),
+                    .set_delay(Duration::from_secs(10)),
             )
             .mount(&server)
             .await;
+        // Retry disabled: one attempt, no real backoff sleeps.
         let config = AniListConfig::new_with_base_url(server.uri())
-            .with_request_timeout(Duration::from_millis(50));
+            .with_request_timeout(Duration::from_millis(50))
+            .with_retry(cameo::RetryPolicy::disabled());
         let client = AniListClient::new(config).unwrap();
 
         let err = client.search_tv_shows("anything", None).await.unwrap_err();

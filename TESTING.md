@@ -256,3 +256,25 @@ AniList detail tests (`anilist_details_test.rs`) use `include_str!` fixture file
 3. **Facade dispatch** → one test per dispatch category (not per method). Test that the right provider is called and the result converts correctly.
 4. **Live tests** → smoke-only. Assert results are non-empty; never assert specific titles or IDs that could change. Gate them with `#[cfg(feature = "live-tests")]` and name them `live_*`. The nextest profiles in `.config/nextest.toml` select live tests by that name (`test(/::live_/)`), so a live test with another name runs in every default run and fails without network or a token. No other test may start with `live_`.
 5. **Fixtures** → capture from real API, trim to 1–2 results, name as `{resource}_response.json`.
+
+### Hermeticity
+
+Every test must pass alone, under `cargo test`'s threads, and under heavy
+parallel load (nextest runs each test in its own process, many at once):
+
+- **Network** → only to a wiremock server on localhost; anything reaching a real
+  host is a `live_*` test gated by `live-tests`. `.cargo/config.toml` sets
+  `NO_PROXY` so a system proxy never intercepts mock traffic.
+- **Timeouts** → a request timeout covers connecting and sending, so under load
+  it can expire before the server sees the request. Don't put `.expect(n)` on a
+  mock a timeout test aims at, unless the count is the point (then use a timeout
+  of hundreds of milliseconds, not tens). Give the mock a delay far past the
+  timeout (seconds) so the response never races it.
+- **Elapsed time** → on real time, assert lower bounds only (`elapsed >= …`).
+  Where no socket is involved, use `#[tokio::test(start_paused = true)]`
+  instead, where exact durations are safe to assert.
+- **Waiting on background work** → poll against a deadline of seconds that exits
+  as soon as the condition holds, not a fixed number of short sleeps.
+- **Files** → one directory per test, removed on drop (`crate::test_support::TempDir`
+  under `src/`, the `TempDir` guard in `facade_routing_test.rs` under `tests/`),
+  never the platform cache directory.
