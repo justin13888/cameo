@@ -1,0 +1,74 @@
+name: Mutation testing (full tree)
+
+# Mutation-tests the whole crate, not just a pull request's diff, so behaviour
+# no test constrains is found even where nobody has changed the code lately.
+# It runs weekly and on demand (Actions → this workflow → Run workflow), blocks
+# nothing, and leaves one mutants.out artifact per shard. Settings live in
+# .cargo/mutants.toml; `just mutants-shard K N` reproduces one shard locally.
+#
+# The tree has about 1,700 mutants, each an incremental build plus a test run
+# (roughly a minute on a hosted runner), so a full run is about a day of runner
+# time. It is split round-robin across SHARDS parallel jobs, about 2 hours
+# each, under the 5-hour limit set below (GitHub's cap is 6). Raise SHARDS if
+# shards start nearing that limit.
+on:
+  schedule:
+    # Saturdays 06:17 UTC: on a weekend, so its 16 runners don't hold up pull
+    # request CI, and off the hour, when GitHub delays scheduled runs most.
+    - cron: "17 6 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never two full runs at once; a new one waits for the last to finish.
+concurrency:
+  group: mutants-full
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  # Keep in step with the matrix below.
+  SHARDS: 16
+
+jobs:
+  shard:
+    name: Mutants (full, shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      # A failing shard (a missed mutant) must not cancel the others' reports.
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # Before rust-cache, so a failed install ends the job before the cache's
+      # save step is registered and cannot save an unbuilt target/.
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-mutants,cargo-nextest
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # A shard with a missed mutant fails, so save on failure too; the
+          # baseline build has run by then.
+          cache-on-failure: "true"
+          # Saved by the first full-run shard to finish and restored by the
+          # pull request shards, which never save it; see mutants.yml.
+          shared-key: mutants
+      # Exits non-zero when any mutant in this shard is missed or times out;
+      # the report says which. --in-place: see mutants.yml.
+      - name: cargo mutants (shard ${{ matrix.shard }})
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: >-
+          cargo mutants --no-shuffle --in-place
+          --shard "${SHARD}/${SHARDS}" --sharding round-robin
+      - name: Upload the mutants report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutants.out-full-shard-${{ matrix.shard }}
+          path: mutants.out
+          if-no-files-found: ignore
