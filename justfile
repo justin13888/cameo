@@ -4,11 +4,11 @@ default:
 
 # Format all code
 fmt:
-    cargo fmt --all
+    cargo +nightly fmt --all
 
 # Check formatting (CI mode)
 fmt-check:
-    cargo fmt --all -- --check
+    cargo +nightly fmt --all -- --check
 
 # Run clippy lints (default features)
 clippy:

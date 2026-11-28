@@ -19,16 +19,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Pinned to match rust-toolchain.toml so formatting is reproducible:
-      # rustfmt.toml uses nightly-only options (see its header). A dated nightly
-      # is not a resolvable action ref, so select it via the `toolchain` input on
-      # the generic `@master` action.
-      - uses: dtolnay/rust-toolchain@master
+      # rustfmt.toml uses nightly-only options (see its header), so formatting
+      # runs on the latest nightly. `+nightly` is explicit because
+      # rust-toolchain.toml (stable) overrides whatever the action installs.
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2026-02-26
           components: rustfmt
       - name: Format check
-        run: cargo fmt --all -- --check
+        run: cargo +nightly fmt --all -- --check
 
   file-length:
     name: File length
@@ -115,6 +113,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Nightly + --cfg docsrs mirrors the docs.rs build and exercises doc_cfg.
+      # `+nightly` is explicit because rust-toolchain.toml (stable) overrides
+      # whatever the action installs.
       - uses: dtolnay/rust-toolchain@nightly
       - uses: Swatinem/rust-cache@v2
         with:
@@ -122,19 +122,45 @@ jobs:
       - name: cargo doc
         env:
           RUSTDOCFLAGS: "--cfg docsrs -D warnings"
-        run: cargo doc --all-features --no-deps
+        run: cargo +nightly doc --all-features --no-deps
 
+  # The MSRV is read from `rust-version` in Cargo.toml, never restated here.
+  # Every cargo call names its toolchain: rust-toolchain.toml overrides what
+  # an action installs, and only `cargo +<toolchain>` overrides the file.
   msrv:
-    name: MSRV (1.89)
+    name: MSRV
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.89
+      - name: Read MSRV
+        id: msrv
+        run: |
+          msrv="$(sed -n 's/^rust-version = "\(.*\)"$/\1/p' Cargo.toml)"
+          test -n "${msrv}" || { echo "Cargo.toml declares no rust-version" >&2; exit 1; }
+          echo "version=${msrv}" >> "${GITHUB_OUTPUT}"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.msrv.outputs.version }}
+      # The stable that resolves the fresh lockfile below.
+      - name: Install stable
+        run: rustup toolchain install stable --profile minimal --no-self-update
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: "true"
-      - name: Check MSRV
-        run: cargo check --all-targets --features tmdb,anilist,cache
+          key: msrv-${{ steps.msrv.outputs.version }}
+      # The committed lockfile must stay installable on the MSRV.
+      - name: Check MSRV (committed Cargo.lock)
+        env:
+          MSRV: ${{ steps.msrv.outputs.version }}
+        run: cargo +"${MSRV}" check --locked --all-targets --features tmdb,anilist,cache
+      # What a downstream user resolves: edition 2024 means resolver 3, which
+      # prefers dependency versions whose `rust-version` the MSRV satisfies.
+      - name: Check MSRV (fresh MSRV-aware resolution)
+        env:
+          MSRV: ${{ steps.msrv.outputs.version }}
+        run: |
+          cargo +stable generate-lockfile
+          cargo +"${MSRV}" check --locked --all-targets --features tmdb,anilist,cache
 
   audit:
     name: Security audit
