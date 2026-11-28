@@ -8,7 +8,7 @@ What does this change and why? Link any related issue (`Closes #123`).
       `just test-live` runs them with a `TMDB_API_TOKEN`)
 - [ ] `cargo test --doc --all-features` passes
 - [ ] `cargo clippy --all-targets --all-features -- -D warnings` is clean
-- [ ] `cargo fmt --all` applied
+- [ ] `cargo +nightly fmt --all` applied
 - [ ] Conventional commit messages (`type: description`)
 - [ ] Public items are documented with `///`
 - [ ] If a `Unified*` model's serialized shape changed, bumped

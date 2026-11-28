@@ -10,7 +10,7 @@ cargo install --locked cargo-nextest   # once; the test runner (https://nexte.st
 cargo nextest run --features full      # run the suite (or `just test`)
 cargo test --doc --features full       # doctests (nextest does not run them)
 cargo clippy --all-targets --features full -- -D warnings
-cargo fmt --all
+cargo +nightly fmt --all                # rustfmt.toml needs nightly (`just fmt`)
 ```
 
 `cargo nextest run --all-features` is safe: the live tests that `live-tests`
@@ -28,11 +28,14 @@ it with `lefthook install`. Use [conventional commits](https://www.conventionalc
 
 The crate's **support target is stable Rust at its MSRV**, declared once as
 `rust-version` in `Cargo.toml` (policy in [docs/STABILITY.md](docs/STABILITY.md));
-the `msrv` CI job runs `cargo check --all-targets` on it (it does not run the
-tests). `rust-toolchain.toml` pins a specific
-**nightly only** because `rustfmt.toml` uses nightly-only formatting options
-(import grouping) — that pinned nightly makes `cargo fmt` reproducible. Nothing
-else requires nightly; don't introduce nightly language features.
+the `msrv` CI job reads it from there and runs `cargo +<msrv> check
+--all-targets` (it does not run the tests), once against the committed
+`Cargo.lock` and once against a fresh MSRV-aware resolution, which is what a
+downstream user gets. Day to day, `rust-toolchain.toml` builds on the latest
+**stable**; breakage a new stable brings is fixed when it lands. Only
+formatting needs nightly, because `rustfmt.toml` uses nightly-only options
+(import grouping): run `cargo +nightly fmt --all` (`just fmt`). Nothing else
+requires nightly; don't introduce nightly language features.
 
 ## Regenerating the TMDB client
 
